@@ -1,0 +1,99 @@
+<Window x:Class="BackgroundImageRemover.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
+        xmlns:models="clr-namespace:BackgroundImageRemover.Models"
+        mc:Ignorable="d"
+        Title="Background Image Remover" Height="720" Width="1180"
+        AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver">
+    <Window.Resources>
+        <ObjectDataProvider x:Key="StrategyKindValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:StrategyKind" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <ToolBar DockPanel.Dock="Top">
+            <Button Content="Open..." Command="{Binding OpenFileCommand}" Padding="8,2" />
+            <Separator />
+            <Button Content="Apply" Command="{Binding ApplyCommand}" Padding="8,2" FontWeight="Bold" />
+            <Button Content="Export PNG..." Command="{Binding ExportCommand}" Padding="8,2" />
+        </ToolBar>
+
+        <!-- Status bar -->
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusMessage}" />
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Strategy controls -->
+        <Border DockPanel.Dock="Right" Width="300" Padding="12" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0">
+            <StackPanel>
+                <TextBlock Text="Strategy" FontWeight="Bold" Margin="0,0,0,8" />
+                <ComboBox ItemsSource="{Binding Source={StaticResource StrategyKindValues}}"
+                          SelectedItem="{Binding SelectedStrategy}"
+                          Margin="0,0,0,16" />
+
+                <!-- Chroma Key options -->
+                <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource StrategyVisibilityConverter}, ConverterParameter=ChromaKey}">
+                    <TextBlock Text="Detected background color:" />
+                    <Rectangle Height="24" Fill="{Binding ChromaKey.DetectedColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" Margin="0,4,0,12" />
+                    <TextBlock Text="Tolerance" />
+                    <Slider Minimum="0" Maximum="100" Value="{Binding ChromaKey.Tolerance}" TickFrequency="5" IsSnapToTickEnabled="False" />
+                </StackPanel>
+
+                <!-- GrabCut options -->
+                <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource StrategyVisibilityConverter}, ConverterParameter=GrabCut}">
+                    <TextBlock Text="Draw a rectangle around the subject on the left image." TextWrapping="Wrap" Margin="0,0,0,8" />
+                    <TextBlock Text="{Binding GrabCut.HasValidRect, StringFormat='Rectangle selected: {0}'}" />
+                </StackPanel>
+
+                <!-- ONNX options -->
+                <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource StrategyVisibilityConverter}, ConverterParameter=Onnx}">
+                    <StackPanel Visibility="{Binding Onnx.IsDownloading, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock Text="Downloading model..." Margin="0,0,0,4" />
+                        <ProgressBar Height="16" Minimum="0" Maximum="1" Value="{Binding Onnx.DownloadFraction, Mode=OneWay}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Onnx.ErrorMessage}" Foreground="Red" TextWrapping="Wrap"
+                               Visibility="{Binding Onnx.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
+                    <Button Content="Retry download" Command="{Binding RetryOnnxDownloadCommand}"
+                            Visibility="{Binding Onnx.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,4,0,8" />
+                    <TextBlock Text="Edge feather" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="15" Value="{Binding Onnx.FeatherPixels}" />
+                </StackPanel>
+
+                <ProgressBar Height="18" IsIndeterminate="True" Margin="0,20,0,0"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <TextBlock Text="{Binding BusyMessage}" Margin="0,4,0,0"
+                           Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Image panes -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <DockPanel Grid.Column="0" Margin="8">
+                <TextBlock DockPanel.Dock="Top" Text="Original" FontWeight="Bold" Margin="0,0,0,4" />
+                <controls:ImagePreviewControl x:Name="OriginalPreview"
+                                               ImageSource="{Binding PreviewBitmap}"
+                                               IsRectDrawingEnabled="{Binding SelectedStrategy, Converter={StaticResource StrategyEqualsGrabCutConverter}}"
+                                               RectSelected="OriginalPreview_RectSelected" />
+            </DockPanel>
+
+            <DockPanel Grid.Column="1" Margin="8">
+                <TextBlock DockPanel.Dock="Top" Text="Result preview" FontWeight="Bold" Margin="0,0,0,4" />
+                <controls:ImagePreviewControl ImageSource="{Binding ResultBitmap}" />
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</Window>

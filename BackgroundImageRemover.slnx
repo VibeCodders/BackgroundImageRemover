@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/BackgroundImageRemover/BackgroundImageRemover.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BackgroundImageRemover.Tests/BackgroundImageRemover.Tests.csproj" />
+  </Folder>
 </Solution>

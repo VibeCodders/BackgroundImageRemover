@@ -56,6 +56,9 @@ public partial class ImagePreviewControl : UserControl
     /// <summary>Raised on a Magic Wand click, with the point in image-pixel coordinates.</summary>
     public event EventHandler<OpenCvSharp.Point>? WandClicked;
 
+    /// <summary>Raised on a SAM prompt click, with the point in image-pixel coordinates.</summary>
+    public event EventHandler<OpenCvSharp.Point>? SamPointClicked;
+
     private Point? _dragStart;
     private Point? _panStart;
     private Point _panStartTranslate;
@@ -127,6 +130,7 @@ public partial class ImagePreviewControl : UserControl
     {
         _dragStart = null;
         SelectionRectangle.Visibility = Visibility.Collapsed;
+        SamPointMarker.Visibility = Visibility.Collapsed;
     }
 
     private void RootGrid_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -181,10 +185,21 @@ public partial class ImagePreviewControl : UserControl
                 StartStroke(e);
                 break;
             case InteractionMode.MagicWand:
-                var imgPoint = ImagePixelAt(e);
-                if (imgPoint is { } p)
+                var wandPoint = ImagePixelAt(e);
+                if (wandPoint is { } wp)
                 {
-                    WandClicked?.Invoke(this, new OpenCvSharp.Point((int)Math.Round(p.X), (int)Math.Round(p.Y)));
+                    WandClicked?.Invoke(this, new OpenCvSharp.Point((int)Math.Round(wp.X), (int)Math.Round(wp.Y)));
+                }
+                break;
+            case InteractionMode.SamClick:
+                var clickControlPoint = e.GetPosition(OverlayCanvas);
+                var samPoint = ImagePixelAt(e);
+                if (samPoint is { } sp)
+                {
+                    SamPointMarker.Visibility = Visibility.Visible;
+                    Canvas.SetLeft(SamPointMarker, clickControlPoint.X - SamPointMarker.Width / 2);
+                    Canvas.SetTop(SamPointMarker, clickControlPoint.Y - SamPointMarker.Height / 2);
+                    SamPointClicked?.Invoke(this, new OpenCvSharp.Point((int)Math.Round(sp.X), (int)Math.Round(sp.Y)));
                 }
                 break;
         }

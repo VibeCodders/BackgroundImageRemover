@@ -3,208 +3,48 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
-        xmlns:models="clr-namespace:BackgroundImageRemover.Models"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:views="clr-namespace:BackgroundImageRemover.Views"
+        xmlns:vm="clr-namespace:BackgroundImageRemover.ViewModels"
         mc:Ignorable="d"
-        Title="Background Image Remover" Height="800" Width="1360"
-        AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver">
+        Title="Background Image Remover" Height="800" Width="1360">
     <Window.InputBindings>
-        <KeyBinding Key="Z" Modifiers="Control" Command="{Binding UndoCommand}" />
-        <KeyBinding Key="Y" Modifiers="Control" Command="{Binding RedoCommand}" />
+        <KeyBinding Key="Z" Modifiers="Control" Command="{Binding SelectedDocument.UndoCommand}" />
+        <KeyBinding Key="Y" Modifiers="Control" Command="{Binding SelectedDocument.RedoCommand}" />
+        <KeyBinding Key="N" Modifiers="Control" Command="{Binding NewTabCommand}" />
     </Window.InputBindings>
-    <Window.Resources>
-        <ObjectDataProvider x:Key="StrategyKindValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
-            <ObjectDataProvider.MethodParameters>
-                <x:Type TypeName="models:StrategyKind" />
-            </ObjectDataProvider.MethodParameters>
-        </ObjectDataProvider>
-        <ObjectDataProvider x:Key="ExportBackgroundModeValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
-            <ObjectDataProvider.MethodParameters>
-                <x:Type TypeName="models:ExportBackgroundMode" />
-            </ObjectDataProvider.MethodParameters>
-        </ObjectDataProvider>
-    </Window.Resources>
 
     <DockPanel>
-        <!-- Toolbar -->
-        <ToolBar DockPanel.Dock="Top">
-            <Button Content="Open..." Command="{Binding OpenFileCommand}" Padding="8,2" />
-            <Separator />
-            <Button Content="Undo" Command="{Binding UndoCommand}" Padding="8,2" />
-            <Button Content="Redo" Command="{Binding RedoCommand}" Padding="8,2" />
-            <Separator />
-            <Button Content="Apply" Command="{Binding ApplyCommand}" Padding="8,2" FontWeight="Bold" />
-            <Button Content="Export PNG..." Command="{Binding ExportCommand}" Padding="8,2" />
-            <Separator />
-            <Button Content="Batch..." Command="{Binding BatchCommand}" Padding="8,2" />
-            <TextBlock Text="{Binding BatchStatus}" VerticalAlignment="Center" Margin="8,0"
-                       Visibility="{Binding IsBatchRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
-        </ToolBar>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open..." Command="{Binding NewTabCommand}" InputGestureText="Ctrl+N" />
+                <MenuItem Header="_Recent" ItemsSource="{Binding RecentFiles}">
+                    <MenuItem.ItemContainerStyle>
+                        <Style TargetType="MenuItem">
+                            <Setter Property="Header" Value="{Binding}" />
+                            <Setter Property="Command" Value="{Binding DataContext.OpenRecentCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                            <Setter Property="CommandParameter" Value="{Binding}" />
+                        </Style>
+                    </MenuItem.ItemContainerStyle>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
 
-        <!-- Status bar -->
-        <StatusBar DockPanel.Dock="Bottom">
-            <StatusBarItem>
-                <TextBlock Text="{Binding StatusMessage}" />
-            </StatusBarItem>
-        </StatusBar>
-
-        <!-- Strategy + refinement controls -->
-        <Border DockPanel.Dock="Right" Width="320" Padding="12" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <TextBlock Text="Strategy" FontWeight="Bold" Margin="0,0,0,8" />
-                <ComboBox ItemsSource="{Binding Source={StaticResource StrategyKindValues}}"
-                          SelectedItem="{Binding SelectedStrategy}"
-                          Margin="0,0,0,16" />
-
-                <!-- Chroma Key options -->
-                <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ChromaKey}">
-                    <TextBlock Text="Detected background color:" />
-                    <Rectangle Height="24" Fill="{Binding ChromaKey.DetectedColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" Margin="0,4,0,12" />
-                    <TextBlock Text="Tolerance" />
-                    <Slider Minimum="0" Maximum="100" Value="{Binding ChromaKey.Tolerance}" TickFrequency="5" />
-                    <CheckBox Content="Spill suppression" IsChecked="{Binding ChromaKey.SpillSuppression}" Margin="0,8,0,0" />
-                </StackPanel>
-
-                <!-- GrabCut options -->
-                <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=GrabCut}">
-                    <TextBlock Text="Draw a rectangle around the subject on the left image." TextWrapping="Wrap" Margin="0,0,0,8" />
-                    <TextBlock Text="{Binding GrabCut.HasValidRect, StringFormat='Rectangle selected: {0}'}" Margin="0,0,0,8" />
-
-                    <TextBlock Text="Refine with scribbles (optional):" FontWeight="SemiBold" Margin="0,4,0,4" />
-                    <UniformGrid Columns="2" Margin="0,0,0,4">
-                        <RadioButton Content="Foreground" GroupName="ScribbleMode" Margin="0,0,4,4"
-                                     IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ScribbleForeground, Mode=OneWay}"
-                                     Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.ScribbleForeground}" />
-                        <RadioButton Content="Background" GroupName="ScribbleMode" Margin="4,0,0,4"
-                                     IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ScribbleBackground, Mode=OneWay}"
-                                     Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.ScribbleBackground}" />
-                    </UniformGrid>
-                    <Button Content="Refine preview with scribbles" Command="{Binding RefineGrabCutPreviewCommand}"
-                            Visibility="{Binding GrabCut.HasScribbles, Converter={StaticResource BoolToVisibilityConverter}}" />
-                </StackPanel>
-
-                <!-- ONNX options -->
-                <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Onnx}">
-                    <TextBlock Text="Model" />
-                    <ComboBox ItemsSource="{Binding Onnx.AvailableModels}" SelectedItem="{Binding Onnx.SelectedModel}" Margin="0,0,0,8" />
-                    <StackPanel Visibility="{Binding Onnx.IsDownloading, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Downloading model..." Margin="0,0,0,4" />
-                        <ProgressBar Height="16" Minimum="0" Maximum="1" Value="{Binding Onnx.DownloadFraction, Mode=OneWay}" />
+        <TabControl ItemsSource="{Binding Documents}" SelectedItem="{Binding SelectedDocument}">
+            <TabControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:DocumentViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center" MaxWidth="180" TextTrimming="CharacterEllipsis" />
+                        <Button Content="&#x2715;" Margin="8,0,0,0" Padding="2,0" FontSize="10"
+                                Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}" />
                     </StackPanel>
-                    <TextBlock Text="{Binding Onnx.ErrorMessage}" Foreground="Red" TextWrapping="Wrap"
-                               Visibility="{Binding Onnx.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
-                    <Button Content="Retry download" Command="{Binding RetryOnnxDownloadCommand}"
-                            Visibility="{Binding Onnx.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,4,0,8" />
-                    <TextBlock Text="Edge feather" Margin="0,8,0,0" />
-                    <Slider Minimum="0" Maximum="15" Value="{Binding Onnx.FeatherPixels}" />
-                    <CheckBox Content="Alpha matting refinement (slower)" IsChecked="{Binding Onnx.EnableAlphaMatting}" Margin="0,8,0,0" />
-                </StackPanel>
-
-                <Separator Margin="0,16"/>
-
-                <!-- Result refinement tools -->
-                <TextBlock Text="Retouch result" FontWeight="Bold" Margin="0,0,0,8" />
-                <UniformGrid Columns="3" Margin="0,0,0,8">
-                    <Button Content="None" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.None}" Margin="0,0,2,0" />
-                    <Button Content="Brush" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.Brush}" Margin="2,0" />
-                    <Button Content="Wand" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.MagicWand}" Margin="2,0,0,0" />
-                </UniformGrid>
-
-                <UniformGrid Columns="2" Margin="0,0,0,8">
-                    <RadioButton Content="Restore" GroupName="BrushMode" Margin="0,0,4,0"
-                                 IsChecked="{Binding BrushMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Restore}" />
-                    <RadioButton Content="Erase" GroupName="BrushMode" Margin="4,0,0,0"
-                                 IsChecked="{Binding BrushMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Erase}" />
-                </UniformGrid>
-
-                <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Brush}">
-                    <TextBlock Text="Brush size" />
-                    <Slider Minimum="2" Maximum="120" Value="{Binding BrushRadius}" />
-                    <TextBlock Text="Brush hardness" />
-                    <Slider Minimum="0" Maximum="0.95" Value="{Binding BrushHardness}" />
-                </StackPanel>
-
-                <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=MagicWand}">
-                    <TextBlock Text="Wand tolerance" />
-                    <Slider Minimum="1" Maximum="100" Value="{Binding MagicWandTolerance}" />
-                </StackPanel>
-
-                <CheckBox Content="Compare before/after" IsChecked="{Binding IsCompareMode}" Margin="0,8,0,16" />
-
-                <Separator Margin="0,0,0,16"/>
-
-                <!-- Export options -->
-                <TextBlock Text="Export background" FontWeight="Bold" Margin="0,0,0,8" />
-                <RadioButton Content="Transparent" GroupName="ExportBg" Margin="0,0,0,4"
-                             IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Transparent}" />
-                <RadioButton Content="Solid color" GroupName="ExportBg" Margin="0,0,0,4"
-                             IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
-                <StackPanel Orientation="Horizontal"
-                            Visibility="{Binding ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}"
-                            Margin="16,0,0,8">
-                    <Rectangle Width="24" Height="24" Fill="{Binding ExportSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                    <Button x:Name="ChooseColorButton" Content="Choose..." Margin="8,0,0,0"
-                            Click="ChooseColorButton_Click" />
-                    <Popup IsOpen="{Binding IsColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseColorButton}"
-                           StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                        <Border Background="White" BorderBrush="Gray" BorderThickness="1">
-                            <controls:SimpleColorPickerControl SelectedColor="{Binding ExportSolidColor}" />
-                        </Border>
-                    </Popup>
-                </StackPanel>
-                <RadioButton Content="Image" GroupName="ExportBg" Margin="0,0,0,4"
-                             IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}" />
-                <StackPanel Orientation="Horizontal"
-                            Visibility="{Binding ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Image}"
-                            Margin="16,0,0,8">
-                    <Button Content="Choose image..." Command="{Binding PickBackgroundImageCommand}" />
-                </StackPanel>
-
-                <ProgressBar Height="18" IsIndeterminate="True" Margin="0,20,0,0"
-                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <TextBlock Text="{Binding BusyMessage}" Margin="0,4,0,0"
-                           Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
-            </StackPanel>
-            </ScrollViewer>
-        </Border>
-
-        <!-- Image panes -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <DockPanel Grid.Column="0" Margin="8">
-                <TextBlock DockPanel.Dock="Top" Text="Original (draw rect / scribbles here)" FontWeight="Bold" Margin="0,0,0,4" />
-                <controls:ImagePreviewControl x:Name="OriginalPreview"
-                                               ImageSource="{Binding PreviewBitmap}"
-                                               Mode="{Binding OriginalMode}"
-                                               RectSelected="OriginalPreview_RectSelected"
-                                               StrokeStart="OriginalPreview_StrokeStart"
-                                               StrokeMove="OriginalPreview_StrokeMove"
-                                               StrokeEnd="OriginalPreview_StrokeEnd" />
-            </DockPanel>
-
-            <DockPanel Grid.Column="1" Margin="8">
-                <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
-
-                <controls:CompareImageControl BeforeSource="{Binding PreviewBitmap}" AfterSource="{Binding ResultBitmap}"
-                                               DividerPosition="{Binding CompareDividerPosition}"
-                                               Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVisibilityConverter}}" />
-
-                <controls:ImagePreviewControl x:Name="ResultEditPreview"
-                                               ImageSource="{Binding ResultBitmap}"
-                                               Mode="{Binding ResultMode}"
-                                               BrushRadius="{Binding BrushRadius}"
-                                               StrokeStart="ResultEditPreview_StrokeStart"
-                                               StrokeMove="ResultEditPreview_StrokeMove"
-                                               StrokeEnd="ResultEditPreview_StrokeEnd"
-                                               WandClicked="ResultEditPreview_WandClicked"
-                                               Visibility="{Binding IsCompareMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
-            </DockPanel>
-        </Grid>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate DataType="{x:Type vm:DocumentViewModel}">
+                    <views:DocumentView />
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
     </DockPanel>
 </Window>

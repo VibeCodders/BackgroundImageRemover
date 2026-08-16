@@ -25,6 +25,17 @@ public sealed class OnnxStrategy : StrategyBase
     public Task EnsureReadyAsync(OnnxModelKind kind, IProgress<ModelDownloadProgress>? progress, CancellationToken ct)
         => _engine.EnsureReadyAsync(kind, progress, ct);
 
+    /// <summary>Switches future model loads between CPU and DirectML (GPU); already-loaded models are reloaded.</summary>
+    public void SetUseGpu(bool useGpu)
+    {
+        if (_engine.UseGpu == useGpu)
+        {
+            return;
+        }
+        _engine.UseGpu = useGpu;
+        _engine.ReleaseAllSessions();
+    }
+
     protected override Mat ComputeMask(Mat bgr, StrategyContext context, CancellationToken ct)
     {
         if (!_engine.IsReady(context.OnnxModel))

@@ -8,5 +8,6 @@ public enum InteractionMode
     ScribbleForeground,
     ScribbleBackground,
     Brush,
-    MagicWand
+    MagicWand,
+    SamClick
 }

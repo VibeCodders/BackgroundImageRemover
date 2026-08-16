@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Logging;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using OpenCvSharp;
@@ -13,11 +14,20 @@ namespace BackgroundImageRemover.Services.Onnx;
 public sealed class OnnxInferenceEngine : IDisposable
 {
     private readonly IModelCacheService _modelCache;
+    private readonly IFileLogService _log;
     private readonly Dictionary<OnnxModelKind, InferenceSession> _sessions = new();
 
-    public OnnxInferenceEngine(IModelCacheService modelCache)
+    /// <summary>
+    /// Whether to try DirectML (GPU) when the next session is created. Changing this only
+    /// affects models loaded afterwards; already-loaded sessions keep their execution provider
+    /// until <see cref="ReleaseAllSessions"/> is called.
+    /// </summary>
+    public bool UseGpu { get; set; }
+
+    public OnnxInferenceEngine(IModelCacheService modelCache, IFileLogService log)
     {
         _modelCache = modelCache;
+        _log = log;
     }
 
     public bool IsReady(OnnxModelKind kind) => _sessions.ContainsKey(kind);
@@ -30,7 +40,35 @@ public sealed class OnnxInferenceEngine : IDisposable
         }
 
         string path = await _modelCache.EnsureModelAvailableAsync(kind, progress, ct);
-        _sessions[kind] = new InferenceSession(path);
+        _sessions[kind] = CreateSession(path);
+    }
+
+    private InferenceSession CreateSession(string path)
+    {
+        if (UseGpu)
+        {
+            try
+            {
+                var options = new SessionOptions();
+                options.AppendExecutionProvider_DML(deviceId: 0);
+                return new InferenceSession(path, options);
+            }
+            catch (Exception ex)
+            {
+                _log.Error("DirectML execution provider unavailable, falling back to CPU.", ex);
+            }
+        }
+        return new InferenceSession(path);
+    }
+
+    /// <summary>Disposes all cached sessions so the next <see cref="EnsureReadyAsync"/> call rebuilds them (e.g. after toggling GPU use).</summary>
+    public void ReleaseAllSessions()
+    {
+        foreach (var session in _sessions.Values)
+        {
+            session.Dispose();
+        }
+        _sessions.Clear();
     }
 
     /// <summary>Runs saliency inference and returns a single-channel 0-255 mask sized to <paramref name="bgr"/>.</summary>
@@ -92,12 +130,5 @@ public sealed class OnnxInferenceEngine : IDisposable
         return fullMask;
     }
 
-    public void Dispose()
-    {
-        foreach (var session in _sessions.Values)
-        {
-            session.Dispose();
-        }
-        _sessions.Clear();
-    }
+    public void Dispose() => ReleaseAllSessions();
 }

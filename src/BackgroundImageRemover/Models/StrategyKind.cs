@@ -4,5 +4,6 @@ public enum StrategyKind
 {
     Onnx,
     GrabCut,
-    ChromaKey
+    ChromaKey,
+    Sam
 }

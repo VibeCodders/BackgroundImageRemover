@@ -9,10 +9,14 @@ public interface IModelCacheService
     string CachedModelPath(OnnxModelKind kind);
     bool IsModelCached(OnnxModelKind kind);
     Task<string> EnsureModelAvailableAsync(OnnxModelKind kind, IProgress<ModelDownloadProgress>? progress, CancellationToken ct);
+
+    /// <summary>Generic named-file download/cache, used for models that aren't part of <see cref="OnnxModelKind"/> (e.g. SAM's encoder/decoder pair).</summary>
+    Task<string> EnsureNamedFileAvailableAsync(string fileName, string url, IProgress<ModelDownloadProgress>? progress, CancellationToken ct);
+    bool IsNamedFileCached(string fileName);
 }
 
 /// <summary>
-/// Downloads and caches ONNX models on first use, one file per <see cref="OnnxModelKind"/>.
+/// Downloads and caches ONNX models on first use under %LOCALAPPDATA%\BackgroundImageRemover\models\.
 /// </summary>
 public sealed class ModelCacheService : IModelCacheService
 {
@@ -30,27 +34,34 @@ public sealed class ModelCacheService : IModelCacheService
 
     public string CachedModelPath(OnnxModelKind kind) => Path.Combine(_modelsDirectory, OnnxModelCatalog.Get(kind).FileName);
 
-    public bool IsModelCached(OnnxModelKind kind)
+    public bool IsModelCached(OnnxModelKind kind) => IsNamedFileCached(OnnxModelCatalog.Get(kind).FileName);
+
+    public bool IsNamedFileCached(string fileName)
     {
-        string path = CachedModelPath(kind);
+        string path = Path.Combine(_modelsDirectory, fileName);
         return File.Exists(path) && new FileInfo(path).Length >= MinimumValidFileSizeBytes;
     }
 
-    public async Task<string> EnsureModelAvailableAsync(OnnxModelKind kind, IProgress<ModelDownloadProgress>? progress, CancellationToken ct)
+    public Task<string> EnsureModelAvailableAsync(OnnxModelKind kind, IProgress<ModelDownloadProgress>? progress, CancellationToken ct)
     {
-        if (IsModelCached(kind))
+        var definition = OnnxModelCatalog.Get(kind);
+        return EnsureNamedFileAvailableAsync(definition.FileName, definition.DownloadUrl, progress, ct);
+    }
+
+    public async Task<string> EnsureNamedFileAvailableAsync(string fileName, string url, IProgress<ModelDownloadProgress>? progress, CancellationToken ct)
+    {
+        string finalPath = Path.Combine(_modelsDirectory, fileName);
+        if (IsNamedFileCached(fileName))
         {
-            return CachedModelPath(kind);
+            return finalPath;
         }
 
-        var definition = OnnxModelCatalog.Get(kind);
-        string finalPath = CachedModelPath(kind);
         Directory.CreateDirectory(_modelsDirectory);
         string tmpPath = finalPath + ".tmp";
 
         try
         {
-            using var response = await _httpClient.GetAsync(definition.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
             response.EnsureSuccessStatusCode();
 
             long? totalBytes = response.Content.Headers.ContentLength;
@@ -73,7 +84,7 @@ public sealed class ModelCacheService : IModelCacheService
             if (downloadedSize < MinimumValidFileSizeBytes)
             {
                 throw new InvalidOperationException(
-                    $"Downloaded model file looks invalid (only {downloadedSize} bytes). The model URL may have changed.");
+                    $"Downloaded file '{fileName}' looks invalid (only {downloadedSize} bytes). The download URL may have changed.");
             }
 
             File.Move(tmpPath, finalPath, overwrite: true);

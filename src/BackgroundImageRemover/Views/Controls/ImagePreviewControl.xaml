@@ -36,6 +36,8 @@
                 <Rectangle x:Name="SelectionRectangle"
                            Stroke="DodgerBlue" StrokeThickness="2" StrokeDashArray="4 2"
                            Fill="#220096FF" Visibility="Collapsed" />
+                <Ellipse x:Name="SamPointMarker" Width="14" Height="14" Fill="Yellow" Stroke="Black" StrokeThickness="1.5"
+                         Visibility="Collapsed" IsHitTestVisible="False" />
             </Canvas>
         </Grid>
     </Grid>

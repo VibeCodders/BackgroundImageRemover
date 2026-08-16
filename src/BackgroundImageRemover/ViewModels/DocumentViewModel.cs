@@ -7,9 +7,12 @@ using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.Editing;
 using BackgroundImageRemover.Services.ImageIo;
+using BackgroundImageRemover.Services.Logging;
 using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Preview;
 using BackgroundImageRemover.Services.Refinement;
+using BackgroundImageRemover.Services.Sam;
+using BackgroundImageRemover.Services.Settings;
 using BackgroundImageRemover.Services.Strategies;
 using BackgroundImageRemover.ViewModels.StrategyViewModels;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -21,16 +24,23 @@ using WpfPoint = System.Windows.Point;
 
 namespace BackgroundImageRemover.ViewModels;
 
-public partial class MainViewModel : ObservableObject, IDisposable
+/// <summary>
+/// State and logic for a single open image ("document"): one per tab. <see cref="ShellViewModel"/>
+/// owns a collection of these.
+/// </summary>
+public partial class DocumentViewModel : ObservableObject, IDisposable
 {
     private readonly IImageLoaderService _imageLoader;
     private readonly IImageExportService _imageExporter;
     private readonly IDownscaleService _downscaler;
     private readonly IDialogService _dialogs;
     private readonly IBatchProcessingService _batchProcessor;
+    private readonly ISettingsService _settings;
+    private readonly IFileLogService _log;
     private readonly IReadOnlyDictionary<StrategyKind, IBackgroundRemovalStrategy> _strategies;
     private readonly OnnxStrategy _onnxStrategy;
     private readonly GrabCutStrategy _grabCutStrategy;
+    private readonly SamStrategy _samStrategy;
     private readonly EditHistory _editHistory = new();
 
     private readonly DispatcherTimer _debounceTimer;
@@ -53,9 +63,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly Stack<(Mat Fg, Mat Bg)> _scribbleUndo = new();
     private readonly Stack<(Mat Fg, Mat Bg)> _scribbleRedo = new();
 
+    private SamEmbedding? _samEmbedding;
+    private WpfPoint? _samPromptPointPreview;
+
     public ChromaKeyStrategyViewModel ChromaKey { get; } = new();
     public GrabCutStrategyViewModel GrabCut { get; } = new();
     public OnnxStrategyViewModel Onnx { get; } = new();
+    public SamStrategyViewModel Sam { get; } = new();
+
+    [ObservableProperty]
+    private string _title = "Untitled";
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
@@ -132,27 +149,46 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string? _batchStatus;
 
+    [ObservableProperty]
+    private bool _useGpuForOnnx;
+
     public bool HasWorkingResult => _workingAlpha is not null;
     public bool IsResultEditModeActive => ResultMode != InteractionMode.None;
 
-    public MainViewModel(
+    /// <summary>Raised after a scribble stroke is undone/redone, so the View can keep its stroke visuals in sync.</summary>
+    public event EventHandler? ScribbleStrokeUndone;
+    public event EventHandler? ScribbleStrokeRedone;
+
+    /// <summary>Raised when scribbles are reset (new image, new rect), so the View can clear stroke visuals.</summary>
+    public event EventHandler? ScribblesCleared;
+
+    public DocumentViewModel(
         IImageLoaderService imageLoader,
         IImageExportService imageExporter,
         IDownscaleService downscaler,
         IDialogService dialogs,
         IBatchProcessingService batchProcessor,
+        ISettingsService settings,
+        IFileLogService log,
         IEnumerable<IBackgroundRemovalStrategy> strategies,
         OnnxStrategy onnxStrategy,
-        GrabCutStrategy grabCutStrategy)
+        GrabCutStrategy grabCutStrategy,
+        SamStrategy samStrategy)
     {
         _imageLoader = imageLoader;
         _imageExporter = imageExporter;
         _downscaler = downscaler;
         _dialogs = dialogs;
         _batchProcessor = batchProcessor;
+        _settings = settings;
+        _log = log;
         _strategies = strategies.ToDictionary(s => s.Kind);
         _onnxStrategy = onnxStrategy;
         _grabCutStrategy = grabCutStrategy;
+        _samStrategy = samStrategy;
+
+        _useGpuForOnnx = settings.Current.UseGpuForOnnx;
+        _onnxStrategy.SetUseGpu(_useGpuForOnnx);
 
         _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         _debounceTimer.Tick += (_, _) =>
@@ -206,13 +242,34 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnOriginalModeChanged(InteractionMode value) => RefreshUndoRedoState();
 
+    partial void OnUseGpuForOnnxChanged(bool value)
+    {
+        _onnxStrategy.SetUseGpu(value);
+        _settings.Current.UseGpuForOnnx = value;
+        _settings.Save();
+        if (SelectedStrategy == StrategyKind.Onnx)
+        {
+            Onnx.IsModelReady = false;
+            _ = EnsureOnnxReadyAsync();
+        }
+    }
+
     partial void OnSelectedStrategyChanged(StrategyKind value)
     {
-        OriginalMode = value == StrategyKind.GrabCut ? InteractionMode.DrawRect : InteractionMode.None;
+        OriginalMode = value switch
+        {
+            StrategyKind.GrabCut => InteractionMode.DrawRect,
+            StrategyKind.Sam => InteractionMode.SamClick,
+            _ => InteractionMode.None
+        };
 
         if (value == StrategyKind.Onnx && !Onnx.IsModelReady)
         {
             _ = EnsureOnnxReadyAsync();
+        }
+        else if (value == StrategyKind.Sam && !Sam.IsModelReady)
+        {
+            _ = EnsureSamReadyAsync();
         }
         else
         {
@@ -242,6 +299,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             DisposeWorkingResult();
             _editHistory.Clear();
             RefreshUndoRedoState();
+            _samEmbedding = null;
+            _samPromptPointPreview = null;
+            Sam.HasClickedPoint = false;
 
             _loadedImage = await _imageLoader.LoadAsync(path);
             _preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
@@ -249,17 +309,26 @@ public partial class MainViewModel : ObservableObject, IDisposable
             PreviewBitmap = _preview.Bgr.ToBitmapSource();
             ResultBitmap = null;
             IsImageLoaded = true;
+            Title = Path.GetFileName(path);
             StatusMessage = $"Loaded {Path.GetFileName(path)} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})";
+            _log.Info($"Loaded image {path} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})");
+            _settings.AddRecentFile(path);
 
             GrabCut.SelectedRect = null;
             ClearScribbles();
             ChromaKey.DetectedColorBgr = ChromaKeyStrategy.DetectDominantBorderColor(_preview.Bgr);
+
+            if (SelectedStrategy == StrategyKind.Sam && Sam.IsModelReady)
+            {
+                ComputeSamEmbedding();
+            }
 
             RequestPreviewDebounced();
         }
         catch (Exception ex)
         {
             StatusMessage = $"Could not load image: {ex.Message}";
+            _log.Error($"Could not load image: {path}", ex);
         }
         finally
         {
@@ -285,6 +354,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             Onnx.ErrorMessage = $"Could not download model: {ex.Message}";
+            _log.Error("ONNX model download failed", ex);
         }
         finally
         {
@@ -294,6 +364,64 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     private Task RetryOnnxDownloadAsync() => EnsureOnnxReadyAsync();
+
+    private async Task EnsureSamReadyAsync()
+    {
+        try
+        {
+            Sam.ErrorMessage = null;
+            Sam.IsDownloading = true;
+            var progress = new Progress<ModelDownloadProgress>(p => Sam.DownloadFraction = p.FractionComplete);
+            await _samStrategy.EnsureReadyAsync(progress, CancellationToken.None);
+            Sam.IsModelReady = true;
+            ApplyCommand.NotifyCanExecuteChanged();
+            if (_loadedImage is not null)
+            {
+                ComputeSamEmbedding();
+            }
+        }
+        catch (Exception ex)
+        {
+            Sam.ErrorMessage = $"Could not download SAM model: {ex.Message}";
+            _log.Error("SAM model download failed", ex);
+        }
+        finally
+        {
+            Sam.IsDownloading = false;
+        }
+    }
+
+    [RelayCommand]
+    private Task RetrySamDownloadAsync() => EnsureSamReadyAsync();
+
+    private void ComputeSamEmbedding()
+    {
+        if (_loadedImage is null)
+        {
+            return;
+        }
+        try
+        {
+            _samEmbedding = _samStrategy.ComputeEmbedding(_loadedImage.FullBgr);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"SAM embedding failed: {ex.Message}";
+            _log.Error("SAM embedding computation failed", ex);
+        }
+    }
+
+    public void OnOriginalSamPointClicked(OpenCvSharp.Point previewPoint)
+    {
+        if (_samEmbedding is null)
+        {
+            StatusMessage = "SAM is still preparing this image, try again in a moment.";
+            return;
+        }
+        _samPromptPointPreview = new WpfPoint(previewPoint.X, previewPoint.Y);
+        Sam.HasClickedPoint = true;
+        RequestPreviewDebounced();
+    }
 
     private void RequestPreviewDebounced()
     {
@@ -332,6 +460,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
                 OnnxFeatherPixels = Onnx.FeatherPixels,
                 EnableAlphaMatting = Onnx.EnableAlphaMatting
             },
+            StrategyKind.Sam => new StrategyContext
+            {
+                SamPromptPoint = _samPromptPointPreview is { } p
+                    ? new Point((int)Math.Round(p.X * scaleToFull), (int)Math.Round(p.Y * scaleToFull))
+                    : (Point?)null,
+                SamEmbedding = _samEmbedding
+            },
             _ => new StrategyContext()
         };
     }
@@ -348,6 +483,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
         if (SelectedStrategy == StrategyKind.Onnx && !Onnx.IsModelReady)
+        {
+            return;
+        }
+        if (SelectedStrategy == StrategyKind.Sam && (!Sam.IsModelReady || _samEmbedding is null || _samPromptPointPreview is null))
         {
             return;
         }
@@ -383,7 +522,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private bool CanApply() => IsImageLoaded && !IsBusy
         && (SelectedStrategy != StrategyKind.GrabCut || GrabCut.HasValidRect)
-        && (SelectedStrategy != StrategyKind.Onnx || Onnx.IsModelReady);
+        && (SelectedStrategy != StrategyKind.Onnx || Onnx.IsModelReady)
+        && (SelectedStrategy != StrategyKind.Sam || (Sam.IsModelReady && Sam.HasClickedPoint));
 
     [RelayCommand(CanExecute = nameof(CanApply))]
     private async Task ApplyAsync()
@@ -423,6 +563,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             StatusMessage = $"Processing failed: {ex.Message}";
+            _log.Error("Apply failed", ex);
         }
         finally
         {
@@ -496,13 +637,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private bool CanUndoExecute() => IsScribbling ? _scribbleUndo.Count > 0 : _editHistory.CanUndo;
     private bool CanRedoExecute() => IsScribbling ? _scribbleRedo.Count > 0 : _editHistory.CanRedo;
-
-    /// <summary>Raised after a scribble stroke is undone/redone, so the View can keep its stroke visuals in sync.</summary>
-    public event EventHandler? ScribbleStrokeUndone;
-    public event EventHandler? ScribbleStrokeRedone;
-
-    /// <summary>Raised when scribbles are reset (new image, new rect), so the View can clear stroke visuals.</summary>
-    public event EventHandler? ScribblesCleared;
 
     [RelayCommand(CanExecute = nameof(CanUndoExecute))]
     private void Undo()
@@ -839,10 +973,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
 
             StatusMessage = $"Exported to {path}";
+            _log.Info($"Exported to {path}");
         }
         catch (Exception ex)
         {
             StatusMessage = $"Export failed: {ex.Message}";
+            _log.Error("Export failed", ex);
         }
     }
 
@@ -865,7 +1001,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     // --- Batch ---
 
-    private bool CanBatch() => IsImageLoaded && !IsBusy && SelectedStrategy != StrategyKind.GrabCut
+    private bool CanBatch() => IsImageLoaded && !IsBusy && SelectedStrategy is not (StrategyKind.GrabCut or StrategyKind.Sam)
         && (SelectedStrategy != StrategyKind.Onnx || Onnx.IsModelReady);
 
     [RelayCommand(CanExecute = nameof(CanBatch))]
@@ -907,6 +1043,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             StatusMessage = $"Batch failed: {ex.Message}";
+            _log.Error("Batch failed", ex);
         }
         finally
         {

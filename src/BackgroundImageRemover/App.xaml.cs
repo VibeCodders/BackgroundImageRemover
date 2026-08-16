@@ -2,8 +2,11 @@ using System.Windows;
 using BackgroundImageRemover.Services.Batch;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.ImageIo;
+using BackgroundImageRemover.Services.Logging;
 using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Preview;
+using BackgroundImageRemover.Services.Sam;
+using BackgroundImageRemover.Services.Settings;
 using BackgroundImageRemover.Services.Strategies;
 using BackgroundImageRemover.ViewModels;
 using BackgroundImageRemover.Views;
@@ -23,6 +26,16 @@ public partial class App : Application
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
 
+        var log = _serviceProvider.GetRequiredService<IFileLogService>();
+        DispatcherUnhandledException += (_, args) =>
+        {
+            log.Error("Unhandled UI exception", args.Exception);
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            log.Error("Unhandled exception", args.ExceptionObject as Exception);
+        };
+
         var window = _serviceProvider.GetRequiredService<MainWindow>();
         window.Show();
     }
@@ -36,6 +49,8 @@ public partial class App : Application
         services.AddSingleton<IDownscaleService, DownscaleService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IBatchProcessingService, BatchProcessingService>();
+        services.AddSingleton<ISettingsService, SettingsService>();
+        services.AddSingleton<IFileLogService, FileLogService>();
 
         services.AddSingleton<OnnxInferenceEngine>();
         services.AddSingleton<OnnxStrategy>();
@@ -43,8 +58,13 @@ public partial class App : Application
         services.AddSingleton<GrabCutStrategy>();
         services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<GrabCutStrategy>());
         services.AddSingleton<IBackgroundRemovalStrategy, ChromaKeyStrategy>();
+        services.AddSingleton<SamInferenceEngine>();
+        services.AddSingleton<SamStrategy>();
+        services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<SamStrategy>());
 
-        services.AddSingleton<MainViewModel>();
+        services.AddTransient<DocumentViewModel>();
+        services.AddSingleton<Func<DocumentViewModel>>(sp => sp.GetRequiredService<DocumentViewModel>);
+        services.AddSingleton<ShellViewModel>();
         services.AddSingleton<MainWindow>();
     }
 

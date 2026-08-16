@@ -61,9 +61,48 @@ public partial class ImagePreviewControl : UserControl
     private Point _panStartTranslate;
     private Polyline? _activeStrokeVisual;
 
+    // Scribble strokes (unlike Brush strokes) stay visible on the canvas, so their visuals
+    // need their own undo/redo stack, kept in step with the ViewModel's scribble mask stack.
+    private readonly Stack<Polyline> _scribbleUndoVisuals = new();
+    private readonly Stack<Polyline> _scribbleRedoVisuals = new();
+
     public ImagePreviewControl()
     {
         InitializeComponent();
+    }
+
+    public bool UndoScribbleStroke()
+    {
+        if (_scribbleUndoVisuals.Count == 0)
+        {
+            return false;
+        }
+        var line = _scribbleUndoVisuals.Pop();
+        OverlayCanvas.Children.Remove(line);
+        _scribbleRedoVisuals.Push(line);
+        return true;
+    }
+
+    public bool RedoScribbleStroke()
+    {
+        if (_scribbleRedoVisuals.Count == 0)
+        {
+            return false;
+        }
+        var line = _scribbleRedoVisuals.Pop();
+        OverlayCanvas.Children.Add(line);
+        _scribbleUndoVisuals.Push(line);
+        return true;
+    }
+
+    public void ClearScribbleStrokes()
+    {
+        foreach (var line in _scribbleUndoVisuals)
+        {
+            OverlayCanvas.Children.Remove(line);
+        }
+        _scribbleUndoVisuals.Clear();
+        _scribbleRedoVisuals.Clear();
     }
 
     public void ResetView()
@@ -75,7 +114,11 @@ public partial class ImagePreviewControl : UserControl
     }
 
     private static void OnImageSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        => ((ImagePreviewControl)d).ClearSelection();
+    {
+        var control = (ImagePreviewControl)d;
+        control.ClearSelection();
+        control.ClearScribbleStrokes();
+    }
 
     private static void OnModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         => ((ImagePreviewControl)d).ClearSelection();
@@ -293,6 +336,12 @@ public partial class ImagePreviewControl : UserControl
         };
         _activeStrokeVisual.Points.Add(_dragStart.Value);
         OverlayCanvas.Children.Add(_activeStrokeVisual);
+
+        if (Mode is InteractionMode.ScribbleForeground or InteractionMode.ScribbleBackground)
+        {
+            _scribbleUndoVisuals.Push(_activeStrokeVisual);
+            _scribbleRedoVisuals.Clear();
+        }
 
         StrokeStart?.Invoke(this, point);
     }

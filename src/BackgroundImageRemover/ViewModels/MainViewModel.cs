@@ -50,6 +50,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private Mat? _grabCutBgScribble;
     private WpfPoint? _scribbleLastPoint;
     private WpfPoint? _brushLastPoint;
+    private readonly Stack<(Mat Fg, Mat Bg)> _scribbleUndo = new();
+    private readonly Stack<(Mat Fg, Mat Bg)> _scribbleRedo = new();
 
     public ChromaKeyStrategyViewModel ChromaKey { get; } = new();
     public GrabCutStrategyViewModel GrabCut { get; } = new();
@@ -201,6 +203,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
         };
     }
+
+    partial void OnOriginalModeChanged(InteractionMode value) => RefreshUndoRedoState();
 
     partial void OnSelectedStrategyChanged(StrategyKind value)
     {
@@ -485,14 +489,31 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _workingAlpha = null;
     }
 
-    // --- Undo / Redo (scoped to the working alpha channel: brush, magic wand edits) ---
+    // --- Undo / Redo: while scribbling, undoes the last scribble stroke; otherwise undoes
+    // the last brush/magic-wand edit on the working alpha channel. ---
 
-    private bool CanUndoExecute() => _editHistory.CanUndo;
-    private bool CanRedoExecute() => _editHistory.CanRedo;
+    private bool IsScribbling => OriginalMode is InteractionMode.ScribbleForeground or InteractionMode.ScribbleBackground;
+
+    private bool CanUndoExecute() => IsScribbling ? _scribbleUndo.Count > 0 : _editHistory.CanUndo;
+    private bool CanRedoExecute() => IsScribbling ? _scribbleRedo.Count > 0 : _editHistory.CanRedo;
+
+    /// <summary>Raised after a scribble stroke is undone/redone, so the View can keep its stroke visuals in sync.</summary>
+    public event EventHandler? ScribbleStrokeUndone;
+    public event EventHandler? ScribbleStrokeRedone;
+
+    /// <summary>Raised when scribbles are reset (new image, new rect), so the View can clear stroke visuals.</summary>
+    public event EventHandler? ScribblesCleared;
 
     [RelayCommand(CanExecute = nameof(CanUndoExecute))]
     private void Undo()
     {
+        if (IsScribbling && TryUndoScribble())
+        {
+            ScribbleStrokeUndone?.Invoke(this, EventArgs.Empty);
+            RefreshUndoRedoState();
+            return;
+        }
+
         if (_workingAlpha is null)
         {
             return;
@@ -511,6 +532,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand(CanExecute = nameof(CanRedoExecute))]
     private void Redo()
     {
+        if (IsScribbling && TryRedoScribble())
+        {
+            ScribbleStrokeRedone?.Invoke(this, EventArgs.Empty);
+            RefreshUndoRedoState();
+            return;
+        }
+
         if (_workingAlpha is null)
         {
             return;
@@ -528,8 +556,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void RefreshUndoRedoState()
     {
-        CanUndo = _editHistory.CanUndo;
-        CanRedo = _editHistory.CanRedo;
+        CanUndo = CanUndoExecute();
+        CanRedo = CanRedoExecute();
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
     }
@@ -596,6 +624,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public void OnOriginalStrokeStart(WpfPoint imagePoint)
     {
         EnsureScribbleMats();
+        PushScribbleUndoSnapshot();
         _scribbleLastPoint = imagePoint;
         DrawScribbleSegment(imagePoint, imagePoint);
     }
@@ -646,6 +675,69 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _grabCutFgScribble = null;
         _grabCutBgScribble = null;
         GrabCut.HasScribbles = false;
+
+        foreach (var (fg, bg) in _scribbleUndo) { fg.Dispose(); bg.Dispose(); }
+        foreach (var (fg, bg) in _scribbleRedo) { fg.Dispose(); bg.Dispose(); }
+        _scribbleUndo.Clear();
+        _scribbleRedo.Clear();
+        RefreshUndoRedoState();
+        ScribblesCleared?.Invoke(this, EventArgs.Empty);
+    }
+
+    private const int MaxScribbleHistoryDepth = 20;
+
+    private void PushScribbleUndoSnapshot()
+    {
+        if (_grabCutFgScribble is null || _grabCutBgScribble is null)
+        {
+            return;
+        }
+
+        _scribbleUndo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
+        while (_scribbleUndo.Count > MaxScribbleHistoryDepth)
+        {
+            var items = _scribbleUndo.ToArray();
+            _scribbleUndo.Clear();
+            for (int i = items.Length - 2; i >= 0; i--) _scribbleUndo.Push(items[i]);
+            items[^1].Fg.Dispose();
+            items[^1].Bg.Dispose();
+        }
+
+        foreach (var (fg, bg) in _scribbleRedo) { fg.Dispose(); bg.Dispose(); }
+        _scribbleRedo.Clear();
+        RefreshUndoRedoState();
+    }
+
+    private bool TryUndoScribble()
+    {
+        if (_scribbleUndo.Count == 0 || _grabCutFgScribble is null || _grabCutBgScribble is null)
+        {
+            return false;
+        }
+        _scribbleRedo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
+        var (fg, bg) = _scribbleUndo.Pop();
+        _grabCutFgScribble.Dispose();
+        _grabCutBgScribble.Dispose();
+        _grabCutFgScribble = fg;
+        _grabCutBgScribble = bg;
+        GrabCut.HasScribbles = HasNonEmptyScribbles();
+        return true;
+    }
+
+    private bool TryRedoScribble()
+    {
+        if (_scribbleRedo.Count == 0 || _grabCutFgScribble is null || _grabCutBgScribble is null)
+        {
+            return false;
+        }
+        _scribbleUndo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
+        var (fg, bg) = _scribbleRedo.Pop();
+        _grabCutFgScribble.Dispose();
+        _grabCutBgScribble.Dispose();
+        _grabCutFgScribble = fg;
+        _grabCutBgScribble = bg;
+        GrabCut.HasScribbles = HasNonEmptyScribbles();
+        return true;
     }
 
     [RelayCommand]

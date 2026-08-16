@@ -13,6 +13,9 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = viewModel;
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
+        viewModel.ScribbleStrokeUndone += (_, _) => OriginalPreview.UndoScribbleStroke();
+        viewModel.ScribbleStrokeRedone += (_, _) => OriginalPreview.RedoScribbleStroke();
+        viewModel.ScribblesCleared += (_, _) => OriginalPreview.ClearScribbleStrokes();
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)

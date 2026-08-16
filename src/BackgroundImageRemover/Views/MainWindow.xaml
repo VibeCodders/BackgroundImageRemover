@@ -9,6 +9,10 @@
         mc:Ignorable="d"
         Title="Background Image Remover" Height="800" Width="1360"
         AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver">
+    <Window.InputBindings>
+        <KeyBinding Key="Z" Modifiers="Control" Command="{Binding UndoCommand}" />
+        <KeyBinding Key="Y" Modifiers="Control" Command="{Binding RedoCommand}" />
+    </Window.InputBindings>
     <Window.Resources>
         <ObjectDataProvider x:Key="StrategyKindValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
             <ObjectDataProvider.MethodParameters>

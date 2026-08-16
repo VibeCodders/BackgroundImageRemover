@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using BackgroundImageRemover.ViewModels;
 
@@ -11,6 +12,16 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
+        viewModel.PropertyChanged += ViewModel_PropertyChanged;
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.PreviewBitmap))
+        {
+            OriginalPreview.ResetView();
+            ResultEditPreview.ResetView();
+        }
     }
 
     private void Window_DragOver(object sender, DragEventArgs e)
@@ -27,8 +38,16 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OriginalPreview_RectSelected(object? sender, OpenCvSharp.Rect e)
-    {
-        ViewModel.GrabCut.SelectedRect = e;
-    }
+    private void OriginalPreview_RectSelected(object? sender, OpenCvSharp.Rect e) => ViewModel.GrabCut.SelectedRect = e;
+
+    private void OriginalPreview_StrokeStart(object? sender, Point e) => ViewModel.OnOriginalStrokeStart(e);
+    private void OriginalPreview_StrokeMove(object? sender, Point e) => ViewModel.OnOriginalStrokeMove(e);
+    private void OriginalPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel.OnOriginalStrokeEnd();
+
+    private void ResultEditPreview_StrokeStart(object? sender, Point e) => ViewModel.OnResultStrokeStart(e);
+    private void ResultEditPreview_StrokeMove(object? sender, Point e) => ViewModel.OnResultStrokeMove(e);
+    private void ResultEditPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel.OnResultStrokeEnd();
+    private void ResultEditPreview_WandClicked(object? sender, OpenCvSharp.Point e) => ViewModel.OnResultWandClicked(e);
+
+    private void ChooseColorButton_Click(object sender, RoutedEventArgs e) => ViewModel.IsColorPickerOpen = !ViewModel.IsColorPickerOpen;
 }

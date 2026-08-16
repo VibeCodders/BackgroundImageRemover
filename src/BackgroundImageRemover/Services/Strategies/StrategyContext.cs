@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Strategies;
@@ -20,6 +21,15 @@ public sealed record StrategyContext
     /// <summary>Chroma Key: tolerance, 0-100.</summary>
     public double ChromaKeyTolerance { get; init; } = 20;
 
+    /// <summary>Chroma Key: neutralize the background color's cast on semi-transparent edge pixels.</summary>
+    public bool ChromaKeySpillSuppression { get; init; } = true;
+
+    /// <summary>ONNX: which model to run inference with.</summary>
+    public OnnxModelKind OnnxModel { get; init; } = OnnxModelKind.U2NetP;
+
     /// <summary>ONNX: edge feather amount in pixels applied to the mask.</summary>
     public int OnnxFeatherPixels { get; init; } = 2;
+
+    /// <summary>Applies guided-filter alpha matting refinement to the computed mask before returning it.</summary>
+    public bool EnableAlphaMatting { get; init; }
 }

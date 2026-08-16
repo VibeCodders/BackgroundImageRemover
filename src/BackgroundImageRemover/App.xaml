@@ -5,9 +5,10 @@
              xmlns:conv="clr-namespace:BackgroundImageRemover.Converters">
     <Application.Resources>
         <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
         <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
-        <conv:StrategyVisibilityConverter x:Key="StrategyVisibilityConverter" />
-        <conv:StrategyEqualsGrabCutConverter x:Key="StrategyEqualsGrabCutConverter" />
+        <conv:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter" />
+        <conv:EnumToBoolConverter x:Key="EnumToBoolConverter" />
         <conv:ColorToBrushConverter x:Key="ColorToBrushConverter" />
     </Application.Resources>
 </Application>

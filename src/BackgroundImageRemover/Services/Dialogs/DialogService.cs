@@ -6,6 +6,7 @@ public interface IDialogService
 {
     string? ShowOpenImageDialog();
     string? ShowSavePngDialog(string? suggestedFileName);
+    string? ShowOpenFolderDialog(string title);
 }
 
 public sealed class DialogService : IDialogService
@@ -30,5 +31,11 @@ public sealed class DialogService : IDialogService
             DefaultExt = ".png"
         };
         return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    public string? ShowOpenFolderDialog(string title)
+    {
+        var dialog = new OpenFolderDialog { Title = title };
+        return dialog.ShowDialog() == true ? dialog.FolderName : null;
     }
 }

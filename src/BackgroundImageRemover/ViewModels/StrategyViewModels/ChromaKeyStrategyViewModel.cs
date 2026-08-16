@@ -10,6 +10,9 @@ public partial class ChromaKeyStrategyViewModel : ObservableObject
     private double _tolerance = 20;
 
     [ObservableProperty]
+    private bool _spillSuppression = true;
+
+    [ObservableProperty]
     private Color _detectedColor = Colors.Transparent;
 
     private Vec3b? _detectedColorBgr;

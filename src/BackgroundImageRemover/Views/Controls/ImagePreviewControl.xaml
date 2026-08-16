@@ -4,34 +4,39 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
+             ClipToBounds="True"
              d:DesignHeight="400" d:DesignWidth="400">
-    <Grid>
+    <Grid x:Name="RootGrid"
+          MouseWheel="RootGrid_MouseWheel"
+          MouseDown="RootGrid_MouseDown"
+          MouseMove="RootGrid_MouseMove"
+          MouseUp="RootGrid_MouseUp">
         <Grid.Background>
             <VisualBrush TileMode="Tile" Viewport="0,0,16,16" ViewportUnits="Absolute">
                 <VisualBrush.Visual>
                     <Grid Width="16" Height="16">
                         <Rectangle Width="8" Height="8" Fill="#FFE0E0E0" HorizontalAlignment="Left" VerticalAlignment="Top" />
                         <Rectangle Width="8" Height="8" Fill="#FFE0E0E0" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
-                        <Rectangle Width="16" Height="16" Fill="#FFFFFFFF" Opacity="0" />
                     </Grid>
                 </VisualBrush.Visual>
             </VisualBrush>
         </Grid.Background>
 
-        <Image x:Name="ImageHost" Stretch="Uniform" Source="{Binding ImageSource, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <Grid x:Name="ZoomPanHost">
+            <Grid.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform x:Name="ZoomScale" ScaleX="1" ScaleY="1" />
+                    <TranslateTransform x:Name="PanTranslate" X="0" Y="0" />
+                </TransformGroup>
+            </Grid.RenderTransform>
 
-        <Canvas x:Name="OverlayCanvas"
-                Background="Transparent"
-                IsHitTestVisible="{Binding IsRectDrawingEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                MouseLeftButtonDown="OverlayCanvas_MouseLeftButtonDown"
-                MouseMove="OverlayCanvas_MouseMove"
-                MouseLeftButtonUp="OverlayCanvas_MouseLeftButtonUp">
-            <Rectangle x:Name="SelectionRectangle"
-                       Stroke="DodgerBlue"
-                       StrokeThickness="2"
-                       StrokeDashArray="4 2"
-                       Fill="#220096FF"
-                       Visibility="Collapsed" />
-        </Canvas>
+            <Image x:Name="ImageHost" Stretch="Uniform" Source="{Binding ImageSource, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+
+            <Canvas x:Name="OverlayCanvas" Background="Transparent">
+                <Rectangle x:Name="SelectionRectangle"
+                           Stroke="DodgerBlue" StrokeThickness="2" StrokeDashArray="4 2"
+                           Fill="#220096FF" Visibility="Collapsed" />
+            </Canvas>
+        </Grid>
     </Grid>
 </UserControl>

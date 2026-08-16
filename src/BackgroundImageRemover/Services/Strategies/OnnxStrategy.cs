@@ -5,34 +5,34 @@ using OpenCvSharp;
 namespace BackgroundImageRemover.Services.Strategies;
 
 /// <summary>
-/// Saliency-based segmentation using the U2Netp ONNX model. Inference always runs at the
-/// model's fixed 320x320 input size, so preview and full-res runs cost the same; only the
-/// mask's feather post-processing differs by output resolution.
+/// Saliency-based segmentation using a selectable ONNX model. Inference always runs at the
+/// model's fixed input size, so preview and full-res runs cost about the same; only the mask's
+/// feather post-processing differs by output resolution.
 /// </summary>
-public sealed class OnnxU2NetStrategy : StrategyBase
+public sealed class OnnxStrategy : StrategyBase
 {
     public override StrategyKind Kind => StrategyKind.Onnx;
 
     private readonly OnnxInferenceEngine _engine;
 
-    public OnnxU2NetStrategy(OnnxInferenceEngine engine)
+    public OnnxStrategy(OnnxInferenceEngine engine)
     {
         _engine = engine;
     }
 
-    public bool IsReady => _engine.IsReady;
+    public bool IsReady(OnnxModelKind kind) => _engine.IsReady(kind);
 
-    public Task EnsureReadyAsync(IProgress<ModelDownloadProgress>? progress, CancellationToken ct)
-        => _engine.EnsureReadyAsync(progress, ct);
+    public Task EnsureReadyAsync(OnnxModelKind kind, IProgress<ModelDownloadProgress>? progress, CancellationToken ct)
+        => _engine.EnsureReadyAsync(kind, progress, ct);
 
     protected override Mat ComputeMask(Mat bgr, StrategyContext context, CancellationToken ct)
     {
-        if (!_engine.IsReady)
+        if (!_engine.IsReady(context.OnnxModel))
         {
             throw new InvalidOperationException("ONNX model is not loaded yet.");
         }
 
-        using var raw = _engine.InferMask(bgr);
+        using var raw = _engine.InferMask(bgr, context.OnnxModel);
 
         var mask = new Mat();
         int feather = Math.Max(1, context.OnnxFeatherPixels);

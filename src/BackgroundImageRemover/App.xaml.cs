@@ -1,4 +1,5 @@
 using System.Windows;
+using BackgroundImageRemover.Services.Batch;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.ImageIo;
 using BackgroundImageRemover.Services.Onnx;
@@ -34,11 +35,13 @@ public partial class App : Application
         services.AddSingleton<IImageExportService, ImageExportService>();
         services.AddSingleton<IDownscaleService, DownscaleService>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<IBatchProcessingService, BatchProcessingService>();
 
         services.AddSingleton<OnnxInferenceEngine>();
-        services.AddSingleton<OnnxU2NetStrategy>();
-        services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<OnnxU2NetStrategy>());
-        services.AddSingleton<IBackgroundRemovalStrategy, GrabCutStrategy>();
+        services.AddSingleton<OnnxStrategy>();
+        services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<OnnxStrategy>());
+        services.AddSingleton<GrabCutStrategy>();
+        services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<GrabCutStrategy>());
         services.AddSingleton<IBackgroundRemovalStrategy, ChromaKeyStrategy>();
 
         services.AddSingleton<MainViewModel>();

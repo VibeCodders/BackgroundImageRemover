@@ -9,5 +9,8 @@ public partial class GrabCutStrategyViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasValidRect))]
     private Rect? _selectedRect;
 
+    [ObservableProperty]
+    private bool _hasScribbles;
+
     public bool HasValidRect => SelectedRect is { Width: > 0, Height: > 0 };
 }

@@ -1,56 +1,56 @@
 using System.IO;
 using System.Net.Http;
+using BackgroundImageRemover.Models;
 
 namespace BackgroundImageRemover.Services.Onnx;
 
 public interface IModelCacheService
 {
-    string CachedModelPath { get; }
-    bool IsModelCached { get; }
-    Task<string> EnsureModelAvailableAsync(IProgress<ModelDownloadProgress>? progress, CancellationToken ct);
+    string CachedModelPath(OnnxModelKind kind);
+    bool IsModelCached(OnnxModelKind kind);
+    Task<string> EnsureModelAvailableAsync(OnnxModelKind kind, IProgress<ModelDownloadProgress>? progress, CancellationToken ct);
 }
 
 /// <summary>
-/// Downloads and caches the U2Netp ONNX model on first use. The source URL is a public
-/// release asset and can be overridden via the BIR_U2NETP_URL environment variable if it
-/// ever moves.
+/// Downloads and caches ONNX models on first use, one file per <see cref="OnnxModelKind"/>.
 /// </summary>
 public sealed class ModelCacheService : IModelCacheService
 {
-    private const string DefaultModelUrl = "https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx";
     private const long MinimumValidFileSizeBytes = 1_000_000; // sanity check against HTML error pages
 
     private readonly HttpClient _httpClient;
+    private readonly string _modelsDirectory = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "BackgroundImageRemover", "models");
 
     public ModelCacheService(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }
 
-    public string CachedModelPath { get; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "BackgroundImageRemover", "models", "u2netp.onnx");
+    public string CachedModelPath(OnnxModelKind kind) => Path.Combine(_modelsDirectory, OnnxModelCatalog.Get(kind).FileName);
 
-    public bool IsModelCached => File.Exists(CachedModelPath) && new FileInfo(CachedModelPath).Length >= MinimumValidFileSizeBytes;
-
-    public async Task<string> EnsureModelAvailableAsync(IProgress<ModelDownloadProgress>? progress, CancellationToken ct)
+    public bool IsModelCached(OnnxModelKind kind)
     {
-        if (IsModelCached)
+        string path = CachedModelPath(kind);
+        return File.Exists(path) && new FileInfo(path).Length >= MinimumValidFileSizeBytes;
+    }
+
+    public async Task<string> EnsureModelAvailableAsync(OnnxModelKind kind, IProgress<ModelDownloadProgress>? progress, CancellationToken ct)
+    {
+        if (IsModelCached(kind))
         {
-            return CachedModelPath;
+            return CachedModelPath(kind);
         }
 
-        string url = Environment.GetEnvironmentVariable("BIR_U2NETP_URL") is { Length: > 0 } overrideUrl
-            ? overrideUrl
-            : DefaultModelUrl;
-
-        var directory = Path.GetDirectoryName(CachedModelPath)!;
-        Directory.CreateDirectory(directory);
-        string tmpPath = CachedModelPath + ".tmp";
+        var definition = OnnxModelCatalog.Get(kind);
+        string finalPath = CachedModelPath(kind);
+        Directory.CreateDirectory(_modelsDirectory);
+        string tmpPath = finalPath + ".tmp";
 
         try
         {
-            using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var response = await _httpClient.GetAsync(definition.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, ct);
             response.EnsureSuccessStatusCode();
 
             long? totalBytes = response.Content.Headers.ContentLength;
@@ -76,8 +76,8 @@ public sealed class ModelCacheService : IModelCacheService
                     $"Downloaded model file looks invalid (only {downloadedSize} bytes). The model URL may have changed.");
             }
 
-            File.Move(tmpPath, CachedModelPath, overwrite: true);
-            return CachedModelPath;
+            File.Move(tmpPath, finalPath, overwrite: true);
+            return finalPath;
         }
         catch
         {

@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore BackgroundImageRemover.slnx
+
+      - name: Test
+        run: dotnet test tests/BackgroundImageRemover.Tests/BackgroundImageRemover.Tests.csproj -c Release --no-restore
+
+      - name: Publish single-file executable
+        run: >
+          dotnet publish src/BackgroundImageRemover/BackgroundImageRemover.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish
+
+      - name: Set release tag
+        id: tag
+        shell: bash
+        run: echo "tag=$(date -u +'%Y.%m.%d-%H%M')" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "${{ steps.tag.outputs.tag }}" \
+            "publish/BackgroundImageRemover.exe" \
+            --title "Build ${{ steps.tag.outputs.tag }}" \
+            --notes "Automated build from commit ${{ github.sha }}"

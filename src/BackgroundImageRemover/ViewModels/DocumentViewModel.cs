@@ -80,6 +80,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
+    [NotifyPropertyChangedFor(nameof(TabTitle))]
     private string _title = "Untitled";
 
     [ObservableProperty]
@@ -137,6 +138,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DirtyHint))]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
+    [NotifyPropertyChangedFor(nameof(TabTitle))]
     private bool _isDirty;
 
     /// <summary>Explains the unsaved-work indicator in the tab header.</summary>
@@ -146,6 +148,9 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
 
     /// <summary>Chrome title for the main window: document name plus a dirty marker.</summary>
     public string WindowTitle => Title + (IsDirty ? " *" : string.Empty) + " — Background Image Remover";
+
+    /// <summary>Tab header title: document name plus a dirty asterisk.</summary>
+    public string TabTitle => IsDirty ? Title + " *" : Title;
 
     [ObservableProperty]
     private double _brushRadius = 20;
@@ -1082,22 +1087,30 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         _ => true
     };
 
+    /// <summary>Exports the full-size cutout without cropping (transparent margins kept).</summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private Task ExportAsync() => ExportCoreAsync(crop: false);
+
+    /// <summary>Exports the cutout trimmed to the subject (transparent borders removed).</summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private Task ExportCroppedAsync() => ExportCoreAsync(crop: true);
+
     /// <summary>
     /// The single "complete the job" action: computes the full-resolution cutout (faithful
-    /// to the preview) when needed, then exports it. There is no separate Apply step, and
-    /// loaded cutouts / hand-edited results are exported as-is.
+    /// to the preview) when needed, then exports it, optionally trimming transparent borders.
+    /// Loaded cutouts / hand-edited results are exported as-is.
     /// </summary>
-    [RelayCommand(CanExecute = nameof(CanExport))]
-    private async Task ExportAsync()
+    private async Task ExportCoreAsync(bool crop)
     {
         if (!await EnsureWorkingResultAsync() || _workingBgr is null || _workingAlpha is null)
         {
             return;
         }
 
-        var suggested = _loadedImage is not null
-            ? Path.GetFileNameWithoutExtension(_loadedImage.FilePath) + "_cutout.png"
-            : "cutout.png";
+        var baseName = _loadedImage is not null
+            ? Path.GetFileNameWithoutExtension(_loadedImage.FilePath)
+            : "cutout";
+        var suggested = crop ? baseName + "_cropped.png" : baseName + "_cutout.png";
 
         var path = _dialogs.ShowSavePngDialog(suggested);
         if (path is null)
@@ -1111,16 +1124,20 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             Cv2.CvtColor(_workingBgr, bgra, ColorConversionCodes.BGR2BGRA);
             ReplaceAlphaChannel(bgra, _workingAlpha);
 
+            // "Crop" trims the transparent margins so the exported PNG hugs the subject.
+            using var cropped = crop ? BackgroundCompositingService.TrimTransparentBorders(bgra) : null;
+            var exportBgra = cropped ?? bgra;
+
             switch (ExportBackgroundMode)
             {
                 case ExportBackgroundMode.Transparent:
-                    await _imageExporter.ExportPngAsync(bgra, path);
+                    await _imageExporter.ExportPngAsync(exportBgra, path);
                     break;
 
                 case ExportBackgroundMode.SolidColor:
                 {
                     var colorBgr = new Vec3b(ExportSolidColor.B, ExportSolidColor.G, ExportSolidColor.R);
-                    using var composited = BackgroundCompositingService.CompositeOntoColor(bgra, colorBgr);
+                    using var composited = BackgroundCompositingService.CompositeOntoColor(exportBgra, colorBgr);
                     await ExportBgrAsPngAsync(composited, path);
                     break;
                 }
@@ -1133,7 +1150,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
                         return;
                     }
                     using var background = await _imageLoader.LoadAsync(ExportBackgroundImagePath);
-                    using var composited = BackgroundCompositingService.CompositeOntoImage(bgra, background.FullBgr);
+                    using var composited = BackgroundCompositingService.CompositeOntoImage(exportBgra, background.FullBgr);
                     await ExportBgrAsPngAsync(composited, path);
                     break;
                 }
@@ -1386,7 +1403,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             Title = Path.GetFileName(path);
             StatusMessage = $"Loaded project {Path.GetFileName(path)} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})";
             _log.Info($"Loaded project {path}");
-            _settings.AddRecentFile(path);
+            _settings.AddRecentProject(path);
 
             ClearScribbles();
             if (ChromaKey.DetectedColorBgr is null)

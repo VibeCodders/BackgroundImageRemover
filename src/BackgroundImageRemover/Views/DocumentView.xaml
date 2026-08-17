@@ -28,7 +28,14 @@
             <Separator />
             <Button Content="Save" Command="{Binding SaveProjectCommand}" Padding="8,2"
                     ToolTip="Ctrl+S — save the project (.ibrproj) so you can reopen and continue later" />
-            <Button Content="Export PNG..." Command="{Binding ExportCommand}" Padding="8,2" />
+            <Menu VerticalAlignment="Center">
+                <MenuItem Header="Export PNG...">
+                    <MenuItem Header="With crop" Command="{Binding ExportCroppedCommand}"
+                              ToolTip="Trim transparent borders around the subject" />
+                    <MenuItem Header="Without crop" Command="{Binding ExportCommand}"
+                              ToolTip="Export at the original image size" />
+                </MenuItem>
+            </Menu>
             <Separator />
             <Button Content="Batch..." Command="{Binding BatchCommand}" Padding="8,2" />
             <TextBlock Text="{Binding BatchStatus}" VerticalAlignment="Center" Margin="8,0"

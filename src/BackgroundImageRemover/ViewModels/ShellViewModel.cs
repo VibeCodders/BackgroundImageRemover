@@ -82,6 +82,7 @@ public partial class ShellViewModel : ObservableObject
         SelectedDocument = document;
         await document.LoadAsync(path);
         RefreshRecentFiles();
+        RefreshRecentProjects();
     }
 
     [RelayCommand]

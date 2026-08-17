@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Projects;
@@ -144,22 +145,8 @@ public sealed class ProjectService : IProjectService
 
         using var bgra = new Mat();
         Cv2.CvtColor(bgr, bgra, ColorConversionCodes.BGR2BGRA);
-        ReplaceAlphaChannel(bgra, alpha);
+        BackgroundCompositingService.ReplaceAlphaChannel(bgra, alpha);
         return EncodePngBase64(bgra);
-    }
-
-    private static void ReplaceAlphaChannel(Mat bgra, Mat newAlpha)
-    {
-        var channels = Cv2.Split(bgra);
-        try
-        {
-            newAlpha.CopyTo(channels[3]);
-            Cv2.Merge(channels, bgra);
-        }
-        finally
-        {
-            foreach (var c in channels) c.Dispose();
-        }
     }
 
     private static string EncodePngBase64(Mat mat)
@@ -170,36 +157,14 @@ public sealed class ProjectService : IProjectService
 
     private static (Mat Bgr, Mat? Alpha) DecodeBgrWithAlphaBase64(string base64)
     {
-        var mat = DecodePngBase64(base64);
+        using var mat = DecodePngBase64(base64);
         if (mat.Channels() != 4)
         {
-            return (mat, null);
+            return (mat.Clone(), null);
         }
 
-        var bgr = new Mat();
-        Mat? alpha = null;
-        Mat[]? channels = null;
-        try
-        {
-            channels = Cv2.Split(mat);
-            Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, bgr);
-            alpha = channels[3].Clone();
-            return (bgr, alpha);
-        }
-        catch
-        {
-            bgr.Dispose();
-            alpha?.Dispose();
-            throw;
-        }
-        finally
-        {
-            if (channels is not null)
-            {
-                foreach (var c in channels) c.Dispose();
-            }
-            mat.Dispose();
-        }
+        var (bgr, alpha) = BackgroundCompositingService.SplitBgra(mat);
+        return (bgr, alpha);
     }
 
     private static Mat DecodePngBase64(string base64)

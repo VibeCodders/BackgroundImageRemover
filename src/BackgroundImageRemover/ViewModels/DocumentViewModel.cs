@@ -564,7 +564,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         Cv2.Resize(fullAlpha, previewAlpha, preview.Bgr.Size(), interpolation: InterpolationFlags.Area);
         using var bgra = new Mat();
         Cv2.CvtColor(preview.Bgr, bgra, ColorConversionCodes.BGR2BGRA);
-        ReplaceAlphaChannel(bgra, previewAlpha);
+        BackgroundCompositingService.ReplaceAlphaChannel(bgra, previewAlpha);
         return bgra.ToBitmapSource();
     }
 
@@ -662,7 +662,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             using var fgFull = ResizeScribbleToSize(_grabCutFgScribble, _loadedImage.FullBgr.Size());
             using var bgFull = ResizeScribbleToSize(_grabCutBgScribble, _loadedImage.FullBgr.Size());
             using var refinedAlpha = _grabCutStrategy.RefineWithScribbles(_loadedImage.FullBgr, fullLabelMask, fgFull, bgFull, iterations: 3);
-            ReplaceAlphaChannel(result.Bgra, refinedAlpha);
+            BackgroundCompositingService.ReplaceAlphaChannel(result.Bgra, refinedAlpha);
         }
 
         return result;
@@ -717,35 +717,11 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         }
     }
 
-    private static void ReplaceAlphaChannel(Mat bgra, Mat newAlpha)
-    {
-        var channels = Cv2.Split(bgra);
-        try
-        {
-            newAlpha.CopyTo(channels[3]);
-            Cv2.Merge(channels, bgra);
-        }
-        finally
-        {
-            foreach (var c in channels) c.Dispose();
-        }
-    }
-
     private void SetWorkingResult(RemovalResult result)
     {
         DisposeWorkingResult();
 
-        var channels = Cv2.Split(result.Bgra);
-        try
-        {
-            _workingBgr = new Mat();
-            Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, _workingBgr);
-            _workingAlpha = channels[3].Clone();
-        }
-        finally
-        {
-            foreach (var c in channels) c.Dispose();
-        }
+        (_workingBgr, _workingAlpha) = BackgroundCompositingService.SplitBgra(result.Bgra);
         result.Dispose();
 
         _editHistory.Clear();
@@ -766,7 +742,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         }
         using var bgra = new Mat();
         Cv2.CvtColor(_workingBgr, bgra, ColorConversionCodes.BGR2BGRA);
-        ReplaceAlphaChannel(bgra, _workingAlpha);
+        BackgroundCompositingService.ReplaceAlphaChannel(bgra, _workingAlpha);
         ResultBitmap = bgra.ToBitmapSource();
     }
 
@@ -1052,7 +1028,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
 
             using var bgra = new Mat();
             Cv2.CvtColor(_preview.Bgr, bgra, ColorConversionCodes.BGR2BGRA);
-            ReplaceAlphaChannel(bgra, refined);
+            BackgroundCompositingService.ReplaceAlphaChannel(bgra, refined);
             refined.Dispose();
             ResultBitmap = bgra.ToBitmapSource();
         }
@@ -1125,7 +1101,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         {
             using var bgra = new Mat();
             Cv2.CvtColor(_workingBgr, bgra, ColorConversionCodes.BGR2BGRA);
-            ReplaceAlphaChannel(bgra, _workingAlpha);
+            BackgroundCompositingService.ReplaceAlphaChannel(bgra, _workingAlpha);
 
             // Fully-removed pixels must not carry the original color data forward: leaving it
             // in place is invisible today, but re-running a strategy (or reopening the file)

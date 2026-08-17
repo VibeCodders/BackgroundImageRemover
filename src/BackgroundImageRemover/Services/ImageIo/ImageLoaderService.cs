@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.ImageIo;
@@ -34,31 +35,13 @@ public sealed class ImageLoaderService : IImageLoaderService
                 }
             }
 
-            var mat = Cv2.ImRead(filePath, ImreadModes.Unchanged);
+            using var mat = Cv2.ImRead(filePath, ImreadModes.Unchanged);
             if (mat.Empty())
             {
-                mat.Dispose();
                 throw new InvalidOperationException($"Could not decode image: {filePath}");
             }
 
-            var channels = Cv2.Split(mat);
-            Mat bgr = new();
-            Mat alpha = channels[3].Clone();
-            try
-            {
-                Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, bgr);
-            }
-            catch
-            {
-                bgr.Dispose();
-                throw;
-            }
-            finally
-            {
-                foreach (var c in channels) c.Dispose();
-                mat.Dispose();
-            }
-
+            var (bgr, alpha) = BackgroundCompositingService.SplitBgra(mat);
             return new LoadedImage(filePath, bgr, alpha);
         }, ct);
     }

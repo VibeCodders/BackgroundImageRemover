@@ -63,6 +63,44 @@ public class BackgroundCompositingServiceTests
     }
 
     [Fact]
+    public void ReplaceAlphaChannel_OverwritesOnlyTheAlphaChannel()
+    {
+        using var bgra = new Mat(3, 3, MatType.CV_8UC4, new Scalar(10, 20, 30, 255));
+        using var newAlpha = new Mat(3, 3, MatType.CV_8UC1, Scalar.All(64));
+
+        BackgroundCompositingService.ReplaceAlphaChannel(bgra, newAlpha);
+
+        var px = bgra.At<Vec4b>(0, 0);
+        Assert.Equal(10, px.Item0);
+        Assert.Equal(20, px.Item1);
+        Assert.Equal(30, px.Item2);
+        Assert.Equal(64, px.Item3);
+    }
+
+    [Fact]
+    public void SplitBgra_SeparatesColorAndAlphaIntoIndependentMats()
+    {
+        using var bgra = new Mat(3, 3, MatType.CV_8UC4, new Scalar(10, 20, 30, 128));
+
+        var (bgr, alpha) = BackgroundCompositingService.SplitBgra(bgra);
+        using (bgr)
+        using (alpha)
+        {
+            Assert.Equal(3, bgr.Channels());
+            var bgrPx = bgr.At<Vec3b>(0, 0);
+            Assert.Equal(10, bgrPx.Item0);
+            Assert.Equal(20, bgrPx.Item1);
+            Assert.Equal(30, bgrPx.Item2);
+            Assert.Equal(128, alpha.At<byte>(0, 0));
+
+            // Independent of the source: mutating the source must not affect the split-off Mats.
+            bgra.SetTo(new Scalar(0, 0, 0, 0));
+            Assert.Equal(10, bgr.At<Vec3b>(0, 0).Item0);
+            Assert.Equal(128, alpha.At<byte>(0, 0));
+        }
+    }
+
+    [Fact]
     public void ZeroFullyTransparentPixels_ClearsColorOnlyWhereAlphaIsZero()
     {
         using var bgra = new Mat(4, 4, MatType.CV_8UC4, new Scalar(10, 20, 30, 255));

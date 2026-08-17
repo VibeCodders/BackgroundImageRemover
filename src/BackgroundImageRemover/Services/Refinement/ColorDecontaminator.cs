@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Refinement;
@@ -30,27 +31,17 @@ public static class ColorDecontaminator
             return;
         }
 
-        var channels = Cv2.Split(bgra);
-        try
+        using var split = ChannelSplit.Of(bgra);
+        if (knownBackground is { } kb)
         {
-            if (knownBackground is { } kb)
-            {
-                Despill(channels, kb);
-            }
-            else
-            {
-                Unspill(channels, estimateRadius);
-            }
+            Despill(split.Channels, kb);
+        }
+        else
+        {
+            Unspill(split.Channels, estimateRadius);
+        }
 
-            Cv2.Merge(channels, bgra);
-        }
-        finally
-        {
-            foreach (var c in channels)
-            {
-                c.Dispose();
-            }
-        }
+        Cv2.Merge(split.Channels, bgra);
     }
 
     /// <summary>

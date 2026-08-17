@@ -12,24 +12,17 @@ public static class BackgroundCompositingService
     /// </summary>
     public static Mat TrimTransparentBorders(Mat bgra)
     {
-        var channels = Cv2.Split(bgra);
-        try
+        using var split = ChannelSplit.Of(bgra);
+        using var nonZero = new Mat();
+        Cv2.FindNonZero(split[3], nonZero);
+        if (nonZero.Rows == 0)
         {
-            using var nonZero = new Mat();
-            Cv2.FindNonZero(channels[3], nonZero);
-            if (nonZero.Rows == 0)
-            {
-                return bgra.Clone();
-            }
+            return bgra.Clone();
+        }
 
-            var bounds = Cv2.BoundingRect(nonZero);
-            using var roi = new Mat(bgra, bounds);
-            return roi.Clone();
-        }
-        finally
-        {
-            foreach (var c in channels) c.Dispose();
-        }
+        var bounds = Cv2.BoundingRect(nonZero);
+        using var roi = new Mat(bgra, bounds);
+        return roi.Clone();
     }
 
     /// <summary>
@@ -56,20 +49,40 @@ public static class BackgroundCompositingService
     /// </summary>
     public static void ZeroFullyTransparentPixels(Mat bgra)
     {
-        var channels = Cv2.Split(bgra);
+        using var split = ChannelSplit.Of(bgra);
+        using var mask = new Mat();
+        Cv2.Compare(split[3], 0, mask, CmpType.EQ);
+        split[0].SetTo(Scalar.All(0), mask);
+        split[1].SetTo(Scalar.All(0), mask);
+        split[2].SetTo(Scalar.All(0), mask);
+        Cv2.Merge(split.Channels, bgra);
+    }
+
+    /// <summary>Overwrites the alpha channel of <paramref name="bgra"/> with <paramref name="newAlpha"/>, in place.</summary>
+    public static void ReplaceAlphaChannel(Mat bgra, Mat newAlpha)
+    {
+        using var split = ChannelSplit.Of(bgra);
+        newAlpha.CopyTo(split[3]);
+        Cv2.Merge(split.Channels, bgra);
+    }
+
+    /// <summary>Splits a BGRA Mat into an independent BGR Mat and an independent alpha Mat.</summary>
+    public static (Mat Bgr, Mat Alpha) SplitBgra(Mat bgra)
+    {
+        using var split = ChannelSplit.Of(bgra);
+        var bgr = new Mat();
         try
         {
-            using var mask = new Mat();
-            Cv2.Compare(channels[3], 0, mask, CmpType.EQ);
-            channels[0].SetTo(Scalar.All(0), mask);
-            channels[1].SetTo(Scalar.All(0), mask);
-            channels[2].SetTo(Scalar.All(0), mask);
-            Cv2.Merge(channels, bgra);
+            Cv2.Merge(new[] { split[0], split[1], split[2] }, bgr);
         }
-        finally
+        catch
         {
-            foreach (var c in channels) c.Dispose();
+            bgr.Dispose();
+            throw;
         }
+
+        var alpha = split[3].Clone();
+        return (bgr, alpha);
     }
 
     public static Mat CompositeOntoColor(Mat bgra, Vec3b colorBgr)
@@ -87,36 +100,29 @@ public static class BackgroundCompositingService
 
     private static Mat CompositeOntoBgr(Mat bgra, Mat backgroundBgr)
     {
-        var channels = Cv2.Split(bgra);
-        try
-        {
-            using var alphaF = new Mat();
-            channels[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
+        using var split = ChannelSplit.Of(bgra);
+        using var alphaF = new Mat();
+        split[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
 
-            using var foregroundBgr = new Mat();
-            Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, foregroundBgr);
+        using var foregroundBgr = new Mat();
+        Cv2.Merge(new[] { split[0], split[1], split[2] }, foregroundBgr);
 
-            using var alpha3 = new Mat();
-            Cv2.CvtColor(alphaF, alpha3, ColorConversionCodes.GRAY2BGR);
+        using var alpha3 = new Mat();
+        Cv2.CvtColor(alphaF, alpha3, ColorConversionCodes.GRAY2BGR);
 
-            using var fgF = new Mat();
-            foregroundBgr.ConvertTo(fgF, MatType.CV_32FC3);
-            using var bgF = new Mat();
-            backgroundBgr.ConvertTo(bgF, MatType.CV_32FC3);
+        using var fgF = new Mat();
+        foregroundBgr.ConvertTo(fgF, MatType.CV_32FC3);
+        using var bgF = new Mat();
+        backgroundBgr.ConvertTo(bgF, MatType.CV_32FC3);
 
-            using var fgWeighted = fgF.Mul(alpha3).ToMat();
-            using var oneMinusAlpha = new Mat();
-            Cv2.Subtract(new Mat(alpha3.Size(), alpha3.Type(), Scalar.All(1.0)), alpha3, oneMinusAlpha);
-            using var bgWeighted = bgF.Mul(oneMinusAlpha).ToMat();
+        using var fgWeighted = fgF.Mul(alpha3).ToMat();
+        using var oneMinusAlpha = new Mat();
+        Cv2.Subtract(new Mat(alpha3.Size(), alpha3.Type(), Scalar.All(1.0)), alpha3, oneMinusAlpha);
+        using var bgWeighted = bgF.Mul(oneMinusAlpha).ToMat();
 
-            using var blended = (fgWeighted + bgWeighted).ToMat();
-            var result = new Mat();
-            blended.ConvertTo(result, MatType.CV_8UC3);
-            return result;
-        }
-        finally
-        {
-            foreach (var c in channels) c.Dispose();
-        }
+        using var blended = (fgWeighted + bgWeighted).ToMat();
+        var result = new Mat();
+        blended.ConvertTo(result, MatType.CV_8UC3);
+        return result;
     }
 }

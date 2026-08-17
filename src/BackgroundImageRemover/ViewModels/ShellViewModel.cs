@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -79,8 +80,13 @@ public partial class ShellViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void CloseTab(DocumentViewModel document)
+    private async Task CloseTabAsync(DocumentViewModel document)
     {
+        if (!await ConfirmCloseAsync(document))
+        {
+            return;
+        }
+
         int index = Documents.IndexOf(document);
         if (index < 0)
         {
@@ -94,6 +100,35 @@ public partial class ShellViewModel : ObservableObject
             SelectedDocument = Documents.Count == 0 ? null
                 : Documents[Math.Min(index, Documents.Count - 1)];
         }
+    }
+
+    private async Task<bool> ConfirmCloseAsync(DocumentViewModel document)
+    {
+        if (!document.IsDirty)
+        {
+            return true;
+        }
+
+        var choice = _dialogs.ConfirmCloseDocument(document.Title);
+        return choice switch
+        {
+            CloseDocumentResult.Cancel => false,
+            CloseDocumentResult.Save => await document.TrySaveProjectAsync(),
+            _ => true // Discard
+        };
+    }
+
+    /// <summary>Asks about each dirty document; returns false when the close should be cancelled.</summary>
+    public async Task<bool> ConfirmCloseAllAsync()
+    {
+        foreach (var document in Documents.ToList())
+        {
+            if (!await ConfirmCloseAsync(document))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void RefreshRecentFiles()

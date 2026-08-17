@@ -10,7 +10,10 @@ namespace BackgroundImageRemover.Models;
 /// </summary>
 public sealed class ProjectDocument
 {
-    public int Version { get; set; } = 1;
+    /// <summary>Current on-disk format version written by this app.</summary>
+    public const int FormatVersion = 1;
+
+    public int Version { get; set; } = FormatVersion;
 
     /// <summary>Base display name (without the "(cutout)" suffix).</summary>
     public string? Title { get; set; }
@@ -36,4 +39,10 @@ public sealed class ProjectDocument
     public double BrushHardness { get; set; } = 0.5;
     public string BrushMode { get; set; } = nameof(BrushModeEnum.Restore);
     public double MagicWandTolerance { get; set; } = 20;
+
+    /// <summary>GrabCut subject rectangle in preview coordinates; null when none was drawn. [X, Y, Width, Height]</summary>
+    public int[]? GrabCutRect { get; set; }
+
+    /// <summary>SAM prompt point in preview coordinates; null when none was clicked. [X, Y]</summary>
+    public int[]? SamPoint { get; set; }
 }

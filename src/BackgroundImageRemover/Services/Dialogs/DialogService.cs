@@ -1,6 +1,14 @@
+using System.Windows;
 using Microsoft.Win32;
 
 namespace BackgroundImageRemover.Services.Dialogs;
+
+public enum CloseDocumentResult
+{
+    Save,
+    Discard,
+    Cancel
+}
 
 public interface IDialogService
 {
@@ -9,6 +17,7 @@ public interface IDialogService
     string? ShowOpenFolderDialog(string title);
     string? ShowOpenProjectDialog();
     string? ShowSaveProjectDialog(string? suggestedFileName);
+    CloseDocumentResult ConfirmCloseDocument(string documentName);
 }
 
 public sealed class DialogService : IDialogService
@@ -61,5 +70,22 @@ public sealed class DialogService : IDialogService
             DefaultExt = ".ibrproj"
         };
         return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    public CloseDocumentResult ConfirmCloseDocument(string documentName)
+    {
+        var result = MessageBox.Show(
+            $"Save changes to \"{documentName}\" before closing?",
+            "Unsaved changes",
+            MessageBoxButton.YesNoCancel,
+            MessageBoxImage.Question,
+            MessageBoxResult.Cancel);
+
+        return result switch
+        {
+            MessageBoxResult.Yes => CloseDocumentResult.Save,
+            MessageBoxResult.No => CloseDocumentResult.Discard,
+            _ => CloseDocumentResult.Cancel
+        };
     }
 }

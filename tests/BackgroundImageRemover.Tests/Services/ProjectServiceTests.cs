@@ -25,7 +25,9 @@ public class ProjectServiceTests
             SelectedStrategy = nameof(StrategyKind.ChromaKey),
             ChromaKeyTolerance = 42,
             BrushRadius = 7,
-            MagicWandTolerance = 9
+            MagicWandTolerance = 9,
+            GrabCutRect = new[] { 3, 4, 50, 60 },
+            SamPoint = new[] { 11, 22 }
         };
 
         var path = Path.Combine(Path.GetTempPath(), $"proj_{Guid.NewGuid():N}.ibrproj");
@@ -56,6 +58,26 @@ public class ProjectServiceTests
             Assert.Equal(42, loaded.Settings.ChromaKeyTolerance);
             Assert.Equal(7, loaded.Settings.BrushRadius);
             Assert.Equal(9, loaded.Settings.MagicWandTolerance);
+            Assert.Equal(new[] { 3, 4, 50, 60 }, loaded.Settings.GrabCutRect);
+            Assert.Equal(new[] { 11, 22 }, loaded.Settings.SamPoint);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task LoadAsync_RejectsNewerFormatVersion()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"proj_{Guid.NewGuid():N}.ibrproj");
+        try
+        {
+            File.WriteAllText(path, "{\"Version\":999,\"OriginalImagePng\":null,\"WorkingImagePng\":null}");
+
+            var service = new ProjectService();
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.LoadAsync(path));
+            Assert.Contains("newer version", ex.Message);
         }
         finally
         {

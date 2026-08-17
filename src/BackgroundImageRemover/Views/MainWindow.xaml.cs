@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using BackgroundImageRemover.ViewModels;
 
@@ -9,6 +10,17 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
+    }
+
+    private async void MainWindow_Closing(object? sender, CancelEventArgs e)
+    {
+        if (DataContext is ShellViewModel viewModel)
+        {
+            if (!await viewModel.ConfirmCloseAllAsync())
+            {
+                e.Cancel = true;
+            }
+        }
     }
 
     private void RecentMenu_SubmenuOpened(object sender, RoutedEventArgs e) => RefreshRecentMenus();

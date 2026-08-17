@@ -87,6 +87,12 @@ public sealed class ProjectService : IProjectService
             var file = JsonSerializer.Deserialize<ProjectFile>(json)
                 ?? throw new InvalidOperationException("The project file is empty or malformed.");
 
+            if (file.Version > ProjectDocument.FormatVersion)
+            {
+                throw new InvalidOperationException(
+                    $"This project was saved by a newer version of the app (format {file.Version}); update the app to open it.");
+            }
+
             if (file.OriginalImagePng is null)
             {
                 throw new InvalidOperationException("The project file has no embedded image.");

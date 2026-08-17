@@ -82,6 +82,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     public SamStrategyViewModel Sam { get; } = new();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(WindowTitle))]
     private string _title = "Untitled";
 
     [ObservableProperty]
@@ -141,12 +142,16 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     /// <summary>True when the working result has changes not yet persisted with Save work (Ctrl+S).</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DirtyHint))]
+    [NotifyPropertyChangedFor(nameof(WindowTitle))]
     private bool _isDirty;
 
     /// <summary>Explains the unsaved-work indicator in the tab header.</summary>
     public string? DirtyHint => IsDirty
         ? "Unsaved changes — press Ctrl+S (Save work) or save the project."
         : null;
+
+    /// <summary>Chrome title for the main window: document name plus a dirty marker.</summary>
+    public string WindowTitle => Title + (IsDirty ? " *" : string.Empty) + " — Background Image Remover";
 
     [ObservableProperty]
     private double _brushRadius = 20;
@@ -1244,6 +1249,13 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>Saves the project (prompting for a path on first save); returns true when persisted.</summary>
+    public async Task<bool> TrySaveProjectAsync()
+    {
+        await SaveProjectAsync();
+        return !IsDirty;
+    }
+
     [RelayCommand(CanExecute = nameof(CanSaveProject))]
     private async Task SaveProjectAsAsync()
     {
@@ -1316,7 +1328,9 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             BrushRadius = BrushRadius,
             BrushHardness = BrushHardness,
             BrushMode = BrushMode.ToString(),
-            MagicWandTolerance = MagicWandTolerance
+            MagicWandTolerance = MagicWandTolerance,
+            GrabCutRect = GrabCut.SelectedRect is { } rect ? new[] { rect.X, rect.Y, rect.Width, rect.Height } : null,
+            SamPoint = _samPromptPointPreview is { } p ? new[] { (int)Math.Round(p.X), (int)Math.Round(p.Y) } : null
         };
     }
 
@@ -1360,6 +1374,17 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             BrushMode = brushMode;
         }
         MagicWandTolerance = p.MagicWandTolerance;
+
+        if (p.GrabCutRect is { Length: 4 } rect && rect[2] > 0 && rect[3] > 0)
+        {
+            GrabCut.SelectedRect = new Rect(rect[0], rect[1], rect[2], rect[3]);
+        }
+
+        if (p.SamPoint is { Length: 2 } sam)
+        {
+            _samPromptPointPreview = new WpfPoint(sam[0], sam[1]);
+            Sam.HasClickedPoint = true;
+        }
     }
 
     /// <summary>Loads a <c>.ibrproj</c> project into this document, replacing the current state.</summary>
@@ -1385,6 +1410,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             Sam.HasClickedPoint = false;
             _workSavePath = null;
             ProjectPath = null;
+            GrabCut.SelectedRect = null;
 
             loaded = await _projectService.LoadAsync(path);
             preview = _downscaler.CreatePreview(loaded.OriginalBgr);
@@ -1431,7 +1457,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             _log.Info($"Loaded project {path}");
             _settings.AddRecentFile(path);
 
-            GrabCut.SelectedRect = null;
             ClearScribbles();
             if (ChromaKey.DetectedColorBgr is null)
             {

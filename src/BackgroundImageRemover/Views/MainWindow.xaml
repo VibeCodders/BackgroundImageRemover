@@ -6,7 +6,9 @@
         xmlns:views="clr-namespace:BackgroundImageRemover.Views"
         xmlns:vm="clr-namespace:BackgroundImageRemover.ViewModels"
         mc:Ignorable="d"
-        Title="Background Image Remover" Height="800" Width="1360">
+        Title="{Binding SelectedDocument.WindowTitle, FallbackValue='Background Image Remover'}"
+        Closing="MainWindow_Closing"
+        Height="800" Width="1360">
     <Window.InputBindings>
         <KeyBinding Key="Z" Modifiers="Control" Command="{Binding SelectedDocument.UndoCommand}" />
         <KeyBinding Key="Y" Modifiers="Control" Command="{Binding SelectedDocument.RedoCommand}" />

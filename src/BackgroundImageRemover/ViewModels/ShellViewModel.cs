@@ -27,15 +27,8 @@ public partial class ShellViewModel : ObservableObject
         _dialogs = dialogs;
         _settings = settings;
 
-        foreach (var recent in _settings.Current.RecentFiles)
-        {
-            RecentFiles.Add(recent);
-        }
-
-        foreach (var project in _settings.Current.RecentProjects)
-        {
-            RecentProjects.Add(project);
-        }
+        SyncFrom(RecentFiles, _settings.Current.RecentFiles);
+        SyncFrom(RecentProjects, _settings.Current.RecentProjects);
     }
 
     [RelayCommand]
@@ -137,21 +130,16 @@ public partial class ShellViewModel : ObservableObject
         return true;
     }
 
-    public void RefreshRecentFiles()
-    {
-        RecentFiles.Clear();
-        foreach (var recent in _settings.Current.RecentFiles)
-        {
-            RecentFiles.Add(recent);
-        }
-    }
+    public void RefreshRecentFiles() => SyncFrom(RecentFiles, _settings.Current.RecentFiles);
 
-    public void RefreshRecentProjects()
+    public void RefreshRecentProjects() => SyncFrom(RecentProjects, _settings.Current.RecentProjects);
+
+    private static void SyncFrom(ObservableCollection<string> target, IEnumerable<string> source)
     {
-        RecentProjects.Clear();
-        foreach (var project in _settings.Current.RecentProjects)
+        target.Clear();
+        foreach (var item in source)
         {
-            RecentProjects.Add(project);
+            target.Add(item);
         }
     }
 }

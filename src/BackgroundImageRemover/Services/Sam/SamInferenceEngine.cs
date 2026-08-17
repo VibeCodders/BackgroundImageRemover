@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Services.Onnx;
+using BackgroundImageRemover.Services.Preview;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using OpenCvSharp;
@@ -55,17 +56,15 @@ public sealed class SamInferenceEngine : IDisposable
             throw new InvalidOperationException("Call EnsureReadyAsync before ComputeEmbedding.");
         }
 
-        double scale = (double)EncoderInputSize / Math.Max(bgr.Width, bgr.Height);
-        int newW = Math.Max(1, (int)Math.Round(bgr.Width * scale));
-        int newH = Math.Max(1, (int)Math.Round(bgr.Height * scale));
+        var size = ImageScaling.ComputeFitSize(bgr.Width, bgr.Height, EncoderInputSize);
 
         using var resized = new Mat();
-        Cv2.Resize(bgr, resized, new Size(newW, newH), interpolation: InterpolationFlags.Area);
+        Cv2.Resize(bgr, resized, size, interpolation: InterpolationFlags.Area);
         using var rgb = new Mat();
         Cv2.CvtColor(resized, rgb, ColorConversionCodes.BGR2RGB);
 
         using var padded = new Mat(EncoderInputSize, EncoderInputSize, MatType.CV_8UC3, Scalar.All(0));
-        using (var roi = new Mat(padded, new Rect(0, 0, newW, newH)))
+        using (var roi = new Mat(padded, new Rect(0, 0, size.Width, size.Height)))
         {
             rgb.CopyTo(roi);
         }

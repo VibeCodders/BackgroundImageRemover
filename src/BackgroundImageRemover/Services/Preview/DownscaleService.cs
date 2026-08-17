@@ -18,13 +18,12 @@ public sealed class DownscaleService : IDownscaleService
             return new PreviewImage(full.Clone(), 1.0);
         }
 
-        double scale = (double)maxDim / longestSide;
-        var size = new Size(Math.Max(1, (int)Math.Round(full.Width * scale)), Math.Max(1, (int)Math.Round(full.Height * scale)));
+        var size = ImageScaling.ComputeFitSize(full.Width, full.Height, maxDim);
         var resized = new Mat();
         Cv2.Resize(full, resized, size, interpolation: InterpolationFlags.Area);
 
         // ScaleFactor converts preview-space coords to full-image-space coords.
-        double scaleFactor = 1.0 / scale;
+        double scaleFactor = (double)longestSide / maxDim;
         return new PreviewImage(resized, scaleFactor);
     }
 }

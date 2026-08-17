@@ -521,7 +521,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             {
                 ChromaKeyColor = ChromaKey.DetectedColorBgr,
                 ChromaKeyTolerance = ChromaKey.Tolerance,
-                ChromaKeySpillSuppression = ChromaKey.SpillSuppression
+                DecontaminateEdges = ChromaKey.SpillSuppression
             },
             StrategyKind.GrabCut => new StrategyContext
             {

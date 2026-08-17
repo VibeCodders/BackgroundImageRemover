@@ -57,6 +57,13 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
 
             PostProcessBgra(bgra, context);
 
+            // The mask is feathered, so edge pixels still carry the original background color
+            // in their RGB. Remove that cast so the exported cutout has no halo of the old image.
+            if (context.DecontaminateEdges)
+            {
+                ColorDecontaminator.Decontaminate(bgra, context.ChromaKeyColor);
+            }
+
             sw.Stop();
             return new RemovalResult(bgra, sw.Elapsed.TotalMilliseconds);
         }, ct);

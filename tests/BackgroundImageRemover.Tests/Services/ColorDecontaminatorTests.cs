@@ -1,0 +1,64 @@
+using BackgroundImageRemover.Services.Refinement;
+using OpenCvSharp;
+
+namespace BackgroundImageRemover.Tests.Services;
+
+public class ColorDecontaminatorTests
+{
+    [Fact]
+    public void Decontaminate_KnownBackground_RemovesSpillFromEdgePixel()
+    {
+        // A 50% edge pixel: red foreground blended over a green background, stored straight (unpremultiplied).
+        using var bgra = new Mat(1, 1, MatType.CV_8UC4);
+        bgra.Set(0, 0, new Vec4b(0, 127, 127, 128)); // BGR = (0,127,127), alpha = 128
+
+        ColorDecontaminator.Decontaminate(bgra, new Vec3b(0, 255, 0)); // green key
+
+        var px = bgra.At<Vec4b>(0, 0);
+        Assert.Equal(128, px.Item3);            // alpha untouched
+        Assert.InRange(px.Item1, 0, 4);         // green spill removed
+        Assert.InRange(px.Item2, 248, 255);     // red foreground recovered
+    }
+
+    [Fact]
+    public void Decontaminate_LocalEstimate_RemovesSpillNearTransparentBackground()
+    {
+        // 40x40: left half is a transparent green background, right half is a semi-transparent
+        // red-over-green edge. The background color must be estimated from the transparent side.
+        using var bgra = new Mat(40, 40, MatType.CV_8UC4);
+        for (int y = 0; y < 40; y++)
+        {
+            for (int x = 0; x < 40; x++)
+            {
+                if (x < 20)
+                {
+                    bgra.Set(y, x, new Vec4b(0, 255, 0, 0));      // transparent green background
+                }
+                else
+                {
+                    bgra.Set(y, x, new Vec4b(0, 127, 127, 128));  // semi-transparent blended edge
+                }
+            }
+        }
+
+        ColorDecontaminator.Decontaminate(bgra, null);
+
+        // A pixel just inside the edge still has transparent neighbors within the estimation kernel.
+        var px = bgra.At<Vec4b>(20, 21);
+        Assert.InRange(px.Item1, 0, 8);      // green spill largely removed
+        Assert.InRange(px.Item2, 240, 255);  // red foreground recovered
+    }
+
+    [Fact]
+    public void Decontaminate_LeavesOpaqueAndTransparentPixelsUntouched()
+    {
+        using var bgra = new Mat(2, 1, MatType.CV_8UC4);
+        bgra.Set(0, 0, new Vec4b(10, 20, 30, 255)); // opaque foreground
+        bgra.Set(0, 1, new Vec4b(0, 255, 0, 0));    // fully transparent background
+
+        ColorDecontaminator.Decontaminate(bgra, new Vec3b(0, 255, 0));
+
+        Assert.Equal(new Vec4b(10, 20, 30, 255), bgra.At<Vec4b>(0, 0));
+        Assert.Equal(new Vec4b(0, 255, 0, 0), bgra.At<Vec4b>(0, 1));
+    }
+}

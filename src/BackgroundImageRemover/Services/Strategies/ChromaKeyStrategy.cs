@@ -1,5 +1,4 @@
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Refinement;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Strategies;
@@ -90,35 +89,5 @@ public sealed class ChromaKeyStrategy : StrategyBase
 
         mask.SetArray(maskPixels);
         return mask;
-    }
-
-    protected override void PostProcessBgra(Mat bgra, StrategyContext context)
-    {
-        if (!context.ChromaKeySpillSuppression)
-        {
-            return;
-        }
-
-        Vec3b keyColor;
-        if (context.ChromaKeyColor is { } explicitColor)
-        {
-            keyColor = explicitColor;
-        }
-        else
-        {
-            var channels = Cv2.Split(bgra);
-            try
-            {
-                using var bgr = new Mat();
-                Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, bgr);
-                keyColor = DetectDominantBorderColor(bgr);
-            }
-            finally
-            {
-                foreach (var c in channels) c.Dispose();
-            }
-        }
-
-        ColorSpillSuppressor.Suppress(bgra, keyColor);
     }
 }

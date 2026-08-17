@@ -21,8 +21,8 @@ public sealed record StrategyContext
     /// <summary>Chroma Key: tolerance, 0-100.</summary>
     public double ChromaKeyTolerance { get; init; } = 20;
 
-    /// <summary>Chroma Key: neutralize the background color's cast on semi-transparent edge pixels.</summary>
-    public bool ChromaKeySpillSuppression { get; init; } = true;
+    /// <summary>Remove the background color's cast from semi-transparent edge pixels before returning the result.</summary>
+    public bool DecontaminateEdges { get; init; } = true;
 
     /// <summary>ONNX: which model to run inference with.</summary>
     public OnnxModelKind OnnxModel { get; init; } = OnnxModelKind.U2NetP;

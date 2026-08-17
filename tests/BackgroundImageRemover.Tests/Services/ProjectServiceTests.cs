@@ -121,4 +121,33 @@ public class ProjectServiceTests
             File.Delete(path);
         }
     }
+
+    [Fact]
+    public async Task LoadAsync_RejectsMismatchedWorkingImageDimensions()
+    {
+        using var original = new Mat(20, 30, MatType.CV_8UC3, new Scalar(1, 2, 3)); // 30x20
+        using var working = new Mat(40, 50, MatType.CV_8UC3, new Scalar(4, 5, 6));   // 50x40
+
+        var path = Path.Combine(Path.GetTempPath(), $"proj_{Guid.NewGuid():N}.ibrproj");
+        try
+        {
+            var json = "{\"Version\":1,\"Settings\":{},\"OriginalImagePng\":\"" + EncodePngBase64(original)
+                + "\",\"WorkingImagePng\":\"" + EncodePngBase64(working) + "\"}";
+            File.WriteAllText(path, json);
+
+            var service = new ProjectService();
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.LoadAsync(path));
+            Assert.Contains("dimensions", ex.Message);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    private static string EncodePngBase64(Mat mat)
+    {
+        Cv2.ImEncode(".png", mat, out var buffer);
+        return Convert.ToBase64String(buffer);
+    }
 }

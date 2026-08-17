@@ -16,7 +16,7 @@ public partial class ShellViewModel : ObservableObject
 
     public ObservableCollection<DocumentViewModel> Documents { get; } = new();
     public ObservableCollection<string> RecentFiles { get; } = new();
-    public ObservableCollection<string> RecentWorkFiles { get; } = new();
+    public ObservableCollection<string> RecentProjects { get; } = new();
 
     [ObservableProperty]
     private DocumentViewModel? _selectedDocument;
@@ -30,6 +30,11 @@ public partial class ShellViewModel : ObservableObject
         foreach (var recent in _settings.Current.RecentFiles)
         {
             RecentFiles.Add(recent);
+        }
+
+        foreach (var project in _settings.Current.RecentProjects)
+        {
+            RecentProjects.Add(project);
         }
     }
 
@@ -140,12 +145,12 @@ public partial class ShellViewModel : ObservableObject
         }
     }
 
-    public void RefreshRecentWorkFiles()
+    public void RefreshRecentProjects()
     {
-        RecentWorkFiles.Clear();
-        foreach (var work in _settings.Current.RecentWorkFiles)
+        RecentProjects.Clear();
+        foreach (var project in _settings.Current.RecentProjects)
         {
-            RecentWorkFiles.Add(work);
+            RecentProjects.Add(project);
         }
     }
 }

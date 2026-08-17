@@ -18,9 +18,6 @@ public sealed class ProjectDocument
     /// <summary>Base display name (without the "(cutout)" suffix).</summary>
     public string? Title { get; set; }
 
-    /// <summary>The path used by "Save work" (Ctrl+S quick PNG save), if the document had one.</summary>
-    public string? WorkSavePath { get; set; }
-
     public string SelectedStrategy { get; set; } = nameof(StrategyKind.ChromaKey);
 
     public double ChromaKeyTolerance { get; set; } = 20;

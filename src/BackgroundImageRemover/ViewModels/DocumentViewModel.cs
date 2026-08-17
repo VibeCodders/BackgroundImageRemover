@@ -58,9 +58,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     private Mat? _workingBgr;
     private Mat? _workingAlpha;
 
-    // Where the work-in-progress cutout was last saved; null until the first explicit save.
-    private string? _workSavePath;
-
     // Whether the working result is authoritative (the live preview must not replace it on
     // the next export): true for loaded cutouts and for results the user has hand-edited.
     private bool _workingResultIsLoadedCutout;
@@ -87,7 +84,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
-    [NotifyCanExecuteChangedFor(nameof(SaveWorkCommand))]
     [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
     private StrategyKind _selectedStrategy = StrategyKind.ChromaKey;
 
@@ -99,13 +95,11 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
-    [NotifyCanExecuteChangedFor(nameof(SaveWorkCommand))]
     [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
     private bool _isImageLoaded;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
-    [NotifyCanExecuteChangedFor(nameof(SaveWorkCommand))]
     [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
     private bool _isBusy;
 
@@ -139,7 +133,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     /// <summary>Persistent status-bar hint shown while the open file is a clean cutout.</summary>
     public string CutoutStatus => "Clean cutout — refine with Brush/Wand or re-run a strategy.";
 
-    /// <summary>True when the working result has changes not yet persisted with Save work (Ctrl+S).</summary>
+    /// <summary>True when the working result has changes not yet persisted with Save (Ctrl+S).</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DirtyHint))]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
@@ -147,7 +141,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
 
     /// <summary>Explains the unsaved-work indicator in the tab header.</summary>
     public string? DirtyHint => IsDirty
-        ? "Unsaved changes — press Ctrl+S (Save work) or save the project."
+        ? "Unsaved changes — press Ctrl+S (Save) to persist them."
         : null;
 
     /// <summary>Chrome title for the main window: document name plus a dirty marker.</summary>
@@ -260,7 +254,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             if (e.PropertyName == nameof(GrabCut.SelectedRect))
             {
                 ExportCommand.NotifyCanExecuteChanged();
-                SaveWorkCommand.NotifyCanExecuteChanged();
                 ClearScribbles();
                 if (GrabCut.HasValidRect)
                 {
@@ -282,7 +275,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             if (e.PropertyName == nameof(Onnx.IsModelReady))
             {
                 ExportCommand.NotifyCanExecuteChanged();
-                SaveWorkCommand.NotifyCanExecuteChanged();
                 BatchCommand.NotifyCanExecuteChanged();
             }
             if (e.PropertyName is nameof(Onnx.FeatherPixels) or nameof(Onnx.EnableAlphaMatting) && Onnx.IsModelReady)
@@ -368,7 +360,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             _samEmbedding = null;
             _samPromptPointPreview = null;
             Sam.HasClickedPoint = false;
-            _workSavePath = null;
 
             _loadedImage = await _imageLoader.LoadAsync(path);
             var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
@@ -459,7 +450,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             await _samStrategy.EnsureReadyAsync(progress, CancellationToken.None);
             Sam.IsModelReady = true;
             ExportCommand.NotifyCanExecuteChanged();
-            SaveWorkCommand.NotifyCanExecuteChanged();
             if (_loadedImage is not null)
             {
                 ComputeSamEmbedding();
@@ -588,7 +578,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasWorkingResult));
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
-        SaveWorkCommand.NotifyCanExecuteChanged();
         ExportCommand.NotifyCanExecuteChanged();
         IsDirty = false; // the loaded cutout matches the file on disk until it is edited
         RefreshResultBitmapFromWorking();
@@ -756,7 +745,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasWorkingResult));
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
-        SaveWorkCommand.NotifyCanExecuteChanged();
         ExportCommand.NotifyCanExecuteChanged();
         IsDirty = true; // freshly computed, not yet saved as a work file
         RefreshResultBitmapFromWorking();
@@ -783,7 +771,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         _workingResultIsLoadedCutout = false;
         _workingResultHandEdited = false;
         IsDirty = false;
-        SaveWorkCommand.NotifyCanExecuteChanged();
         ExportCommand.NotifyCanExecuteChanged();
     }
 
@@ -1082,58 +1069,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         return resized;
     }
 
-    // --- Save work in progress ---
-
-    private bool CanSaveWork() => CanExport();
-
-    /// <summary>
-    /// Saves the current working cutout (BGR + alpha, transparent PNG) so a half-finished
-    /// job can be reopened later and continued. Computes the full-resolution result on
-    /// demand (faithful to the preview) when none exists yet. The first save asks for a
-    /// path; afterwards the command overwrites that same file (like a document save).
-    /// </summary>
-    [RelayCommand(CanExecute = nameof(CanSaveWork))]
-    private async Task SaveWorkAsync()
-    {
-        if (!await EnsureWorkingResultAsync() || _workingBgr is null || _workingAlpha is null)
-        {
-            return;
-        }
-
-        if (_workSavePath is null)
-        {
-            var suggested = _loadedImage is not null
-                ? Path.GetFileNameWithoutExtension(_loadedImage.FilePath) + "_work.png"
-                : "work.png";
-            var path = _dialogs.ShowSavePngDialog(suggested, "Save Work in Progress");
-            if (path is null)
-            {
-                return;
-            }
-            _workSavePath = path;
-        }
-
-        try
-        {
-            // Always stored with transparency, independent of the Export background mode,
-            // so reopening the file restores the exact working state (BGR + alpha).
-            using var bgra = new Mat();
-            Cv2.CvtColor(_workingBgr, bgra, ColorConversionCodes.BGR2BGRA);
-            ReplaceAlphaChannel(bgra, _workingAlpha);
-            await _imageExporter.ExportPngAsync(bgra, _workSavePath);
-
-            StatusMessage = $"Work saved to {_workSavePath}";
-            _log.Info($"Work saved to {_workSavePath}");
-            _settings.AddRecentWorkFile(_workSavePath);
-            IsDirty = false;
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Save failed: {ex.Message}";
-            _log.Error("Save work failed", ex);
-        }
-    }
-
     // --- Export ---
 
     private bool CanExport() => IsImageLoaded && !IsBusy
@@ -1297,7 +1232,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             IsDirty = false; // the working result is now persisted inside the project
             StatusMessage = $"Project saved to {path}";
             _log.Info($"Project saved to {path}");
-            _settings.AddRecentFile(path);
+            _settings.AddRecentProject(path);
         }
         catch (Exception ex)
         {
@@ -1312,7 +1247,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         return new ProjectDocument
         {
             Title = Title,
-            WorkSavePath = _workSavePath,
             SelectedStrategy = SelectedStrategy.ToString(),
             ChromaKeyTolerance = ChromaKey.Tolerance,
             ChromaKeySpillSuppression = ChromaKey.SpillSuppression,
@@ -1408,7 +1342,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             _samEmbedding = null;
             _samPromptPointPreview = null;
             Sam.HasClickedPoint = false;
-            _workSavePath = null;
             ProjectPath = null;
             GrabCut.SelectedRect = null;
 
@@ -1430,7 +1363,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             ResultBitmap = null;
 
             ProjectPath = path;
-            _workSavePath = loaded.Settings.WorkSavePath;
 
             if (loaded.WorkingBgr is not null && loaded.WorkingAlpha is not null)
             {
@@ -1440,7 +1372,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
                 _workingResultHandEdited = false;
                 OnPropertyChanged(nameof(HasWorkingResult));
                 RefreshUndoRedoState();
-                SaveWorkCommand.NotifyCanExecuteChanged();
                 ExportCommand.NotifyCanExecuteChanged();
                 IsDirty = false;
                 RefreshResultBitmapFromWorking();

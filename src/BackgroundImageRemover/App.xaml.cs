@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using BackgroundImageRemover.Services.Batch;
 using BackgroundImageRemover.Services.Dialogs;
@@ -38,6 +39,22 @@ public partial class App : Application
         };
 
         var window = _serviceProvider.GetRequiredService<MainWindow>();
+        var shell = _serviceProvider.GetRequiredService<ShellViewModel>();
+
+        // Open files passed on the command line (e.g. double-clicking a .ibrproj or an image
+        // once the OS associates the extension with this app).
+        var startupPaths = e.Args.Where(File.Exists).ToArray();
+        if (startupPaths.Length > 0)
+        {
+            window.Loaded += async (_, _) =>
+            {
+                foreach (var path in startupPaths)
+                {
+                    await shell.OpenInNewTabAsync(path);
+                }
+            };
+        }
+
         window.Show();
     }
 

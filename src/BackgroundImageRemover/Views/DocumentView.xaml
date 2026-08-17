@@ -17,10 +17,6 @@
         </ObjectDataProvider>
     </UserControl.Resources>
 
-    <UserControl.InputBindings>
-        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveWorkCommand}" />
-    </UserControl.InputBindings>
-
     <DockPanel>
         <!-- Toolbar -->
         <ToolBar DockPanel.Dock="Top">
@@ -30,8 +26,8 @@
             <Button Content="Undo" Command="{Binding UndoCommand}" Padding="8,2" />
             <Button Content="Redo" Command="{Binding RedoCommand}" Padding="8,2" />
             <Separator />
-            <Button Content="Save work" Command="{Binding SaveWorkCommand}" Padding="8,2"
-                    ToolTip="Ctrl+S — save the current cutout as a transparent PNG so you can reopen and continue later" />
+            <Button Content="Save" Command="{Binding SaveProjectCommand}" Padding="8,2"
+                    ToolTip="Ctrl+S — save the project (.ibrproj) so you can reopen and continue later" />
             <Button Content="Export PNG..." Command="{Binding ExportCommand}" Padding="8,2" />
             <Separator />
             <Button Content="Batch..." Command="{Binding BatchCommand}" Padding="8,2" />

@@ -107,6 +107,12 @@ public sealed class ProjectService : IProjectService
                 if (file.WorkingImagePng is not null)
                 {
                     (workingBgr, workingAlpha) = DecodeBgrWithAlphaBase64(file.WorkingImagePng);
+
+                    if (workingBgr.Width != originalBgr.Width || workingBgr.Height != originalBgr.Height)
+                    {
+                        throw new InvalidOperationException(
+                            "The project's working image has different dimensions than the original image.");
+                    }
                 }
 
                 return new LoadedProject

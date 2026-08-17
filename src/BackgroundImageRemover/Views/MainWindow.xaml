@@ -14,7 +14,8 @@
         <KeyBinding Key="Y" Modifiers="Control" Command="{Binding SelectedDocument.RedoCommand}" />
         <KeyBinding Key="N" Modifiers="Control" Command="{Binding NewProjectCommand}" />
         <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenProjectCommand}" />
-        <KeyBinding Key="S" Modifiers="Control+Shift" Command="{Binding SelectedDocument.SaveProjectCommand}" />
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SelectedDocument.SaveProjectCommand}" />
+        <KeyBinding Key="S" Modifiers="Control+Shift" Command="{Binding SelectedDocument.SaveProjectAsCommand}" />
     </Window.InputBindings>
 
     <DockPanel>
@@ -24,8 +25,8 @@
                 <MenuItem Header="_Open image..." Command="{Binding NewTabCommand}" />
                 <MenuItem Header="Open _project..." Command="{Binding OpenProjectCommand}" InputGestureText="Ctrl+O" />
                 <Separator />
-                <MenuItem Header="_Save project" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+Shift+S" />
-                <MenuItem Header="Save project _as..." Command="{Binding SelectedDocument.SaveProjectAsCommand}" />
+                <MenuItem Header="_Save" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+S" />
+                <MenuItem Header="Save _as..." Command="{Binding SelectedDocument.SaveProjectAsCommand}" InputGestureText="Ctrl+Shift+S" />
                 <Separator />
                 <MenuItem Header="_Recent" ItemsSource="{Binding RecentFiles}" SubmenuOpened="RecentMenu_SubmenuOpened">
                     <MenuItem.ItemContainerStyle>
@@ -36,7 +37,7 @@
                         </Style>
                     </MenuItem.ItemContainerStyle>
                 </MenuItem>
-                <MenuItem Header="Work in _progress" ItemsSource="{Binding RecentWorkFiles}" SubmenuOpened="WorkInProgressMenu_SubmenuOpened">
+                <MenuItem Header="Recent _projects" ItemsSource="{Binding RecentProjects}" SubmenuOpened="RecentProjectsMenu_SubmenuOpened">
                     <MenuItem.ItemContainerStyle>
                         <Style TargetType="MenuItem">
                             <Setter Property="Header" Value="{Binding}" />

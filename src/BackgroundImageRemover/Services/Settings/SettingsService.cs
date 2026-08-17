@@ -8,14 +8,14 @@ public interface ISettingsService
     AppSettings Current { get; }
     void Save();
     void AddRecentFile(string path);
-    void AddRecentWorkFile(string path);
+    void AddRecentProject(string path);
 }
 
 /// <summary>Loads/saves a small JSON settings file in %LOCALAPPDATA%\BackgroundImageRemover\settings.json.</summary>
 public sealed class SettingsService : ISettingsService
 {
     private const int MaxRecentFiles = 10;
-    private const int MaxRecentWorkFiles = 10;
+    private const int MaxRecentProjects = 10;
     private readonly string _path = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "BackgroundImageRemover", "settings.json");
@@ -68,13 +68,13 @@ public sealed class SettingsService : ISettingsService
         Save();
     }
 
-    public void AddRecentWorkFile(string path)
+    public void AddRecentProject(string path)
     {
-        Current.RecentWorkFiles.Remove(path);
-        Current.RecentWorkFiles.Insert(0, path);
-        while (Current.RecentWorkFiles.Count > MaxRecentWorkFiles)
+        Current.RecentProjects.Remove(path);
+        Current.RecentProjects.Insert(0, path);
+        while (Current.RecentProjects.Count > MaxRecentProjects)
         {
-            Current.RecentWorkFiles.RemoveAt(Current.RecentWorkFiles.Count - 1);
+            Current.RecentProjects.RemoveAt(Current.RecentProjects.Count - 1);
         }
         Save();
     }

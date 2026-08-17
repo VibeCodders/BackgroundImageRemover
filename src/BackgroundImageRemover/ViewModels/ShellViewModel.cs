@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.Settings;
+using BackgroundImageRemover.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -11,6 +12,7 @@ namespace BackgroundImageRemover.ViewModels;
 public partial class ShellViewModel : ObservableObject
 {
     private readonly Func<DocumentViewModel> _documentFactory;
+    private readonly Func<UncropWindow> _uncropWindowFactory;
     private readonly IDialogService _dialogs;
     private readonly ISettingsService _settings;
 
@@ -21,14 +23,33 @@ public partial class ShellViewModel : ObservableObject
     [ObservableProperty]
     private DocumentViewModel? _selectedDocument;
 
-    public ShellViewModel(Func<DocumentViewModel> documentFactory, IDialogService dialogs, ISettingsService settings)
+    public ShellViewModel(
+        Func<DocumentViewModel> documentFactory,
+        Func<UncropWindow> uncropWindowFactory,
+        IDialogService dialogs,
+        ISettingsService settings)
     {
         _documentFactory = documentFactory;
+        _uncropWindowFactory = uncropWindowFactory;
         _dialogs = dialogs;
         _settings = settings;
 
         SyncFrom(RecentFiles, _settings.Current.RecentFiles);
         SyncFrom(RecentProjects, _settings.Current.RecentProjects);
+    }
+
+    /// <summary>Opens the standalone Uncrop tool, seeding it with the current document's image
+    /// (a clone, so Uncrop's own lifecycle never touches the source document's Mats) when one is
+    /// loaded.</summary>
+    [RelayCommand]
+    private void OpenUncrop()
+    {
+        var window = _uncropWindowFactory();
+        if (SelectedDocument?.LoadedImageForUncrop is { } image)
+        {
+            ((UncropViewModel)window.DataContext).LoadInitialImage(image.Clone());
+        }
+        window.Show();
     }
 
     [RelayCommand]

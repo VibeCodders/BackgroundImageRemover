@@ -198,6 +198,10 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string? _projectPath;
 
+    /// <summary>The currently loaded source image, for tools outside the removal pipeline (e.g.
+    /// the standalone Uncrop window) that need their own copy of it. Null until an image is loaded.</summary>
+    public LoadedImage? LoadedImageForUncrop => _loadedImage;
+
     public bool HasProject => ProjectPath is not null;
     public bool HasWorkingResult => _workingAlpha is not null;
     public bool IsResultEditModeActive => ResultMode != InteractionMode.None;

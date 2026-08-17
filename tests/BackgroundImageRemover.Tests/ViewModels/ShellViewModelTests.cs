@@ -26,6 +26,7 @@ public class ShellViewModelTests
 
     private static ShellViewModel CreateShell(FakeSettingsService settings) =>
         new(() => throw new NotImplementedException("Document factory not needed for this test"),
+            () => throw new NotImplementedException("Uncrop window factory not needed for this test"),
             new UnusedDialogService(),
             settings);
 

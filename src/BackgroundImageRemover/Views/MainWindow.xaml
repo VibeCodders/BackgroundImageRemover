@@ -47,6 +47,9 @@
                     </MenuItem.ItemContainerStyle>
                 </MenuItem>
             </MenuItem>
+            <MenuItem Header="_Tools">
+                <MenuItem Header="_Uncrop..." Command="{Binding OpenUncropCommand}" />
+            </MenuItem>
         </Menu>
 
         <TabControl ItemsSource="{Binding Documents}" SelectedItem="{Binding SelectedDocument}">

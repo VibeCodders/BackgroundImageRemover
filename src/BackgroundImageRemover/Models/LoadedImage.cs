@@ -21,6 +21,10 @@ public sealed class LoadedImage : IDisposable
         FullAlpha = fullAlpha;
     }
 
+    /// <summary>Deep-clones the underlying Mats, so the copy can be handed to an independent
+    /// owner (e.g. the standalone Uncrop window) without it mutating or disposing this instance's data.</summary>
+    public LoadedImage Clone() => new(FilePath, FullBgr.Clone(), FullAlpha?.Clone());
+
     public void Dispose()
     {
         FullBgr.Dispose();

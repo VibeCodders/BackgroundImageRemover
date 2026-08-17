@@ -5,6 +5,7 @@ using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.ImageIo;
 using BackgroundImageRemover.Services.Logging;
 using BackgroundImageRemover.Services.Onnx;
+using BackgroundImageRemover.Services.Outpaint;
 using BackgroundImageRemover.Services.Preview;
 using BackgroundImageRemover.Services.Projects;
 using BackgroundImageRemover.Services.Sam;
@@ -83,6 +84,12 @@ public partial class App : Application
 
         services.AddTransient<DocumentViewModel>();
         services.AddSingleton<Func<DocumentViewModel>>(sp => sp.GetRequiredService<DocumentViewModel>);
+
+        services.AddSingleton<IUncropFillService, UncropFillService>();
+        services.AddTransient<UncropViewModel>();
+        services.AddTransient<UncropWindow>();
+        services.AddSingleton<Func<UncropWindow>>(sp => sp.GetRequiredService<UncropWindow>);
+
         services.AddSingleton<ShellViewModel>();
         services.AddSingleton<MainWindow>();
     }

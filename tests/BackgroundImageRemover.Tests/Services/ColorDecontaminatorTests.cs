@@ -53,6 +53,30 @@ public class ColorDecontaminatorTests
     }
 
     [Fact]
+    public void Decontaminate_ConfigurableRadius_IsHonored()
+    {
+        // Same setup as the local-estimate test: a transparent green background on the left,
+        // semi-transparent blended edge pixels on the right. A tiny radius still sees the
+        // adjacent transparent background, so the spill is removed.
+        using var bgra = new Mat(20, 20, MatType.CV_8UC4);
+        for (int y = 0; y < 20; y++)
+        {
+            for (int x = 0; x < 20; x++)
+            {
+                bgra.Set(y, x, x < 10
+                    ? new Vec4b(0, 255, 0, 0)
+                    : new Vec4b(0, 127, 127, 128));
+            }
+        }
+
+        ColorDecontaminator.Decontaminate(bgra, null, estimateRadius: 3);
+
+        var px = bgra.At<Vec4b>(10, 10);
+        Assert.InRange(px.Item1, 0, 8);      // green spill removed with the small radius too
+        Assert.InRange(px.Item2, 240, 255);  // red foreground recovered
+    }
+
+    [Fact]
     public void Decontaminate_LeavesOpaqueAndTransparentPixelsUntouched()
     {
         using var bgra = new Mat(2, 1, MatType.CV_8UC4);

@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Refinement;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Strategies;
@@ -23,6 +24,9 @@ public sealed record StrategyContext
 
     /// <summary>Remove the background color's cast from semi-transparent edge pixels before returning the result.</summary>
     public bool DecontaminateEdges { get; init; } = true;
+
+    /// <summary>Neighborhood radius (px) used to estimate the local background color when decontaminating.</summary>
+    public int DecontaminationEstimateRadius { get; init; } = ColorDecontaminator.DefaultEstimateRadius;
 
     /// <summary>ONNX: which model to run inference with.</summary>
     public OnnxModelKind OnnxModel { get; init; } = OnnxModelKind.U2NetP;

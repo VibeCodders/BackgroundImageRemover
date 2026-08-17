@@ -61,7 +61,7 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
             // in their RGB. Remove that cast so the exported cutout has no halo of the old image.
             if (context.DecontaminateEdges)
             {
-                ColorDecontaminator.Decontaminate(bgra, context.ChromaKeyColor);
+                ColorDecontaminator.Decontaminate(bgra, context.ChromaKeyColor, context.DecontaminationEstimateRadius);
             }
 
             sw.Stop();

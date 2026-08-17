@@ -10,7 +10,8 @@ namespace BackgroundImageRemover.Services.Refinement;
 /// </summary>
 public static class ColorDecontaminator
 {
-    private const int LocalEstimateKernel = 31; // neighborhood over which the background color is estimated
+    /// <summary>Default neighborhood radius (px) over which the background color is estimated.</summary>
+    public const int DefaultEstimateRadius = 15; // matches the original fixed 31x31 kernel
     private const float DensityThreshold = 1e-4f;
 
     /// <summary>
@@ -18,10 +19,11 @@ public static class ColorDecontaminator
     /// supplied (chroma key), the background color is known exactly and the key's alpha is a soft
     /// key rather than true coverage, so a full unspill is unreliable; instead the dominant
     /// background channel is neutralized (classic spill suppression). Otherwise the background
-    /// color is estimated per pixel from the surrounding fully-transparent pixels and the pure
-    /// foreground color is recovered as F = (C - (1-a)*B) / a.
+    /// color is estimated per pixel from the surrounding fully-transparent pixels (within
+    /// <paramref name="estimateRadius"/> pixels) and the pure foreground color is recovered as
+    /// F = (C - (1-a)*B) / a.
     /// </summary>
-    public static void Decontaminate(Mat bgra, Vec3b? knownBackground)
+    public static void Decontaminate(Mat bgra, Vec3b? knownBackground, int estimateRadius = DefaultEstimateRadius)
     {
         if (bgra.Channels() != 4)
         {
@@ -37,7 +39,7 @@ public static class ColorDecontaminator
             }
             else
             {
-                Unspill(channels);
+                Unspill(channels, estimateRadius);
             }
 
             Cv2.Merge(channels, bgra);
@@ -107,9 +109,9 @@ public static class ColorDecontaminator
     /// for every 0 &lt; a &lt; 1 pixel, with B estimated per pixel from surrounding transparent pixels.
     /// Valid for strategies whose feathered alpha approximates the true subject coverage.
     /// </summary>
-    private static void Unspill(Mat[] channels)
+    private static void Unspill(Mat[] channels, int estimateRadius)
     {
-        var (bgB, bgG, bgR, density) = EstimateBackground(channels, null);
+        var (bgB, bgG, bgR, density) = EstimateBackground(channels, null, estimateRadius);
 
         using var alphaF = new Mat();
         channels[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
@@ -155,7 +157,7 @@ public static class ColorDecontaminator
     }
 
     /// <summary>Estimates the background color at every pixel, returning BGR float Mats plus the estimation density (null for a known color).</summary>
-    private static (Mat B, Mat G, Mat R, Mat? Density) EstimateBackground(Mat[] channels, Vec3b? knownBackground)
+    private static (Mat B, Mat G, Mat R, Mat? Density) EstimateBackground(Mat[] channels, Vec3b? knownBackground, int estimateRadius)
     {
         if (knownBackground is { } kb)
         {
@@ -172,7 +174,8 @@ public static class ColorDecontaminator
         using var maskF = new Mat();
         bgMask.ConvertTo(maskF, MatType.CV_32FC1, 1.0 / 255.0);
 
-        var kernel = new Size(LocalEstimateKernel, LocalEstimateKernel);
+        int kernelSize = Math.Max(3, estimateRadius * 2 + 1);
+        var kernel = new Size(kernelSize, kernelSize);
 
         // Normalized box filter of the mask = local fraction of background pixels (0..1).
         using var den = new Mat();

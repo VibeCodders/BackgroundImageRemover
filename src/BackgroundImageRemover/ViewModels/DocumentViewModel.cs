@@ -536,7 +536,10 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
                         (int)Math.Round(r.Height * scaleToFull))
                     : (Rect?)null,
                 // Same iteration count as the preview, so the full-res result matches what the user saw.
-                GrabCutIterations = 3
+                GrabCutIterations = 3,
+                // Scale the feather with the resolution so the export keeps the same relative
+                // softness the user saw in the preview.
+                GrabCutFeatherPixels = Math.Max(1, (int)Math.Round(2 * scaleToFull))
             },
             StrategyKind.Onnx => new StrategyContext
             {
@@ -661,7 +664,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         {
             using var fgFull = ResizeScribbleToSize(_grabCutFgScribble, _loadedImage.FullBgr.Size());
             using var bgFull = ResizeScribbleToSize(_grabCutBgScribble, _loadedImage.FullBgr.Size());
-            using var refinedAlpha = _grabCutStrategy.RefineWithScribbles(_loadedImage.FullBgr, fullLabelMask, fgFull, bgFull, iterations: 3);
+            using var refinedAlpha = _grabCutStrategy.RefineWithScribbles(_loadedImage.FullBgr, fullLabelMask, fgFull, bgFull, iterations: 3, featherPixels: context.GrabCutFeatherPixels);
             BackgroundCompositingService.ReplaceAlphaChannel(result.Bgra, refinedAlpha);
         }
 

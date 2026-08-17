@@ -16,6 +16,9 @@ public sealed record StrategyContext
     /// <summary>GrabCut: iteration count, identical for preview and full-res so exports match the preview.</summary>
     public int GrabCutIterations { get; init; } = 3;
 
+    /// <summary>GrabCut: edge feather amount in pixels applied to the mask, scaled with resolution like <see cref="OnnxFeatherPixels"/> so exports keep the same relative softness as the preview.</summary>
+    public int GrabCutFeatherPixels { get; init; } = 2;
+
     /// <summary>Chroma Key: sampled/detected background color (BGR).</summary>
     public Vec3b? ChromaKeyColor { get; init; }
 

@@ -12,8 +12,6 @@ public sealed class GrabCutStrategy : StrategyBase
 {
     public override StrategyKind Kind => StrategyKind.GrabCut;
 
-    private const int FeatherKernelSize = 5;
-
     // Holds the last raw GrabCut label mask (GC_BGD/GC_FGD/GC_PR_BGD/GC_PR_FGD per pixel) so a
     // subsequent scribble-refine pass can build on it instead of starting over from the rect,
     // and so a higher-resolution run (the full-res export re-running the preview's strategy)
@@ -62,7 +60,7 @@ public sealed class GrabCutStrategy : StrategyBase
         _lastLabelMask = gcMask;
         _lastLabelMaskSize = bgr.Size();
 
-        return MaskFromLabels(gcMask, bgr.Size());
+        return MaskFromLabels(gcMask, bgr.Size(), context.GrabCutFeatherPixels);
     }
 
     /// <summary>The raw GrabCut label mask from the last <see cref="ComputeMask"/> run, if any.</summary>
@@ -73,7 +71,7 @@ public sealed class GrabCutStrategy : StrategyBase
     /// scribbles as certain foreground/background labels first. Returns the refined alpha mask
     /// and updates <see cref="LastLabelMask"/>.
     /// </summary>
-    public Mat RefineWithScribbles(Mat bgr, Mat priorLabelMask, Mat? foregroundScribble, Mat? backgroundScribble, int iterations)
+    public Mat RefineWithScribbles(Mat bgr, Mat priorLabelMask, Mat? foregroundScribble, Mat? backgroundScribble, int iterations, int featherPixels = 2)
     {
         using var bgdModel = new Mat();
         using var fgdModel = new Mat();
@@ -94,10 +92,10 @@ public sealed class GrabCutStrategy : StrategyBase
         _lastLabelMask = workingMask;
         _lastLabelMaskSize = bgr.Size();
 
-        return MaskFromLabels(workingMask, bgr.Size());
+        return MaskFromLabels(workingMask, bgr.Size(), featherPixels);
     }
 
-    private static Mat MaskFromLabels(Mat gcMask, Size size)
+    private static Mat MaskFromLabels(Mat gcMask, Size size, int featherPixels)
     {
         using var binary = new Mat(size, MatType.CV_8UC1);
         Cv2.InRange(gcMask, new Scalar((byte)GrabCutMasks.GC_FGD), new Scalar((byte)GrabCutMasks.GC_FGD), binary);
@@ -105,13 +103,18 @@ public sealed class GrabCutStrategy : StrategyBase
         Cv2.InRange(gcMask, new Scalar((byte)GrabCutMasks.GC_PR_FGD), new Scalar((byte)GrabCutMasks.GC_PR_FGD), probableFgMask);
         Cv2.BitwiseOr(binary, probableFgMask, binary);
 
-        using var kernel = Cv2.GetStructuringElement(MorphShapes.Ellipse, new Size(FeatherKernelSize, FeatherKernelSize));
+        // Kernel size scales with featherPixels (from the resolution-scaled context value) so
+        // exports keep the same relative edge softness as the preview instead of a fixed pixel
+        // amount that reads as much crisper at full resolution.
+        int feather = Math.Max(1, featherPixels);
+        int kernelSize = feather * 2 + 1;
+        using var kernel = Cv2.GetStructuringElement(MorphShapes.Ellipse, new Size(kernelSize, kernelSize));
         var cleaned = new Mat();
         Cv2.MorphologyEx(binary, cleaned, MorphTypes.Open, kernel);
         Cv2.MorphologyEx(cleaned, cleaned, MorphTypes.Close, kernel);
 
         var feathered = new Mat();
-        Cv2.GaussianBlur(cleaned, feathered, new Size(FeatherKernelSize, FeatherKernelSize), 0);
+        Cv2.GaussianBlur(cleaned, feathered, new Size(kernelSize, kernelSize), 0);
         cleaned.Dispose();
 
         return feathered;

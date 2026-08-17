@@ -4,20 +4,19 @@ using OpenCvSharp;
 namespace BackgroundImageRemover.Services.Strategies;
 
 /// <summary>
-/// Segments foreground/background using OpenCV's GrabCut, initialized from a
-/// user-drawn rectangle around the subject. Supports an optional second pass that refines
-/// the result using foreground/background scribbles on top of the previous label mask.
+/// Segments foreground/background using OpenCV's GrabCut. The subject can be seeded from any
+/// combination of a user-drawn rectangle and foreground/background scribbles -- all three inputs
+/// are optional on their own, but at least one is required to have anything to segment from.
 /// </summary>
 public sealed class GrabCutStrategy : StrategyBase
 {
     public override StrategyKind Kind => StrategyKind.GrabCut;
 
     // Holds the last raw GrabCut label mask (GC_BGD/GC_FGD/GC_PR_BGD/GC_PR_FGD per pixel) so a
-    // subsequent scribble-refine pass can build on it instead of starting over from the rect,
-    // and so a higher-resolution run (the full-res export re-running the preview's strategy)
-    // can seed from the preview's result instead of segmenting independently from scratch.
+    // higher-resolution run (the full-res export re-running the preview's strategy) can seed
+    // from the preview's result instead of segmenting independently from scratch.
     // Two independent GrabCut runs at different resolutions can settle on visibly different
-    // boundaries even with the same rect, since the color-model statistics differ; seeding
+    // boundaries even with the same inputs, since the color-model statistics differ; seeding
     // keeps the full-res result a refinement of what the user saw, not a fresh guess.
     // The desktop app serializes preview/apply calls per strategy, so a single-instance cache
     // is safe in practice; a concurrent call would simply see a stale/overwritten mask.
@@ -26,17 +25,14 @@ public sealed class GrabCutStrategy : StrategyBase
 
     protected override Mat ComputeMask(Mat bgr, StrategyContext context, CancellationToken ct)
     {
-        if (context.GrabCutRect is not { } rect || rect.Width <= 0 || rect.Height <= 0)
-        {
-            throw new InvalidOperationException("GrabCut requires a subject rectangle.");
-        }
+        var rect = ClampRect(context.GrabCutRect, bgr);
+        bool hasForeground = context.GrabCutForegroundScribble is not null;
+        bool hasBackground = context.GrabCutBackgroundScribble is not null;
+        bool hasScribbles = hasForeground || hasBackground;
 
-        // Clamp the rect to the Mat bounds; a rect drawn on a differently-scaled preview
-        // could otherwise fall slightly outside after coordinate mapping.
-        rect = rect.Intersect(new Rect(0, 0, bgr.Width, bgr.Height));
-        if (rect.Width <= 0 || rect.Height <= 0)
+        if (rect is null && !hasScribbles && _lastLabelMask is null)
         {
-            throw new InvalidOperationException("GrabCut rectangle does not overlap the image.");
+            throw new InvalidOperationException("GrabCut requires a rectangle or at least one scribble stroke.");
         }
 
         var gcMask = new Mat();
@@ -53,9 +49,29 @@ public sealed class GrabCutStrategy : StrategyBase
             // visibly different from the preview instead of just a higher-resolution version of it.
             Cv2.Resize(priorMask, gcMask, bgr.Size(), interpolation: InterpolationFlags.Nearest);
         }
+        else if (rect is { } r)
+        {
+            Cv2.GrabCut(bgr, gcMask, r, bgdModel, fgdModel, context.GrabCutIterations, GrabCutModes.InitWithRect);
+        }
         else
         {
-            Cv2.GrabCut(bgr, gcMask, rect, bgdModel, fgdModel, context.GrabCutIterations, GrabCutModes.InitWithRect);
+            // No rectangle, and nothing to continue from: start from an all-probable-background
+            // mask and let the scribbles alone define the subject.
+            gcMask.Create(bgr.Size(), MatType.CV_8UC1);
+            gcMask.SetTo(new Scalar((byte)GrabCutMasks.GC_PR_BGD));
+        }
+
+        if (hasScribbles)
+        {
+            if (hasForeground)
+            {
+                gcMask.SetTo(new Scalar((byte)GrabCutMasks.GC_FGD), context.GrabCutForegroundScribble);
+            }
+            if (hasBackground)
+            {
+                gcMask.SetTo(new Scalar((byte)GrabCutMasks.GC_BGD), context.GrabCutBackgroundScribble);
+            }
+            Cv2.GrabCut(bgr, gcMask, default, bgdModel, fgdModel, context.GrabCutIterations, GrabCutModes.InitWithMask);
         }
 
         _lastLabelMask?.Dispose();
@@ -68,33 +84,17 @@ public sealed class GrabCutStrategy : StrategyBase
     /// <summary>The raw GrabCut label mask from the last <see cref="ComputeMask"/> run, if any.</summary>
     public Mat? LastLabelMask => _lastLabelMask;
 
-    /// <summary>
-    /// Re-runs GrabCut starting from <paramref name="priorLabelMask"/>, overlaying the user's
-    /// scribbles as certain foreground/background labels first. Returns the refined alpha mask
-    /// and updates <see cref="LastLabelMask"/>.
-    /// </summary>
-    public Mat RefineWithScribbles(Mat bgr, Mat priorLabelMask, Mat? foregroundScribble, Mat? backgroundScribble, int iterations, int featherPixels = 2)
+    // Clamp the rect to the Mat bounds -- a rect drawn on a differently-scaled preview could
+    // otherwise fall slightly outside after coordinate mapping -- and treat a missing/degenerate
+    // rect as "no rectangle" rather than an error, since it is now an optional input.
+    private static Rect? ClampRect(Rect? rect, Mat bgr)
     {
-        using var bgdModel = new Mat();
-        using var fgdModel = new Mat();
-
-        var workingMask = priorLabelMask.Clone();
-        if (foregroundScribble is not null)
+        if (rect is not { } r || r.Width <= 0 || r.Height <= 0)
         {
-            workingMask.SetTo(new Scalar((byte)GrabCutMasks.GC_FGD), foregroundScribble);
+            return null;
         }
-        if (backgroundScribble is not null)
-        {
-            workingMask.SetTo(new Scalar((byte)GrabCutMasks.GC_BGD), backgroundScribble);
-        }
-
-        Cv2.GrabCut(bgr, workingMask, default, bgdModel, fgdModel, iterations, GrabCutModes.InitWithMask);
-
-        _lastLabelMask?.Dispose();
-        _lastLabelMask = workingMask;
-        _lastLabelMaskSize = bgr.Size();
-
-        return MaskFromLabels(workingMask, bgr.Size(), featherPixels);
+        var clamped = r.Intersect(new Rect(0, 0, bgr.Width, bgr.Height));
+        return clamped.Width > 0 && clamped.Height > 0 ? clamped : (Rect?)null;
     }
 
     private static Mat MaskFromLabels(Mat gcMask, Size size, int featherPixels)

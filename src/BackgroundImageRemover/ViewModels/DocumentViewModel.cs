@@ -265,6 +265,10 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
                     RequestPreviewDebounced();
                 }
             }
+            if (e.PropertyName == nameof(GrabCut.HasScribbles))
+            {
+                ExportCommand.NotifyCanExecuteChanged();
+            }
         };
 
         Onnx.PropertyChanged += (_, e) =>
@@ -535,6 +539,11 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
                         (int)Math.Round(r.Width * scaleToFull),
                         (int)Math.Round(r.Height * scaleToFull))
                     : (Rect?)null,
+                // At preview scale (1.0), the scribbles are already in the right coordinate
+                // space -- use them directly. A scaled-up (export) call overrides these with
+                // resized copies; see RunStrategyFullAsync.
+                GrabCutForegroundScribble = scaleToFull == 1.0 ? _grabCutFgScribble : null,
+                GrabCutBackgroundScribble = scaleToFull == 1.0 ? _grabCutBgScribble : null,
                 // Same iteration count as the preview, so the full-res result matches what the user saw.
                 GrabCutIterations = 3,
                 // Scale the feather with the resolution so the export keeps the same relative
@@ -603,7 +612,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (SelectedStrategy == StrategyKind.GrabCut && !GrabCut.HasValidRect)
+        if (SelectedStrategy == StrategyKind.GrabCut && !GrabCut.HasValidRect && !HasNonEmptyScribbles())
         {
             return;
         }
@@ -647,8 +656,9 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
 
     /// <summary>
     /// Runs the selected strategy at full resolution with the same parameters the preview
-    /// uses, so the result is faithful to what the user saw. Includes the GrabCut scribble
-    /// refinement pass when scribbles exist.
+    /// uses, so the result is faithful to what the user saw. For GrabCut, the current
+    /// foreground/background scribbles (resized to full resolution) are included in the
+    /// context so they feed the same single mask computation the preview used.
     /// </summary>
     private async Task<RemovalResult> RunStrategyFullAsync(IBackgroundRemovalStrategy strategy, CancellationToken ct)
     {
@@ -658,17 +668,16 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         }
 
         var context = BuildContext(_preview.ScaleFactor);
-        var result = await strategy.RunFullAsync(_loadedImage.FullBgr, context, ct);
 
-        if (SelectedStrategy == StrategyKind.GrabCut && HasNonEmptyScribbles() && _grabCutStrategy.LastLabelMask is { } fullLabelMask)
+        if (SelectedStrategy == StrategyKind.GrabCut && HasNonEmptyScribbles())
         {
             using var fgFull = ResizeScribbleToSize(_grabCutFgScribble, _loadedImage.FullBgr.Size());
             using var bgFull = ResizeScribbleToSize(_grabCutBgScribble, _loadedImage.FullBgr.Size());
-            using var refinedAlpha = _grabCutStrategy.RefineWithScribbles(_loadedImage.FullBgr, fullLabelMask, fgFull, bgFull, iterations: 3, featherPixels: context.GrabCutFeatherPixels);
-            BackgroundCompositingService.ReplaceAlphaChannel(result.Bgra, refinedAlpha);
+            context = context with { GrabCutForegroundScribble = fgFull, GrabCutBackgroundScribble = bgFull };
+            return await strategy.RunFullAsync(_loadedImage.FullBgr, context, ct);
         }
 
-        return result;
+        return await strategy.RunFullAsync(_loadedImage.FullBgr, context, ct);
     }
 
     /// <summary>True when the working result is authoritative and must be kept as-is on export.</summary>
@@ -1016,9 +1025,9 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task RefineGrabCutPreviewAsync()
     {
-        if (_preview is null || !HasNonEmptyScribbles() || _grabCutStrategy.LastLabelMask is not { } labelMask)
+        if (_preview is null || !HasNonEmptyScribbles())
         {
-            StatusMessage = "Draw the initial rectangle first, then add scribbles to refine.";
+            StatusMessage = "Add scribbles first.";
             return;
         }
 
@@ -1026,14 +1035,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         {
             IsBusy = true;
             BusyMessage = "Refining selection...";
-            var refined = await Task.Run(() =>
-                _grabCutStrategy.RefineWithScribbles(_preview.Bgr, labelMask, _grabCutFgScribble, _grabCutBgScribble, iterations: 3));
-
-            using var bgra = new Mat();
-            Cv2.CvtColor(_preview.Bgr, bgra, ColorConversionCodes.BGR2BGRA);
-            BackgroundCompositingService.ReplaceAlphaChannel(bgra, refined);
-            refined.Dispose();
-            ResultBitmap = bgra.ToBitmapSource();
+            await RunPreviewAsync();
         }
         catch (Exception ex)
         {
@@ -1063,7 +1065,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
 
     private bool IsSelectedStrategyReady() => SelectedStrategy switch
     {
-        StrategyKind.GrabCut => GrabCut.HasValidRect,
+        StrategyKind.GrabCut => GrabCut.HasValidRect || GrabCut.HasScribbles,
         StrategyKind.Onnx => Onnx.IsModelReady,
         StrategyKind.Sam => Sam.IsModelReady && Sam.HasClickedPoint,
         _ => true

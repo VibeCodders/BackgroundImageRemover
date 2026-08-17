@@ -19,6 +19,12 @@ public sealed record StrategyContext
     /// <summary>GrabCut: edge feather amount in pixels applied to the mask, scaled with resolution like <see cref="OnnxFeatherPixels"/> so exports keep the same relative softness as the preview.</summary>
     public int GrabCutFeatherPixels { get; init; } = 2;
 
+    /// <summary>GrabCut: foreground scribble mask (non-zero = certain foreground), in the coordinate space of the Mat being processed. Optional, like <see cref="GrabCutRect"/>.</summary>
+    public Mat? GrabCutForegroundScribble { get; init; }
+
+    /// <summary>GrabCut: background scribble mask (non-zero = certain background), in the coordinate space of the Mat being processed. Optional, like <see cref="GrabCutRect"/>.</summary>
+    public Mat? GrabCutBackgroundScribble { get; init; }
+
     /// <summary>Chroma Key: sampled/detected background color (BGR).</summary>
     public Vec3b? ChromaKeyColor { get; init; }
 

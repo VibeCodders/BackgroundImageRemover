@@ -99,7 +99,7 @@ public class GrabCutStrategyTests
     }
 
     [Fact]
-    public void RunFullAsync_WithoutARect_Throws()
+    public void RunFullAsync_WithoutARectOrScribbles_Throws()
     {
         var strategy = new GrabCutStrategy();
         using var full = MakeSubjectImage(100, 100, new Rect(10, 10, 50, 50));
@@ -108,5 +108,40 @@ public class GrabCutStrategyTests
         var act = async () => await strategy.RunFullAsync(full, context, CancellationToken.None);
 
         Assert.ThrowsAsync<InvalidOperationException>(act);
+    }
+
+    [Fact]
+    public async Task RunFullAsync_WithoutARect_UsingOnlyScribbles_SegmentsTheSubject()
+    {
+        // The rectangle is optional: a foreground scribble inside the subject plus a background
+        // scribble outside it should be enough to seed a plausible segmentation on its own.
+        var strategy = new GrabCutStrategy();
+        using var full = MakeSubjectImage(200, 150, new Rect(40, 30, 120, 90));
+        using var foreground = new Mat(full.Size(), MatType.CV_8UC1, Scalar.All(0));
+        using var background = new Mat(full.Size(), MatType.CV_8UC1, Scalar.All(0));
+        Cv2.Rectangle(foreground, new Rect(80, 60, 20, 20), Scalar.All(255), thickness: -1);
+        Cv2.Rectangle(background, new Rect(5, 5, 20, 20), Scalar.All(255), thickness: -1);
+
+        var context = new StrategyContext
+        {
+            GrabCutRect = null,
+            GrabCutForegroundScribble = foreground,
+            GrabCutBackgroundScribble = background,
+            DecontaminateEdges = false
+        };
+
+        using var result = await strategy.RunFullAsync(full, context, CancellationToken.None);
+
+        Assert.NotNull(strategy.LastLabelMask);
+        var split = Cv2.Split(result.Bgra);
+        try
+        {
+            double fraction = ForegroundFraction(split[3]);
+            Assert.InRange(fraction, 0.05, 0.95);
+        }
+        finally
+        {
+            foreach (var c in split) c.Dispose();
+        }
     }
 }

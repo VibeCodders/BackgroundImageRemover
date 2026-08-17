@@ -77,19 +77,22 @@
 
                 <!-- GrabCut options -->
                 <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=GrabCut}">
-                    <TextBlock Text="Draw a rectangle around the subject on the left image." TextWrapping="Wrap" Margin="0,0,0,8" />
+                    <TextBlock Text="Mark the subject on the left image using any combination of a rectangle and foreground/background scribbles." TextWrapping="Wrap" Margin="0,0,0,8" />
                     <TextBlock Text="{Binding GrabCut.HasValidRect, StringFormat='Rectangle selected: {0}'}" Margin="0,0,0,8" />
 
-                    <TextBlock Text="Refine with scribbles (optional):" FontWeight="SemiBold" Margin="0,4,0,4" />
-                    <UniformGrid Columns="2" Margin="0,0,0,4">
-                        <RadioButton Content="Foreground" GroupName="ScribbleMode" Margin="0,0,4,4"
+                    <TextBlock Text="Tool:" FontWeight="SemiBold" Margin="0,4,0,4" />
+                    <UniformGrid Columns="3" Margin="0,0,0,4">
+                        <RadioButton Content="Rectangle" GroupName="ScribbleMode" Margin="0,0,4,4"
+                                     IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=DrawRect, Mode=OneWay}"
+                                     Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.DrawRect}" />
+                        <RadioButton Content="Foreground" GroupName="ScribbleMode" Margin="4,0,4,4"
                                      IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ScribbleForeground, Mode=OneWay}"
                                      Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.ScribbleForeground}" />
                         <RadioButton Content="Background" GroupName="ScribbleMode" Margin="4,0,0,4"
                                      IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ScribbleBackground, Mode=OneWay}"
                                      Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.ScribbleBackground}" />
                     </UniformGrid>
-                    <Button Content="Refine preview with scribbles" Command="{Binding RefineGrabCutPreviewCommand}"
+                    <Button Content="Update preview" Command="{Binding RefineGrabCutPreviewCommand}"
                             Visibility="{Binding GrabCut.HasScribbles, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </StackPanel>
 

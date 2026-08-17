@@ -45,11 +45,13 @@ public sealed class GrabCutStrategy : StrategyBase
 
         if (_lastLabelMask is { } priorMask && (bgr.Width > _lastLabelMaskSize.Width || bgr.Height > _lastLabelMaskSize.Height))
         {
-            // A higher-resolution call than the last one: upscale the previous (lower-res)
-            // label mask -- nearest-neighbor, since these are discrete labels, not intensities
-            // -- and refine it in place instead of starting over from the rect.
+            // A higher-resolution call than the last one (the full-res export re-running the
+            // preview's strategy): upscale the previous (lower-res) label mask -- nearest-neighbor,
+            // since these are discrete labels, not intensities -- and use it as-is. Do NOT run
+            // GrabCut again here: an extra refinement pass would let the full-res color-model
+            // statistics pull the boundary away from what the preview showed, making the export
+            // visibly different from the preview instead of just a higher-resolution version of it.
             Cv2.Resize(priorMask, gcMask, bgr.Size(), interpolation: InterpolationFlags.Nearest);
-            Cv2.GrabCut(bgr, gcMask, default, bgdModel, fgdModel, context.GrabCutIterations, GrabCutModes.InitWithMask);
         }
         else
         {

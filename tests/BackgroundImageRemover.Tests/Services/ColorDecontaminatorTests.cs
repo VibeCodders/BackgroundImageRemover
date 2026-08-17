@@ -77,6 +77,89 @@ public class ColorDecontaminatorTests
     }
 
     [Fact]
+    public void Decontaminate_Unspill_NeverProducesOutOfGammaOrNaNRgb()
+    {
+        // Adversarial layout: an opaque core with a thin transparent border. Extreme
+        // semi-transparent pixels (alpha 1 / 254, pure black / white) sit right at the border
+        // where they DO get a background estimate; a deep-interior semi-transparent pixel has
+        // NO transparent neighbor within the kernel, so it must be left untouched rather than
+        // corrupted by a NaN/infinite division.
+        using var bgra = new Mat(12, 12, MatType.CV_8UC4);
+        for (int y = 0; y < 12; y++)
+        {
+            for (int x = 0; x < 12; x++)
+            {
+                bgra.Set(y, x, new Vec4b(100, 100, 100, 255)); // opaque core
+            }
+        }
+        for (int y = 0; y < 12; y++)
+        {
+            for (int x = 0; x < 12; x++)
+            {
+                if (y == 0 || y == 11 || x == 0 || x == 11)
+                {
+                    bgra.Set(y, x, new Vec4b(0, 255, 0, 0)); // transparent green border
+                }
+            }
+        }
+
+        bgra.Set(1, 1, new Vec4b(255, 0, 0, 1));       // alpha = 1 (tiny divisor)
+        bgra.Set(1, 10, new Vec4b(0, 0, 255, 254));    // alpha = 254 (huge multiplier)
+        bgra.Set(10, 1, new Vec4b(0, 0, 0, 128));      // pure black, half alpha
+        bgra.Set(10, 10, new Vec4b(255, 255, 255, 128)); // pure white, half alpha
+        bgra.Set(2, 2, new Vec4b(0, 127, 127, 128));   // deep interior, no transparent neighbor
+
+        var deepSnapshot = bgra.At<Vec4b>(2, 2);
+
+        ColorDecontaminator.Decontaminate(bgra, null, estimateRadius: 1);
+
+        for (int y = 0; y < 12; y++)
+        {
+            for (int x = 0; x < 12; x++)
+            {
+                var px = bgra.At<Vec4b>(y, x);
+                Assert.InRange(px.Item0, 0, 255); // B
+                Assert.InRange(px.Item1, 0, 255); // G
+                Assert.InRange(px.Item2, 0, 255); // R
+            }
+        }
+
+        // Alpha must never be rewritten.
+        Assert.Equal(1, bgra.At<Vec4b>(1, 1).Item3);
+        Assert.Equal(254, bgra.At<Vec4b>(1, 10).Item3);
+        Assert.Equal(128, bgra.At<Vec4b>(10, 1).Item3);
+        Assert.Equal(128, bgra.At<Vec4b>(10, 10).Item3);
+
+        // No local background estimate -> pixel untouched (a NaN leak would zero/garbage it).
+        Assert.Equal(deepSnapshot, bgra.At<Vec4b>(2, 2));
+    }
+
+    [Fact]
+    public void Decontaminate_Despill_NeverProducesOutOfGammaOrNaNRgb()
+    {
+        // Extreme semi-transparent pixels against a known key color: the dominant channel must
+        // be pulled toward the other two but never leave [0,255].
+        using var bgra = new Mat(2, 4, MatType.CV_8UC4);
+        bgra.Set(0, 0, new Vec4b(255, 0, 0, 1));       // dominant = B (blue key), alpha 1
+        bgra.Set(0, 1, new Vec4b(0, 255, 0, 254));     // dominant = G (green key), alpha 254
+        bgra.Set(0, 2, new Vec4b(0, 0, 255, 128));     // dominant = R (red key), alpha 128
+        bgra.Set(0, 3, new Vec4b(200, 250, 255, 64));  // all channels high, alpha 64
+
+        ColorDecontaminator.Decontaminate(bgra, new Vec3b(255, 0, 0)); // blue key
+
+        for (int y = 0; y < 2; y++)
+        {
+            for (int x = 0; x < 4; x++)
+            {
+                var px = bgra.At<Vec4b>(y, x);
+                Assert.InRange(px.Item0, 0, 255);
+                Assert.InRange(px.Item1, 0, 255);
+                Assert.InRange(px.Item2, 0, 255);
+            }
+        }
+    }
+
+    [Fact]
     public void Decontaminate_LeavesOpaqueAndTransparentPixelsUntouched()
     {
         using var bgra = new Mat(2, 1, MatType.CV_8UC4);

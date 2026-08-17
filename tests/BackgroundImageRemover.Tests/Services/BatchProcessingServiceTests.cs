@@ -87,12 +87,21 @@ public class BatchProcessingServiceTests
 
         var files = new[] { "a.png", "b.png" };
         await service.RunAsync(files, new FakeStrategy(), new StrategyContext(), "out",
-            new Progress<BatchProgress>(p => reported.Add(p)), CancellationToken.None);
+            new CollectingProgress(reported), CancellationToken.None);
 
-        // Progress<T> callbacks are marshalled asynchronously; give them a beat to arrive.
-        await Task.Delay(50);
-
+        // The service reports synchronously inside its loop, so a plain IProgress collects
+        // every event deterministically (Progress<T> marshals asynchronously and was flaky
+        // under parallel test load).
         Assert.Contains(reported, p => p.Completed == 0);
         Assert.Contains(reported, p => p.Completed == files.Length);
+    }
+
+    private sealed class CollectingProgress : IProgress<BatchProgress>
+    {
+        private readonly List<BatchProgress> _target;
+
+        public CollectingProgress(List<BatchProgress> target) => _target = target;
+
+        public void Report(BatchProgress value) => _target.Add(value);
     }
 }

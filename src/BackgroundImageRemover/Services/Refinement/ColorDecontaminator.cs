@@ -14,10 +14,12 @@ public static class ColorDecontaminator
     private const float DensityThreshold = 1e-4f;
 
     /// <summary>
-    /// Decontaminates <paramref name="bgra"/> in place, recovering the pure foreground color
-    /// as F = (C - (1-a)*B) / a for every 0 &lt; a &lt; 1 pixel, where C is the observed color,
-    /// a the alpha and B the background color. When <paramref name="knownBackground"/> is null,
-    /// B is estimated per pixel from the surrounding fully-transparent pixels.
+    /// Decontaminates <paramref name="bgra"/> in place. When <paramref name="knownBackground"/> is
+    /// supplied (chroma key), the background color is known exactly and the key's alpha is a soft
+    /// key rather than true coverage, so a full unspill is unreliable; instead the dominant
+    /// background channel is neutralized (classic spill suppression). Otherwise the background
+    /// color is estimated per pixel from the surrounding fully-transparent pixels and the pure
+    /// foreground color is recovered as F = (C - (1-a)*B) / a.
     /// </summary>
     public static void Decontaminate(Mat bgra, Vec3b? knownBackground)
     {
@@ -29,49 +31,14 @@ public static class ColorDecontaminator
         var channels = Cv2.Split(bgra);
         try
         {
-            var (bgB, bgG, bgR, density) = EstimateBackground(channels, knownBackground);
-
-            using var alphaF = new Mat();
-            channels[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
-
-            channels[0].GetArray(out byte[] b);
-            channels[1].GetArray(out byte[] g);
-            channels[2].GetArray(out byte[] r);
-            alphaF.GetArray(out float[] alpha);
-            bgB.GetArray(out float[] bb);
-            bgG.GetArray(out float[] bg2);
-            bgR.GetArray(out float[] br);
-
-            float[]? densityPixels = null;
-            if (density is not null)
+            if (knownBackground is { } kb)
             {
-                density.GetArray(out float[] d);
-                densityPixels = d;
+                Despill(channels, kb);
             }
-
-            for (int i = 0; i < b.Length; i++)
+            else
             {
-                float a = alpha[i];
-                if (a <= 0f || a >= 1f)
-                {
-                    continue;
-                }
-                // Without a reliable local background estimate the pixel is left untouched.
-                if (densityPixels is not null && densityPixels[i] < DensityThreshold)
-                {
-                    continue;
-                }
-
-                float inv = 1f / a;
-                float w = 1f - a;
-                b[i] = ClampToByte((b[i] - w * bb[i]) * inv);
-                g[i] = ClampToByte((g[i] - w * bg2[i]) * inv);
-                r[i] = ClampToByte((r[i] - w * br[i]) * inv);
+                Unspill(channels);
             }
-
-            channels[0].SetArray(b);
-            channels[1].SetArray(g);
-            channels[2].SetArray(r);
 
             Cv2.Merge(channels, bgra);
         }
@@ -82,6 +49,109 @@ public static class ColorDecontaminator
                 c.Dispose();
             }
         }
+    }
+
+    /// <summary>
+    /// Classic chroma-key spill suppression: on semi-transparent edge pixels, pull the key
+    /// color's dominant channel toward the average of the other two, weighted by how much of
+    /// the pixel is still background (1 - alpha). This removes the green/blue cast without
+    /// assuming the key's alpha equals the true subject coverage.
+    /// </summary>
+    private static void Despill(Mat[] channels, Vec3b keyColor)
+    {
+        int dominant = keyColor.Item0 >= keyColor.Item1 && keyColor.Item0 >= keyColor.Item2 ? 0
+            : keyColor.Item1 >= keyColor.Item2 ? 1 : 2;
+
+        using var alphaF = new Mat();
+        channels[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
+
+        channels[0].GetArray(out byte[] b);
+        channels[1].GetArray(out byte[] g);
+        channels[2].GetArray(out byte[] r);
+        alphaF.GetArray(out float[] alpha);
+
+        var dominantPixels = dominant switch { 0 => b, 1 => g, _ => r };
+
+        for (int i = 0; i < b.Length; i++)
+        {
+            float a = alpha[i];
+            if (a <= 0f || a >= 1f)
+            {
+                continue;
+            }
+
+            double edgeWeight = 1.0 - a;
+            byte p0 = b[i], p1 = g[i], p2 = r[i];
+
+            double othersAvg = dominant switch
+            {
+                0 => (p1 + p2) / 2.0,
+                1 => (p0 + p2) / 2.0,
+                _ => (p0 + p1) / 2.0
+            };
+
+            int d = dominantPixels[i];
+            if (d > othersAvg)
+            {
+                dominantPixels[i] = (byte)Math.Clamp(Math.Round(d - (d - othersAvg) * edgeWeight), 0, 255);
+            }
+        }
+
+        channels[0].SetArray(b);
+        channels[1].SetArray(g);
+        channels[2].SetArray(r);
+    }
+
+    /// <summary>
+    /// Matte-based decontamination: recovers the pure foreground color F = (C - (1-a)*B) / a
+    /// for every 0 &lt; a &lt; 1 pixel, with B estimated per pixel from surrounding transparent pixels.
+    /// Valid for strategies whose feathered alpha approximates the true subject coverage.
+    /// </summary>
+    private static void Unspill(Mat[] channels)
+    {
+        var (bgB, bgG, bgR, density) = EstimateBackground(channels, null);
+
+        using var alphaF = new Mat();
+        channels[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
+
+        channels[0].GetArray(out byte[] b);
+        channels[1].GetArray(out byte[] g);
+        channels[2].GetArray(out byte[] r);
+        alphaF.GetArray(out float[] alpha);
+        bgB.GetArray(out float[] bb);
+        bgG.GetArray(out float[] bg2);
+        bgR.GetArray(out float[] br);
+
+        float[]? densityPixels = null;
+        if (density is not null)
+        {
+            density.GetArray(out float[] d);
+            densityPixels = d;
+        }
+
+        for (int i = 0; i < b.Length; i++)
+        {
+            float a = alpha[i];
+            if (a <= 0f || a >= 1f)
+            {
+                continue;
+            }
+            // Without a reliable local background estimate the pixel is left untouched.
+            if (densityPixels is not null && densityPixels[i] < DensityThreshold)
+            {
+                continue;
+            }
+
+            float inv = 1f / a;
+            float w = 1f - a;
+            b[i] = ClampToByte((b[i] - w * bb[i]) * inv);
+            g[i] = ClampToByte((g[i] - w * bg2[i]) * inv);
+            r[i] = ClampToByte((r[i] - w * br[i]) * inv);
+        }
+
+        channels[0].SetArray(b);
+        channels[1].SetArray(g);
+        channels[2].SetArray(r);
     }
 
     /// <summary>Estimates the background color at every pixel, returning BGR float Mats plus the estimation density (null for a known color).</summary>

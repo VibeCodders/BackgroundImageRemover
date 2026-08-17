@@ -6,18 +6,21 @@ namespace BackgroundImageRemover.Tests.Services;
 public class ColorDecontaminatorTests
 {
     [Fact]
-    public void Decontaminate_KnownBackground_RemovesSpillFromEdgePixel()
+    public void Decontaminate_KnownBackground_SuppressesSpillOnEdgePixel()
     {
-        // A 50% edge pixel: red foreground blended over a green background, stored straight (unpremultiplied).
+        // A semi-transparent edge pixel with a green cast (chroma key): the key alpha is a soft
+        // key, not true coverage, so the fix is to neutralize the dominant green channel rather
+        // than recover a pure foreground color.
         using var bgra = new Mat(1, 1, MatType.CV_8UC4);
         bgra.Set(0, 0, new Vec4b(0, 127, 127, 128)); // BGR = (0,127,127), alpha = 128
 
         ColorDecontaminator.Decontaminate(bgra, new Vec3b(0, 255, 0)); // green key
 
         var px = bgra.At<Vec4b>(0, 0);
-        Assert.Equal(128, px.Item3);            // alpha untouched
-        Assert.InRange(px.Item1, 0, 4);         // green spill removed
-        Assert.InRange(px.Item2, 248, 255);     // red foreground recovered
+        Assert.Equal(128, px.Item3);        // alpha untouched
+        Assert.InRange(px.Item1, 90, 100);  // dominant green pulled toward the average of R/B
+        Assert.Equal(127, px.Item2);        // red channel left untouched
+        Assert.Equal(0, px.Item0);          // blue channel left untouched
     }
 
     [Fact]

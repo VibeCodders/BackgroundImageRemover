@@ -32,6 +32,46 @@ public static class BackgroundCompositingService
         }
     }
 
+    /// <summary>
+    /// True when <paramref name="alpha"/> is non-null and actually contains transparency
+    /// (some pixel below 255). A loaded PNG can carry a 4th channel that is uniformly opaque
+    /// -- that's a plain photo saved in an RGBA container, not a real cutout.
+    /// </summary>
+    public static bool HasMeaningfulTransparency(Mat? alpha)
+    {
+        if (alpha is null)
+        {
+            return false;
+        }
+
+        Cv2.MinMaxLoc(alpha, out double min, out _);
+        return min < 255;
+    }
+
+    /// <summary>
+    /// Zeroes B/G/R at every pixel where alpha is exactly 0, in place. Fully-removed pixels
+    /// must not carry the original color data forward: leaving it in place is invisible today,
+    /// but re-running a strategy (or reopening the file) later reads it back as real image
+    /// content and can resurrect the old background.
+    /// </summary>
+    public static void ZeroFullyTransparentPixels(Mat bgra)
+    {
+        var channels = Cv2.Split(bgra);
+        try
+        {
+            using var mask = new Mat();
+            Cv2.Compare(channels[3], 0, mask, CmpType.EQ);
+            channels[0].SetTo(Scalar.All(0), mask);
+            channels[1].SetTo(Scalar.All(0), mask);
+            channels[2].SetTo(Scalar.All(0), mask);
+            Cv2.Merge(channels, bgra);
+        }
+        finally
+        {
+            foreach (var c in channels) c.Dispose();
+        }
+    }
+
     public static Mat CompositeOntoColor(Mat bgra, Vec3b colorBgr)
     {
         using var background = new Mat(bgra.Size(), MatType.CV_8UC3, new Scalar(colorBgr.Item0, colorBgr.Item1, colorBgr.Item2));

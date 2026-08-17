@@ -373,7 +373,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             // When reopening a saved cutout (an image with an alpha channel), show it with
             // its transparency in the Original pane too, instead of the flattened BGR — the
             // flattened version can look black where the removed content had dark RGB.
-            bool isActualCutout = HasMeaningfulTransparency(_loadedImage.FullAlpha);
+            bool isActualCutout = BackgroundCompositingService.HasMeaningfulTransparency(_loadedImage.FullAlpha);
             PreviewBitmap = isActualCutout
                 ? BuildPreviewBitmapWithAlpha(preview, _loadedImage.FullAlpha!)
                 : preview.Bgr.ToBitmapSource();
@@ -566,23 +566,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         Cv2.CvtColor(preview.Bgr, bgra, ColorConversionCodes.BGR2BGRA);
         ReplaceAlphaChannel(bgra, previewAlpha);
         return bgra.ToBitmapSource();
-    }
-
-    /// <summary>
-    /// True when <paramref name="alpha"/> is non-null and actually contains transparency.
-    /// A loaded PNG can carry a 4th channel that is uniformly opaque (255 everywhere) — that's
-    /// a plain photo saved in an RGBA container, not a previously exported cutout, and must not
-    /// be adopted as an authoritative working result.
-    /// </summary>
-    private static bool HasMeaningfulTransparency(Mat? alpha)
-    {
-        if (alpha is null)
-        {
-            return false;
-        }
-
-        Cv2.MinMaxLoc(alpha, out double min, out _);
-        return min < 255;
     }
 
     private void AdoptLoadedCutout()
@@ -1147,7 +1130,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             // Fully-removed pixels must not carry the original color data forward: leaving it
             // in place is invisible today, but re-running a strategy (or reopening the file)
             // later reads it back as real image content and can resurrect the old background.
-            ZeroFullyTransparentPixels(bgra);
+            BackgroundCompositingService.ZeroFullyTransparentPixels(bgra);
 
             // "Crop" trims the transparent margins so the exported PNG hugs the subject.
             using var cropped = crop ? BackgroundCompositingService.TrimTransparentBorders(bgra) : null;
@@ -1188,25 +1171,6 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         {
             StatusMessage = $"Export failed: {ex.Message}";
             _log.Error("Export failed", ex);
-        }
-    }
-
-    /// <summary>Zeroes B/G/R at every pixel where alpha is exactly 0, in place.</summary>
-    private static void ZeroFullyTransparentPixels(Mat bgra)
-    {
-        var channels = Cv2.Split(bgra);
-        try
-        {
-            using var mask = new Mat();
-            Cv2.Compare(channels[3], 0, mask, CmpType.EQ);
-            channels[0].SetTo(Scalar.All(0), mask);
-            channels[1].SetTo(Scalar.All(0), mask);
-            channels[2].SetTo(Scalar.All(0), mask);
-            Cv2.Merge(channels, bgra);
-        }
-        finally
-        {
-            foreach (var c in channels) c.Dispose();
         }
     }
 

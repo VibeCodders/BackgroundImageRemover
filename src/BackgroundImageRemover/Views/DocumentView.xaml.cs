@@ -67,7 +67,7 @@ public partial class DocumentView : UserControl
     {
         if (ViewModel is not null && e.Data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } files)
         {
-            await ViewModel.LoadImageAsync(files[0]);
+            await ViewModel.LoadAsync(files[0]);
         }
     }
 

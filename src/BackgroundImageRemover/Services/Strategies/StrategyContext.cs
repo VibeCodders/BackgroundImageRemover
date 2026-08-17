@@ -12,7 +12,7 @@ public sealed record StrategyContext
     /// <summary>GrabCut: subject rectangle in the coordinate space of the Mat being processed.</summary>
     public Rect? GrabCutRect { get; init; }
 
-    /// <summary>GrabCut: iteration count (lower for preview, higher for full-res).</summary>
+    /// <summary>GrabCut: iteration count, identical for preview and full-res so exports match the preview.</summary>
     public int GrabCutIterations { get; init; } = 3;
 
     /// <summary>Chroma Key: sampled/detected background color (BGR).</summary>

@@ -5,6 +5,7 @@ using BackgroundImageRemover.Services.ImageIo;
 using BackgroundImageRemover.Services.Logging;
 using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Preview;
+using BackgroundImageRemover.Services.Projects;
 using BackgroundImageRemover.Services.Sam;
 using BackgroundImageRemover.Services.Settings;
 using BackgroundImageRemover.Services.Strategies;
@@ -50,6 +51,7 @@ public partial class App : Application
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<IBatchProcessingService, BatchProcessingService>();
         services.AddSingleton<ISettingsService, SettingsService>();
+        services.AddSingleton<IProjectService, ProjectService>();
         services.AddSingleton<IFileLogService, FileLogService>();
 
         services.AddSingleton<OnnxInferenceEngine>();

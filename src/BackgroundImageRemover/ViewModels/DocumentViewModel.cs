@@ -10,6 +10,7 @@ using BackgroundImageRemover.Services.ImageIo;
 using BackgroundImageRemover.Services.Logging;
 using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Preview;
+using BackgroundImageRemover.Services.Projects;
 using BackgroundImageRemover.Services.Refinement;
 using BackgroundImageRemover.Services.Sam;
 using BackgroundImageRemover.Services.Settings;
@@ -36,6 +37,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     private readonly IDialogService _dialogs;
     private readonly IBatchProcessingService _batchProcessor;
     private readonly ISettingsService _settings;
+    private readonly IProjectService _projectService;
     private readonly IFileLogService _log;
     private readonly IReadOnlyDictionary<StrategyKind, IBackgroundRemovalStrategy> _strategies;
     private readonly OnnxStrategy _onnxStrategy;
@@ -45,7 +47,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
 
     private readonly DispatcherTimer _debounceTimer;
     private CancellationTokenSource? _previewCts;
-    private CancellationTokenSource? _applyCts;
+    private CancellationTokenSource? _processCts;
 
     private LoadedImage? _loadedImage;
     private PreviewImage? _preview;
@@ -55,6 +57,14 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     // alpha kept apart so Undo/Redo, Brush and Magic Wand can mutate just the alpha cheaply.
     private Mat? _workingBgr;
     private Mat? _workingAlpha;
+
+    // Where the work-in-progress cutout was last saved; null until the first explicit save.
+    private string? _workSavePath;
+
+    // Whether the working result is authoritative (the live preview must not replace it on
+    // the next export): true for loaded cutouts and for results the user has hand-edited.
+    private bool _workingResultIsLoadedCutout;
+    private bool _workingResultHandEdited;
 
     private Mat? _grabCutFgScribble;
     private Mat? _grabCutBgScribble;
@@ -75,7 +85,8 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     private string _title = "Untitled";
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveWorkCommand))]
     [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
     private StrategyKind _selectedStrategy = StrategyKind.ChromaKey;
 
@@ -86,12 +97,15 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveWorkCommand))]
     [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
     private bool _isImageLoaded;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveWorkCommand))]
+    [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -109,6 +123,30 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool _isCompareMode;
+
+    /// <summary>True when the opened file already carries an alpha channel (a previously cleaned cutout).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CutoutHint))]
+    [NotifyPropertyChangedFor(nameof(CutoutStatus))]
+    private bool _isCutout;
+
+    /// <summary>Explains that a cutout is being refined, not re-cleaned from scratch.</summary>
+    public string? CutoutHint => IsCutout
+        ? "Already a cleaned cutout — you are refining it, not starting over."
+        : null;
+
+    /// <summary>Persistent status-bar hint shown while the open file is a clean cutout.</summary>
+    public string CutoutStatus => "Clean cutout — refine with Brush/Wand or re-run a strategy.";
+
+    /// <summary>True when the working result has changes not yet persisted with Save work (Ctrl+S).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DirtyHint))]
+    private bool _isDirty;
+
+    /// <summary>Explains the unsaved-work indicator in the tab header.</summary>
+    public string? DirtyHint => IsDirty
+        ? "Unsaved changes — press Ctrl+S (Save work) or save the project."
+        : null;
 
     [ObservableProperty]
     private double _brushRadius = 20;
@@ -152,6 +190,11 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _useGpuForOnnx;
 
+    /// <summary>The .ibrproj file this document was loaded from / last saved to; null until saved.</summary>
+    [ObservableProperty]
+    private string? _projectPath;
+
+    public bool HasProject => ProjectPath is not null;
     public bool HasWorkingResult => _workingAlpha is not null;
     public bool IsResultEditModeActive => ResultMode != InteractionMode.None;
 
@@ -169,6 +212,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         IDialogService dialogs,
         IBatchProcessingService batchProcessor,
         ISettingsService settings,
+        IProjectService projectService,
         IFileLogService log,
         IEnumerable<IBackgroundRemovalStrategy> strategies,
         OnnxStrategy onnxStrategy,
@@ -181,6 +225,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         _dialogs = dialogs;
         _batchProcessor = batchProcessor;
         _settings = settings;
+        _projectService = projectService;
         _log = log;
         _strategies = strategies.ToDictionary(s => s.Kind);
         _onnxStrategy = onnxStrategy;
@@ -209,7 +254,8 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         {
             if (e.PropertyName == nameof(GrabCut.SelectedRect))
             {
-                ApplyCommand.NotifyCanExecuteChanged();
+                ExportCommand.NotifyCanExecuteChanged();
+                SaveWorkCommand.NotifyCanExecuteChanged();
                 ClearScribbles();
                 if (GrabCut.HasValidRect)
                 {
@@ -230,7 +276,8 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             }
             if (e.PropertyName == nameof(Onnx.IsModelReady))
             {
-                ApplyCommand.NotifyCanExecuteChanged();
+                ExportCommand.NotifyCanExecuteChanged();
+                SaveWorkCommand.NotifyCanExecuteChanged();
                 BatchCommand.NotifyCanExecuteChanged();
             }
             if (e.PropertyName is nameof(Onnx.FeatherPixels) or nameof(Onnx.EnableAlphaMatting) && Onnx.IsModelReady)
@@ -283,6 +330,19 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         var path = _dialogs.ShowOpenImageDialog();
         if (path is not null)
         {
+            await LoadAsync(path);
+        }
+    }
+
+    /// <summary>Loads an image or a <c>.ibrproj</c> project, dispatching on the file extension.</summary>
+    public async Task LoadAsync(string path)
+    {
+        if (string.Equals(Path.GetExtension(path), ".ibrproj", StringComparison.OrdinalIgnoreCase))
+        {
+            await LoadProjectAsync(path);
+        }
+        else
+        {
             await LoadImageAsync(path);
         }
     }
@@ -293,6 +353,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         {
             IsBusy = true;
             BusyMessage = "Loading image...";
+            _previewCts?.Cancel();
 
             _loadedImage?.Dispose();
             _preview?.Dispose();
@@ -302,14 +363,22 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             _samEmbedding = null;
             _samPromptPointPreview = null;
             Sam.HasClickedPoint = false;
+            _workSavePath = null;
 
             _loadedImage = await _imageLoader.LoadAsync(path);
-            _preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
+            var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
+            _preview = preview;
 
-            PreviewBitmap = _preview.Bgr.ToBitmapSource();
+            // When reopening a saved cutout (an image with an alpha channel), show it with
+            // its transparency in the Original pane too, instead of the flattened BGR — the
+            // flattened version can look black where the removed content had dark RGB.
+            PreviewBitmap = _loadedImage.FullAlpha is not null
+                ? BuildPreviewBitmapWithAlpha(preview, _loadedImage.FullAlpha)
+                : preview.Bgr.ToBitmapSource();
             ResultBitmap = null;
             IsImageLoaded = true;
-            Title = Path.GetFileName(path);
+            IsCutout = _loadedImage.FullAlpha is not null;
+            Title = IsCutout ? Path.GetFileName(path) + " (cutout)" : Path.GetFileName(path);
             StatusMessage = $"Loaded {Path.GetFileName(path)} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})";
             _log.Info($"Loaded image {path} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})");
             _settings.AddRecentFile(path);
@@ -323,7 +392,17 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
                 ComputeSamEmbedding();
             }
 
-            RequestPreviewDebounced();
+            // A file with an alpha channel is a previously exported cutout, not a fresh
+            // photo: adopt it as the working result so the user can keep refining it
+            // (Brush/Wand, or re-run a strategy) instead of re-cleansing it from scratch.
+            if (_loadedImage.FullAlpha is not null)
+            {
+                AdoptLoadedCutout();
+            }
+            else
+            {
+                RequestPreviewDebounced();
+            }
         }
         catch (Exception ex)
         {
@@ -374,7 +453,8 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             var progress = new Progress<ModelDownloadProgress>(p => Sam.DownloadFraction = p.FractionComplete);
             await _samStrategy.EnsureReadyAsync(progress, CancellationToken.None);
             Sam.IsModelReady = true;
-            ApplyCommand.NotifyCanExecuteChanged();
+            ExportCommand.NotifyCanExecuteChanged();
+            SaveWorkCommand.NotifyCanExecuteChanged();
             if (_loadedImage is not null)
             {
                 ComputeSamEmbedding();
@@ -452,12 +532,15 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
                         (int)Math.Round(r.Width * scaleToFull),
                         (int)Math.Round(r.Height * scaleToFull))
                     : (Rect?)null,
-                GrabCutIterations = scaleToFull > 1.0 ? 5 : 3
+                // Same iteration count as the preview, so the full-res result matches what the user saw.
+                GrabCutIterations = 3
             },
             StrategyKind.Onnx => new StrategyContext
             {
                 OnnxModel = Onnx.SelectedModel,
-                OnnxFeatherPixels = Onnx.FeatherPixels,
+                // Scale the feather with the resolution so the export keeps the same relative
+                // softness the user saw in the preview.
+                OnnxFeatherPixels = (int)Math.Round(Onnx.FeatherPixels * scaleToFull),
                 EnableAlphaMatting = Onnx.EnableAlphaMatting
             },
             StrategyKind.Sam => new StrategyContext
@@ -469,6 +552,43 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             },
             _ => new StrategyContext()
         };
+    }
+
+    /// <summary>Builds a preview-resolution BGRA bitmap from the preview BGR plus a downscaled alpha channel.</summary>
+    private static BitmapSource BuildPreviewBitmapWithAlpha(PreviewImage preview, Mat fullAlpha)
+    {
+        using var previewAlpha = new Mat();
+        Cv2.Resize(fullAlpha, previewAlpha, preview.Bgr.Size(), interpolation: InterpolationFlags.Area);
+        using var bgra = new Mat();
+        Cv2.CvtColor(preview.Bgr, bgra, ColorConversionCodes.BGR2BGRA);
+        ReplaceAlphaChannel(bgra, previewAlpha);
+        return bgra.ToBitmapSource();
+    }
+
+    private void AdoptLoadedCutout()
+    {
+        if (_loadedImage?.FullAlpha is not { } alpha)
+        {
+            return;
+        }
+
+        DisposeWorkingResult();
+        _workingBgr = _loadedImage.FullBgr.Clone();
+        _workingAlpha = alpha.Clone();
+        _workingResultIsLoadedCutout = true;
+        _workingResultHandEdited = false;
+
+        _editHistory.Clear();
+        RefreshUndoRedoState();
+        OnPropertyChanged(nameof(HasWorkingResult));
+        UndoCommand.NotifyCanExecuteChanged();
+        RedoCommand.NotifyCanExecuteChanged();
+        SaveWorkCommand.NotifyCanExecuteChanged();
+        ExportCommand.NotifyCanExecuteChanged();
+        IsDirty = false; // the loaded cutout matches the file on disk until it is edited
+        RefreshResultBitmapFromWorking();
+
+        StatusMessage = $"Loaded cutout ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})";
     }
 
     private async Task RunPreviewAsync()
@@ -520,50 +640,74 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         }
     }
 
-    private bool CanApply() => IsImageLoaded && !IsBusy
-        && (SelectedStrategy != StrategyKind.GrabCut || GrabCut.HasValidRect)
-        && (SelectedStrategy != StrategyKind.Onnx || Onnx.IsModelReady)
-        && (SelectedStrategy != StrategyKind.Sam || (Sam.IsModelReady && Sam.HasClickedPoint));
-
-    [RelayCommand(CanExecute = nameof(CanApply))]
-    private async Task ApplyAsync()
+    /// <summary>
+    /// Runs the selected strategy at full resolution with the same parameters the preview
+    /// uses, so the result is faithful to what the user saw. Includes the GrabCut scribble
+    /// refinement pass when scribbles exist.
+    /// </summary>
+    private async Task<RemovalResult> RunStrategyFullAsync(IBackgroundRemovalStrategy strategy, CancellationToken ct)
     {
-        if (_loadedImage is null || _preview is null || !_strategies.TryGetValue(SelectedStrategy, out var strategy))
+        if (_loadedImage is null || _preview is null)
         {
-            return;
+            throw new InvalidOperationException("No image loaded.");
         }
 
-        _applyCts?.Cancel();
+        var context = BuildContext(_preview.ScaleFactor);
+        var result = await strategy.RunFullAsync(_loadedImage.FullBgr, context, ct);
+
+        if (SelectedStrategy == StrategyKind.GrabCut && HasNonEmptyScribbles() && _grabCutStrategy.LastLabelMask is { } fullLabelMask)
+        {
+            using var fgFull = ResizeScribbleToSize(_grabCutFgScribble, _loadedImage.FullBgr.Size());
+            using var bgFull = ResizeScribbleToSize(_grabCutBgScribble, _loadedImage.FullBgr.Size());
+            using var refinedAlpha = _grabCutStrategy.RefineWithScribbles(_loadedImage.FullBgr, fullLabelMask, fgFull, bgFull, iterations: 3);
+            ReplaceAlphaChannel(result.Bgra, refinedAlpha);
+        }
+
+        return result;
+    }
+
+    /// <summary>True when the working result is authoritative and must be kept as-is on export.</summary>
+    private bool IsWorkingResultAuthoritative => _workingResultIsLoadedCutout || _workingResultHandEdited;
+
+    /// <summary>
+    /// Ensures a full-resolution working result exists, recomputing it (faithful to the live
+    /// preview) on demand. Authoritative results (loaded cutouts, hand-edited results) are
+    /// kept untouched. Returns true when a working result is available afterwards.
+    /// </summary>
+    private async Task<bool> EnsureWorkingResultAsync()
+    {
+        if (_workingBgr is not null && _workingAlpha is not null && IsWorkingResultAuthoritative)
+        {
+            return true;
+        }
+        if (_loadedImage is null || _preview is null || !_strategies.TryGetValue(SelectedStrategy, out var strategy))
+        {
+            StatusMessage = "Choose an image first.";
+            return false;
+        }
+
+        _processCts?.Cancel();
         var cts = new CancellationTokenSource();
-        _applyCts = cts;
+        _processCts = cts;
 
         try
         {
             IsBusy = true;
             BusyMessage = "Processing at full resolution...";
-
-            var context = BuildContext(_preview.ScaleFactor);
-            var result = await strategy.RunFullAsync(_loadedImage.FullBgr, context, cts.Token);
-
-            if (SelectedStrategy == StrategyKind.GrabCut && HasNonEmptyScribbles() && _grabCutStrategy.LastLabelMask is { } fullLabelMask)
-            {
-                using var fgFull = ResizeScribbleToSize(_grabCutFgScribble, _loadedImage.FullBgr.Size());
-                using var bgFull = ResizeScribbleToSize(_grabCutBgScribble, _loadedImage.FullBgr.Size());
-                using var refinedAlpha = _grabCutStrategy.RefineWithScribbles(_loadedImage.FullBgr, fullLabelMask, fgFull, bgFull, iterations: 3);
-                ReplaceAlphaChannel(result.Bgra, refinedAlpha);
-            }
-
+            var result = await RunStrategyFullAsync(strategy, cts.Token);
             SetWorkingResult(result);
-            StatusMessage = $"Processed in {result.ElapsedMilliseconds:F0} ms";
+            return true;
         }
         catch (OperationCanceledException)
         {
             StatusMessage = "Processing cancelled.";
+            return false;
         }
         catch (Exception ex)
         {
             StatusMessage = $"Processing failed: {ex.Message}";
-            _log.Error("Apply failed", ex);
+            _log.Error("Full-resolution processing failed", ex);
+            return false;
         }
         finally
         {
@@ -607,6 +751,9 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasWorkingResult));
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
+        SaveWorkCommand.NotifyCanExecuteChanged();
+        ExportCommand.NotifyCanExecuteChanged();
+        IsDirty = true; // freshly computed, not yet saved as a work file
         RefreshResultBitmapFromWorking();
     }
 
@@ -628,6 +775,11 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         _workingAlpha?.Dispose();
         _workingBgr = null;
         _workingAlpha = null;
+        _workingResultIsLoadedCutout = false;
+        _workingResultHandEdited = false;
+        IsDirty = false;
+        SaveWorkCommand.NotifyCanExecuteChanged();
+        ExportCommand.NotifyCanExecuteChanged();
     }
 
     // --- Undo / Redo: while scribbling, undoes the last scribble stroke; otherwise undoes
@@ -659,6 +811,8 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         }
         _workingAlpha.Dispose();
         _workingAlpha = restored;
+        _workingResultHandEdited = true;
+        IsDirty = true;
         RefreshUndoRedoState();
         RefreshResultBitmapFromWorking();
     }
@@ -684,6 +838,8 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         }
         _workingAlpha.Dispose();
         _workingAlpha = restored;
+        _workingResultHandEdited = true;
+        IsDirty = true;
         RefreshUndoRedoState();
         RefreshResultBitmapFromWorking();
     }
@@ -708,6 +864,8 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             return;
         }
         _editHistory.Push(_workingAlpha);
+        _workingResultHandEdited = true;
+        IsDirty = true;
         RefreshUndoRedoState();
         _brushLastPoint = imagePoint;
         StampBrush(imagePoint, imagePoint);
@@ -744,6 +902,8 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             return;
         }
         _editHistory.Push(_workingAlpha);
+        _workingResultHandEdited = true;
+        IsDirty = true;
         RefreshUndoRedoState();
         MagicWandService.Apply(_workingBgr, _workingAlpha, imagePoint, MagicWandTolerance, add: BrushMode == BrushMode.Restore);
         RefreshResultBitmapFromWorking();
@@ -917,14 +1077,81 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         return resized;
     }
 
+    // --- Save work in progress ---
+
+    private bool CanSaveWork() => CanExport();
+
+    /// <summary>
+    /// Saves the current working cutout (BGR + alpha, transparent PNG) so a half-finished
+    /// job can be reopened later and continued. Computes the full-resolution result on
+    /// demand (faithful to the preview) when none exists yet. The first save asks for a
+    /// path; afterwards the command overwrites that same file (like a document save).
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanSaveWork))]
+    private async Task SaveWorkAsync()
+    {
+        if (!await EnsureWorkingResultAsync() || _workingBgr is null || _workingAlpha is null)
+        {
+            return;
+        }
+
+        if (_workSavePath is null)
+        {
+            var suggested = _loadedImage is not null
+                ? Path.GetFileNameWithoutExtension(_loadedImage.FilePath) + "_work.png"
+                : "work.png";
+            var path = _dialogs.ShowSavePngDialog(suggested, "Save Work in Progress");
+            if (path is null)
+            {
+                return;
+            }
+            _workSavePath = path;
+        }
+
+        try
+        {
+            // Always stored with transparency, independent of the Export background mode,
+            // so reopening the file restores the exact working state (BGR + alpha).
+            using var bgra = new Mat();
+            Cv2.CvtColor(_workingBgr, bgra, ColorConversionCodes.BGR2BGRA);
+            ReplaceAlphaChannel(bgra, _workingAlpha);
+            await _imageExporter.ExportPngAsync(bgra, _workSavePath);
+
+            StatusMessage = $"Work saved to {_workSavePath}";
+            _log.Info($"Work saved to {_workSavePath}");
+            _settings.AddRecentWorkFile(_workSavePath);
+            IsDirty = false;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Save failed: {ex.Message}";
+            _log.Error("Save work failed", ex);
+        }
+    }
+
     // --- Export ---
 
-    [RelayCommand]
+    private bool CanExport() => IsImageLoaded && !IsBusy
+        && (HasWorkingResult || IsSelectedStrategyReady());
+
+    private bool IsSelectedStrategyReady() => SelectedStrategy switch
+    {
+        StrategyKind.GrabCut => GrabCut.HasValidRect,
+        StrategyKind.Onnx => Onnx.IsModelReady,
+        StrategyKind.Sam => Sam.IsModelReady && Sam.HasClickedPoint,
+        _ => true
+    };
+
+    /// <summary>
+    /// The single "complete the job" action: computes the full-resolution cutout (faithful
+    /// to the preview) when needed, then exports it. There is no separate Apply step, and
+    /// loaded cutouts / hand-edited results are exported as-is.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
     private async Task ExportAsync()
     {
-        if (_workingBgr is null || _workingAlpha is null)
+        if (!await EnsureWorkingResultAsync() || _workingBgr is null || _workingAlpha is null)
         {
-            StatusMessage = "Run Apply before exporting.";
             return;
         }
 
@@ -996,6 +1223,244 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         if (path is not null)
         {
             ExportBackgroundImagePath = path;
+        }
+    }
+
+    // --- Project (.ibrproj) ---
+
+    private bool CanSaveProject() => IsImageLoaded && !IsBusy;
+
+    /// <summary>Saves the document to its current project path, or asks for one on first save.</summary>
+    [RelayCommand(CanExecute = nameof(CanSaveProject))]
+    private async Task SaveProjectAsync()
+    {
+        if (ProjectPath is null)
+        {
+            await SaveProjectAsAsync();
+        }
+        else
+        {
+            await SaveProjectToPathAsync(ProjectPath);
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSaveProject))]
+    private async Task SaveProjectAsAsync()
+    {
+        if (_loadedImage is null)
+        {
+            return;
+        }
+        var baseName = ProjectPath is null
+            ? Path.GetFileNameWithoutExtension(_loadedImage.FilePath)
+            : Path.GetFileNameWithoutExtension(ProjectPath);
+        var path = _dialogs.ShowSaveProjectDialog(baseName + ".ibrproj");
+        if (path is null)
+        {
+            return;
+        }
+        await SaveProjectToPathAsync(path);
+    }
+
+    private async Task SaveProjectToPathAsync(string path)
+    {
+        if (_loadedImage is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var settings = BuildProjectDocument();
+            await _projectService.SaveAsync(
+                path,
+                _loadedImage.FullBgr,
+                _loadedImage.FullAlpha,
+                _workingBgr,
+                _workingAlpha,
+                settings);
+
+            ProjectPath = path;
+            Title = Path.GetFileName(path);
+            IsDirty = false; // the working result is now persisted inside the project
+            StatusMessage = $"Project saved to {path}";
+            _log.Info($"Project saved to {path}");
+            _settings.AddRecentFile(path);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Save project failed: {ex.Message}";
+            _log.Error("Save project failed", ex);
+        }
+    }
+
+    /// <summary>Captures all editable settings into a persistable snapshot.</summary>
+    private ProjectDocument BuildProjectDocument()
+    {
+        return new ProjectDocument
+        {
+            Title = Title,
+            WorkSavePath = _workSavePath,
+            SelectedStrategy = SelectedStrategy.ToString(),
+            ChromaKeyTolerance = ChromaKey.Tolerance,
+            ChromaKeySpillSuppression = ChromaKey.SpillSuppression,
+            ChromaKeyDetectedColorBgr = ChromaKey.DetectedColorBgr is { } c
+                ? new[] { c.Item0, c.Item1, c.Item2 }
+                : null,
+            OnnxModel = Onnx.SelectedModel.ToString(),
+            OnnxFeatherPixels = Onnx.FeatherPixels,
+            OnnxEnableAlphaMatting = Onnx.EnableAlphaMatting,
+            ExportBackgroundMode = ExportBackgroundMode.ToString(),
+            ExportSolidColor = ExportSolidColor.ToString(),
+            ExportBackgroundImagePath = ExportBackgroundImagePath,
+            BrushRadius = BrushRadius,
+            BrushHardness = BrushHardness,
+            BrushMode = BrushMode.ToString(),
+            MagicWandTolerance = MagicWandTolerance
+        };
+    }
+
+    /// <summary>Restores settings from a loaded project (tolerant of unknown enum names).</summary>
+    private void ApplyProjectDocument(ProjectDocument p)
+    {
+        if (Enum.TryParse<StrategyKind>(p.SelectedStrategy, out var strategy))
+        {
+            SelectedStrategy = strategy;
+        }
+
+        ChromaKey.Tolerance = p.ChromaKeyTolerance;
+        ChromaKey.SpillSuppression = p.ChromaKeySpillSuppression;
+        if (p.ChromaKeyDetectedColorBgr is { Length: 3 } bgr)
+        {
+            ChromaKey.DetectedColorBgr = new Vec3b(bgr[0], bgr[1], bgr[2]);
+        }
+
+        if (Enum.TryParse<OnnxModelKind>(p.OnnxModel, out var model))
+        {
+            Onnx.SelectedModel = model;
+        }
+        Onnx.FeatherPixels = p.OnnxFeatherPixels;
+        Onnx.EnableAlphaMatting = p.OnnxEnableAlphaMatting;
+
+        if (Enum.TryParse<ExportBackgroundMode>(p.ExportBackgroundMode, out var exportMode))
+        {
+            ExportBackgroundMode = exportMode;
+        }
+        if (!string.IsNullOrWhiteSpace(p.ExportSolidColor)
+            && System.Windows.Media.ColorConverter.ConvertFromString(p.ExportSolidColor) is WpfColor solid)
+        {
+            ExportSolidColor = solid;
+        }
+        ExportBackgroundImagePath = p.ExportBackgroundImagePath;
+
+        BrushRadius = p.BrushRadius;
+        BrushHardness = p.BrushHardness;
+        if (Enum.TryParse<BrushMode>(p.BrushMode, out var brushMode))
+        {
+            BrushMode = brushMode;
+        }
+        MagicWandTolerance = p.MagicWandTolerance;
+    }
+
+    /// <summary>Loads a <c>.ibrproj</c> project into this document, replacing the current state.</summary>
+    public async Task LoadProjectAsync(string path)
+    {
+        LoadedProject? loaded = null;
+        PreviewImage? preview = null;
+        var adopted = false;
+
+        try
+        {
+            IsBusy = true;
+            BusyMessage = "Loading project...";
+            _previewCts?.Cancel();
+
+            _loadedImage?.Dispose();
+            _preview?.Dispose();
+            DisposeWorkingResult();
+            _editHistory.Clear();
+            RefreshUndoRedoState();
+            _samEmbedding = null;
+            _samPromptPointPreview = null;
+            Sam.HasClickedPoint = false;
+            _workSavePath = null;
+            ProjectPath = null;
+
+            loaded = await _projectService.LoadAsync(path);
+            preview = _downscaler.CreatePreview(loaded.OriginalBgr);
+
+            var previewBitmap = loaded.OriginalAlpha is not null
+                ? BuildPreviewBitmapWithAlpha(preview, loaded.OriginalAlpha)
+                : preview.Bgr.ToBitmapSource();
+
+            // Restore settings while IsImageLoaded is still false so strategy-change handlers
+            // don't kick off spurious previews; the saved working result is authoritative.
+            ApplyProjectDocument(loaded.Settings);
+
+            // Everything decoded and applied — adopt the Mats (ownership transfers here).
+            _loadedImage = new LoadedImage(path, loaded.OriginalBgr, loaded.OriginalAlpha);
+            _preview = preview;
+            PreviewBitmap = previewBitmap;
+            ResultBitmap = null;
+
+            ProjectPath = path;
+            _workSavePath = loaded.Settings.WorkSavePath;
+
+            if (loaded.WorkingBgr is not null && loaded.WorkingAlpha is not null)
+            {
+                _workingBgr = loaded.WorkingBgr;
+                _workingAlpha = loaded.WorkingAlpha;
+                _workingResultIsLoadedCutout = true;
+                _workingResultHandEdited = false;
+                OnPropertyChanged(nameof(HasWorkingResult));
+                RefreshUndoRedoState();
+                SaveWorkCommand.NotifyCanExecuteChanged();
+                ExportCommand.NotifyCanExecuteChanged();
+                IsDirty = false;
+                RefreshResultBitmapFromWorking();
+            }
+
+            adopted = true;
+            loaded = null;  // Mats now owned by the document
+            preview = null; // Preview now owned by the document
+
+            IsImageLoaded = true;
+            IsCutout = _workingAlpha is not null;
+            Title = Path.GetFileName(path);
+            StatusMessage = $"Loaded project {Path.GetFileName(path)} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})";
+            _log.Info($"Loaded project {path}");
+            _settings.AddRecentFile(path);
+
+            GrabCut.SelectedRect = null;
+            ClearScribbles();
+            if (ChromaKey.DetectedColorBgr is null)
+            {
+                ChromaKey.DetectedColorBgr = ChromaKeyStrategy.DetectDominantBorderColor(_preview.Bgr);
+            }
+
+            if (SelectedStrategy == StrategyKind.Sam && Sam.IsModelReady)
+            {
+                ComputeSamEmbedding();
+            }
+
+            if (_workingAlpha is null)
+            {
+                RequestPreviewDebounced();
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not load project: {ex.Message}";
+            _log.Error($"Could not load project: {path}", ex);
+        }
+        finally
+        {
+            if (!adopted)
+            {
+                loaded?.Dispose();
+                preview?.Dispose();
+            }
+            IsBusy = false;
         }
     }
 

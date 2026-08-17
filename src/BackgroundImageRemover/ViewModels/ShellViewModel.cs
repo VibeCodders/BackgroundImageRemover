@@ -15,6 +15,7 @@ public partial class ShellViewModel : ObservableObject
 
     public ObservableCollection<DocumentViewModel> Documents { get; } = new();
     public ObservableCollection<string> RecentFiles { get; } = new();
+    public ObservableCollection<string> RecentWorkFiles { get; } = new();
 
     [ObservableProperty]
     private DocumentViewModel? _selectedDocument;
@@ -42,6 +43,26 @@ public partial class ShellViewModel : ObservableObject
         await OpenInNewTabAsync(path);
     }
 
+    /// <summary>Creates a fresh, empty project tab (no image yet).</summary>
+    [RelayCommand]
+    private void NewProject()
+    {
+        var document = _documentFactory();
+        Documents.Add(document);
+        SelectedDocument = document;
+    }
+
+    [RelayCommand]
+    private async Task OpenProjectAsync()
+    {
+        var path = _dialogs.ShowOpenProjectDialog();
+        if (path is null)
+        {
+            return;
+        }
+        await OpenInNewTabAsync(path);
+    }
+
     [RelayCommand]
     private async Task OpenRecentAsync(string path)
     {
@@ -53,7 +74,7 @@ public partial class ShellViewModel : ObservableObject
         var document = _documentFactory();
         Documents.Add(document);
         SelectedDocument = document;
-        await document.LoadImageAsync(path);
+        await document.LoadAsync(path);
         RefreshRecentFiles();
     }
 
@@ -75,12 +96,21 @@ public partial class ShellViewModel : ObservableObject
         }
     }
 
-    private void RefreshRecentFiles()
+    public void RefreshRecentFiles()
     {
         RecentFiles.Clear();
         foreach (var recent in _settings.Current.RecentFiles)
         {
             RecentFiles.Add(recent);
+        }
+    }
+
+    public void RefreshRecentWorkFiles()
+    {
+        RecentWorkFiles.Clear();
+        foreach (var work in _settings.Current.RecentWorkFiles)
+        {
+            RecentWorkFiles.Add(work);
         }
     }
 }

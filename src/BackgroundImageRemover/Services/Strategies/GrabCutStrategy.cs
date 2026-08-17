@@ -15,10 +15,16 @@ public sealed class GrabCutStrategy : StrategyBase
     private const int FeatherKernelSize = 5;
 
     // Holds the last raw GrabCut label mask (GC_BGD/GC_FGD/GC_PR_BGD/GC_PR_FGD per pixel) so a
-    // subsequent scribble-refine pass can build on it instead of starting over from the rect.
+    // subsequent scribble-refine pass can build on it instead of starting over from the rect,
+    // and so a higher-resolution run (the full-res export re-running the preview's strategy)
+    // can seed from the preview's result instead of segmenting independently from scratch.
+    // Two independent GrabCut runs at different resolutions can settle on visibly different
+    // boundaries even with the same rect, since the color-model statistics differ; seeding
+    // keeps the full-res result a refinement of what the user saw, not a fresh guess.
     // The desktop app serializes preview/apply calls per strategy, so a single-instance cache
     // is safe in practice; a concurrent call would simply see a stale/overwritten mask.
     private Mat? _lastLabelMask;
+    private Size _lastLabelMaskSize;
 
     protected override Mat ComputeMask(Mat bgr, StrategyContext context, CancellationToken ct)
     {
@@ -39,10 +45,22 @@ public sealed class GrabCutStrategy : StrategyBase
         using var bgdModel = new Mat();
         using var fgdModel = new Mat();
 
-        Cv2.GrabCut(bgr, gcMask, rect, bgdModel, fgdModel, context.GrabCutIterations, GrabCutModes.InitWithRect);
+        if (_lastLabelMask is { } priorMask && (bgr.Width > _lastLabelMaskSize.Width || bgr.Height > _lastLabelMaskSize.Height))
+        {
+            // A higher-resolution call than the last one: upscale the previous (lower-res)
+            // label mask -- nearest-neighbor, since these are discrete labels, not intensities
+            // -- and refine it in place instead of starting over from the rect.
+            Cv2.Resize(priorMask, gcMask, bgr.Size(), interpolation: InterpolationFlags.Nearest);
+            Cv2.GrabCut(bgr, gcMask, default, bgdModel, fgdModel, context.GrabCutIterations, GrabCutModes.InitWithMask);
+        }
+        else
+        {
+            Cv2.GrabCut(bgr, gcMask, rect, bgdModel, fgdModel, context.GrabCutIterations, GrabCutModes.InitWithRect);
+        }
 
         _lastLabelMask?.Dispose();
         _lastLabelMask = gcMask;
+        _lastLabelMaskSize = bgr.Size();
 
         return MaskFromLabels(gcMask, bgr.Size());
     }
@@ -74,6 +92,7 @@ public sealed class GrabCutStrategy : StrategyBase
 
         _lastLabelMask?.Dispose();
         _lastLabelMask = workingMask;
+        _lastLabelMaskSize = bgr.Size();
 
         return MaskFromLabels(workingMask, bgr.Size());
     }

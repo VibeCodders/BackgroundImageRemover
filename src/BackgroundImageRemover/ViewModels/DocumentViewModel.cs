@@ -373,12 +373,13 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
             // When reopening a saved cutout (an image with an alpha channel), show it with
             // its transparency in the Original pane too, instead of the flattened BGR — the
             // flattened version can look black where the removed content had dark RGB.
-            PreviewBitmap = _loadedImage.FullAlpha is not null
-                ? BuildPreviewBitmapWithAlpha(preview, _loadedImage.FullAlpha)
+            bool isActualCutout = HasMeaningfulTransparency(_loadedImage.FullAlpha);
+            PreviewBitmap = isActualCutout
+                ? BuildPreviewBitmapWithAlpha(preview, _loadedImage.FullAlpha!)
                 : preview.Bgr.ToBitmapSource();
             ResultBitmap = null;
             IsImageLoaded = true;
-            IsCutout = _loadedImage.FullAlpha is not null;
+            IsCutout = isActualCutout;
             Title = IsCutout ? Path.GetFileName(path) + " (cutout)" : Path.GetFileName(path);
             StatusMessage = $"Loaded {Path.GetFileName(path)} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})";
             _log.Info($"Loaded image {path} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})");
@@ -393,10 +394,12 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
                 ComputeSamEmbedding();
             }
 
-            // A file with an alpha channel is a previously exported cutout, not a fresh
+            // A file with genuine transparency is a previously exported cutout, not a fresh
             // photo: adopt it as the working result so the user can keep refining it
             // (Brush/Wand, or re-run a strategy) instead of re-cleansing it from scratch.
-            if (_loadedImage.FullAlpha is not null)
+            // A PNG that merely carries an (fully opaque) alpha channel is a plain photo and
+            // must go through the normal removal flow instead of being adopted as-is.
+            if (isActualCutout)
             {
                 AdoptLoadedCutout();
             }
@@ -563,6 +566,23 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         Cv2.CvtColor(preview.Bgr, bgra, ColorConversionCodes.BGR2BGRA);
         ReplaceAlphaChannel(bgra, previewAlpha);
         return bgra.ToBitmapSource();
+    }
+
+    /// <summary>
+    /// True when <paramref name="alpha"/> is non-null and actually contains transparency.
+    /// A loaded PNG can carry a 4th channel that is uniformly opaque (255 everywhere) — that's
+    /// a plain photo saved in an RGBA container, not a previously exported cutout, and must not
+    /// be adopted as an authoritative working result.
+    /// </summary>
+    private static bool HasMeaningfulTransparency(Mat? alpha)
+    {
+        if (alpha is null)
+        {
+            return false;
+        }
+
+        Cv2.MinMaxLoc(alpha, out double min, out _);
+        return min < 255;
     }
 
     private void AdoptLoadedCutout()

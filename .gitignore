@@ -3,3 +3,4 @@ src/BackgroundImageRemover/bin/
 tests/BackgroundImageRemover.Tests/obj/
 tests/BackgroundImageRemover.Tests/bin/
 .claude/
+.freebuff/

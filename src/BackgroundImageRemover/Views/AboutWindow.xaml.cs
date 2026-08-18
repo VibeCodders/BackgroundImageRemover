@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Navigation;
 
 namespace BackgroundImageRemover.Views;
 
@@ -31,4 +33,18 @@ public partial class AboutWindow : Window
     }
 
     private void Ok_Click(object sender, RoutedEventArgs e) => Close();
+
+    /// <summary>Opens the project page in the default browser.</summary>
+    private void GitHubLink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch
+        {
+            // Opening a browser must never crash the About dialog.
+        }
+        e.Handled = true;
+    }
 }

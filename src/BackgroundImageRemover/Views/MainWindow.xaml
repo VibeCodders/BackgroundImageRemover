@@ -29,6 +29,7 @@
         <KeyBinding Key="W" Modifiers="Control" Command="{Binding CloseTabCommand}" CommandParameter="{Binding SelectedDocument}" />
         <KeyBinding Key="Tab" Modifiers="Control" Command="{Binding NextTabCommand}" />
         <KeyBinding Key="Tab" Modifiers="Control+Shift" Command="{Binding PreviousTabCommand}" />
+        <KeyBinding Key="U" Modifiers="Control+Shift" Command="{Binding OpenUncropCommand}" />
         <KeyBinding Key="D" Modifiers="Control+Shift" Command="{Binding DuplicateTabCommand}" CommandParameter="{Binding SelectedDocument}" />
         <KeyBinding Key="P" Modifiers="Control+Shift" Command="{Binding SelectedDocument.CopyFilePathCommand}" />
         <KeyBinding Key="OemComma" Modifiers="Control" Command="{Binding ShowPreferencesCommand}" />
@@ -106,6 +107,7 @@
                 <MenuItem Header="{Binding [OpenImage], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
                 <MenuItem Header="{Binding [OpenNewTab], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding NewTabCommand}" />
                 <MenuItem Header="{Binding [OpenProject], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding OpenProjectCommand}" InputGestureText="Ctrl+O" />
+                <MenuItem Header="{Binding [NewUncropTab], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding OpenUncropCommand}" InputGestureText="Ctrl+Shift+U" />
                 <MenuItem Header="{Binding [DuplicateTab], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding DuplicateTabCommand}" CommandParameter="{Binding SelectedDocument}" InputGestureText="Ctrl+Shift+D" />
                 <MenuItem Header="{Binding [ShowInExplorer], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.RevealSourceFileInExplorerCommand}" />
                 <Separator />

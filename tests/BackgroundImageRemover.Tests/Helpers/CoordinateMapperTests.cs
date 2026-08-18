@@ -36,6 +36,32 @@ public class CoordinateMapperTests
     }
 
     [Fact]
+    public void ControlPointToImagePixel_ClampsToLastValidPixel_OnRightAndBottomEdges()
+    {
+        // A click on the very right edge of the letterboxed content must map to width - 1,
+        // not width: tools round and index into the image, where x == width is out of bounds.
+        var right = CoordinateMapper.ControlPointToImagePixel(new Point(400, 100), 400, 200, 100, 100);
+        var bottom = CoordinateMapper.ControlPointToImagePixel(new Point(200, 200), 400, 200, 100, 100);
+        var corner = CoordinateMapper.ControlPointToImagePixel(new Point(400, 200), 400, 200, 100, 100);
+
+        Assert.Equal(99, right.X, precision: 3);
+        Assert.Equal(50, right.Y, precision: 3);
+        Assert.Equal(50, bottom.X, precision: 3);
+        Assert.Equal(99, bottom.Y, precision: 3);
+        Assert.Equal(99, corner.X, precision: 3);
+        Assert.Equal(99, corner.Y, precision: 3);
+    }
+
+    [Fact]
+    public void ControlPointToImagePixel_StillClampsPointsFarOutsideTheContent()
+    {
+        var pixel = CoordinateMapper.ControlPointToImagePixel(new Point(5000, 5000), 400, 200, 100, 100);
+
+        Assert.Equal(99, pixel.X, precision: 3);
+        Assert.Equal(99, pixel.Y, precision: 3);
+    }
+
+    [Fact]
     public void ToCvRect_RoundsAndEnforcesMinimumSize()
     {
         var rect = new Rect(1.2, 2.7, 0, 0).ToCvRect();

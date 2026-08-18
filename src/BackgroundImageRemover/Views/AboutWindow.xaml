@@ -20,7 +20,13 @@
             <TextBlock Text="Remove image backgrounds, refine cutouts and edit photos with a suite of tools: AI (ONNX/SAM), GrabCut, chroma key, uncrop/outpainting, retouch, filters, transforms and more."
                        TextWrapping="Wrap" FontSize="12" Foreground="#FF444444" Margin="0,0,0,16" />
 
-            <TextBlock x:Name="CopyrightText" Text="Open source project — contributions welcome." FontSize="11" Foreground="#FF888888" Margin="0,0,0,16" />
+            <TextBlock FontSize="11" Foreground="#FF888888" Margin="0,0,0,16">
+                <Run Text="Open source project — " />
+                <Hyperlink x:Name="GitHubLink" NavigateUri="https://github.com/VibeCodders/BackgroundImageRemover"
+                           RequestNavigate="GitHubLink_RequestNavigate">
+                    <Run Text="contributions welcome on GitHub" />
+                </Hyperlink>
+            </TextBlock>
 
             <Button Content="OK" HorizontalAlignment="Right" Padding="18,6" MinWidth="80"
                     IsDefault="True" Click="Ok_Click" Cursor="Hand" />

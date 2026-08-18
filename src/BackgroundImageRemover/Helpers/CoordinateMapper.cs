@@ -36,8 +36,11 @@ public static class CoordinateMapper
         double px = (controlPoint.X - content.X) / scale;
         double py = (controlPoint.Y - content.Y) / scale;
 
-        px = Math.Clamp(px, 0, bitmapPixelWidth);
-        py = Math.Clamp(py, 0, bitmapPixelHeight);
+        // Clamp to the last valid pixel (width - 1): mapping to exactly "width" would produce
+        // an out-of-bounds coordinate for tools that round and index into the image (Magic
+        // Wand seed, SAM prompt point, scribble endpoints, GrabCut rectangle).
+        px = Math.Clamp(px, 0, Math.Max(0, bitmapPixelWidth - 1));
+        py = Math.Clamp(py, 0, Math.Max(0, bitmapPixelHeight - 1));
         return new Point(px, py);
     }
 

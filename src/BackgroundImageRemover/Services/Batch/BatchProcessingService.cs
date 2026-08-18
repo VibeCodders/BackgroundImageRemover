@@ -23,9 +23,9 @@ public interface IBatchProcessingService
 
 /// <summary>
 /// Applies one strategy/context to every file in a list, full resolution, exporting each as
-/// "<name>_cutout.png" (or "_cutout.jpg" when JPEG output is requested) into the output
-/// folder. Files that fail to load/process are skipped (reported via progress's CurrentFile)
-/// rather than aborting the whole batch.
+/// "<name>_cutout.png" by default (or "_cutout.jpg" for JPEG output, "_cutout.webp" for WebP)
+/// into the output folder. Files that fail to load/process are skipped (reported via progress's
+/// CurrentFile) rather than aborting the whole batch.
 /// </summary>
 public sealed class BatchProcessingService : IBatchProcessingService
 {

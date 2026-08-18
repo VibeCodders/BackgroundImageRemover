@@ -1,0 +1,102 @@
+using OpenCvSharp;
+
+namespace BackgroundImageRemover.Services.Editing;
+
+/// <summary>Cropping helpers on a BGR (or any-channel) image. Each method returns a new Mat.</summary>
+public static class CropService
+{
+    /// <summary>Crops to the given rectangle, clamped to the image bounds. Returns a clone.</summary>
+    public static Mat CropRect(Mat src, Rect rect)
+    {
+        var clamped = Clamp(src.Size(), rect);
+        using var roi = new Mat(src, clamped);
+        return roi.Clone();
+    }
+
+    /// <summary>Returns the largest centered rectangle with the requested aspect ratio (width/height).</summary>
+    public static Rect CenteredRectForAspect(Size size, double ratio)
+    {
+        if (size.Width <= 0 || size.Height <= 0 || ratio <= 0)
+        {
+            return new Rect(0, 0, size.Width, size.Height);
+        }
+
+        double currentRatio = (double)size.Width / size.Height;
+        int width;
+        int height;
+        if (ratio > currentRatio)
+        {
+            width = size.Width;
+            height = (int)Math.Round(width / ratio);
+        }
+        else
+        {
+            height = size.Height;
+            width = (int)Math.Round(height * ratio);
+        }
+
+        width = Math.Clamp(width, 1, size.Width);
+        height = Math.Clamp(height, 1, size.Height);
+        int x = (size.Width - width) / 2;
+        int y = (size.Height - height) / 2;
+        return new Rect(x, y, width, height);
+    }
+
+    /// <summary>Crops away the given margins (in pixels) from each side.</summary>
+    public static Mat CropMargins(Mat src, int left, int top, int right, int bottom)
+    {
+        int width = Math.Max(1, src.Width - left - right);
+        int height = Math.Max(1, src.Height - top - bottom);
+        int x = Math.Clamp(left, 0, src.Width - 1);
+        int y = Math.Clamp(top, 0, src.Height - 1);
+        width = Math.Min(width, src.Width - x);
+        height = Math.Min(height, src.Height - y);
+        return CropRect(src, new Rect(x, y, width, height));
+    }
+
+    /// <summary>
+    /// Computes the bounding box of the non-border content (the border color is sampled from
+    /// the corners). Useful for removing letterbox bars or a flat backdrop.
+    /// </summary>
+    public static Rect TrimContentBounds(Mat src, int tolerance = 12)
+    {
+        if (src.Width <= 2 || src.Height <= 2)
+        {
+            return new Rect(0, 0, src.Width, src.Height);
+        }
+
+        var bg = src.At<Vec3b>(0, 0);
+        using var diff = new Mat();
+        Cv2.Absdiff(src, new Mat(src.Size(), src.Type(), new Scalar(bg.Item0, bg.Item1, bg.Item2)), diff);
+
+        using var gray = new Mat();
+        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
+        using var mask = new Mat();
+        Cv2.Threshold(gray, mask, tolerance, 255, ThresholdTypes.Binary); // non-border = 255
+
+        using var nonZero = new Mat();
+        Cv2.FindNonZero(mask, nonZero);
+        if (nonZero.Rows == 0)
+        {
+            return new Rect(0, 0, src.Width, src.Height);
+        }
+
+        return Cv2.BoundingRect(nonZero);
+    }
+
+    /// <summary>
+    /// Trims a near-uniform border (the dominant corner color) off the image. Useful for
+    /// removing letterbox bars or a flat backdrop.
+    /// </summary>
+    public static Mat TrimContent(Mat src, int tolerance = 12)
+        => CropRect(src, TrimContentBounds(src, tolerance));
+
+    private static Rect Clamp(Size size, Rect rect)
+    {
+        int x = Math.Clamp(rect.X, 0, size.Width - 1);
+        int y = Math.Clamp(rect.Y, 0, size.Height - 1);
+        int width = Math.Clamp(rect.Width, 1, size.Width - x);
+        int height = Math.Clamp(rect.Height, 1, size.Height - y);
+        return new Rect(x, y, width, height);
+    }
+}

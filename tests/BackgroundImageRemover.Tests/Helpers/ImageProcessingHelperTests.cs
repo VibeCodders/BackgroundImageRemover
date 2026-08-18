@@ -203,5 +203,75 @@ public sealed class ImageProcessingHelperTests
         // Auto-enhance must not be a no-op on a non-gray image.
         Assert.NotEqual(src.At<Vec3b>(0, 0), result.At<Vec3b>(0, 0));
     }
+
+    [Fact]
+    public void ApplyAdjustments_Vibrance_IncreasesColorSpread()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(100, 150, 200)); // moderate saturation
+        var adj = new ImageAdjustments { Vibrance = 1.0 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+        var before = src.At<Vec3b>(0, 0);
+        var after = result.At<Vec3b>(0, 0);
+        int beforeSpread = Math.Max(before.Item0, Math.Max(before.Item1, before.Item2)) - Math.Min(before.Item0, Math.Min(before.Item1, before.Item2));
+        int afterSpread = Math.Max(after.Item0, Math.Max(after.Item1, after.Item2)) - Math.Min(after.Item0, Math.Min(after.Item1, after.Item2));
+
+        Assert.True(afterSpread >= beforeSpread);
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Fade_LiftsBlacksTowardMidGray()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(20, 20, 20));
+        var adj = new ImageAdjustments { Fade = 1.0 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+        var pixel = result.At<Vec3b>(0, 0);
+
+        Assert.Equal(128, pixel.Item0);
+        Assert.Equal(128, pixel.Item1);
+        Assert.Equal(128, pixel.Item2);
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Monochrome_MakesChannelsEqual()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(0, 0, 255)); // pure red
+        var adj = new ImageAdjustments { Monochrome = 1.0 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+        var pixel = result.At<Vec3b>(0, 0);
+
+        Assert.True(Math.Abs(pixel.Item0 - pixel.Item1) <= 1);
+        Assert.True(Math.Abs(pixel.Item1 - pixel.Item2) <= 1);
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Grain_ChangesPixelValues()
+    {
+        using var src = new Mat(10, 10, MatType.CV_8UC3, new Scalar(100, 100, 100));
+        var adj = new ImageAdjustments { Grain = 1.0 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+
+        Assert.Equal(src.Size(), result.Size());
+        Assert.NotEqual(src.At<Vec3b>(5, 5), result.At<Vec3b>(5, 5));
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Clarity_PreservesSizeAndType()
+    {
+        using var src = new Mat(30, 30, MatType.CV_8UC3, new Scalar(90, 90, 90));
+        using (var bright = new Mat(src, new Rect(10, 10, 10, 10)))
+        {
+            bright.SetTo(new Scalar(200, 200, 200));
+        }
+        var adj = new ImageAdjustments { Clarity = 0.8 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+
+        Assert.Equal(src.Size(), result.Size());
+        Assert.Equal(src.Type(), result.Type());
+    }
 }
 

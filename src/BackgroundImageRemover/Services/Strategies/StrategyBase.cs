@@ -101,6 +101,94 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
         {
             KeepLargestComponent(mask);
         }
+
+        if (context.MaskExpandPixels != 0)
+        {
+            ExpandOrShrink(mask, context.MaskExpandPixels);
+        }
+
+        if (context.MaskBlurPixels > 1e-4)
+        {
+            Cv2.GaussianBlur(mask, mask, new Size(0, 0), context.MaskBlurPixels, context.MaskBlurPixels);
+        }
+
+        if (context.MinComponentAreaPixels > 0)
+        {
+            RemoveSmallComponents(mask, context.MinComponentAreaPixels);
+        }
+
+        if (Math.Abs(context.MaskGamma - 1.0) > 1e-4)
+        {
+            ApplyAlphaLut(mask, i => 255.0 * Math.Pow(i / 255.0, Math.Clamp(context.MaskGamma, 0.1, 10.0)));
+        }
+
+        if (context.MaskHardness > 1e-4)
+        {
+            double h = Math.Clamp(context.MaskHardness, 0.0, 1.0);
+            ApplyAlphaLut(mask, i =>
+            {
+                double t = i / 255.0;
+                double hardened = t * t * (3.0 - 2.0 * t); // smoothstep
+                return 255.0 * ((1.0 - h) * t + h * hardened);
+            });
+        }
+    }
+
+    /// <summary>Dilates (positive) or erodes (negative) the mask by the given pixel radius.</summary>
+    private static void ExpandOrShrink(Mat mask, int pixels)
+    {
+        int k = Math.Max(1, Math.Abs(pixels)) | 1;
+        using var kernel = Cv2.GetStructuringElement(MorphShapes.Ellipse, new Size(k, k));
+        if (pixels > 0)
+        {
+            Cv2.Dilate(mask, mask, kernel);
+        }
+        else
+        {
+            Cv2.Erode(mask, mask, kernel);
+        }
+    }
+
+    /// <summary>Removes connected foreground components whose area is below <paramref name="minArea"/> pixels.</summary>
+    private static void RemoveSmallComponents(Mat mask, int minArea)
+    {
+        using var labels = new Mat();
+        using var stats = new Mat();
+        using var centroids = new Mat();
+        int count = Cv2.ConnectedComponentsWithStats(
+            mask, labels, stats, centroids, PixelConnectivity.Connectivity8, MatType.CV_32S);
+        if (count <= 1)
+        {
+            return;
+        }
+
+        using var keep = new Mat(mask.Size(), MatType.CV_8UC1, Scalar.All(0));
+        for (int i = 1; i < count; i++)
+        {
+            int area = stats.Get<int>(i, 4); // CC_STAT_AREA
+            if (area >= minArea)
+            {
+                using var component = new Mat();
+                Cv2.Compare(labels, new Scalar(i), component, CmpType.EQ);
+                Cv2.BitwiseOr(keep, component, keep);
+            }
+        }
+
+        Cv2.BitwiseAnd(mask, keep, mask);
+    }
+
+    /// <summary>Applies a per-level mapping to the mask through a 256-entry lookup table.</summary>
+    private static void ApplyAlphaLut(Mat mask, Func<int, double> map)
+    {
+        var lut = new byte[256];
+        for (int i = 0; i < lut.Length; i++)
+        {
+            lut[i] = (byte)Math.Round(Math.Clamp(map(i), 0.0, 255.0));
+        }
+
+        using var lutMat = new Mat(1, 256, MatType.CV_8UC1);
+        lutMat.SetArray(lut);
+        Cv2.LUT(mask, lutMat, mask);
     }
 
     /// <summary>Keeps only the largest connected foreground region (by area) in the mask.</summary>

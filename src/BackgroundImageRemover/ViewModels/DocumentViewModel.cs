@@ -193,6 +193,21 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     [ObservableProperty]
     private double _maskFeatherPixels;
 
+    [ObservableProperty]
+    private int _maskExpandPixels;
+
+    [ObservableProperty]
+    private double _maskBlurPixels;
+
+    [ObservableProperty]
+    private int _minComponentAreaPixels;
+
+    [ObservableProperty]
+    private double _maskGamma = 1.0;
+
+    [ObservableProperty]
+    private double _maskHardness;
+
     /// <summary>
     /// The active display bitmap: shows the processed ResultBitmap if available,
     /// otherwise falls back to the clean loaded PreviewBitmap.
@@ -444,6 +459,16 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     partial void OnInvertMaskChanged(bool value) => RequestPreviewDebounced();
 
     partial void OnMaskFeatherPixelsChanged(double value) => RequestPreviewDebounced();
+
+    partial void OnMaskExpandPixelsChanged(int value) => RequestPreviewDebounced();
+
+    partial void OnMaskBlurPixelsChanged(double value) => RequestPreviewDebounced();
+
+    partial void OnMinComponentAreaPixelsChanged(int value) => RequestPreviewDebounced();
+
+    partial void OnMaskGammaChanged(double value) => RequestPreviewDebounced();
+
+    partial void OnMaskHardnessChanged(double value) => RequestPreviewDebounced();
 
     partial void OnUseGpuForOnnxChanged(bool value)
     {

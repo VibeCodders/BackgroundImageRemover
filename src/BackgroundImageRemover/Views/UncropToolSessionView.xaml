@@ -226,6 +226,36 @@
                         <CheckBox Content="Flip V" IsChecked="{Binding Options.FlipVertical}" />
                     </StackPanel>
 
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Rotate:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.RotateAngle, StringFormat={}{0:F0}°}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="-180" Maximum="180" Value="{Binding Options.RotateAngle}" />
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Vignette:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.Vignette, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="0" Maximum="1" Value="{Binding Options.Vignette}" />
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Saturation:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.Saturation, StringFormat={}{0:F2}x}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="0" Maximum="3" Value="{Binding Options.Saturation}" />
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Contrast:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.Contrast, StringFormat={}{0:F2}x}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="0.1" Maximum="3" Value="{Binding Options.Contrast}" />
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Brightness:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.Brightness, StringFormat={}{0:F0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="-100" Maximum="100" Value="{Binding Options.Brightness}" />
+                    </DockPanel>
+
                     <Button Content="Preview fill" Command="{Binding ApplyFillCommand}" Margin="0,14,0,0" Padding="8" FontWeight="Bold" />
                 </StackPanel>
             </ScrollViewer>

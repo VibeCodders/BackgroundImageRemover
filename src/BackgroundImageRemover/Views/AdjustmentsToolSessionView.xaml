@@ -134,6 +134,41 @@
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjDenoise}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
+                    <!-- Vibrance -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Vibrance" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjVibrance, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="-1" Maximum="1" Value="{Binding AdjVibrance}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <!-- Clarity -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Clarity" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjClarity, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjClarity}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <!-- Fade -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Fade (matte film)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjFade, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjFade}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <!-- Grain -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Grain" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjGrain, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjGrain}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <!-- Monochrome -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Monochrome" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjMonochrome, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjMonochrome}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
                     <CheckBox Content="✨ Auto-enhance (one click)" IsChecked="{Binding AdjAutoEnhance}" Margin="0,0,0,12" FontWeight="SemiBold" />
 
                     <CheckBox Content="Split Compare view" IsChecked="{Binding IsCompareMode}" Margin="0,0,0,12" FontWeight="SemiBold" />

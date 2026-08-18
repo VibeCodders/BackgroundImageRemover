@@ -21,6 +21,11 @@ public static class FilterService
             FilterKind.Posterize => Posterize(inputBgr, posterizeLevels),
             FilterKind.Emboss => Emboss(inputBgr),
             FilterKind.Sketch => Sketch(inputBgr),
+            FilterKind.Neon => Neon(inputBgr),
+            FilterKind.Hdr => Hdr(inputBgr),
+            FilterKind.Pencil => Pencil(inputBgr),
+            FilterKind.Dreamy => Dreamy(inputBgr),
+            FilterKind.Cartoon => Cartoon(inputBgr),
             _ => inputBgr.Clone()
         };
 
@@ -116,6 +121,57 @@ public static class FilterService
 
         var result = new Mat();
         Cv2.CvtColor(sketch, result, ColorConversionCodes.GRAY2BGR);
+        return result;
+    }
+
+    /// <summary>Neon edge-glow: white edge lines on black with a soft halo.</summary>
+    private static Mat Neon(Mat input)
+    {
+        using var gray = new Mat();
+        Cv2.CvtColor(input, gray, ColorConversionCodes.BGR2GRAY);
+        using var edges = new Mat();
+        Cv2.Canny(gray, edges, 50, 150);
+        using var edgesBgr = new Mat();
+        Cv2.CvtColor(edges, edgesBgr, ColorConversionCodes.GRAY2BGR);
+        using var glow = new Mat();
+        Cv2.GaussianBlur(edgesBgr, glow, new Size(0, 0), 5);
+        var result = new Mat();
+        Cv2.Add(edgesBgr, glow, result);
+        return result;
+    }
+
+    /// <summary>HDR-style local detail enhancement.</summary>
+    private static Mat Hdr(Mat input)
+    {
+        var result = new Mat();
+        Cv2.DetailEnhance(input, result, 10f, 0.3f);
+        return result;
+    }
+
+    /// <summary>Colored pencil-sketch rendition.</summary>
+    private static Mat Pencil(Mat input)
+    {
+        using var grayPencil = new Mat();
+        var colorPencil = new Mat();
+        Cv2.PencilSketch(input, grayPencil, colorPencil, 60f, 0.07f, 0.02f);
+        return colorPencil;
+    }
+
+    /// <summary>Dreamy Orton glow: a blurred, brightened copy blended with the sharp original.</summary>
+    private static Mat Dreamy(Mat input)
+    {
+        using var blurred = new Mat();
+        Cv2.GaussianBlur(input, blurred, new Size(0, 0), 12);
+        var result = new Mat();
+        Cv2.AddWeighted(blurred, 0.6, input, 0.4, 20, result);
+        return result;
+    }
+
+    /// <summary>Cartoon stylization (edge-preserving smoothing with flattened color).</summary>
+    private static Mat Cartoon(Mat input)
+    {
+        var result = new Mat();
+        Cv2.Stylization(input, result, 60f, 0.45f);
         return result;
     }
 

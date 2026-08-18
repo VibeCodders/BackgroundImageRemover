@@ -45,6 +45,11 @@ public static class UncropOperationHelper
         public double GrainAmount { get; init; }
         public bool FlipHorizontal { get; init; }
         public bool FlipVertical { get; init; }
+        public double RotateAngle { get; init; }
+        public double Vignette { get; init; }
+        public double Saturation { get; init; } = 1.0;
+        public double Contrast { get; init; } = 1.0;
+        public double Brightness { get; init; }
     }
 
     /// <summary>
@@ -124,6 +129,26 @@ public static class UncropOperationHelper
                 var grained = AddGrain(current, config.GrainAmount);
                 current.Dispose();
                 current = grained;
+            }
+            if (Math.Abs(config.RotateAngle) > 1e-4)
+            {
+                var rotated = TransformService.Rotate(current, config.RotateAngle);
+                current.Dispose();
+                current = rotated;
+            }
+
+            var adjustments = new ImageAdjustments
+            {
+                Brightness = config.Brightness,
+                Contrast = config.Contrast,
+                Saturation = config.Saturation,
+                Vignette = config.Vignette
+            };
+            if (!adjustments.IsIdentity)
+            {
+                var adjusted = ImageProcessingHelper.ApplyAdjustments(current, adjustments);
+                current.Dispose();
+                current = adjusted;
             }
 
             using var bgra = current.ToBgra();

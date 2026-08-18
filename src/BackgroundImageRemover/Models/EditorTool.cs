@@ -33,5 +33,20 @@ public enum EditorTool
     Frame,
 
     /// <summary>Text watermark overlay.</summary>
-    Text
+    Text,
+
+    /// <summary>Crop with aspect presets, margins, auto-trim and straighten.</summary>
+    Crop,
+
+    /// <summary>Resize with aspect lock, percent and interpolation.</summary>
+    Resize,
+
+    /// <summary>Pixelate or blur a region (or the whole image).</summary>
+    Mosaic,
+
+    /// <summary>Composite a second image (logo/sticker) over the document.</summary>
+    Overlay,
+
+    /// <summary>Levels adjustment (black point, white point, gamma).</summary>
+    Levels
 }

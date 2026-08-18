@@ -230,4 +230,35 @@ public class BackgroundCompositingServiceTests
         byte spilled = result.At<Vec4b>(pad - 1, cx).Item3;
         Assert.True(spilled > 0 && spilled < 255, $"expected a soft edge, got alpha {spilled}");
     }
+
+    [Fact]
+    public void PlaceOnCanvas_PadsAndOffsetsTheSubject()
+    {
+        using var bgra = new Mat(10, 10, MatType.CV_8UC4, new Scalar(0, 0, 255, 255));
+
+        using var result = BackgroundCompositingService.PlaceOnCanvas(bgra, padding: 5, offsetX: 3, offsetY: 4);
+
+        Assert.Equal(20, result.Width);
+        Assert.Equal(20, result.Height);
+        Assert.Equal(0, result.At<Vec4b>(0, 0).Item3); // corner transparent
+
+        var subject = result.At<Vec4b>(9, 8); // (5+3, 5+4)
+        Assert.Equal(255, subject.Item2);
+        Assert.Equal(255, subject.Item3);
+    }
+
+    [Fact]
+    public void ApplyDropShadow_ColoredShadow_TintsTheShadowPixels()
+    {
+        using var bgra = new Mat(10, 10, MatType.CV_8UC4, new Scalar(0, 0, 0, 255));
+
+        using var result = BackgroundCompositingService.ApplyDropShadow(
+            bgra, offsetX: 5, offsetY: 5, blurSigma: 0, opacity: 1.0, shadowColor: new Vec3b(0, 0, 255));
+
+        var shadow = result.At<Vec4b>(16, 16); // shadow-only pixel
+        Assert.Equal(0, shadow.Item0);
+        Assert.Equal(0, shadow.Item1);
+        Assert.Equal(255, shadow.Item2);
+        Assert.Equal(255, shadow.Item3);
+    }
 }

@@ -100,6 +100,16 @@
                                     IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
                             <Button Content="✎  Text" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Text}"
                                     IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="✂  Crop" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Crop}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="⤡  Resize" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Resize}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="▦  Mosaic" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Mosaic}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="🔲  Overlay" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Overlay}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="📊  Levels" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Levels}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

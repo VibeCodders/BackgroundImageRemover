@@ -83,4 +83,66 @@ public class UncropFinishingTests
 
         Assert.Equal(new CanvasPadding(262, 262, 262, 262), options.Padding);
     }
+
+    [Fact]
+    public void ApplyFinishing_Rotate_SwapsDimensions()
+    {
+        using var src = new Mat(1, 2, MatType.CV_8UC3, new Scalar(0, 0, 255));
+
+        var config = new UncropOperationHelper.UncropConfig { RotateAngle = 90 };
+
+        using var result = UncropOperationHelper.ApplyFinishing(src, config);
+
+        Assert.Equal(1, result.Width);
+        Assert.Equal(2, result.Height);
+    }
+
+    [Fact]
+    public void ApplyFinishing_Vignette_DarkensCorners()
+    {
+        using var src = new Mat(40, 40, MatType.CV_8UC3, new Scalar(200, 200, 200));
+
+        var config = new UncropOperationHelper.UncropConfig { Vignette = 0.9 };
+
+        using var result = UncropOperationHelper.ApplyFinishing(src, config);
+
+        Assert.True(result.At<Vec4b>(20, 20).Item0 > result.At<Vec4b>(0, 0).Item0);
+    }
+
+    [Fact]
+    public void ApplyFinishing_SaturationZero_ProducesGray()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(0, 0, 255)); // pure red
+
+        var config = new UncropOperationHelper.UncropConfig { Saturation = 0.0 };
+
+        using var result = UncropOperationHelper.ApplyFinishing(src, config);
+        var px = result.At<Vec4b>(2, 2);
+
+        Assert.True(Math.Abs(px.Item0 - px.Item2) <= 1); // B == R now
+    }
+
+    [Fact]
+    public void ApplyFinishing_Contrast_DoublesValue()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(100, 100, 100));
+
+        var config = new UncropOperationHelper.UncropConfig { Contrast = 2.0 };
+
+        using var result = UncropOperationHelper.ApplyFinishing(src, config);
+
+        Assert.Equal(200, result.At<Vec4b>(2, 2).Item0);
+    }
+
+    [Fact]
+    public void ApplyFinishing_Brightness_ShiftsValue()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(100, 100, 100));
+
+        var config = new UncropOperationHelper.UncropConfig { Brightness = 30 };
+
+        using var result = UncropOperationHelper.ApplyFinishing(src, config);
+
+        Assert.Equal(130, result.At<Vec4b>(2, 2).Item0);
+    }
 }

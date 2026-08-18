@@ -78,4 +78,87 @@ public class StrategyCleanupTests
 
         Assert.Equal(255, alpha.Get<byte>(10, 10));
     }
+
+    [Fact]
+    public void MaskExpandPixels_DilatesForeground()
+    {
+        using var mask = new Mat(21, 21, MatType.CV_8UC1, Scalar.All(0));
+        using (var block = new Mat(mask, new Rect(5, 5, 9, 9)))
+        {
+            block.SetTo(Scalar.All(255));
+        }
+
+        using var alpha = RunMask(mask, new StrategyContext { MaskExpandPixels = 3, DecontaminateEdges = false });
+
+        Assert.Equal(255, alpha.Get<byte>(4, 10)); // grown one pixel beyond the block edge
+    }
+
+    [Fact]
+    public void MaskExpandPixels_ErodesForeground()
+    {
+        using var mask = new Mat(21, 21, MatType.CV_8UC1, Scalar.All(0));
+        using (var block = new Mat(mask, new Rect(5, 5, 9, 9)))
+        {
+            block.SetTo(Scalar.All(255));
+        }
+
+        using var alpha = RunMask(mask, new StrategyContext { MaskExpandPixels = -3, DecontaminateEdges = false });
+
+        Assert.Equal(0, alpha.Get<byte>(5, 10)); // block edge shrank
+        Assert.Equal(255, alpha.Get<byte>(10, 10)); // center preserved
+    }
+
+    [Fact]
+    public void MaskBlurPixels_SoftensHardEdge()
+    {
+        using var mask = new Mat(21, 21, MatType.CV_8UC1, Scalar.All(0));
+        using (var block = new Mat(mask, new Rect(0, 0, 21, 11)))
+        {
+            block.SetTo(Scalar.All(255));
+        }
+
+        using var alpha = RunMask(mask, new StrategyContext { MaskBlurPixels = 4, DecontaminateEdges = false });
+
+        byte atEdge = alpha.Get<byte>(10, 10);
+        Assert.InRange(atEdge, (byte)1, (byte)254);
+    }
+
+    [Fact]
+    public void MinComponentAreaPixels_DropsTinyIslands()
+    {
+        using var mask = new Mat(21, 21, MatType.CV_8UC1, Scalar.All(0));
+        using (var big = new Mat(mask, new Rect(5, 5, 8, 8)))
+        {
+            big.SetTo(Scalar.All(255));
+        }
+        using (var small = new Mat(mask, new Rect(15, 15, 2, 2)))
+        {
+            small.SetTo(Scalar.All(255));
+        }
+
+        using var alpha = RunMask(mask, new StrategyContext { MinComponentAreaPixels = 10, DecontaminateEdges = false });
+
+        Assert.Equal(255, alpha.Get<byte>(9, 9)); // big component kept
+        Assert.Equal(0, alpha.Get<byte>(16, 16)); // 4-pixel island removed
+    }
+
+    [Fact]
+    public void MaskGamma_AboveOne_DarkensSoftAlpha()
+    {
+        using var mask = new Mat(5, 5, MatType.CV_8UC1, Scalar.All(128));
+
+        using var alpha = RunMask(mask, new StrategyContext { MaskGamma = 5, DecontaminateEdges = false });
+
+        Assert.True(alpha.Get<byte>(2, 2) < 128);
+    }
+
+    [Fact]
+    public void MaskHardness_HardensSoftEdges()
+    {
+        using var mask = new Mat(5, 5, MatType.CV_8UC1, Scalar.All(64));
+
+        using var alpha = RunMask(mask, new StrategyContext { MaskHardness = 1.0, DecontaminateEdges = false });
+
+        Assert.True(alpha.Get<byte>(2, 2) < 64);
+    }
 }

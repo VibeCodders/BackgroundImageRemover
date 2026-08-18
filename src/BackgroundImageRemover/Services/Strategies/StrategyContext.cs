@@ -84,4 +84,19 @@ public sealed record StrategyContext
 
     /// <summary>Keeps only the largest connected foreground region, dropping stray islands.</summary>
     public bool KeepLargestComponent { get; init; }
+
+    /// <summary>Dilates (&gt;0) or erodes (&lt;0) the mask by this many pixels to grow/shrink the subject.</summary>
+    public int MaskExpandPixels { get; init; }
+
+    /// <summary>Gaussian-blurs the mask by this sigma (0 disables it) to soften edges.</summary>
+    public double MaskBlurPixels { get; init; }
+
+    /// <summary>Drops foreground components smaller than this many pixels (0 disables it).</summary>
+    public int MinComponentAreaPixels { get; init; }
+
+    /// <summary>Gamma applied to the mask alpha (default 1.0; &gt;1 sharpens the cutout, &lt;1 expands the soft edge).</summary>
+    public double MaskGamma { get; init; } = 1.0;
+
+    /// <summary>Hardens soft mask edges (0 = original, 1 = fully hardened with a smoothstep curve).</summary>
+    public double MaskHardness { get; init; }
 }

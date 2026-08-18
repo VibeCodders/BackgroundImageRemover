@@ -3,6 +3,7 @@ using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Dialogs;
+using BackgroundImageRemover.Services.Editing;
 using BackgroundImageRemover.Services.ImageIo;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -61,6 +62,27 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     private double _shadowOpacity = 0.45;
 
     [ObservableProperty]
+    private double _subjectScale = 100.0;
+
+    [ObservableProperty]
+    private double _subjectRotation;
+
+    [ObservableProperty]
+    private int _subjectOffsetX;
+
+    [ObservableProperty]
+    private int _subjectOffsetY;
+
+    [ObservableProperty]
+    private int _backgroundPadding;
+
+    [ObservableProperty]
+    private WpfColor _shadowColor = WpfColor.FromRgb(0, 0, 0);
+
+    [ObservableProperty]
+    private bool _isShadowColorPickerOpen;
+
+    [ObservableProperty]
     private bool _isSolidColorPickerOpen;
 
     [ObservableProperty]
@@ -104,6 +126,12 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     partial void OnShadowOffsetChanged(double value) => RefreshPreview();
     partial void OnShadowBlurChanged(double value) => RefreshPreview();
     partial void OnShadowOpacityChanged(double value) => RefreshPreview();
+    partial void OnSubjectScaleChanged(double value) => RefreshPreview();
+    partial void OnSubjectRotationChanged(double value) => RefreshPreview();
+    partial void OnSubjectOffsetXChanged(int value) => RefreshPreview();
+    partial void OnSubjectOffsetYChanged(int value) => RefreshPreview();
+    partial void OnBackgroundPaddingChanged(int value) => RefreshPreview();
+    partial void OnShadowColorChanged(WpfColor value) => RefreshPreview();
 
     [RelayCommand]
     private void PickBackgroundImage()
@@ -142,14 +170,39 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     {
         using var bgra = _workingBgr!.ToBgra(_workingAlpha!);
         BackgroundCompositingService.ZeroFullyTransparentPixels(bgra);
-        if (!DropShadowEnabled)
-        {
-            return bgra.Clone();
-        }
 
-        using var shadowed = BackgroundCompositingService.ApplyDropShadow(
-            bgra, ShadowOffset, ShadowOffset, ShadowBlur, ShadowOpacity);
-        return shadowed.Clone();
+        Mat current = Math.Abs(SubjectScale - 100.0) > 1e-4
+            ? TransformService.Resize(bgra, SubjectScale / 100.0)
+            : bgra.Clone();
+
+        try
+        {
+            if (Math.Abs(SubjectRotation) > 1e-4)
+            {
+                using var rotated = TransformService.Rotate(current, SubjectRotation);
+                current.Dispose();
+                current = rotated.Clone();
+            }
+
+            if (DropShadowEnabled)
+            {
+                using var shadowed = BackgroundCompositingService.ApplyDropShadow(
+                    current, ShadowOffset, ShadowOffset, ShadowBlur, ShadowOpacity,
+                    new Vec3b(ShadowColor.B, ShadowColor.G, ShadowColor.R));
+                current.Dispose();
+                current = shadowed.Clone();
+            }
+
+            using var placed = BackgroundCompositingService.PlaceOnCanvas(
+                current, BackgroundPadding, SubjectOffsetX, SubjectOffsetY);
+            current.Dispose();
+            return placed.Clone();
+        }
+        catch
+        {
+            current.Dispose();
+            throw;
+        }
     }
 
     private Mat CompositeOnto(Mat subject)

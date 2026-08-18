@@ -73,4 +73,73 @@ public static class TransformService
         Cv2.Resize(bgr, result, new Size(0, 0), scale, scale, InterpolationFlags.Lanczos4);
         return result;
     }
+
+    /// <summary>Resizes to exact pixel dimensions (stretching if the aspect ratio differs).</summary>
+    public static Mat ResizeTo(Mat bgr, int width, int height)
+    {
+        width = Math.Max(1, width);
+        height = Math.Max(1, height);
+        var result = new Mat();
+        Cv2.Resize(bgr, result, new Size(width, height), 0, 0, InterpolationFlags.Lanczos4);
+        return result;
+    }
+
+    /// <summary>Shears the image horizontally (<paramref name="skewX"/>°) and/or vertically (<paramref name="skewY"/>°), expanding the canvas.</summary>
+    public static Mat Skew(Mat bgr, double skewX, double skewY)
+    {
+        if (Math.Abs(skewX) < 1e-6 && Math.Abs(skewY) < 1e-6)
+        {
+            return bgr.Clone();
+        }
+
+        double tx = Math.Tan(skewX * Math.PI / 180.0);
+        double ty = Math.Tan(skewY * Math.PI / 180.0);
+        int newWidth = bgr.Width + Math.Max(0, (int)Math.Round(Math.Abs(tx) * bgr.Height));
+        int newHeight = bgr.Height + Math.Max(0, (int)Math.Round(Math.Abs(ty) * bgr.Width));
+
+        using var matrix = new Mat(2, 3, MatType.CV_64FC1);
+        matrix.Set(0, 0, 1.0);
+        matrix.Set(0, 1, tx);
+        matrix.Set(0, 2, tx < 0 ? -tx * bgr.Height : 0.0);
+        matrix.Set(1, 0, ty);
+        matrix.Set(1, 1, 1.0);
+        matrix.Set(1, 2, ty < 0 ? -ty * bgr.Width : 0.0);
+
+        var result = new Mat();
+        Cv2.WarpAffine(bgr, result, matrix, new Size(newWidth, newHeight), InterpolationFlags.Linear, BorderTypes.Constant, Scalar.All(0));
+        return result;
+    }
+
+    /// <summary>Crops to the largest centered rectangle with the requested width/height ratio.</summary>
+    public static Mat CropToAspect(Mat bgr, double ratio)
+    {
+        var rect = CropService.CenteredRectForAspect(bgr.Size(), ratio);
+        return CropService.CropRect(bgr, rect);
+    }
+
+    /// <summary>Trims away a near-uniform border (letterbox bars / flat backdrop), preserving any alpha channel.</summary>
+    public static Mat TrimBorder(Mat img, int tolerance = 12)
+    {
+        Rect bounds;
+        if (img.Channels() == 4)
+        {
+            var channels = Cv2.Split(img);
+            try
+            {
+                using var bgr = new Mat();
+                Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, bgr);
+                bounds = CropService.TrimContentBounds(bgr, tolerance);
+            }
+            finally
+            {
+                foreach (var ch in channels) ch.Dispose();
+            }
+        }
+        else
+        {
+            bounds = CropService.TrimContentBounds(img, tolerance);
+        }
+
+        return CropService.CropRect(img, bounds);
+    }
 }

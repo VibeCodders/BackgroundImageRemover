@@ -53,6 +53,43 @@
                     <Slider Minimum="10" Maximum="400" Value="{Binding ScalePercent}" Margin="0,2,0,4" />
                     <Button Content="Apply scale" Command="{Binding ResizeCommand}" Margin="0,0,0,16" />
 
+                    <TextBlock Text="Skew" FontWeight="SemiBold" Margin="0,4,0,4" />
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Horizontal" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding SkewX, StringFormat='{}{0:0}°'}" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="-45" Maximum="45" Value="{Binding SkewX}" Margin="0,0,0,4" />
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Vertical" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding SkewY, StringFormat='{}{0:0}°'}" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="-45" Maximum="45" Value="{Binding SkewY}" Margin="0,0,0,4" />
+                    <Button Content="Apply skew" Command="{Binding ApplySkewCommand}" Margin="0,0,0,16" />
+
+                    <TextBlock Text="Exact size (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                            <TextBlock Text="Width" FontSize="11" Foreground="#FF666666" />
+                            <TextBox Text="{Binding ExactWidth, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Height" FontSize="11" Foreground="#FF666666" />
+                            <TextBox Text="{Binding ExactHeight, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+                    <Button Content="Apply exact size" Command="{Binding ApplyExactResizeCommand}" Margin="0,0,0,16" />
+
+                    <TextBlock Text="Crop to aspect ratio (W:H)" FontWeight="SemiBold" Margin="0,4,0,4" />
+                    <Slider Minimum="0.25" Maximum="3" Value="{Binding CropAspectRatio}" SmallChange="0.05" LargeChange="0.25" Margin="0,0,0,4" />
+                    <TextBlock Text="{Binding CropAspectRatio, StringFormat='{}{0:0.00}'}" FontSize="11" Foreground="#FF666666" HorizontalAlignment="Center" Margin="0,0,0,4" />
+                    <Button Content="Apply crop" Command="{Binding ApplyCropAspectCommand}" Margin="0,0,0,8" />
+
+                    <Button Content="✂ Trim flat border" Command="{Binding TrimBorderCommand}" Margin="0,0,0,16" />
+
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="#FFF0F0F0" Foreground="#FF333333" BorderBrush="#FFCCCCCC" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>

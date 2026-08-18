@@ -125,7 +125,12 @@ public partial class BackgroundRemoverToolSessionViewModel
             DespeckleKernelSize = (int)Math.Round(DespeckleKernelSize * scaleToFull),
             FillHolesKernelSize = (int)Math.Round(FillHolesKernelSize * scaleToFull),
             SmoothEdgesKernelSize = (int)Math.Round(SmoothEdgesKernelSize * scaleToFull),
-            KeepLargestComponent = KeepLargestComponent
+            KeepLargestComponent = KeepLargestComponent,
+            MaskExpandPixels = (int)Math.Round(MaskExpandPixels * scaleToFull),
+            MaskBlurPixels = MaskBlurPixels * scaleToFull,
+            MinComponentAreaPixels = (int)Math.Round(MinComponentAreaPixels * scaleToFull * scaleToFull),
+            MaskGamma = MaskGamma,
+            MaskHardness = MaskHardness
         };
     }
 

@@ -17,4 +17,14 @@ public partial class FrameToolSessionView : UserControl
     {
         if (ViewModel is { } vm) vm.IsColorPickerOpen = !vm.IsColorPickerOpen;
     }
+
+    private void ChooseInnerColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.IsInnerColorPickerOpen = !vm.IsInnerColorPickerOpen;
+    }
+
+    private void ChooseMatColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.IsMatColorPickerOpen = !vm.IsMatColorPickerOpen;
+    }
 }

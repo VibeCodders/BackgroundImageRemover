@@ -47,6 +47,21 @@ public record ImageAdjustments
     /// <summary>When true, applies automatic contrast (CLAHE) and gray-world white balance first.</summary>
     public bool AutoEnhance { get; init; }
 
+    /// <summary>Vibrance in [-1, 1]: boosts low-saturation colors more than already-saturated ones (0 = off).</summary>
+    public double Vibrance { get; init; }
+
+    /// <summary>Clarity in [0, 1]: local contrast via CLAHE, blended with the original (0 = off).</summary>
+    public double Clarity { get; init; }
+
+    /// <summary>Fade in [0, 1]: lifts blacks toward mid-gray for a matte film look (0 = off).</summary>
+    public double Fade { get; init; }
+
+    /// <summary>Film grain in [0, 1]: additive Gaussian noise amount (0 = off).</summary>
+    public double Grain { get; init; }
+
+    /// <summary>Monochrome in [0, 1]: blends toward a grayscale rendition (0 = full color, 1 = B&amp;W).</summary>
+    public double Monochrome { get; init; }
+
     /// <summary>Returns true if all parameters are at neutral/identity values.</summary>
     public bool IsIdentity =>
         Math.Abs(Brightness) < 1e-4 &&
@@ -62,6 +77,11 @@ public record ImageAdjustments
         Math.Abs(Highlights) < 1e-4 &&
         Math.Abs(Shadows) < 1e-4 &&
         Math.Abs(Denoise) < 1e-4 &&
+        Math.Abs(Vibrance) < 1e-4 &&
+        Math.Abs(Clarity) < 1e-4 &&
+        Math.Abs(Fade) < 1e-4 &&
+        Math.Abs(Grain) < 1e-4 &&
+        Math.Abs(Monochrome) < 1e-4 &&
         !AutoEnhance;
 
     public static ImageAdjustments Default { get; } = new();

@@ -53,6 +53,21 @@
         <DataTemplate DataType="{x:Type vm:TextToolSessionViewModel}">
             <views:TextToolSessionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CropToolSessionViewModel}">
+            <views:CropToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ResizeToolSessionViewModel}">
+            <views:ResizeToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MosaicToolSessionViewModel}">
+            <views:MosaicToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OverlayToolSessionViewModel}">
+            <views:OverlayToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LevelsToolSessionViewModel}">
+            <views:LevelsToolSessionView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel>

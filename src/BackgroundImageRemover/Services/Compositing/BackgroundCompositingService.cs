@@ -143,7 +143,7 @@ public static class BackgroundCompositingService
     /// (positive = right) and <paramref name="offsetY"/> (positive = down) and softened by
     /// <paramref name="blurSigma"/>. <paramref name="opacity"/> scales the shadow's alpha (0..1).
     /// </summary>
-    public static Mat ApplyDropShadow(Mat bgra, double offsetX, double offsetY, double blurSigma, double opacity)
+    public static Mat ApplyDropShadow(Mat bgra, double offsetX, double offsetY, double blurSigma, double opacity, Vec3b? shadowColor = null)
     {
         blurSigma = Math.Max(0, blurSigma);
         opacity = Math.Clamp(opacity, 0.0, 1.0);
@@ -188,8 +188,8 @@ public static class BackgroundCompositingService
         using var fgSplit = ChannelSplit.Of(fgF);
         var aFg = fgSplit[3];
 
-        // Over-composite: the shadow (black, so it contributes no color) sits under the subject.
-        // outA = aFg + shadowA * (1 - aFg); outB = (cFg * aFg) / outA.
+        // Over-composite the shadow under the subject. outA = aFg + shadowA * (1 - aFg);
+        // the shadow contributes its color scaled by the alpha it adds.
         using var oneMinusFg = new Mat();
         Cv2.Subtract(new Mat(outSize, MatType.CV_32FC1, Scalar.All(1.0)), aFg, oneMinusFg);
         using var shadowContrib = shadowA.Mul(oneMinusFg).ToMat();
@@ -202,12 +202,19 @@ public static class BackgroundCompositingService
         Cv2.CvtColor(aFg, aFg3, ColorConversionCodes.GRAY2BGR);
         using var fgPremul = fgColor.Mul(aFg3).ToMat();
 
+        using var shadowContrib3 = new Mat();
+        Cv2.CvtColor(shadowContrib, shadowContrib3, ColorConversionCodes.GRAY2BGR);
+        var sc = shadowColor ?? new Vec3b(0, 0, 0);
+        using var shadowColorFloat = new Mat(outSize, MatType.CV_32FC3, new Scalar(sc.Item0 / 255.0, sc.Item1 / 255.0, sc.Item2 / 255.0));
+        using var shadowPremul = shadowColorFloat.Mul(shadowContrib3).ToMat();
+        using var numerator = (fgPremul + shadowPremul).ToMat();
+
         using var outA3 = new Mat();
         Cv2.CvtColor(outA, outA3, ColorConversionCodes.GRAY2BGR);
         using var epsilon = new Mat(outSize, MatType.CV_32FC3, Scalar.All(1e-6));
         Cv2.Max(outA3, epsilon, outA3); // guard division by zero
         using var outB = new Mat();
-        Cv2.Divide(fgPremul, outA3, outB);
+        Cv2.Divide(numerator, outA3, outB);
 
         using var outFloat = new Mat();
         Cv2.CvtColor(outB, outFloat, ColorConversionCodes.BGR2BGRA);
@@ -217,6 +224,27 @@ public static class BackgroundCompositingService
 
         var result = new Mat();
         outFloat.ConvertTo(result, MatType.CV_8UC4, 255.0);
+        return result;
+    }
+
+    /// <summary>
+    /// Places the cutout on an expanded transparent canvas, offset from center. Padding adds
+    /// breathing room and the offsets translate the subject (positive = right/down).
+    /// </summary>
+    public static Mat PlaceOnCanvas(Mat bgra, int padding, int offsetX, int offsetY)
+    {
+        padding = Math.Max(0, padding);
+        if (padding == 0 && offsetX == 0 && offsetY == 0)
+        {
+            return bgra.Clone();
+        }
+
+        var outSize = new Size(bgra.Width + 2 * padding, bgra.Height + 2 * padding);
+        var result = new Mat(outSize, MatType.CV_8UC4, Scalar.All(0));
+        int x = Math.Clamp(padding + offsetX, 0, Math.Max(0, outSize.Width - bgra.Width));
+        int y = Math.Clamp(padding + offsetY, 0, Math.Max(0, outSize.Height - bgra.Height));
+        using var roi = new Mat(result, new Rect(x, y, bgra.Width, bgra.Height));
+        bgra.CopyTo(roi);
         return result;
     }
 

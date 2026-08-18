@@ -95,6 +95,11 @@ public partial class ShellViewModel : ObservableObject
             EditorTool.Compose => new ComposeToolSessionViewModel(this, doc, _dialogs, _imageLoader),
             EditorTool.Frame => new FrameToolSessionViewModel(this, doc),
             EditorTool.Text => new TextToolSessionViewModel(this, doc),
+            EditorTool.Crop => new CropToolSessionViewModel(this, doc),
+            EditorTool.Resize => new ResizeToolSessionViewModel(this, doc),
+            EditorTool.Mosaic => new MosaicToolSessionViewModel(this, doc),
+            EditorTool.Overlay => new OverlayToolSessionViewModel(this, doc, _dialogs, _imageLoader),
+            EditorTool.Levels => new LevelsToolSessionViewModel(this, doc),
             _ => null
         };
 

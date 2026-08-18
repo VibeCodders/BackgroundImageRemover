@@ -185,6 +185,21 @@
 
                     <CheckBox Content="Keep largest subject only" IsChecked="{Binding KeepLargestComponent}" Margin="0,8,0,0" />
 
+                    <TextBlock Text="Grow / shrink subject" Margin="0,8,0,0" />
+                    <Slider Minimum="-30" Maximum="30" Value="{Binding MaskExpandPixels}" TickFrequency="1" IsSnapToTickEnabled="True" />
+
+                    <TextBlock Text="Edge blur" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="15" Value="{Binding MaskBlurPixels}" TickFrequency="0.5" />
+
+                    <TextBlock Text="Min component area (px)" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="500" Value="{Binding MinComponentAreaPixels}" TickFrequency="10" />
+
+                    <TextBlock Text="Mask gamma" Margin="0,8,0,0" />
+                    <Slider Minimum="0.2" Maximum="5" Value="{Binding MaskGamma}" TickFrequency="0.1" />
+
+                    <TextBlock Text="Edge hardness" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="1" Value="{Binding MaskHardness}" TickFrequency="0.05" />
+
                     <!-- Export background options (persisted to the parent document) -->
                     <Separator Margin="0,16,0,8" />
                     <TextBlock Text="Export background" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />

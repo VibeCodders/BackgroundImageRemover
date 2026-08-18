@@ -29,6 +29,21 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
     private double _scalePercent = 100.0;
 
     [ObservableProperty]
+    private double _skewX;
+
+    [ObservableProperty]
+    private double _skewY;
+
+    [ObservableProperty]
+    private int _exactWidth;
+
+    [ObservableProperty]
+    private int _exactHeight;
+
+    [ObservableProperty]
+    private double _cropAspectRatio = 1.0;
+
+    [ObservableProperty]
     private string? _statusMessage;
 
     public TransformToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
@@ -43,8 +58,10 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
         using var alpha = _sourceImage.FullAlpha?.Clone()
             ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
         _workingBgra = _sourceImage.FullBgr.ToBgra(alpha);
+        ExactWidth = _workingBgra.Width;
+        ExactHeight = _workingBgra.Height;
         RefreshPreview();
-        StatusMessage = "Apply flips, rotations and scaling.";
+        StatusMessage = "Apply flips, rotations, scaling, skew, crop and trim.";
     }
 
     private void RefreshPreview()
@@ -76,6 +93,18 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
     private void Resize() => ApplyTransform(m => TransformService.Resize(m, ScalePercent / 100.0));
 
     [RelayCommand]
+    private void ApplySkew() => ApplyTransform(m => TransformService.Skew(m, SkewX, SkewY));
+
+    [RelayCommand]
+    private void ApplyExactResize() => ApplyTransform(m => TransformService.ResizeTo(m, ExactWidth, ExactHeight));
+
+    [RelayCommand]
+    private void ApplyCropAspect() => ApplyTransform(m => TransformService.CropToAspect(m, CropAspectRatio));
+
+    [RelayCommand]
+    private void TrimBorder() => ApplyTransform(m => TransformService.TrimBorder(m));
+
+    [RelayCommand]
     private void Reset()
     {
         if (_sourceImage is null) return;
@@ -85,6 +114,11 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
         _workingBgra = _sourceImage.FullBgr.ToBgra(alpha);
         Angle = 0.0;
         ScalePercent = 100.0;
+        SkewX = 0.0;
+        SkewY = 0.0;
+        ExactWidth = _workingBgra.Width;
+        ExactHeight = _workingBgra.Height;
+        CropAspectRatio = 1.0;
         RefreshPreview();
     }
 

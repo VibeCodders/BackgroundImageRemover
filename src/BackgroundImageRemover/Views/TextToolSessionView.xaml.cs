@@ -17,4 +17,14 @@ public partial class TextToolSessionView : UserControl
     {
         if (ViewModel is { } vm) vm.IsColorPickerOpen = !vm.IsColorPickerOpen;
     }
+
+    private void ChooseOutlineColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.IsOutlineColorPickerOpen = !vm.IsOutlineColorPickerOpen;
+    }
+
+    private void ChoosePlateColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.IsPlateColorPickerOpen = !vm.IsPlateColorPickerOpen;
+    }
 }

@@ -27,4 +27,9 @@ public partial class ComposeToolSessionView : UserControl
     {
         if (ViewModel is { } vm) vm.IsGradientBottomColorPickerOpen = !vm.IsGradientBottomColorPickerOpen;
     }
+
+    private void ChooseShadowColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.IsShadowColorPickerOpen = !vm.IsShadowColorPickerOpen;
+    }
 }

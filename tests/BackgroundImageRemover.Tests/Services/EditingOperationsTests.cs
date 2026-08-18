@@ -140,6 +140,54 @@ public class EditingOperationsTests
     }
 
     [Fact]
+    public void AddInnerBorder_DrawsAccentLine()
+    {
+        using var input = new Mat(20, 20, MatType.CV_8UC4, new Scalar(100, 100, 100, 255));
+
+        using var result = FrameService.AddInnerBorder(input, thickness: 2, new Vec3b(0, 0, 255), opacity: 1.0);
+
+        Assert.Equal(input.Size(), result.Size());
+        Assert.True(result.At<Vec4b>(0, 0).Item2 > 200); // red accent on the edge
+        Assert.Equal(100, result.At<Vec4b>(10, 10).Item2); // center untouched
+    }
+
+    [Fact]
+    public void AddOuterShadow_PadsCanvas()
+    {
+        using var input = new Mat(10, 10, MatType.CV_8UC4, new Scalar(0, 0, 0, 255));
+
+        using var result = FrameService.AddOuterShadow(input, offset: 5, blur: 0, opacity: 1.0);
+
+        Assert.Equal(22, result.Width);
+        Assert.Equal(22, result.Height);
+    }
+
+    [Fact]
+    public void AddPaddingWithColor_FillsPaddingWithMatColor()
+    {
+        using var input = new Mat(10, 10, MatType.CV_8UC4, new Scalar(255, 255, 255, 255));
+
+        using var result = FrameService.AddPaddingWithColor(input, top: 2, right: 2, bottom: 2, left: 2, new Vec3b(0, 0, 255));
+
+        var corner = result.At<Vec4b>(0, 0);
+        Assert.Equal(0, corner.Item0);
+        Assert.Equal(0, corner.Item1);
+        Assert.Equal(255, corner.Item2); // red mat
+        Assert.Equal(255, corner.Item3);
+    }
+
+    [Fact]
+    public void AddBorder_Opacity_MakesBorderSemiTransparent()
+    {
+        using var input = new Mat(10, 10, MatType.CV_8UC4, new Scalar(255, 255, 255, 255));
+
+        using var result = FrameService.AddBorder(input, thickness: 2, new Vec3b(0, 0, 255), opacity: 0.5);
+
+        Assert.Equal(14, result.Width);
+        Assert.True(result.At<Vec4b>(0, 0).Item3 is > 120 and < 135); // ~127
+    }
+
+    [Fact]
     public void TextOverlay_BlankText_LeavesImageUnchanged()
     {
         using var input = new Mat(40, 40, MatType.CV_8UC3, new Scalar(10, 20, 30));
@@ -175,5 +223,138 @@ public class EditingOperationsTests
         Assert.Equal(0, corner.Item0);
         Assert.Equal(0, corner.Item1);
         Assert.Equal(0, corner.Item2);
+    }
+
+    [Fact]
+    public void TextOverlay_BackgroundPlate_AddsPlateColor()
+    {
+        using var input = new Mat(100, 100, MatType.CV_8UC3, new Scalar(10, 10, 10));
+
+        using var result = TextOverlayService.Render(input, new TextOverlayOptions
+        {
+            Text = "TEST",
+            Anchor = TextAnchor.Center,
+            FontSize = 48,
+            Color = new Vec3b(255, 255, 255),
+            Opacity = 1.0,
+            BackgroundPlate = true,
+            PlateColor = new Vec3b(0, 0, 255),
+            PlateOpacity = 1.0,
+            PlatePadding = 12
+        });
+
+        Assert.True(CountPixelsWhere(result, p => p.Item2 > 200 && p.Item0 < 100 && p.Item1 < 100) > 0);
+    }
+
+    [Fact]
+    public void TextOverlay_Outline_AddsOutlineColor()
+    {
+        using var input = new Mat(100, 100, MatType.CV_8UC3, new Scalar(10, 10, 10));
+
+        using var result = TextOverlayService.Render(input, new TextOverlayOptions
+        {
+            Text = "TEST",
+            Anchor = TextAnchor.Center,
+            FontSize = 48,
+            Color = new Vec3b(255, 255, 255),
+            Opacity = 1.0,
+            OutlineThickness = 3,
+            OutlineColor = new Vec3b(0, 255, 0)
+        });
+
+        Assert.True(CountPixelsWhere(result, p => p.Item1 > 200 && p.Item0 < 100 && p.Item2 < 100) > 0);
+    }
+
+    [Fact]
+    public void TextOverlay_Rotation_PreservesCanvasSize()
+    {
+        using var input = new Mat(100, 100, MatType.CV_8UC3, new Scalar(10, 10, 10));
+
+        using var result = TextOverlayService.Render(input, new TextOverlayOptions
+        {
+            Text = "TEST",
+            Anchor = TextAnchor.Center,
+            FontSize = 48,
+            Rotation = 45
+        });
+
+        Assert.Equal(input.Size(), result.Size());
+    }
+
+    private static int CountPixelsWhere(Mat bgr, Func<Vec3b, bool> predicate)
+    {
+        int count = 0;
+        for (int y = 0; y < bgr.Height; y++)
+        {
+            for (int x = 0; x < bgr.Width; x++)
+            {
+                if (predicate(bgr.At<Vec3b>(y, x)))
+                {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    [Fact]
+    public void Neon_ProducesEdgeGlow()
+    {
+        using var input = new Mat(21, 21, MatType.CV_8UC3, Scalar.All(0));
+        using (var block = new Mat(input, new Rect(8, 8, 5, 5)))
+        {
+            block.SetTo(new Scalar(200, 200, 200));
+        }
+
+        using var result = FilterService.Apply(input, FilterKind.Neon, intensity: 1.0);
+
+        Assert.Equal(input.Size(), result.Size());
+        using var gray = new Mat();
+        Cv2.CvtColor(result, gray, ColorConversionCodes.BGR2GRAY);
+        Assert.True(Cv2.CountNonZero(gray) > 0);
+    }
+
+    [Fact]
+    public void Hdr_PreservesSizeAndType()
+    {
+        using var input = new Mat(30, 30, MatType.CV_8UC3, new Scalar(120, 90, 60));
+
+        using var result = FilterService.Apply(input, FilterKind.Hdr, intensity: 1.0);
+
+        Assert.Equal(input.Size(), result.Size());
+        Assert.Equal(input.Type(), result.Type());
+    }
+
+    [Fact]
+    public void Pencil_PreservesSizeAndType()
+    {
+        using var input = new Mat(30, 30, MatType.CV_8UC3, new Scalar(120, 90, 60));
+
+        using var result = FilterService.Apply(input, FilterKind.Pencil, intensity: 1.0);
+
+        Assert.Equal(input.Size(), result.Size());
+        Assert.Equal(input.Type(), result.Type());
+    }
+
+    [Fact]
+    public void Dreamy_PreservesSizeAndType()
+    {
+        using var input = new Mat(30, 30, MatType.CV_8UC3, new Scalar(120, 90, 60));
+
+        using var result = FilterService.Apply(input, FilterKind.Dreamy, intensity: 1.0);
+
+        Assert.Equal(input.Size(), result.Size());
+        Assert.Equal(input.Type(), result.Type());
+    }
+
+    [Fact]
+    public void Cartoon_PreservesSizeAndType()
+    {
+        using var input = new Mat(30, 30, MatType.CV_8UC3, new Scalar(120, 90, 60));
+
+        using var result = FilterService.Apply(input, FilterKind.Cartoon, intensity: 1.0);
+
+        Assert.Equal(input.Size(), result.Size());
+        Assert.Equal(input.Type(), result.Type());
     }
 }

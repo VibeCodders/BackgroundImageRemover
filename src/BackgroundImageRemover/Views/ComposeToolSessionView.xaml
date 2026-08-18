@@ -106,7 +106,49 @@
                             <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" TickFrequency="0.05" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Rectangle Width="24" Height="24" Fill="{Binding ShadowColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                            <Button x:Name="ChooseShadowColorButton" Content="Shadow color..." Margin="8,0,0,0" Click="ChooseShadowColorButton_Click" />
+                            <Popup IsOpen="{Binding IsShadowColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseShadowColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
+                                <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                    <controls:SimpleColorPickerControl SelectedColor="{Binding ShadowColor}" />
+                                </Border>
+                            </Popup>
+                        </StackPanel>
                     </StackPanel>
+
+                    <Separator Margin="0,12,0,12" />
+                    <TextBlock Text="Subject placement" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+
+                    <DockPanel>
+                        <TextBlock Text="Scale" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding SubjectScale, StringFormat='{}{0:0}%'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="10" Maximum="400" Value="{Binding SubjectScale}" Margin="0,0,0,8" />
+
+                    <DockPanel>
+                        <TextBlock Text="Rotation" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding SubjectRotation, StringFormat='{}{0:0}°'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="-180" Maximum="180" Value="{Binding SubjectRotation}" Margin="0,0,0,8" />
+
+                    <DockPanel>
+                        <TextBlock Text="Offset X" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding SubjectOffsetX, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="-200" Maximum="200" Value="{Binding SubjectOffsetX}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
+
+                    <DockPanel>
+                        <TextBlock Text="Offset Y" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding SubjectOffsetY, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="-200" Maximum="200" Value="{Binding SubjectOffsetY}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
+
+                    <DockPanel>
+                        <TextBlock Text="Canvas padding" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding BackgroundPadding, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="300" Value="{Binding BackgroundPadding}" TickFrequency="1" IsSnapToTickEnabled="True" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

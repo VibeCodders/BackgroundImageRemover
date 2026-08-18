@@ -86,7 +86,12 @@ public partial class DocumentViewModel
         return strategyContext with
         {
             InvertMask = InvertMask,
-            MaskFeatherPixels = (int)Math.Round(MaskFeatherPixels * scaleToFull)
+            MaskFeatherPixels = (int)Math.Round(MaskFeatherPixels * scaleToFull),
+            MaskExpandPixels = (int)Math.Round(MaskExpandPixels * scaleToFull),
+            MaskBlurPixels = MaskBlurPixels * scaleToFull,
+            MinComponentAreaPixels = (int)Math.Round(MinComponentAreaPixels * scaleToFull * scaleToFull),
+            MaskGamma = MaskGamma,
+            MaskHardness = MaskHardness
         };
     }
 

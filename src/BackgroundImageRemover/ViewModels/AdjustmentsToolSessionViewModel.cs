@@ -71,6 +71,21 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     private bool _adjAutoEnhance;
 
     [ObservableProperty]
+    private double _adjVibrance;
+
+    [ObservableProperty]
+    private double _adjClarity;
+
+    [ObservableProperty]
+    private double _adjFade;
+
+    [ObservableProperty]
+    private double _adjGrain;
+
+    [ObservableProperty]
+    private double _adjMonochrome;
+
+    [ObservableProperty]
     private bool _isCompareMode;
 
     [ObservableProperty]
@@ -118,6 +133,11 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     partial void OnAdjShadowsChanged(double value) => UpdateLivePreview();
     partial void OnAdjDenoiseChanged(double value) => UpdateLivePreview();
     partial void OnAdjAutoEnhanceChanged(bool value) => UpdateLivePreview();
+    partial void OnAdjVibranceChanged(double value) => UpdateLivePreview();
+    partial void OnAdjClarityChanged(double value) => UpdateLivePreview();
+    partial void OnAdjFadeChanged(double value) => UpdateLivePreview();
+    partial void OnAdjGrainChanged(double value) => UpdateLivePreview();
+    partial void OnAdjMonochromeChanged(double value) => UpdateLivePreview();
 
     private void UpdateLivePreview()
     {
@@ -138,7 +158,12 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
             Highlights = AdjHighlights,
             Shadows = AdjShadows,
             Denoise = AdjDenoise,
-            AutoEnhance = AdjAutoEnhance
+            AutoEnhance = AdjAutoEnhance,
+            Vibrance = AdjVibrance,
+            Clarity = AdjClarity,
+            Fade = AdjFade,
+            Grain = AdjGrain,
+            Monochrome = AdjMonochrome
         };
 
         if (adjustments.IsIdentity)
@@ -177,6 +202,11 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
         AdjShadows = 0.0;
         AdjDenoise = 0.0;
         AdjAutoEnhance = false;
+        AdjVibrance = 0.0;
+        AdjClarity = 0.0;
+        AdjFade = 0.0;
+        AdjGrain = 0.0;
+        AdjMonochrome = 0.0;
         UpdateLivePreview();
     }
 
@@ -203,7 +233,12 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
             Highlights = AdjHighlights,
             Shadows = AdjShadows,
             Denoise = AdjDenoise,
-            AutoEnhance = AdjAutoEnhance
+            AutoEnhance = AdjAutoEnhance,
+            Vibrance = AdjVibrance,
+            Clarity = AdjClarity,
+            Fade = AdjFade,
+            Grain = AdjGrain,
+            Monochrome = AdjMonochrome
         };
 
         if (!adjustments.IsIdentity)

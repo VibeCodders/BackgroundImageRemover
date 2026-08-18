@@ -9,5 +9,10 @@ public enum FilterKind
     Invert,
     Posterize,
     Emboss,
-    Sketch
+    Sketch,
+    Neon,
+    Hdr,
+    Pencil,
+    Dreamy,
+    Cartoon
 }

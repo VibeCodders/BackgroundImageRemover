@@ -183,6 +183,101 @@ public static class ImageProcessingHelper
                 current = denoised;
             }
 
+            // 5.6 Vibrance: boost muted colors more than already-saturated ones.
+            if (Math.Abs(adjustments.Vibrance) > 1e-4)
+            {
+                using var hsv = new Mat();
+                Cv2.CvtColor(current, hsv, ColorConversionCodes.BGR2HSV);
+                var channels = Cv2.Split(hsv);
+                try
+                {
+                    double v = adjustments.Vibrance;
+                    using var satLut = BuildLut(s =>
+                    {
+                        double t = s / 255.0;
+                        double k = v >= 0 ? 1.0 + v * (1.0 - t) : 1.0 + v;
+                        return 255.0 * t * k;
+                    });
+                    Cv2.LUT(channels[1], satLut, channels[1]);
+                    Cv2.Merge(channels, hsv);
+                    var vibrant = new Mat();
+                    Cv2.CvtColor(hsv, vibrant, ColorConversionCodes.HSV2BGR);
+                    current.Dispose();
+                    current = vibrant;
+                }
+                finally
+                {
+                    foreach (var ch in channels) ch.Dispose();
+                }
+            }
+
+            // 5.7 Clarity: local contrast via CLAHE on the Luminance channel, blended with the original.
+            if (adjustments.Clarity > 1e-4)
+            {
+                using var lab = new Mat();
+                Cv2.CvtColor(current, lab, ColorConversionCodes.BGR2Lab);
+                var labChannels = Cv2.Split(lab);
+                Mat clarified;
+                try
+                {
+                    using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
+                    clahe.Apply(labChannels[0], labChannels[0]);
+                    Cv2.Merge(labChannels, lab);
+                    clarified = new Mat();
+                    Cv2.CvtColor(lab, clarified, ColorConversionCodes.Lab2BGR);
+                }
+                finally
+                {
+                    foreach (var ch in labChannels) ch.Dispose();
+                }
+
+                using (clarified)
+                {
+                    var blended = new Mat();
+                    Cv2.AddWeighted(current, 1.0 - adjustments.Clarity, clarified, adjustments.Clarity, 0, blended);
+                    current.Dispose();
+                    current = blended;
+                }
+            }
+
+            // 5.8 Fade: lift blacks toward mid-gray for a matte film look.
+            if (adjustments.Fade > 1e-4)
+            {
+                using var lut = BuildLut(i => i + adjustments.Fade * (128.0 - i));
+                var faded = new Mat();
+                Cv2.LUT(current, lut, faded);
+                current.Dispose();
+                current = faded;
+            }
+
+            // 5.9 Monochrome: blend toward a grayscale rendition.
+            if (adjustments.Monochrome > 1e-4)
+            {
+                using var gray = new Mat();
+                Cv2.CvtColor(current, gray, ColorConversionCodes.BGR2GRAY);
+                using var grayBgr = new Mat();
+                Cv2.CvtColor(gray, grayBgr, ColorConversionCodes.GRAY2BGR);
+                var mono = new Mat();
+                Cv2.AddWeighted(current, 1.0 - adjustments.Monochrome, grayBgr, adjustments.Monochrome, 0, mono);
+                current.Dispose();
+                current = mono;
+            }
+
+            // 5.95 Grain: additive Gaussian noise for a film-like texture.
+            if (adjustments.Grain > 1e-4)
+            {
+                using var noise = new Mat(current.Size(), MatType.CV_32FC3);
+                Cv2.Randn(noise, Scalar.All(0), Scalar.All(30.0 * adjustments.Grain));
+                using var currentF = new Mat();
+                current.ConvertTo(currentF, MatType.CV_32FC3);
+                using var noisyF = new Mat();
+                Cv2.Add(currentF, noise, noisyF);
+                var grained = new Mat();
+                noisyF.ConvertTo(grained, MatType.CV_8UC3);
+                current.Dispose();
+                current = grained;
+            }
+
             // 6. Vignette effect
             if (adjustments.Vignette > 1e-4)
             {

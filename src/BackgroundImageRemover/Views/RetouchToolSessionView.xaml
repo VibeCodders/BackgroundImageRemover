@@ -100,6 +100,35 @@
                     <Button Content="Feather edges" Command="{Binding FeatherEdgesCommand}" Margin="0,0,0,6" />
                     <Button Content="Remove specks" Command="{Binding RemoveSpecksCommand}" Margin="0,0,0,6" />
                     <Button Content="Invert mask" Command="{Binding InvertMaskCommand}" />
+
+                    <Separator Margin="0,12,0,12" />
+                    <TextBlock Text="Whole-image effects" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Dehaze" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding Dehaze, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="1" Value="{Binding Dehaze}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Blur background" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding BlurBackgroundRadius, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="50" Value="{Binding BlurBackgroundRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Sharpen subject" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding SharpenStrength, StringFormat='{}{0:0.00}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="2" Value="{Binding SharpenStrength}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Color boost" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding ColorBoost, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="1" Value="{Binding ColorBoost}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <CheckBox Content="Defringe edges" IsChecked="{Binding Defringe}" FontWeight="SemiBold" Margin="0,0,0,8" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

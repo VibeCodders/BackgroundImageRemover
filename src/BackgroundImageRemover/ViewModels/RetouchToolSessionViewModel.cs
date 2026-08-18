@@ -48,6 +48,21 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     private double _magicWandTolerance = 25.0;
 
     [ObservableProperty]
+    private double _dehaze;
+
+    [ObservableProperty]
+    private bool _defringe;
+
+    [ObservableProperty]
+    private int _blurBackgroundRadius;
+
+    [ObservableProperty]
+    private double _sharpenStrength;
+
+    [ObservableProperty]
+    private double _colorBoost;
+
+    [ObservableProperty]
     private bool _canUndo;
 
     [ObservableProperty]
@@ -140,10 +155,62 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         RefreshResultBitmap();
     }
 
+    partial void OnDehazeChanged(double value) => RefreshResultBitmap();
+    partial void OnDefringeChanged(bool value) => RefreshResultBitmap();
+    partial void OnBlurBackgroundRadiusChanged(int value) => RefreshResultBitmap();
+    partial void OnSharpenStrengthChanged(double value) => RefreshResultBitmap();
+    partial void OnColorBoostChanged(double value) => RefreshResultBitmap();
+
+    /// <summary>Applies the whole-image retouch effects on top of the brush/wand alpha edits.</summary>
+    private Mat BuildResultBgr()
+    {
+        var result = _workingBgr!.Clone();
+        try
+        {
+            if (Dehaze > 1e-4)
+            {
+                var dehazed = RetouchEffectsService.Dehaze(result, Dehaze);
+                result.Dispose();
+                result = dehazed;
+            }
+            if (BlurBackgroundRadius > 0)
+            {
+                var blurred = RetouchEffectsService.BlurBackground(result, _workingAlpha!, BlurBackgroundRadius);
+                result.Dispose();
+                result = blurred;
+            }
+            if (SharpenStrength > 1e-4)
+            {
+                var sharpened = RetouchEffectsService.SharpenSubject(result, _workingAlpha!, SharpenStrength);
+                result.Dispose();
+                result = sharpened;
+            }
+            if (ColorBoost > 1e-4)
+            {
+                var boosted = RetouchEffectsService.ColorBoost(result, _workingAlpha!, ColorBoost);
+                result.Dispose();
+                result = boosted;
+            }
+            if (Defringe)
+            {
+                var defringed = RetouchEffectsService.Defringe(result, _workingAlpha!);
+                result.Dispose();
+                result = defringed;
+            }
+            return result;
+        }
+        catch
+        {
+            result.Dispose();
+            throw;
+        }
+    }
+
     private void RefreshResultBitmap()
     {
         if (_workingBgr is null || _workingAlpha is null) return;
-        ResultBitmap = _workingBgr.ToBitmapSource(_workingAlpha);
+        using var result = BuildResultBgr();
+        ResultBitmap = result.ToBitmapSource(_workingAlpha);
     }
 
     private void RefineAlpha(Func<Mat, Mat> refine)
@@ -203,7 +270,8 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     {
         if (_workingBgr is not null && _workingAlpha is not null)
         {
-            _parentDocument.ApplyToolResult(_workingBgr.Clone(), _workingAlpha.Clone(), "Retouch & Brush");
+            using var resultBgr = BuildResultBgr();
+            _parentDocument.ApplyToolResult(resultBgr.Clone(), _workingAlpha.Clone(), "Retouch & Brush");
         }
         _shell.CloseTabDirect(this);
         return Task.CompletedTask;

@@ -113,6 +113,21 @@ public partial class UncropOptionsViewModel : ObservableObject
     [ObservableProperty]
     private bool _flipVertical;
 
+    [ObservableProperty]
+    private double _rotateAngle;
+
+    [ObservableProperty]
+    private double _vignette;
+
+    [ObservableProperty]
+    private double _saturation = 1.0;
+
+    [ObservableProperty]
+    private double _contrast = 1.0;
+
+    [ObservableProperty]
+    private double _brightness;
+
     /// <summary>
     /// Supplies the current source-image size so an aspect-ratio preset can compute a centered
     /// padding. Set by the hosting ViewModel; null until an image is available.
@@ -218,6 +233,11 @@ public partial class UncropOptionsViewModel : ObservableObject
         GrainAmount = 0.0;
         FlipHorizontal = false;
         FlipVertical = false;
+        RotateAngle = 0.0;
+        Vignette = 0.0;
+        Saturation = 1.0;
+        Contrast = 1.0;
+        Brightness = 0.0;
     }
 
     /// <summary>Builds the operation config consumed by <see cref="UncropOperationHelper"/>.</summary>
@@ -248,7 +268,12 @@ public partial class UncropOptionsViewModel : ObservableObject
         BorderColor = BorderColor,
         GrainAmount = GrainAmount,
         FlipHorizontal = FlipHorizontal,
-        FlipVertical = FlipVertical
+        FlipVertical = FlipVertical,
+        RotateAngle = RotateAngle,
+        Vignette = Vignette,
+        Saturation = Saturation,
+        Contrast = Contrast,
+        Brightness = Brightness
     };
 
     /// <summary>True when the current options describe a runnable uncrop operation.</summary>

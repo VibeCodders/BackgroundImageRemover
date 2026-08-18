@@ -69,6 +69,7 @@
                         <TextBlock Text="Tolerance" />
                         <Slider Minimum="0" Maximum="100" Value="{Binding ChromaKey.Tolerance}" TickFrequency="5" />
                         <CheckBox Content="Spill suppression" IsChecked="{Binding ChromaKey.SpillSuppression}" Margin="0,8,0,0" />
+                        <CheckBox Content="🎯 Sample color by clicking image" IsChecked="{Binding SampleColorMode}" Margin="0,8,0,0" />
                     </StackPanel>
 
                     <!-- GrabCut options -->
@@ -172,6 +173,17 @@
                     <CheckBox Content="Invert mask (keep background)" IsChecked="{Binding InvertMask}" Margin="0,0,0,8" />
                     <TextBlock Text="Edge feather" />
                     <Slider Minimum="0" Maximum="30" Value="{Binding MaskFeatherPixels}" TickFrequency="1" IsSnapToTickEnabled="True" />
+
+                    <TextBlock Text="Despeckle" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="15" Value="{Binding DespeckleKernelSize}" TickFrequency="1" IsSnapToTickEnabled="True" />
+
+                    <TextBlock Text="Fill holes" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="15" Value="{Binding FillHolesKernelSize}" TickFrequency="1" IsSnapToTickEnabled="True" />
+
+                    <TextBlock Text="Edge smoothing" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="15" Value="{Binding SmoothEdgesKernelSize}" TickFrequency="1" IsSnapToTickEnabled="True" />
+
+                    <CheckBox Content="Keep largest subject only" IsChecked="{Binding KeepLargestComponent}" Margin="0,8,0,0" />
 
                     <!-- Export background options (persisted to the parent document) -->
                     <Separator Margin="0,16,0,8" />

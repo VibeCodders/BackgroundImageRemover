@@ -16,6 +16,7 @@ namespace BackgroundImageRemover.ViewModels;
 public partial class UncropOptionsViewModel : ObservableObject
 {
     public IReadOnlyList<UncropAspectPreset> AspectPresets { get; } = UncropAspectPresets.All;
+    public IReadOnlyList<UncropSizePreset> SizePresets { get; } = UncropSizePresets.All;
     public IReadOnlyList<UncropInpaintMethod> InpaintMethods { get; } = Enum.GetValues<UncropInpaintMethod>();
     public IReadOnlyList<UncropMirrorType> MirrorTypes { get; } = Enum.GetValues<UncropMirrorType>();
     public IReadOnlyList<UncropColorSource> ColorSources { get; } = Enum.GetValues<UncropColorSource>();
@@ -26,6 +27,9 @@ public partial class UncropOptionsViewModel : ObservableObject
 
     [ObservableProperty]
     private UncropAspectPreset _selectedPreset = UncropAspectPresets.Free;
+
+    [ObservableProperty]
+    private UncropSizePreset _selectedSizePreset = UncropSizePresets.None;
 
     [ObservableProperty]
     private UncropFillMode _selectedFillMode = UncropFillMode.Mirror;
@@ -87,6 +91,28 @@ public partial class UncropOptionsViewModel : ObservableObject
     [ObservableProperty]
     private int _patchBlendOverlap = 8;
 
+    // Post-fill finishing options (applied to the whole result).
+    [ObservableProperty]
+    private int _cornerRadius = 0;
+
+    [ObservableProperty]
+    private int _borderThickness = 0;
+
+    [ObservableProperty]
+    private WpfColor _borderColor = WpfColor.FromRgb(255, 255, 255);
+
+    [ObservableProperty]
+    private bool _isBorderColorPickerOpen;
+
+    [ObservableProperty]
+    private double _grainAmount = 0.0;
+
+    [ObservableProperty]
+    private bool _flipHorizontal;
+
+    [ObservableProperty]
+    private bool _flipVertical;
+
     /// <summary>
     /// Supplies the current source-image size so an aspect-ratio preset can compute a centered
     /// padding. Set by the hosting ViewModel; null until an image is available.
@@ -136,6 +162,29 @@ public partial class UncropOptionsViewModel : ObservableObject
             return;
         }
         Padding = CanvasPadding.ComputeCentered(imageSize, ratio);
+        if (value.Ratio is not null)
+        {
+            SelectedSizePreset = UncropSizePresets.None;
+        }
+    }
+
+    partial void OnSelectedSizePresetChanged(UncropSizePreset value)
+    {
+        if (value.Size is not { } target)
+        {
+            return;
+        }
+        if (ImageSizeProvider?.Invoke() is not { } imageSize)
+        {
+            return;
+        }
+
+        int extraW = Math.Max(0, target.Width - imageSize.Width);
+        int extraH = Math.Max(0, target.Height - imageSize.Height);
+        int left = extraW / 2;
+        int top = extraH / 2;
+        Padding = new CanvasPadding(left, top, extraW - left, extraH - top);
+        SelectedPreset = UncropAspectPresets.Custom;
     }
 
     /// <summary>Applies a padding change coming from the handles or the numeric fields: if a
@@ -152,6 +201,10 @@ public partial class UncropOptionsViewModel : ObservableObject
         {
             SelectedPreset = UncropAspectPresets.Custom;
         }
+        if (SelectedSizePreset.Size is not null)
+        {
+            SelectedSizePreset = UncropSizePresets.None;
+        }
     }
 
     /// <summary>Resets padding and preset to the default free-form state.</summary>
@@ -159,6 +212,12 @@ public partial class UncropOptionsViewModel : ObservableObject
     {
         Padding = CanvasPadding.Zero;
         SelectedPreset = UncropAspectPresets.Free;
+        SelectedSizePreset = UncropSizePresets.None;
+        CornerRadius = 0;
+        BorderThickness = 0;
+        GrainAmount = 0.0;
+        FlipHorizontal = false;
+        FlipVertical = false;
     }
 
     /// <summary>Builds the operation config consumed by <see cref="UncropOperationHelper"/>.</summary>
@@ -183,7 +242,13 @@ public partial class UncropOptionsViewModel : ObservableObject
         PatchSize = PatchSize,
         PatchBlendOverlap = PatchBlendOverlap,
         ColorSource = SelectedColorSource,
-        CustomSolidColor = CustomSolidColor
+        CustomSolidColor = CustomSolidColor,
+        CornerRadius = CornerRadius,
+        BorderThickness = BorderThickness,
+        BorderColor = BorderColor,
+        GrainAmount = GrainAmount,
+        FlipHorizontal = FlipHorizontal,
+        FlipVertical = FlipVertical
     };
 
     /// <summary>True when the current options describe a runnable uncrop operation.</summary>

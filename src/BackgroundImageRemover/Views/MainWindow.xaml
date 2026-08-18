@@ -38,6 +38,21 @@
         <DataTemplate DataType="{x:Type vm:AdjustmentsToolSessionViewModel}">
             <views:AdjustmentsToolSessionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:FiltersToolSessionViewModel}">
+            <views:FiltersToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TransformToolSessionViewModel}">
+            <views:TransformToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ComposeToolSessionViewModel}">
+            <views:ComposeToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:FrameToolSessionViewModel}">
+            <views:FrameToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TextToolSessionViewModel}">
+            <views:TextToolSessionView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel>

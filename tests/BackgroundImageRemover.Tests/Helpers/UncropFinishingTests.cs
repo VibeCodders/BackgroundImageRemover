@@ -1,0 +1,86 @@
+using BackgroundImageRemover.Helpers;
+using BackgroundImageRemover.Models;
+using BackgroundImageRemover.ViewModels;
+using OpenCvSharp;
+
+namespace BackgroundImageRemover.Tests.Helpers;
+
+public class UncropFinishingTests
+{
+    [Fact]
+    public void AddGrain_ProducesSameSizeAndChangesPixels()
+    {
+        using var src = new Mat(20, 20, MatType.CV_8UC3, new Scalar(100, 100, 100));
+
+        using var result = UncropOperationHelper.AddGrain(src, 0.5);
+
+        Assert.Equal(src.Size(), result.Size());
+        using var diff = new Mat();
+        Cv2.Absdiff(src, result, diff);
+        using var gray = new Mat();
+        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
+        Assert.True(Cv2.CountNonZero(gray) > 0);
+    }
+
+    [Fact]
+    public void ApplyFinishing_AppliesFlipAndBorder()
+    {
+        using var src = new Mat(1, 2, MatType.CV_8UC3);
+        src.Set(0, 0, new Vec3b(0, 0, 255));    // left red
+        src.Set(0, 1, new Vec3b(255, 0, 0));    // right blue
+
+        var config = new UncropOperationHelper.UncropConfig
+        {
+            FlipHorizontal = true,
+            BorderThickness = 2,
+            BorderColor = System.Windows.Media.Color.FromRgb(255, 255, 255)
+        };
+
+        using var result = UncropOperationHelper.ApplyFinishing(src, config);
+
+        Assert.Equal(6, result.Width);  // 2 + 2*2
+        Assert.Equal(5, result.Height); // 1 + 2*2
+
+        // After the flip, the left pixel is blue and the right pixel is red.
+        var left = result.At<Vec4b>(2, 2);
+        Assert.Equal(255, left.Item0);
+        Assert.Equal(0, left.Item2);
+
+        var right = result.At<Vec4b>(2, 3);
+        Assert.Equal(0, right.Item0);
+        Assert.Equal(255, right.Item2);
+
+        // The border is the configured color.
+        var corner = result.At<Vec4b>(0, 0);
+        Assert.Equal(255, corner.Item0);
+        Assert.Equal(255, corner.Item1);
+        Assert.Equal(255, corner.Item2);
+        Assert.Equal(255, corner.Item3);
+    }
+
+    [Fact]
+    public void ApplyFinishing_RoundsCorners()
+    {
+        using var src = new Mat(10, 10, MatType.CV_8UC3, new Scalar(200, 200, 200));
+
+        var config = new UncropOperationHelper.UncropConfig { CornerRadius = 4 };
+
+        using var result = UncropOperationHelper.ApplyFinishing(src, config);
+
+        Assert.Equal(0, result.At<Vec4b>(0, 0).Item3); // corner transparent
+        Assert.Equal(255, result.At<Vec4b>(5, 5).Item3); // center opaque
+    }
+
+    [Fact]
+    public void SizePreset_ComputesCenteredPadding()
+    {
+        var options = new UncropOptionsViewModel
+        {
+            ImageSizeProvider = () => new Size(500, 500)
+        };
+
+        options.SelectedSizePreset = new UncropSizePreset("Test", new Size(1024, 1024));
+
+        Assert.Equal(new CanvasPadding(262, 262, 262, 262), options.Padding);
+    }
+}

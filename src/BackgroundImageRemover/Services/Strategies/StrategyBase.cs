@@ -40,12 +40,14 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
 
             using var mask = context.EnableAlphaMatting ? AlphaMattingRefiner.Refine(bgr, rawMask) : rawMask.Clone();
 
-            // Global post-processing shared by every strategy: invert foreground/background and
-            // optionally soften the mask edges, before the mask is composited into BGRA.
+            // Global post-processing shared by every strategy: invert foreground/background,
+            // clean up the mask, and optionally soften the edges before compositing into BGRA.
             if (context.InvertMask)
             {
                 Cv2.BitwiseNot(mask, mask);
             }
+
+            ApplyMaskCleanup(mask, context);
 
             if (context.MaskFeatherPixels > 0)
             {
@@ -69,5 +71,66 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
             sw.Stop();
             return new RemovalResult(bgra, sw.Elapsed.TotalMilliseconds);
         }, ct);
+    }
+
+    /// <summary>Applies the shared mask-cleanup options (despeckle, fill holes, edge smoothing,
+    /// keep largest component) to the mask in place.</summary>
+    private static void ApplyMaskCleanup(Mat mask, StrategyContext context)
+    {
+        if (context.DespeckleKernelSize > 0)
+        {
+            int k = Math.Max(1, context.DespeckleKernelSize) | 1;
+            using var kernel = Cv2.GetStructuringElement(MorphShapes.Ellipse, new Size(k, k));
+            Cv2.MorphologyEx(mask, mask, MorphTypes.Open, kernel);
+        }
+
+        if (context.FillHolesKernelSize > 0)
+        {
+            int k = Math.Max(1, context.FillHolesKernelSize) | 1;
+            using var kernel = Cv2.GetStructuringElement(MorphShapes.Ellipse, new Size(k, k));
+            Cv2.MorphologyEx(mask, mask, MorphTypes.Close, kernel);
+        }
+
+        if (context.SmoothEdgesKernelSize > 0)
+        {
+            int k = Math.Max(1, context.SmoothEdgesKernelSize) | 1;
+            Cv2.MedianBlur(mask, mask, k);
+        }
+
+        if (context.KeepLargestComponent)
+        {
+            KeepLargestComponent(mask);
+        }
+    }
+
+    /// <summary>Keeps only the largest connected foreground region (by area) in the mask.</summary>
+    private static void KeepLargestComponent(Mat mask)
+    {
+        using var labels = new Mat();
+        using var stats = new Mat();
+        using var centroids = new Mat();
+        int count = Cv2.ConnectedComponentsWithStats(
+            mask, labels, stats, centroids, PixelConnectivity.Connectivity8, MatType.CV_32S);
+        if (count <= 1)
+        {
+            return; // background only
+        }
+
+        int bestLabel = -1;
+        int bestArea = 0;
+        for (int i = 1; i < count; i++)
+        {
+            int area = stats.Get<int>(i, 4); // CC_STAT_AREA
+            if (area > bestArea)
+            {
+                bestArea = area;
+                bestLabel = i;
+            }
+        }
+
+        if (bestLabel >= 0)
+        {
+            Cv2.Compare(labels, new Scalar(bestLabel), mask, CmpType.EQ);
+        }
     }
 }

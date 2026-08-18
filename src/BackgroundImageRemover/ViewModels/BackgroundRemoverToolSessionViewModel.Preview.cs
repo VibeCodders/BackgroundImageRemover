@@ -121,12 +121,31 @@ public partial class BackgroundRemoverToolSessionViewModel
         return strategyContext with
         {
             InvertMask = InvertMask,
-            MaskFeatherPixels = (int)Math.Round(MaskFeatherPixels * scaleToFull)
+            MaskFeatherPixels = (int)Math.Round(MaskFeatherPixels * scaleToFull),
+            DespeckleKernelSize = (int)Math.Round(DespeckleKernelSize * scaleToFull),
+            FillHolesKernelSize = (int)Math.Round(FillHolesKernelSize * scaleToFull),
+            SmoothEdgesKernelSize = (int)Math.Round(SmoothEdgesKernelSize * scaleToFull),
+            KeepLargestComponent = KeepLargestComponent
         };
     }
 
     public void OnOriginalWandClicked(Point imagePoint)
     {
+        // Sample-color mode: pick the clicked pixel as the Chroma Key background color.
+        if (SampleColorMode)
+        {
+            if (_preview is null)
+            {
+                return;
+            }
+            var px = _preview.Bgr.At<Vec3b>(imagePoint.Y, imagePoint.X);
+            ChromaKey.DetectedColorBgr = new Vec3b(px.Item0, px.Item1, px.Item2);
+            SampleColorMode = false;
+            SelectedStrategy = StrategyKind.ChromaKey;
+            RequestPreviewDebounced();
+            return;
+        }
+
         if (SelectedStrategy != StrategyKind.MagicWand)
         {
             return;

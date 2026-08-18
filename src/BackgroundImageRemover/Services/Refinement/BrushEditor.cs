@@ -10,7 +10,7 @@ namespace BackgroundImageRemover.Services.Refinement;
 /// </summary>
 public static class BrushEditor
 {
-    public static void StampSegment(Mat alpha, Point2f from, Point2f to, double radius, double hardness, BrushMode mode)
+    public static void StampSegment(Mat alpha, Point2f from, Point2f to, double radius, double hardness, BrushMode mode, double opacity = 1.0)
     {
         double distance = Math.Sqrt(Math.Pow(to.X - from.X, 2) + Math.Pow(to.Y - from.Y, 2));
         double step = Math.Max(1.0, radius * 0.35);
@@ -22,11 +22,11 @@ public static class BrushEditor
             var point = new Point2f(
                 (float)(from.X + (to.X - from.X) * t),
                 (float)(from.Y + (to.Y - from.Y) * t));
-            StampPoint(alpha, point, radius, hardness, mode);
+            StampPoint(alpha, point, radius, hardness, mode, opacity);
         }
     }
 
-    private static void StampPoint(Mat alpha, Point2f center, double radius, double hardness, BrushMode mode)
+    private static void StampPoint(Mat alpha, Point2f center, double radius, double hardness, BrushMode mode, double opacity)
     {
         int r = Math.Max(1, (int)Math.Ceiling(radius));
         int cx = (int)Math.Round(center.X);
@@ -56,6 +56,7 @@ public static class BrushEditor
                 double falloff = dist <= hardRadius
                     ? 1.0
                     : 1.0 - (dist - hardRadius) / Math.Max(1e-6, radius - hardRadius);
+                falloff *= Math.Clamp(opacity, 0.0, 1.0);
 
                 byte current = alpha.Get<byte>(y, x);
                 byte updated = mode == BrushMode.Restore

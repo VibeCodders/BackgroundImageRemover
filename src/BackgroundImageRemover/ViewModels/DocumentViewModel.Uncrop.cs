@@ -1,5 +1,6 @@
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Compositing;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
@@ -48,20 +49,27 @@ public partial class DocumentViewModel
             using var filledBgr = await UncropOperationHelper.ExecuteUncropAsync(
                 _loadedImage.FullBgr, config, _uncropFillService, ct);
 
-            // Create new LoadedImage from the filled result
-            var newLoadedImage = new LoadedImage(_loadedImage.FilePath, filledBgr.Clone());
+            // Apply finishing (flip, grain, border, rounded corners), then split back to BGR + alpha.
+            using var finishedBgra = UncropOperationHelper.ApplyFinishing(filledBgr, config);
+            var (bgr, alpha) = BackgroundCompositingService.SplitBgra(finishedBgra);
+
+            // Create new LoadedImage from the finished result
+            var newLoadedImage = new LoadedImage(_loadedImage.FilePath, bgr, alpha);
             _loadedImage?.Dispose();
             _preview?.Dispose();
             _loadedImage = newLoadedImage;
 
             var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
             _preview = preview;
-            PreviewBitmap = preview.Bgr.ToBitmapSource();
+            PreviewBitmap = _loadedImage.FullAlpha is { } a
+                ? preview.Bgr.BuildPreviewWithAlpha(a)
+                : preview.Bgr.ToBitmapSource();
 
             // Set as new working image
             DisposeWorkingResult();
             _workingBgr = _loadedImage.FullBgr.Clone();
-            _workingAlpha = new Mat(_loadedImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+            _workingAlpha = _loadedImage.FullAlpha?.Clone()
+                ?? new Mat(_loadedImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
             _workingResultIsLoadedCutout = false;
             _workingResultHandEdited = true;
 

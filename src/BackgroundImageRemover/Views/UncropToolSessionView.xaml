@@ -52,6 +52,10 @@
                     <ComboBox ItemsSource="{Binding Options.AspectPresets}" DisplayMemberPath="Label"
                               SelectedItem="{Binding Options.SelectedPreset}" Margin="0,0,0,12" />
 
+                    <TextBlock Text="Target size" FontWeight="Bold" Margin="0,0,0,4" />
+                    <ComboBox ItemsSource="{Binding Options.SizePresets}" DisplayMemberPath="Label"
+                              SelectedItem="{Binding Options.SelectedSizePreset}" Margin="0,0,0,12" />
+
                     <TextBlock Text="Padding (px)" FontWeight="Bold" Margin="0,0,0,4" />
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
@@ -180,6 +184,47 @@
                     <!-- Wrap Mode -->
                     <RadioButton Content="Tile / Pattern (Wrap)" GroupName="UncropFillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Wrap}" />
+
+                    <Separator Margin="0,8,0,8" />
+                    <TextBlock Text="Finishing" FontWeight="Bold" Margin="0,0,0,4" />
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Corner radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.CornerRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="0" Maximum="400" Value="{Binding Options.CornerRadius}" />
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Border:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.BorderThickness, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="0" Maximum="200" Value="{Binding Options.BorderThickness}" />
+                    </DockPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <Button x:Name="UncropBorderColorButton" Padding="4,2" Click="UncropBorderColorButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle Width="18" Height="18" Fill="{Binding Options.BorderColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="#FF888888" Margin="0,0,6,0" />
+                                <TextBlock Text="Border color..." VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Popup IsOpen="{Binding Options.IsBorderColorPickerOpen}" PlacementTarget="{Binding ElementName=UncropBorderColorButton}"
+                               StaysOpen="False" AllowsTransparency="True">
+                            <Border Background="#FF2D2D30" BorderBrush="#FF3F3F46" BorderThickness="1" Padding="8" CornerRadius="4">
+                                <controls:SimpleColorPickerControl SelectedColor="{Binding Options.BorderColor, Mode=TwoWay}" />
+                            </Border>
+                        </Popup>
+                    </StackPanel>
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Grain:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.GrainAmount, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="0" Maximum="1" Value="{Binding Options.GrainAmount}" />
+                    </DockPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <CheckBox Content="Flip H" IsChecked="{Binding Options.FlipHorizontal}" Margin="0,0,8,0" />
+                        <CheckBox Content="Flip V" IsChecked="{Binding Options.FlipVertical}" />
+                    </StackPanel>
 
                     <Button Content="Preview fill" Command="{Binding ApplyFillCommand}" Margin="0,14,0,0" Padding="8" FontWeight="Bold" />
                 </StackPanel>

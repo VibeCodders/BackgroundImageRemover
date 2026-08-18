@@ -26,11 +26,47 @@ public static class ImageProcessingHelper
 
         try
         {
+            // 0. One-click auto enhancement (CLAHE contrast + gray-world white balance).
+            if (adjustments.AutoEnhance)
+            {
+                var enhanced = ApplyAutoEnhance(current);
+                current.Dispose();
+                current = enhanced;
+            }
+
             // 1. Contrast and Brightness: new_pixel = alpha * old_pixel + beta
             if (Math.Abs(adjustments.Contrast - 1.0) > 1e-4 || Math.Abs(adjustments.Brightness) > 1e-4)
             {
                 var adjusted = new Mat();
                 current.ConvertTo(adjusted, MatType.CV_8UC3, adjustments.Contrast, adjustments.Brightness);
+                current.Dispose();
+                current = adjusted;
+            }
+
+            // 1.5 Exposure (gamma curve).
+            if (Math.Abs(adjustments.Exposure - 1.0) > 1e-4)
+            {
+                using var lut = BuildLut(i => 255.0 * Math.Pow(i / 255.0, 1.0 / adjustments.Exposure));
+                var adjusted = new Mat();
+                Cv2.LUT(current, lut, adjusted);
+                current.Dispose();
+                current = adjusted;
+            }
+
+            // 1.6 Shadow lift and highlight recovery.
+            if (Math.Abs(adjustments.Highlights) > 1e-4 || Math.Abs(adjustments.Shadows) > 1e-4)
+            {
+                double shadows = adjustments.Shadows;
+                double highlights = adjustments.Highlights;
+                using var lut = BuildLut(i =>
+                {
+                    double v = i;
+                    v += shadows * 0.5 * (1.0 - v / 255.0);
+                    v -= highlights * 0.5 * (v / 255.0);
+                    return v;
+                });
+                var adjusted = new Mat();
+                Cv2.LUT(current, lut, adjusted);
                 current.Dispose();
                 current = adjusted;
             }
@@ -138,6 +174,15 @@ public static class ImageProcessingHelper
                 current = sharpened;
             }
 
+            // 5.5 Denoise (bilateral filter).
+            if (adjustments.Denoise > 1e-4)
+            {
+                var denoised = new Mat();
+                Cv2.BilateralFilter(current, denoised, 5, adjustments.Denoise * 100.0, adjustments.Denoise * 100.0);
+                current.Dispose();
+                current = denoised;
+            }
+
             // 6. Vignette effect
             if (adjustments.Vignette > 1e-4)
             {
@@ -199,6 +244,65 @@ public static class ImageProcessingHelper
         }
 
         return mask;
+    }
+
+    /// <summary>Builds a 1x256 CV_8UC1 lookup table from a per-level mapping function.</summary>
+    private static Mat BuildLut(Func<int, double> map)
+    {
+        var lut = new byte[256];
+        for (int i = 0; i < lut.Length; i++)
+        {
+            lut[i] = (byte)Math.Round(Math.Clamp(map(i), 0.0, 255.0));
+        }
+
+        var lutMat = new Mat(1, 256, MatType.CV_8UC1);
+        lutMat.SetArray(lut);
+        return lutMat;
+    }
+
+    /// <summary>Applies gray-world white balance followed by CLAHE contrast equalization.</summary>
+    private static Mat ApplyAutoEnhance(Mat src)
+    {
+        var means = Cv2.Mean(src);
+        double avg = (means.Val0 + means.Val1 + means.Val2) / 3.0;
+        double bGain = avg / Math.Max(means.Val0, 1.0);
+        double gGain = avg / Math.Max(means.Val1, 1.0);
+        double rGain = avg / Math.Max(means.Val2, 1.0);
+
+        var channels = Cv2.Split(src);
+        Mat balanced;
+        try
+        {
+            channels[0].ConvertTo(channels[0], MatType.CV_8UC1, bGain);
+            channels[1].ConvertTo(channels[1], MatType.CV_8UC1, gGain);
+            channels[2].ConvertTo(channels[2], MatType.CV_8UC1, rGain);
+            balanced = new Mat();
+            Cv2.Merge(channels, balanced);
+        }
+        finally
+        {
+            foreach (var ch in channels) ch.Dispose();
+        }
+
+        using (balanced)
+        {
+            using var lab = new Mat();
+            Cv2.CvtColor(balanced, lab, ColorConversionCodes.BGR2Lab);
+            var labChannels = Cv2.Split(lab);
+            try
+            {
+                using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
+                clahe.Apply(labChannels[0], labChannels[0]);
+                Cv2.Merge(labChannels, lab);
+                var result = new Mat();
+                Cv2.CvtColor(lab, result, ColorConversionCodes.Lab2BGR);
+                return result;
+            }
+            finally
+            {
+                foreach (var ch in labChannels) ch.Dispose();
+            }
+        }
     }
 }
 

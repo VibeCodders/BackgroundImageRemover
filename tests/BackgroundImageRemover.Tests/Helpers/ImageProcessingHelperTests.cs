@@ -139,5 +139,69 @@ public sealed class ImageProcessingHelperTests
         Assert.True(centerPixel.Item0 > cornerPixel.Item0);
         Assert.True(cornerPixel.Item0 < 200);
     }
+
+    [Fact]
+    public void ApplyAdjustments_Exposure_BrightensMidtones()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(100, 100, 100));
+        var adj = new ImageAdjustments { Exposure = 2.0 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+        var pixel = result.At<Vec3b>(0, 0);
+
+        // Gamma < 1 inside the exponent brightens midtones.
+        Assert.True(pixel.Item0 > 100);
+        Assert.True(pixel.Item1 > 100);
+        Assert.True(pixel.Item2 > 100);
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Shadows_BrightensDarkPixels()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(20, 20, 20));
+        var adj = new ImageAdjustments { Shadows = 60 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+        var pixel = result.At<Vec3b>(0, 0);
+
+        Assert.True(pixel.Item0 > 20);
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Highlights_DarkensBrightPixels()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(230, 230, 230));
+        var adj = new ImageAdjustments { Highlights = 60 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+        var pixel = result.At<Vec3b>(0, 0);
+
+        Assert.True(pixel.Item0 < 230);
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Denoise_KeepsSizeAndType()
+    {
+        using var src = new Mat(10, 10, MatType.CV_8UC3, new Scalar(100, 100, 100));
+        var adj = new ImageAdjustments { Denoise = 0.5 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+
+        Assert.Equal(src.Size(), result.Size());
+        Assert.Equal(src.Type(), result.Type());
+    }
+
+    [Fact]
+    public void ApplyAdjustments_AutoEnhance_ChangesTheImage()
+    {
+        using var src = new Mat(20, 20, MatType.CV_8UC3, new Scalar(80, 120, 160));
+        var adj = new ImageAdjustments { AutoEnhance = true };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+
+        Assert.Equal(src.Size(), result.Size());
+        // Auto-enhance must not be a no-op on a non-gray image.
+        Assert.NotEqual(src.At<Vec3b>(0, 0), result.At<Vec3b>(0, 0));
+    }
 }
 

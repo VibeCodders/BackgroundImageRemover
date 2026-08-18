@@ -90,6 +90,16 @@
                                     IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
                             <Button Content="✨  Adjustments" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Adjustments}"
                                     IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="🎨  Filters" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Filters}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="↻  Transform" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Transform}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="🖼  Compose" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Compose}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="▣  Frame" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Frame}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="✎  Text" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Text}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

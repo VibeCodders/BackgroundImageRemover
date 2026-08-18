@@ -32,6 +32,21 @@ public record ImageAdjustments
     /// <summary>Unsharp mask / sharpening strength in [0.0, 3.0]. Default 0.0 (no sharpening).</summary>
     public double SharpenStrength { get; init; } = 0.0;
 
+    /// <summary>Exposure gamma in [0.2, 3.0]. Default 1.0 (no change; &gt;1 brightens, &lt;1 darkens).</summary>
+    public double Exposure { get; init; } = 1.0;
+
+    /// <summary>Highlight recovery in [-100, 100]. Positive darkens blown highlights.</summary>
+    public double Highlights { get; init; } = 0.0;
+
+    /// <summary>Shadow lift in [-100, 100]. Positive brightens crushed shadows.</summary>
+    public double Shadows { get; init; } = 0.0;
+
+    /// <summary>Denoise strength in [0.0, 1.0]. Default 0.0 (no denoising).</summary>
+    public double Denoise { get; init; } = 0.0;
+
+    /// <summary>When true, applies automatic contrast (CLAHE) and gray-world white balance first.</summary>
+    public bool AutoEnhance { get; init; }
+
     /// <summary>Returns true if all parameters are at neutral/identity values.</summary>
     public bool IsIdentity =>
         Math.Abs(Brightness) < 1e-4 &&
@@ -42,7 +57,12 @@ public record ImageAdjustments
         Math.Abs(Tint) < 1e-4 &&
         Math.Abs(Vignette) < 1e-4 &&
         BlurRadius == 0 &&
-        Math.Abs(SharpenStrength) < 1e-4;
+        Math.Abs(SharpenStrength) < 1e-4 &&
+        Math.Abs(Exposure - 1.0) < 1e-4 &&
+        Math.Abs(Highlights) < 1e-4 &&
+        Math.Abs(Shadows) < 1e-4 &&
+        Math.Abs(Denoise) < 1e-4 &&
+        !AutoEnhance;
 
     public static ImageAdjustments Default { get; } = new();
 }

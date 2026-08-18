@@ -56,6 +56,21 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     private double _adjSharpenStrength = 0.0;
 
     [ObservableProperty]
+    private double _adjExposure = 1.0;
+
+    [ObservableProperty]
+    private double _adjHighlights = 0.0;
+
+    [ObservableProperty]
+    private double _adjShadows = 0.0;
+
+    [ObservableProperty]
+    private double _adjDenoise = 0.0;
+
+    [ObservableProperty]
+    private bool _adjAutoEnhance;
+
+    [ObservableProperty]
     private bool _isCompareMode;
 
     [ObservableProperty]
@@ -98,6 +113,11 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     partial void OnAdjVignetteChanged(double value) => UpdateLivePreview();
     partial void OnAdjBlurRadiusChanged(int value) => UpdateLivePreview();
     partial void OnAdjSharpenStrengthChanged(double value) => UpdateLivePreview();
+    partial void OnAdjExposureChanged(double value) => UpdateLivePreview();
+    partial void OnAdjHighlightsChanged(double value) => UpdateLivePreview();
+    partial void OnAdjShadowsChanged(double value) => UpdateLivePreview();
+    partial void OnAdjDenoiseChanged(double value) => UpdateLivePreview();
+    partial void OnAdjAutoEnhanceChanged(bool value) => UpdateLivePreview();
 
     private void UpdateLivePreview()
     {
@@ -113,7 +133,12 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
             Tint = AdjTint,
             Vignette = AdjVignette,
             BlurRadius = AdjBlurRadius,
-            SharpenStrength = AdjSharpenStrength
+            SharpenStrength = AdjSharpenStrength,
+            Exposure = AdjExposure,
+            Highlights = AdjHighlights,
+            Shadows = AdjShadows,
+            Denoise = AdjDenoise,
+            AutoEnhance = AdjAutoEnhance
         };
 
         if (adjustments.IsIdentity)
@@ -147,6 +172,11 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
         AdjVignette = 0.0;
         AdjBlurRadius = 0;
         AdjSharpenStrength = 0.0;
+        AdjExposure = 1.0;
+        AdjHighlights = 0.0;
+        AdjShadows = 0.0;
+        AdjDenoise = 0.0;
+        AdjAutoEnhance = false;
         UpdateLivePreview();
     }
 
@@ -168,7 +198,12 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
             Tint = AdjTint,
             Vignette = AdjVignette,
             BlurRadius = AdjBlurRadius,
-            SharpenStrength = AdjSharpenStrength
+            SharpenStrength = AdjSharpenStrength,
+            Exposure = AdjExposure,
+            Highlights = AdjHighlights,
+            Shadows = AdjShadows,
+            Denoise = AdjDenoise,
+            AutoEnhance = AdjAutoEnhance
         };
 
         if (!adjustments.IsIdentity)

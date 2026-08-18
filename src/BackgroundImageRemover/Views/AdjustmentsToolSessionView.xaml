@@ -104,8 +104,37 @@
                         <TextBlock Text="Sharpen Strength" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
                         <TextBlock Text="{Binding AdjSharpenStrength, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
                     </DockPanel>
-                    <Slider Minimum="0.0" Maximum="3.0" Value="{Binding AdjSharpenStrength}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,16" />
+                    <Slider Minimum="0.0" Maximum="3.0" Value="{Binding AdjSharpenStrength}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
 
+                    <!-- Exposure (gamma) -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Exposure (gamma)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjExposure, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.2" Maximum="3.0" Value="{Binding AdjExposure}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
+
+                    <!-- Highlights -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Highlights" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjHighlights, StringFormat='{}{0:0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="-100" Maximum="100" Value="{Binding AdjHighlights}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
+
+                    <!-- Shadows -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Shadows" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjShadows, StringFormat='{}{0:0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="-100" Maximum="100" Value="{Binding AdjShadows}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
+
+                    <!-- Denoise -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Denoise" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjDenoise, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjDenoise}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <CheckBox Content="✨ Auto-enhance (one click)" IsChecked="{Binding AdjAutoEnhance}" Margin="0,0,0,12" FontWeight="SemiBold" />
 
                     <CheckBox Content="Split Compare view" IsChecked="{Binding IsCompareMode}" Margin="0,0,0,12" FontWeight="SemiBold" />
 

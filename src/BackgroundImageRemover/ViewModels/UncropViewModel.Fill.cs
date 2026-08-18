@@ -104,7 +104,7 @@ public partial class UncropViewModel
             using var filledBgr = await UncropOperationHelper.ExecuteUncropAsync(
                 _sourceImage.FullBgr, config, _fillService, ct);
 
-            var bgra = filledBgr.ToBgra();
+            var bgra = UncropOperationHelper.ApplyFinishing(filledBgr, config);
 
             _resultSession.Replace(bgra);
 

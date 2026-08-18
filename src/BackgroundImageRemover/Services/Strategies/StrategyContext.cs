@@ -72,4 +72,16 @@ public sealed record StrategyContext
 
     /// <summary>Feathers the final mask by this many pixels (0 disables it). Scaled with resolution like the other feather fields.</summary>
     public int MaskFeatherPixels { get; init; }
+
+    /// <summary>Removes small foreground specks via morphological open (0 disables it).</summary>
+    public int DespeckleKernelSize { get; init; }
+
+    /// <summary>Fills small background holes via morphological close (0 disables it).</summary>
+    public int FillHolesKernelSize { get; init; }
+
+    /// <summary>Smooths jagged mask edges via a median filter (0 disables it).</summary>
+    public int SmoothEdgesKernelSize { get; init; }
+
+    /// <summary>Keeps only the largest connected foreground region, dropping stray islands.</summary>
+    public bool KeepLargestComponent { get; init; }
 }

@@ -20,4 +20,12 @@ public partial class UncropToolSessionView : UserControl
             ViewModel.Options.IsColorPickerOpen = !ViewModel.Options.IsColorPickerOpen;
         }
     }
+
+    private void UncropBorderColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is not null)
+        {
+            ViewModel.Options.IsBorderColorPickerOpen = !ViewModel.Options.IsBorderColorPickerOpen;
+        }
+    }
 }

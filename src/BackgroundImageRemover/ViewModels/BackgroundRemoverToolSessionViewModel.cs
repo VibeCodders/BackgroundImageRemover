@@ -77,6 +77,21 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     private double _maskFeatherPixels;
 
     [ObservableProperty]
+    private int _despeckleKernelSize = 0;
+
+    [ObservableProperty]
+    private int _fillHolesKernelSize = 0;
+
+    [ObservableProperty]
+    private int _smoothEdgesKernelSize = 0;
+
+    [ObservableProperty]
+    private bool _keepLargestComponent;
+
+    [ObservableProperty]
+    private bool _sampleColorMode;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
     private bool _isBusy;
 
@@ -238,6 +253,27 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     partial void OnInvertMaskChanged(bool value) => RequestPreviewDebounced();
 
     partial void OnMaskFeatherPixelsChanged(double value) => RequestPreviewDebounced();
+
+    partial void OnDespeckleKernelSizeChanged(int value) => RequestPreviewDebounced();
+
+    partial void OnFillHolesKernelSizeChanged(int value) => RequestPreviewDebounced();
+
+    partial void OnSmoothEdgesKernelSizeChanged(int value) => RequestPreviewDebounced();
+
+    partial void OnKeepLargestComponentChanged(bool value) => RequestPreviewDebounced();
+
+    partial void OnSampleColorModeChanged(bool value)
+    {
+        OriginalMode = value
+            ? InteractionMode.MagicWand
+            : SelectedStrategy switch
+            {
+                StrategyKind.GrabCut => InteractionMode.DrawRect,
+                StrategyKind.Sam => InteractionMode.SamClick,
+                StrategyKind.MagicWand => InteractionMode.MagicWand,
+                _ => InteractionMode.None
+            };
+    }
 
     public override void Dispose()
     {

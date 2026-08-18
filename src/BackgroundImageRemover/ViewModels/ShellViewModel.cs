@@ -90,6 +90,11 @@ public partial class ShellViewModel : ObservableObject
                 this, doc, _uncropFillService, _dialogs, _imageLoader, _imageExporter, _log),
             EditorTool.Retouch => new RetouchToolSessionViewModel(this, doc),
             EditorTool.Adjustments => new AdjustmentsToolSessionViewModel(this, doc, _log),
+            EditorTool.Filters => new FiltersToolSessionViewModel(this, doc),
+            EditorTool.Transform => new TransformToolSessionViewModel(this, doc),
+            EditorTool.Compose => new ComposeToolSessionViewModel(this, doc, _dialogs, _imageLoader),
+            EditorTool.Frame => new FrameToolSessionViewModel(this, doc),
+            EditorTool.Text => new TextToolSessionViewModel(this, doc),
             _ => null
         };
 

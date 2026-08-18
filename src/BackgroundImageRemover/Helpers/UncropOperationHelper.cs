@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Editing;
 using BackgroundImageRemover.Services.Outpaint;
 using OpenCvSharp;
 using WpfColor = System.Windows.Media.Color;
@@ -36,6 +37,14 @@ public static class UncropOperationHelper
         public int PatchBlendOverlap { get; init; } = 8;
         public UncropColorSource ColorSource { get; init; } = UncropColorSource.EdgeAverage;
         public WpfColor CustomSolidColor { get; init; } = WpfColor.FromRgb(255, 255, 255);
+
+        // Post-fill finishing applied to the whole result.
+        public int CornerRadius { get; init; }
+        public int BorderThickness { get; init; }
+        public WpfColor BorderColor { get; init; } = WpfColor.FromRgb(255, 255, 255);
+        public double GrainAmount { get; init; }
+        public bool FlipHorizontal { get; init; }
+        public bool FlipVertical { get; init; }
     }
 
     /// <summary>
@@ -87,6 +96,69 @@ public static class UncropOperationHelper
 
             _ => throw new InvalidOperationException($"Fill mode {config.FillMode} is not available.")
         }, cancellationToken);
+    }
+
+    /// <summary>
+    /// Applies the post-fill finishing options (flip, grain, border, rounded corners) to a
+    /// filled BGR image and returns the finished BGRA image.
+    /// </summary>
+    public static Mat ApplyFinishing(Mat filledBgr, UncropConfig config)
+    {
+        var current = filledBgr.Clone();
+        try
+        {
+            if (config.FlipHorizontal)
+            {
+                var flipped = TransformService.FlipHorizontal(current);
+                current.Dispose();
+                current = flipped;
+            }
+            if (config.FlipVertical)
+            {
+                var flipped = TransformService.FlipVertical(current);
+                current.Dispose();
+                current = flipped;
+            }
+            if (config.GrainAmount > 1e-4)
+            {
+                var grained = AddGrain(current, config.GrainAmount);
+                current.Dispose();
+                current = grained;
+            }
+
+            using var bgra = current.ToBgra();
+            using var bordered = config.BorderThickness > 0
+                ? FrameService.AddBorder(bgra, config.BorderThickness, new Vec3b(config.BorderColor.B, config.BorderColor.G, config.BorderColor.R))
+                : bgra.Clone();
+            using var rounded = config.CornerRadius > 0
+                ? FrameService.RoundCorners(bordered, config.CornerRadius)
+                : bordered.Clone();
+            return rounded.Clone();
+        }
+        finally
+        {
+            current.Dispose();
+        }
+    }
+
+    /// <summary>Adds subtle Gaussian grain to a BGR image, scaled by <paramref name="amount"/> (0..1).</summary>
+    public static Mat AddGrain(Mat bgr, double amount)
+    {
+        amount = Math.Clamp(amount, 0.0, 1.0);
+        if (amount <= 1e-4)
+        {
+            return bgr.Clone();
+        }
+
+        using var noise = new Mat(bgr.Size(), MatType.CV_32FC3);
+        Cv2.Randn(noise, Scalar.All(0), Scalar.All(30.0 * amount));
+        using var bgrF = new Mat();
+        bgr.ConvertTo(bgrF, MatType.CV_32FC3);
+        using var noisyF = new Mat();
+        Cv2.Add(bgrF, noise, noisyF);
+        var result = new Mat();
+        noisyF.ConvertTo(result, MatType.CV_8UC3);
+        return result;
     }
 
     /// <summary>

@@ -42,6 +42,9 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     private double _brushHardness = 0.5;
 
     [ObservableProperty]
+    private double _brushOpacity = 1.0;
+
+    [ObservableProperty]
     private double _magicWandTolerance = 25.0;
 
     [ObservableProperty]
@@ -109,7 +112,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         if (_workingAlpha is null) return;
         BrushEditor.StampSegment(_workingAlpha,
             new Point2f((float)from.X, (float)from.Y), new Point2f((float)to.X, (float)to.Y),
-            pixelRadius, BrushHardness, BrushMode);
+            pixelRadius, BrushHardness, BrushMode, BrushOpacity);
         RequestBrushRefresh();
     }
 
@@ -142,6 +145,30 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         if (_workingBgr is null || _workingAlpha is null) return;
         ResultBitmap = _workingBgr.ToBitmapSource(_workingAlpha);
     }
+
+    private void RefineAlpha(Func<Mat, Mat> refine)
+    {
+        if (_workingAlpha is null) return;
+        _editSession.Record(_workingAlpha);
+        var refined = refine(_workingAlpha);
+        _workingAlpha.Dispose();
+        _workingAlpha = refined;
+        IsDirty = true;
+        RefreshUndoRedoState();
+        RefreshResultBitmap();
+    }
+
+    [RelayCommand]
+    private void SmoothEdges() => RefineAlpha(a => AlphaRefinementService.Smooth(a));
+
+    [RelayCommand]
+    private void FeatherEdges() => RefineAlpha(a => AlphaRefinementService.Feather(a, 2.0));
+
+    [RelayCommand]
+    private void RemoveSpecks() => RefineAlpha(a => AlphaRefinementService.RemoveSpecks(a));
+
+    [RelayCommand]
+    private void InvertMask() => RefineAlpha(a => AlphaRefinementService.Invert(a));
 
     private bool CanUndoExecute() => _editSession.CanUndo;
     private bool CanRedoExecute() => _editSession.CanRedo;

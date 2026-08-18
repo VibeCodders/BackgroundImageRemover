@@ -21,7 +21,11 @@ public partial class FiltersToolSessionViewModel : ToolSessionViewModelBase
     private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasEffect))]
     private FilterKind _selectedFilter = FilterKind.Sepia;
+
+    /// <summary>True when the selected filter actually changes the image (i.e. not "None").</summary>
+    public bool HasEffect => SelectedFilter != FilterKind.None;
 
     [ObservableProperty]
     private double _intensity = 1.0;

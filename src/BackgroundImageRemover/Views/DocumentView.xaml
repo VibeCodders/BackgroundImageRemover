@@ -59,6 +59,8 @@
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,16,0">
                     <Button Content="Open image" Command="{Binding OpenFileCommand}" Padding="8,4" Margin="0,0,4,0"
                             ToolTip="Open an image file into this tab" />
+                    <Button Content="Paste" Command="{Binding PasteFromClipboardCommand}" Padding="8,4" Margin="0,0,4,0"
+                            ToolTip="Ctrl+V — paste image from clipboard" />
                     <Button Content="Save" Command="{Binding SaveProjectCommand}" Padding="8,4" Margin="0,0,4,0"
                             ToolTip="Ctrl+S — save project (.ibrproj)" />
                     <Menu VerticalAlignment="Center" Margin="0,0,4,0">
@@ -387,6 +389,8 @@
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Button Content="📁 Open Image..." Command="{Binding OpenFileCommand}"
                                     Padding="16,8" Height="36" FontWeight="SemiBold" Background="#FF0078D7" Foreground="White" BorderThickness="0" Cursor="Hand" Margin="0,0,12,0" />
+                            <Button Content="📋 Paste Image" Command="{Binding PasteFromClipboardCommand}"
+                                    Padding="16,8" Height="36" FontWeight="SemiBold" Background="#FFF0F0F0" Foreground="#FF333333" BorderBrush="#FFCCCCCC" BorderThickness="1" Cursor="Hand" />
                         </StackPanel>
                         <TextBlock Text="Or drag &amp; drop an image anywhere into this window" FontSize="11" Foreground="#FF888888" HorizontalAlignment="Center" Margin="0,16,0,0" />
                     </StackPanel>

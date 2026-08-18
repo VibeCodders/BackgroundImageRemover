@@ -153,6 +153,13 @@ public partial class ImagePreviewControl : UserControl
 
     private void RootGrid_MouseDown(object sender, MouseButtonEventArgs e)
     {
+        if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
+        {
+            ResetView();
+            e.Handled = true;
+            return;
+        }
+
         if (e.MiddleButton == MouseButtonState.Pressed)
         {
             _panStart = e.GetPosition(this);

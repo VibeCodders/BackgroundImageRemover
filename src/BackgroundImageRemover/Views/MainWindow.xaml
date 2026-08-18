@@ -12,6 +12,7 @@
     <Window.InputBindings>
         <KeyBinding Key="Z" Modifiers="Control" Command="{Binding SelectedDocument.UndoCommand}" />
         <KeyBinding Key="Y" Modifiers="Control" Command="{Binding SelectedDocument.RedoCommand}" />
+        <KeyBinding Key="V" Modifiers="Control" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" />
         <KeyBinding Key="N" Modifiers="Control" Command="{Binding NewProjectCommand}" />
         <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenProjectCommand}" />
         <KeyBinding Key="S" Modifiers="Control" Command="{Binding SelectedDocument.SaveProjectCommand}" />
@@ -55,6 +56,12 @@
                         </Style>
                     </MenuItem.ItemContainerStyle>
                 </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Undo" Command="{Binding SelectedDocument.UndoCommand}" InputGestureText="Ctrl+Z" />
+                <MenuItem Header="_Redo" Command="{Binding SelectedDocument.RedoCommand}" InputGestureText="Ctrl+Y" />
+                <Separator />
+                <MenuItem Header="_Paste image" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" InputGestureText="Ctrl+V" />
             </MenuItem>
         </Menu>
 

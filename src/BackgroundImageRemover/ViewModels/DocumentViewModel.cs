@@ -544,64 +544,43 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
         }
     }
 
+    [RelayCommand]
+    private async Task PasteFromClipboardAsync()
+    {
+        var clipboardBitmap = ViewInteractionHelper.TryGetClipboardImage();
+        if (clipboardBitmap is null)
+        {
+            StatusMessage = "No image found in clipboard.";
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+            BusyMessage = "Pasting image from clipboard...";
+            var loaded = await _imageLoader.LoadFromBitmapSourceAsync(clipboardBitmap, "Clipboard Image");
+            await InitializeLoadedImageAsync(loaded, "Clipboard Image");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not paste image: {ex.Message}";
+            _log.Error("Could not paste image from clipboard", ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     public async Task LoadImageAsync(string path)
     {
         try
         {
             IsBusy = true;
             BusyMessage = "Loading image...";
-            _previewCts?.Cancel();
-
-            _loadedImage?.Dispose();
-            _preview?.Dispose();
-            DisposeWorkingResult();
-            _editHistory.Clear();
-            RefreshUndoRedoState();
-            _samEmbedding = null;
-            _samPromptPointPreview = null;
-            Sam.HasClickedPoint = false;
-
-            _loadedImage = await _imageLoader.LoadAsync(path);
-            var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
-            _preview = preview;
-
-            // When reopening a saved cutout (an image with an alpha channel), show it with
-            // its transparency in the Original pane too, instead of the flattened BGR — the
-            // flattened version can look black where the removed content had dark RGB.
-            bool isActualCutout = BackgroundCompositingService.HasMeaningfulTransparency(_loadedImage.FullAlpha);
-            PreviewBitmap = isActualCutout
-                ? BuildPreviewBitmapWithAlpha(preview, _loadedImage.FullAlpha!)
-                : preview.Bgr.ToBitmapSource();
-            ResultBitmap = null;
-            IsImageLoaded = true;
-            IsCutout = isActualCutout;
-            Title = IsCutout ? Path.GetFileName(path) + " (cutout)" : Path.GetFileName(path);
-            StatusMessage = $"Loaded {Path.GetFileName(path)} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})";
-            _log.Info($"Loaded image {path} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})");
+            var loaded = await _imageLoader.LoadAsync(path);
+            await InitializeLoadedImageAsync(loaded, path);
             _settings.AddRecentFile(path);
-
-            GrabCut.SelectedRect = null;
-            ClearScribbles();
-            ChromaKey.DetectedColorBgr = ChromaKeyStrategy.DetectDominantBorderColor(_preview.Bgr);
-
-            if (SelectedStrategy == StrategyKind.Sam && Sam.IsModelReady)
-            {
-                ComputeSamEmbedding();
-            }
-
-            // A file with genuine transparency is a previously exported cutout, not a fresh
-            // photo: adopt it as the working result so the user can keep refining it
-            // (Brush/Wand, or re-run a strategy) instead of re-cleansing it from scratch.
-            // A PNG that merely carries an (fully opaque) alpha channel is a plain photo and
-            // must go through the normal removal flow instead of being adopted as-is.
-            if (isActualCutout)
-            {
-                AdoptLoadedCutout();
-            }
-            else
-            {
-                RequestPreviewDebounced();
-            }
         }
         catch (Exception ex)
         {
@@ -611,6 +590,55 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    private async Task InitializeLoadedImageAsync(LoadedImage loaded, string sourceName)
+    {
+        _previewCts?.Cancel();
+
+        _loadedImage?.Dispose();
+        _preview?.Dispose();
+        DisposeWorkingResult();
+        _editHistory.Clear();
+        RefreshUndoRedoState();
+        _samEmbedding = null;
+        _samPromptPointPreview = null;
+        Sam.HasClickedPoint = false;
+
+        _loadedImage = loaded;
+        var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
+        _preview = preview;
+
+        bool isActualCutout = BackgroundCompositingService.HasMeaningfulTransparency(_loadedImage.FullAlpha);
+        PreviewBitmap = isActualCutout
+            ? BuildPreviewBitmapWithAlpha(preview, _loadedImage.FullAlpha!)
+            : preview.Bgr.ToBitmapSource();
+        ResultBitmap = null;
+        IsImageLoaded = true;
+        IsCutout = isActualCutout;
+        var displayTitle = Path.GetFileName(sourceName);
+        if (string.IsNullOrWhiteSpace(displayTitle)) displayTitle = sourceName;
+        Title = IsCutout ? displayTitle + " (cutout)" : displayTitle;
+        StatusMessage = $"Loaded {displayTitle} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})";
+        _log.Info($"Loaded image {sourceName} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})");
+
+        GrabCut.SelectedRect = null;
+        ClearScribbles();
+        ChromaKey.DetectedColorBgr = ChromaKeyStrategy.DetectDominantBorderColor(_preview.Bgr);
+
+        if (SelectedStrategy == StrategyKind.Sam && Sam.IsModelReady)
+        {
+            ComputeSamEmbedding();
+        }
+
+        if (isActualCutout)
+        {
+            AdoptLoadedCutout();
+        }
+        else
+        {
+            RequestPreviewDebounced();
         }
     }
 

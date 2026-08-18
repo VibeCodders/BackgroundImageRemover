@@ -84,4 +84,32 @@ public static class ViewInteractionHelper
             panStartTranslate.X + (currentPoint.X - panStartPoint.X),
             panStartTranslate.Y + (currentPoint.Y - panStartPoint.Y));
     }
+
+    /// <summary>
+    /// Checks clipboard for an image (BitmapSource or image file) and returns it, or null if none present.
+    /// </summary>
+    public static System.Windows.Media.Imaging.BitmapSource? TryGetClipboardImage()
+    {
+        try
+        {
+            if (Clipboard.ContainsImage())
+            {
+                return Clipboard.GetImage();
+            }
+
+            if (Clipboard.ContainsFileDropList())
+            {
+                var files = Clipboard.GetFileDropList();
+                if (files.Count > 0 && files[0] is { } filePath && IsSupportedImage(filePath))
+                {
+                    return new System.Windows.Media.Imaging.BitmapImage(new Uri(filePath));
+                }
+            }
+        }
+        catch
+        {
+            // Clipboard access can throw if locked by another process
+        }
+        return null;
+    }
 }

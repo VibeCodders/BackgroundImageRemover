@@ -18,18 +18,18 @@ public interface IUncropFillService
     Mat ExpandCanvas(Mat sourceBgr, CanvasPadding padding, out Mat newAreaMask);
 
     /// <summary>Extends the canvas by reflecting the image content outward from each edge.</summary>
-    Mat FillMirror(Mat sourceBgr, CanvasPadding padding, UncropMirrorType mirrorType = UncropMirrorType.Reflect101);
+    Mat FillMirror(Mat sourceBgr, CanvasPadding padding, UncropMirrorType mirrorType = UncropMirrorType.Reflect101, CancellationToken ct = default);
 
     /// <summary>Extends the canvas using OpenCV content-aware inpainting on the new border area.</summary>
-    Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0);
+    Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0, CancellationToken ct = default);
 
     /// <summary>Extends the canvas with a flat color (either sampled from image edges or custom), optionally
     /// replicated-and-blurred into a soft gradient instead of a hard flat fill.</summary>
-    Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred, Scalar? customColor = null, int blurRadius = 0);
+    Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred, Scalar? customColor = null, int blurRadius = 0, CancellationToken ct = default);
 
     /// <summary>Extends the canvas by clamping/replicating the edge pixels outward.</summary>
-    Mat FillReplicate(Mat sourceBgr, CanvasPadding padding);
+    Mat FillReplicate(Mat sourceBgr, CanvasPadding padding, CancellationToken ct = default);
 
     /// <summary>Extends the canvas by tiling/wrapping the image cyclically across borders.</summary>
-    Mat FillWrap(Mat sourceBgr, CanvasPadding padding);
+    Mat FillWrap(Mat sourceBgr, CanvasPadding padding, CancellationToken ct = default);
 }

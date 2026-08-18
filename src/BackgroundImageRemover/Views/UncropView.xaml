@@ -24,8 +24,11 @@
                 <TextBlock Text="{Binding StatusMessage}" />
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
-                <ProgressBar IsIndeterminate="True" Width="120" Height="12"
-                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <StackPanel Orientation="Horizontal"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ProgressBar IsIndeterminate="True" Width="100" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <Button Content="Cancel" Command="{Binding CancelFillCommand}" Padding="6,1" FontSize="11" />
+                </StackPanel>
             </StatusBarItem>
         </StatusBar>
 
@@ -155,6 +158,8 @@
                                  IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=AiOutpaint}" />
 
                     <Button Content="Apply fill" Command="{Binding ApplyFillCommand}" Margin="0,14,0,0" Padding="8" FontWeight="Bold" />
+                    <Button Content="Cancel fill" Command="{Binding CancelFillCommand}" Margin="0,6,0,0" Padding="6"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

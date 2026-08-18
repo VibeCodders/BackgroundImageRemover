@@ -27,6 +27,7 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
     private readonly IImageExportService _imageExporter;
     private readonly IFileLogService _log;
     private readonly EditHistory _editHistory = new();
+    private CancellationTokenSource? _fillCts;
 
     private LoadedImage? _sourceImage;
     private Mat? _resultBgra;
@@ -72,6 +73,7 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ApplyFillCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelFillCommand))]
     [NotifyCanExecuteChangedFor(nameof(SaveAsCommand))]
     [NotifyCanExecuteChangedFor(nameof(OpenImageCommand))]
     private bool _isBusy;
@@ -282,6 +284,18 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
         && SelectedFillMode != UncropFillMode.AiOutpaint
         && !Padding.IsZero;
 
+    private bool CanCancelFill() => IsBusy && _fillCts is not null && !_fillCts.IsCancellationRequested;
+
+    [RelayCommand(CanExecute = nameof(CanCancelFill))]
+    private void CancelFill()
+    {
+        if (_fillCts is not null && !_fillCts.IsCancellationRequested)
+        {
+            _fillCts.Cancel();
+            StatusMessage = "Cancelling fill operation...";
+        }
+    }
+
     [RelayCommand(CanExecute = nameof(CanApplyFill))]
     private async Task ApplyFillAsync()
     {
@@ -304,20 +318,25 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
             ? new Scalar(CustomSolidColor.B, CustomSolidColor.G, CustomSolidColor.R)
             : (Scalar?)null;
 
+        _fillCts?.Dispose();
+        _fillCts = new CancellationTokenSource();
+        var ct = _fillCts.Token;
+
         try
         {
             IsBusy = true;
+            CancelFillCommand.NotifyCanExecuteChanged();
             StatusMessage = "Filling...";
 
             using var filledBgr = await Task.Run(() => mode switch
             {
-                UncropFillMode.Mirror => _fillService.FillMirror(sourceBgr, padding, mirrorType),
-                UncropFillMode.Inpaint => _fillService.FillInpaint(sourceBgr, padding, inpaintMethod, inpaintRadius, blendMargin),
-                UncropFillMode.SolidColor => _fillService.FillSolidColor(sourceBgr, padding, blurred, customColor, blurRadius),
-                UncropFillMode.Replicate => _fillService.FillReplicate(sourceBgr, padding),
-                UncropFillMode.Wrap => _fillService.FillWrap(sourceBgr, padding),
+                UncropFillMode.Mirror => _fillService.FillMirror(sourceBgr, padding, mirrorType, ct),
+                UncropFillMode.Inpaint => _fillService.FillInpaint(sourceBgr, padding, inpaintMethod, inpaintRadius, blendMargin, ct),
+                UncropFillMode.SolidColor => _fillService.FillSolidColor(sourceBgr, padding, blurred, customColor, blurRadius, ct),
+                UncropFillMode.Replicate => _fillService.FillReplicate(sourceBgr, padding, ct),
+                UncropFillMode.Wrap => _fillService.FillWrap(sourceBgr, padding, ct),
                 _ => throw new InvalidOperationException($"Fill mode {mode} is not available yet.")
-            });
+            }, ct);
 
             var bgra = new Mat();
             Cv2.CvtColor(filledBgr, bgra, ColorConversionCodes.BGR2BGRA);
@@ -335,6 +354,10 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
             IsDirty = true;
             StatusMessage = $"Applied {mode} fill.";
         }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Fill operation cancelled.";
+        }
         catch (Exception ex)
         {
             StatusMessage = $"Fill failed: {ex.Message}";
@@ -342,7 +365,10 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
         }
         finally
         {
+            _fillCts?.Dispose();
+            _fillCts = null;
             IsBusy = false;
+            CancelFillCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -433,6 +459,8 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
 
     public void Dispose()
     {
+        _fillCts?.Cancel();
+        _fillCts?.Dispose();
         _sourceImage?.Dispose();
         _resultBgra?.Dispose();
         _editHistory.Dispose();

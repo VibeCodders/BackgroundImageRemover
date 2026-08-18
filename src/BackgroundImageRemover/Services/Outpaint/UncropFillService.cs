@@ -21,23 +21,29 @@ public sealed class UncropFillService : IUncropFillService
         return expanded;
     }
 
-    public Mat FillMirror(Mat sourceBgr, CanvasPadding padding, UncropMirrorType mirrorType = UncropMirrorType.Reflect101)
+    public Mat FillMirror(Mat sourceBgr, CanvasPadding padding, UncropMirrorType mirrorType = UncropMirrorType.Reflect101, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var result = new Mat();
         var borderType = mirrorType == UncropMirrorType.Reflect ? BorderTypes.Reflect : BorderTypes.Reflect101;
         Cv2.CopyMakeBorder(sourceBgr, result, padding.Top, padding.Bottom, padding.Left, padding.Right, borderType);
+        ct.ThrowIfCancellationRequested();
         return result;
     }
 
-    public Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0)
+    public Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         using var expanded = ExpandCanvas(sourceBgr, padding, out var mask);
         using (mask)
         {
+            ct.ThrowIfCancellationRequested();
             var result = new Mat();
             var cvMethod = method == UncropInpaintMethod.Telea ? InpaintMethod.Telea : InpaintMethod.NS;
             double radius = Math.Max(1.0, Math.Min(100.0, inpaintRadius));
             Cv2.Inpaint(expanded, mask, result, inpaintRadius: radius, cvMethod);
+
+            ct.ThrowIfCancellationRequested();
 
             if (blendMargin <= 0)
             {
@@ -46,15 +52,17 @@ public sealed class UncropFillService : IUncropFillService
             }
             else
             {
-                BlendInteriorWithFeather(result, sourceBgr, padding, blendMargin);
+                BlendInteriorWithFeather(result, sourceBgr, padding, blendMargin, ct);
             }
 
+            ct.ThrowIfCancellationRequested();
             return result;
         }
     }
 
-    public Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred, Scalar? customColor = null, int blurRadius = 0)
+    public Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred, Scalar? customColor = null, int blurRadius = 0, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         if (padding.IsZero)
         {
             return sourceBgr.Clone();
@@ -62,35 +70,42 @@ public sealed class UncropFillService : IUncropFillService
 
         if (blurred)
         {
-            return FillSolidColorBlurred(sourceBgr, padding, blurRadius);
+            return FillSolidColorBlurred(sourceBgr, padding, blurRadius, ct);
         }
 
         var expanded = new Mat();
         Cv2.CopyMakeBorder(sourceBgr, expanded, padding.Top, padding.Bottom, padding.Left, padding.Right,
             BorderTypes.Constant, Scalar.All(0));
         var color = customColor ?? SampleEdgeAverageColor(sourceBgr);
+        ct.ThrowIfCancellationRequested();
         FillBorderRegions(expanded, padding, sourceBgr.Size(), color);
+        ct.ThrowIfCancellationRequested();
         return expanded;
     }
 
-    public Mat FillReplicate(Mat sourceBgr, CanvasPadding padding)
+    public Mat FillReplicate(Mat sourceBgr, CanvasPadding padding, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var result = new Mat();
         Cv2.CopyMakeBorder(sourceBgr, result, padding.Top, padding.Bottom, padding.Left, padding.Right,
             BorderTypes.Replicate);
+        ct.ThrowIfCancellationRequested();
         return result;
     }
 
-    public Mat FillWrap(Mat sourceBgr, CanvasPadding padding)
+    public Mat FillWrap(Mat sourceBgr, CanvasPadding padding, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var result = new Mat();
         Cv2.CopyMakeBorder(sourceBgr, result, padding.Top, padding.Bottom, padding.Left, padding.Right,
             BorderTypes.Wrap);
+        ct.ThrowIfCancellationRequested();
         return result;
     }
 
-    private static Mat FillSolidColorBlurred(Mat sourceBgr, CanvasPadding padding, int blurRadius)
+    private static Mat FillSolidColorBlurred(Mat sourceBgr, CanvasPadding padding, int blurRadius, CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
         using var replicated = new Mat();
         Cv2.CopyMakeBorder(sourceBgr, replicated, padding.Top, padding.Bottom, padding.Left, padding.Right,
             BorderTypes.Replicate);
@@ -107,9 +122,11 @@ public sealed class UncropFillService : IUncropFillService
             kernel = Math.Max(3, (maxPad / 2) | 1); // odd kernel size, scaled with the padding
         }
 
+        ct.ThrowIfCancellationRequested();
         var result = new Mat();
         Cv2.GaussianBlur(replicated, result, new Size(kernel, kernel), 0);
 
+        ct.ThrowIfCancellationRequested();
         using var interiorRoi = new Mat(result, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
         sourceBgr.CopyTo(interiorRoi);
         return result;
@@ -148,16 +165,18 @@ public sealed class UncropFillService : IUncropFillService
         }
     }
 
-    private static void BlendInteriorWithFeather(Mat resultCanvas, Mat sourceBgr, CanvasPadding padding, int featherPx)
+    private static void BlendInteriorWithFeather(Mat resultCanvas, Mat sourceBgr, CanvasPadding padding, int featherPx, CancellationToken ct)
     {
         int w = sourceBgr.Width;
         int h = sourceBgr.Height;
         featherPx = Math.Max(1, Math.Min(featherPx, Math.Min(w, h) / 4));
 
+        ct.ThrowIfCancellationRequested();
         using var alphaMask = new Mat(h, w, MatType.CV_32FC1, Scalar.All(1.0));
         // Soft gradient around outer border of interior
         for (int y = 0; y < h; y++)
         {
+            if (y % 16 == 0) ct.ThrowIfCancellationRequested();
             for (int x = 0; x < w; x++)
             {
                 int distLeft = x;
@@ -179,6 +198,7 @@ public sealed class UncropFillService : IUncropFillService
             }
         }
 
+        ct.ThrowIfCancellationRequested();
         using var interiorRoi = new Mat(resultCanvas, new Rect(padding.Left, padding.Top, w, h));
         using var source32F = new Mat();
         using var interior32F = new Mat();

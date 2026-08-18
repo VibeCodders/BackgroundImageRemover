@@ -18,19 +18,19 @@ public class UncropViewModelTests
             return new Mat(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
         }
 
-        public Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0)
+        public Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0, CancellationToken ct = default)
             => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
 
-        public Mat FillMirror(Mat sourceBgr, CanvasPadding padding, UncropMirrorType mirrorType = UncropMirrorType.Reflect101)
+        public Mat FillMirror(Mat sourceBgr, CanvasPadding padding, UncropMirrorType mirrorType = UncropMirrorType.Reflect101, CancellationToken ct = default)
             => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
 
-        public Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred, Scalar? customColor = null, int blurRadius = 0)
+        public Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred, Scalar? customColor = null, int blurRadius = 0, CancellationToken ct = default)
             => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
 
-        public Mat FillReplicate(Mat sourceBgr, CanvasPadding padding)
+        public Mat FillReplicate(Mat sourceBgr, CanvasPadding padding, CancellationToken ct = default)
             => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
 
-        public Mat FillWrap(Mat sourceBgr, CanvasPadding padding)
+        public Mat FillWrap(Mat sourceBgr, CanvasPadding padding, CancellationToken ct = default)
             => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
     }
 
@@ -132,5 +132,55 @@ public class UncropViewModelTests
 
         Assert.True(vm.IsDirty);
         Assert.NotNull(vm.PreviewResult);
+    }
+
+    [Fact]
+    public async Task CancelFillCommand_CancelsRunningOperation()
+    {
+        var delayFillService = new DelayUncropFillService();
+        using var vm = new UncropViewModel(
+            delayFillService,
+            new DummyDialogService(),
+            new DummyImageLoaderService(),
+            new DummyImageExportService(),
+            new DummyFileLogService());
+
+        await vm.LoadAsync("test_photo.jpg");
+        vm.Padding = new CanvasPadding(10, 10, 10, 10);
+
+        var fillTask = vm.ApplyFillCommand.ExecuteAsync(null);
+        Assert.True(vm.IsBusy);
+        Assert.True(vm.CancelFillCommand.CanExecute(null));
+
+        vm.CancelFillCommand.Execute(null);
+        await fillTask;
+
+        Assert.False(vm.IsBusy);
+        Assert.Equal("Fill operation cancelled.", vm.StatusMessage);
+    }
+
+    private sealed class DelayUncropFillService : IUncropFillService
+    {
+        public Mat ExpandCanvas(Mat sourceBgr, CanvasPadding padding, out Mat newAreaMask)
+        {
+            newAreaMask = new Mat(10, 10, MatType.CV_8UC1, Scalar.All(0));
+            return new Mat(10, 10, MatType.CV_8UC3, Scalar.All(0));
+        }
+
+        public Mat FillMirror(Mat sourceBgr, CanvasPadding padding, UncropMirrorType mirrorType = UncropMirrorType.Reflect101, CancellationToken ct = default)
+        {
+            ct.WaitHandle.WaitOne(500);
+            ct.ThrowIfCancellationRequested();
+            return new Mat(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
+        }
+
+        public Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0, CancellationToken ct = default)
+            => throw new NotImplementedException();
+        public Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred, Scalar? customColor = null, int blurRadius = 0, CancellationToken ct = default)
+            => throw new NotImplementedException();
+        public Mat FillReplicate(Mat sourceBgr, CanvasPadding padding, CancellationToken ct = default)
+            => throw new NotImplementedException();
+        public Mat FillWrap(Mat sourceBgr, CanvasPadding padding, CancellationToken ct = default)
+            => throw new NotImplementedException();
     }
 }

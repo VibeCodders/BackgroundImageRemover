@@ -401,6 +401,23 @@ public class EditingOperations2Tests
     }
 
     [Fact]
+    public void BlendByMask_AppliesModifiedOnlyWhereMaskIsSet()
+    {
+        using var original = new Mat(10, 10, MatType.CV_8UC3, new Scalar(10, 10, 10));
+        using var modified = new Mat(10, 10, MatType.CV_8UC3, new Scalar(200, 200, 200));
+        using var mask = new Mat(10, 10, MatType.CV_8UC1, Scalar.All(0));
+        using (var roi = new Mat(mask, new Rect(2, 2, 4, 4)))
+        {
+            roi.SetTo(new Scalar(255));
+        }
+
+        using var result = MosaicService.BlendByMask(original, modified, mask);
+
+        Assert.Equal(200, result.At<Vec3b>(3, 3).Item0);
+        Assert.Equal(10, result.At<Vec3b>(0, 0).Item0);
+    }
+
+    [Fact]
     public void Overlay_Rotation_PreservesBaseSize()
     {
         using var baseBgr = new Mat(40, 40, MatType.CV_8UC3, new Scalar(10, 10, 10));

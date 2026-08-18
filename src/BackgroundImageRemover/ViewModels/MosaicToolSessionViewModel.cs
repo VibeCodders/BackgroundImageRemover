@@ -5,6 +5,7 @@ using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
+using WpfPoint = System.Windows.Point;
 
 namespace BackgroundImageRemover.ViewModels;
 
@@ -13,6 +14,7 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
 {
     private LoadedImage? _sourceImage;
     private Mat? _workingAlpha;
+    private Mat? _paintedMask;
 
     public override string ToolBadge => "▦ Mosaic";
     public override string AccentColor => "#EA580C";
@@ -48,6 +50,18 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
     private bool _wholeImage = true;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewMode))]
+    private bool _paintMode;
+
+    [ObservableProperty]
+    private double _brushRadius = 30;
+
+    [ObservableProperty]
+    private bool _hasPaintedMask;
+
+    public InteractionMode PreviewMode => PaintMode ? InteractionMode.Brush : InteractionMode.DrawRect;
+
+    [ObservableProperty]
     private string? _statusMessage;
 
     public MosaicToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
@@ -61,9 +75,10 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
         _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
         _workingAlpha = _sourceImage.FullAlpha?.Clone()
             ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        _paintedMask = new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, Scalar.All(0));
         SourceBitmap = _sourceImage.FullBgr.ToBitmapSource(_workingAlpha);
         RefreshResult();
-        StatusMessage = "Choose mosaic or blur, and a region (or the whole image).";
+        StatusMessage = "Choose mosaic or blur, then paint or select a region.";
     }
 
     partial void OnCellSizeChanged(int value) => RefreshResult();
@@ -73,6 +88,7 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
     partial void OnStrengthChanged(double value) => RefreshResult();
     partial void OnJitterChanged(int value) => RefreshResult();
     partial void OnWholeImageChanged(bool value) => RefreshResult();
+    partial void OnPaintModeChanged(bool value) => RefreshResult();
 
     public void OnRectSelected(Rect rect)
     {
@@ -81,11 +97,43 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
         RefreshResult();
     }
 
+    public void OnBrushStrokeStart(WpfPoint imagePoint, double pixelRadius)
+        => StampMask(imagePoint, imagePoint, pixelRadius);
+
+    public void OnBrushStrokeMove(WpfPoint imagePoint, double pixelRadius)
+        => StampMask(imagePoint, imagePoint, pixelRadius);
+
+    public void OnBrushStrokeEnd()
+    {
+        HasPaintedMask = _paintedMask is not null && Cv2.CountNonZero(_paintedMask) > 0;
+        RefreshResult();
+    }
+
+    private void StampMask(WpfPoint from, WpfPoint to, double pixelRadius)
+    {
+        if (_paintedMask is null) return;
+        int r = Math.Max(1, (int)Math.Round(pixelRadius));
+        Cv2.Line(_paintedMask, new Point((int)from.X, (int)from.Y), new Point((int)to.X, (int)to.Y), Scalar.All(255), r * 2);
+        Cv2.Circle(_paintedMask, new Point((int)to.X, (int)to.Y), r, Scalar.All(255), -1);
+        HasPaintedMask = true;
+    }
+
+    [RelayCommand]
+    private void ClearMask()
+    {
+        _paintedMask?.SetTo(Scalar.All(0));
+        HasPaintedMask = false;
+        RefreshResult();
+    }
+
     [RelayCommand]
     private void Reset()
     {
         SelectedRegion = null;
         WholeImage = true;
+        PaintMode = false;
+        _paintedMask?.SetTo(Scalar.All(0));
+        HasPaintedMask = false;
         CellSize = 16;
         BlurRadius = 20;
         Mode = MosaicMode.Pixelate;
@@ -101,6 +149,7 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
         using var result = BuildResult(_sourceImage.FullBgr);
         ResultBitmap = result.ToBitmapSource(_workingAlpha);
         IsDirty = !WholeImage
+            || HasPaintedMask
             || CellSize > 1
             || BlurRadius > 0
             || Mode is MosaicMode.Median or MosaicMode.SolidFill or MosaicMode.Crystallize
@@ -110,6 +159,11 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
 
     private Mat BuildResult(Mat src)
     {
+        if (PaintMode)
+        {
+            return BuildMaskedResult(src);
+        }
+
         var region = WholeImage ? (Rect?)null : SelectedRegion;
 
         if (InvertRegion && region is { } r)
@@ -123,6 +177,19 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
         }
 
         return ApplyModeCore(src, region);
+    }
+
+    private Mat BuildMaskedResult(Mat src)
+    {
+        if (_paintedMask is null || Cv2.CountNonZero(_paintedMask) == 0)
+        {
+            return src.Clone();
+        }
+
+        using var effect = ApplyModeCore(src, null);
+        return InvertRegion
+            ? MosaicService.BlendByMask(effect, src, _paintedMask)
+            : MosaicService.BlendByMask(src, effect, _paintedMask);
     }
 
     private Mat ApplyModeCore(Mat src, Rect? region) => Mode switch
@@ -155,5 +222,6 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
     {
         _sourceImage?.Dispose();
         _workingAlpha?.Dispose();
+        _paintedMask?.Dispose();
     }
 }

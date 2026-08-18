@@ -36,6 +36,7 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
     public IReadOnlyList<UncropInpaintMethod> InpaintMethods { get; } = Enum.GetValues<UncropInpaintMethod>();
     public IReadOnlyList<UncropMirrorType> MirrorTypes { get; } = Enum.GetValues<UncropMirrorType>();
     public IReadOnlyList<UncropColorSource> ColorSources { get; } = Enum.GetValues<UncropColorSource>();
+    public IReadOnlyList<UncropGradientMode> GradientModes { get; } = Enum.GetValues<UncropGradientMode>();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
@@ -93,6 +94,12 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
     private UncropMirrorType _selectedMirrorType = UncropMirrorType.Reflect101;
 
     [ObservableProperty]
+    private int _mirrorBlurRadius = 0;
+
+    [ObservableProperty]
+    private double _mirrorFadeOpacity = 1.0;
+
+    [ObservableProperty]
     private UncropInpaintMethod _selectedInpaintMethod = UncropInpaintMethod.Telea;
 
     [ObservableProperty]
@@ -100,6 +107,9 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
 
     [ObservableProperty]
     private int _blendMargin = 0;
+
+    [ObservableProperty]
+    private bool _inpaintPreFillEdgeAverage;
 
     [ObservableProperty]
     private UncropColorSource _selectedColorSource = UncropColorSource.EdgeAverage;
@@ -115,6 +125,27 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
 
     [ObservableProperty]
     private int _blurRadius = 0;
+
+    [ObservableProperty]
+    private int _replicateSmoothRadius = 0;
+
+    [ObservableProperty]
+    private int _zoomBlurRadius = 35;
+
+    [ObservableProperty]
+    private double _zoomScale = 1.25;
+
+    [ObservableProperty]
+    private UncropGradientMode _selectedGradientMode = UncropGradientMode.PerEdgeSplay;
+
+    [ObservableProperty]
+    private double _gradientNoiseAmount = 0.0;
+
+    [ObservableProperty]
+    private int _patchSize = 32;
+
+    [ObservableProperty]
+    private int _patchBlendOverlap = 8;
 
     [ObservableProperty]
     private BitmapSource? _previewResult;
@@ -308,11 +339,21 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
         var padding = Padding;
         var mode = SelectedFillMode;
         var mirrorType = SelectedMirrorType;
+        var mirrorBlur = MirrorBlurRadius;
+        var mirrorFade = MirrorFadeOpacity;
         var inpaintMethod = SelectedInpaintMethod;
         var inpaintRadius = InpaintRadius;
         var blendMargin = BlendMargin;
+        var inpaintPreFill = InpaintPreFillEdgeAverage;
         var blurred = BlurredColorFill;
         var blurRadius = BlurRadius;
+        var replicateSmooth = ReplicateSmoothRadius;
+        var zoomBlurRadius = ZoomBlurRadius;
+        var zoomScale = ZoomScale;
+        var gradientMode = SelectedGradientMode;
+        var gradientNoise = GradientNoiseAmount;
+        var patchSize = PatchSize;
+        var patchOverlap = PatchBlendOverlap;
         var colorSource = SelectedColorSource;
         var customColor = colorSource == UncropColorSource.CustomColor
             ? new Scalar(CustomSolidColor.B, CustomSolidColor.G, CustomSolidColor.R)
@@ -330,11 +371,14 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
 
             using var filledBgr = await Task.Run(() => mode switch
             {
-                UncropFillMode.Mirror => _fillService.FillMirror(sourceBgr, padding, mirrorType, ct),
-                UncropFillMode.Inpaint => _fillService.FillInpaint(sourceBgr, padding, inpaintMethod, inpaintRadius, blendMargin, ct),
+                UncropFillMode.Mirror => _fillService.FillMirror(sourceBgr, padding, mirrorType, mirrorBlur, mirrorFade, ct),
+                UncropFillMode.Inpaint => _fillService.FillInpaint(sourceBgr, padding, inpaintMethod, inpaintRadius, blendMargin, inpaintPreFill, ct),
                 UncropFillMode.SolidColor => _fillService.FillSolidColor(sourceBgr, padding, blurred, customColor, blurRadius, ct),
-                UncropFillMode.Replicate => _fillService.FillReplicate(sourceBgr, padding, ct),
+                UncropFillMode.Replicate => _fillService.FillReplicate(sourceBgr, padding, replicateSmooth, ct),
                 UncropFillMode.Wrap => _fillService.FillWrap(sourceBgr, padding, ct),
+                UncropFillMode.ZoomBlur => _fillService.FillZoomBlur(sourceBgr, padding, zoomBlurRadius, zoomScale, blendMargin, ct),
+                UncropFillMode.EdgeGradient => _fillService.FillEdgeGradient(sourceBgr, padding, gradientMode, customColor, gradientNoise, ct),
+                UncropFillMode.PatchSynthesis => _fillService.FillPatchSynthesis(sourceBgr, padding, patchSize, patchOverlap, blendMargin, ct),
                 _ => throw new InvalidOperationException($"Fill mode {mode} is not available yet.")
             }, ct);
 

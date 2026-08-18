@@ -77,12 +77,24 @@
                                  IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Mirror}">
                         <TextBlock Text="Mirror reflection type:" FontSize="11" Foreground="#FF666666" Margin="0,0,0,2" />
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <RadioButton Content="Reflect 101" GroupName="MirrorType" Margin="0,0,8,0"
                                          IsChecked="{Binding SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect101}" />
                             <RadioButton Content="Reflect" GroupName="MirrorType"
                                          IsChecked="{Binding SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect}" />
                         </StackPanel>
+
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding MirrorBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="0" Maximum="50" Value="{Binding MirrorBlurRadius}" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
+                        </DockPanel>
+
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Fade opacity:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding MirrorFadeOpacity, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding MirrorFadeOpacity}" SmallChange="0.05" LargeChange="0.2" TickFrequency="0.05" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
+                        </DockPanel>
                     </StackPanel>
 
                     <!-- Inpaint Mode -->
@@ -108,6 +120,10 @@
                             <TextBlock Text="{Binding BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="0" Maximum="30" Value="{Binding BlendMargin}" SmallChange="1" LargeChange="5" TickFrequency="2" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
                         </DockPanel>
+
+                        <CheckBox Content="Pre-fill edge colors" Margin="0,2,0,4"
+                                  IsChecked="{Binding InpaintPreFillEdgeAverage}"
+                                  ToolTip="Pre-fills border area with average edge color before inpainting for better color consistency." />
                     </StackPanel>
 
                     <!-- Solid / Gradient Color Mode -->
@@ -150,9 +166,67 @@
                         </DockPanel>
                     </StackPanel>
 
+                    <!-- Zoom & Blur Background Mode -->
+                    <RadioButton Content="Zoom &amp; Blur background" GroupName="FillMode" Margin="0,0,0,4"
+                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ZoomBlur}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ZoomBlur}">
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding ZoomBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="1" Maximum="101" Value="{Binding ZoomBlurRadius}" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Zoom scale:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding ZoomScale, StringFormat={}{0:F2}x}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="1.0" Maximum="2.5" Value="{Binding ZoomScale}" SmallChange="0.05" LargeChange="0.25" TickFrequency="0.05" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Blend margin:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="0" Maximum="30" Value="{Binding BlendMargin}" SmallChange="1" LargeChange="5" TickFrequency="2" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </StackPanel>
+
+                    <!-- Edge Gradient Mode -->
+                    <RadioButton Content="Edge gradient" GroupName="FillMode" Margin="0,0,0,4"
+                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeGradient}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=EdgeGradient}">
+                        <TextBlock Text="Gradient style:" FontSize="11" Foreground="#FF666666" Margin="0,0,0,2" />
+                        <ComboBox ItemsSource="{Binding GradientModes}" SelectedItem="{Binding SelectedGradientMode}" Margin="0,0,0,6" />
+
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Noise (dither):" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding GradientNoiseAmount, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="0.0" Maximum="0.20" Value="{Binding GradientNoiseAmount}" SmallChange="0.01" LargeChange="0.05" TickFrequency="0.01" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </StackPanel>
+
+                    <!-- Patch Synthesis Mode -->
+                    <RadioButton Content="Patch texture synthesis" GroupName="FillMode" Margin="0,0,0,4"
+                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PatchSynthesis}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=PatchSynthesis}">
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Patch size:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding PatchSize, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="8" Maximum="64" Value="{Binding PatchSize}" SmallChange="4" LargeChange="8" TickFrequency="4" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Blend overlap:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding PatchBlendOverlap, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="2" Maximum="24" Value="{Binding PatchBlendOverlap}" SmallChange="2" LargeChange="4" TickFrequency="2" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </StackPanel>
+
                     <!-- Replicate / Clamp Mode -->
                     <RadioButton Content="Edge stretch (Replicate)" GroupName="FillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Replicate}">
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Smoothing:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding ReplicateSmoothRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="0" Maximum="30" Value="{Binding ReplicateSmoothRadius}" SmallChange="2" LargeChange="6" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </StackPanel>
 
                     <!-- Wrap / Tile Mode -->
                     <RadioButton Content="Tile / Pattern (Wrap)" GroupName="FillMode" Margin="0,0,0,4"

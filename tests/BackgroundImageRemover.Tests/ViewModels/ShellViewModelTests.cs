@@ -130,15 +130,21 @@ public class ShellViewModelTests
             newAreaMask = new OpenCvSharp.Mat(1, 1, OpenCvSharp.MatType.CV_8UC1);
             return new OpenCvSharp.Mat(1, 1, OpenCvSharp.MatType.CV_8UC3);
         }
-        public OpenCvSharp.Mat FillInpaint(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, Models.UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0, CancellationToken ct = default)
+        public OpenCvSharp.Mat FillInpaint(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, Models.UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0, bool preFillEdgeAverage = false, CancellationToken ct = default)
             => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
-        public OpenCvSharp.Mat FillMirror(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, Models.UncropMirrorType mirrorType = Models.UncropMirrorType.Reflect101, CancellationToken ct = default)
+        public OpenCvSharp.Mat FillMirror(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, Models.UncropMirrorType mirrorType = Models.UncropMirrorType.Reflect101, int blurRadius = 0, double fadeOpacity = 1.0, CancellationToken ct = default)
             => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
         public OpenCvSharp.Mat FillSolidColor(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, bool blurred, OpenCvSharp.Scalar? customColor = null, int blurRadius = 0, CancellationToken ct = default)
             => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
-        public OpenCvSharp.Mat FillReplicate(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, CancellationToken ct = default)
+        public OpenCvSharp.Mat FillReplicate(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, int smoothRadius = 0, CancellationToken ct = default)
             => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
         public OpenCvSharp.Mat FillWrap(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, CancellationToken ct = default)
+            => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
+        public OpenCvSharp.Mat FillZoomBlur(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, int blurRadius = 25, double zoomScale = 1.25, int blendMargin = 0, CancellationToken ct = default)
+            => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
+        public OpenCvSharp.Mat FillEdgeGradient(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, Models.UncropGradientMode gradientMode = Models.UncropGradientMode.PerEdgeSplay, OpenCvSharp.Scalar? customEndColor = null, double noiseAmount = 0, CancellationToken ct = default)
+            => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
+        public OpenCvSharp.Mat FillPatchSynthesis(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, int patchSize = 32, int blendOverlap = 8, int blendMargin = 0, CancellationToken ct = default)
             => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
     }
 

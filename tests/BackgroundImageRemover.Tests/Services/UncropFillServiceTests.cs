@@ -162,6 +162,106 @@ public class UncropFillServiceTests
         Assert.True(MatsAreEqual(centerRoi, source));
     }
 
+    [Fact]
+    public void FillMirror_WithBlurAndFade_ReturnsExpectedSize_AndPreservesInterior()
+    {
+        var service = new UncropFillService();
+        using var source = new Mat(30, 40, MatType.CV_8UC3, Scalar.All(0));
+        Cv2.Rectangle(source, new Rect(5, 5, 20, 15), new Scalar(10, 200, 30), thickness: -1);
+        var padding = new CanvasPadding(10, 10, 10, 10);
+
+        using var result = service.FillMirror(source, padding, UncropMirrorType.Reflect101, blurRadius: 11, fadeOpacity: 0.5);
+        Assert.Equal(60, result.Width);
+        Assert.Equal(50, result.Height);
+
+        using var centerRoi = new Mat(result, new Rect(padding.Left, padding.Top, source.Width, source.Height));
+        Assert.True(MatsAreEqual(centerRoi, source));
+    }
+
+    [Fact]
+    public void FillInpaint_WithPreFill_ReturnsExpectedSize_AndPreservesInterior()
+    {
+        var service = new UncropFillService();
+        using var source = MakeUniformImage(40, 30, Scalar.All(120));
+        var padding = new CanvasPadding(6, 4, 6, 4);
+
+        using var result = service.FillInpaint(source, padding, UncropInpaintMethod.Telea, inpaintRadius: 8, blendMargin: 0, preFillEdgeAverage: true);
+
+        Assert.Equal(52, result.Width);
+        Assert.Equal(38, result.Height);
+
+        using var centerRoi = new Mat(result, new Rect(padding.Left, padding.Top, source.Width, source.Height));
+        Assert.True(MatsAreEqual(centerRoi, source));
+    }
+
+    [Fact]
+    public void FillReplicate_WithSmoothRadius_ReturnsExpectedSize()
+    {
+        var service = new UncropFillService();
+        using var source = MakeUniformImage(40, 30, new Scalar(45, 90, 135));
+        var padding = new CanvasPadding(10, 10, 10, 10);
+
+        using var result = service.FillReplicate(source, padding, smoothRadius: 9);
+
+        Assert.Equal(60, result.Width);
+        Assert.Equal(50, result.Height);
+
+        using var centerRoi = new Mat(result, new Rect(padding.Left, padding.Top, source.Width, source.Height));
+        Assert.True(MatsAreEqual(centerRoi, source));
+    }
+
+    [Fact]
+    public void FillZoomBlur_ReturnsExpectedSize_AndPreservesInterior()
+    {
+        var service = new UncropFillService();
+        using var source = new Mat(40, 60, MatType.CV_8UC3, Scalar.All(100));
+        Cv2.Circle(source, new Point(30, 20), 10, new Scalar(200, 50, 50), thickness: -1);
+        var padding = new CanvasPadding(15, 10, 15, 10);
+
+        using var result = service.FillZoomBlur(source, padding, blurRadius: 21, zoomScale: 1.3, blendMargin: 0);
+
+        Assert.Equal(90, result.Width);
+        Assert.Equal(60, result.Height);
+
+        using var centerRoi = new Mat(result, new Rect(padding.Left, padding.Top, source.Width, source.Height));
+        Assert.True(MatsAreEqual(centerRoi, source));
+    }
+
+    [Theory]
+    [InlineData(UncropGradientMode.PerEdgeSplay)]
+    [InlineData(UncropGradientMode.FadeToColor)]
+    [InlineData(UncropGradientMode.FourCorners)]
+    public void FillEdgeGradient_SupportsAllModes_AndPreservesInterior(UncropGradientMode mode)
+    {
+        var service = new UncropFillService();
+        using var source = MakeUniformImage(50, 40, new Scalar(100, 150, 200));
+        var padding = new CanvasPadding(8, 8, 8, 8);
+
+        using var result = service.FillEdgeGradient(source, padding, mode, customEndColor: new Scalar(0, 0, 0), noiseAmount: 0.05);
+
+        Assert.Equal(66, result.Width);
+        Assert.Equal(56, result.Height);
+
+        using var centerRoi = new Mat(result, new Rect(padding.Left, padding.Top, source.Width, source.Height));
+        Assert.True(MatsAreEqual(centerRoi, source));
+    }
+
+    [Fact]
+    public void FillPatchSynthesis_ReturnsExpectedSize_AndPreservesInterior()
+    {
+        var service = new UncropFillService();
+        using var source = MakeUniformImage(60, 60, new Scalar(50, 100, 150));
+        var padding = new CanvasPadding(12, 12, 12, 12);
+
+        using var result = service.FillPatchSynthesis(source, padding, patchSize: 16, blendOverlap: 4, blendMargin: 0);
+
+        Assert.Equal(84, result.Width);
+        Assert.Equal(84, result.Height);
+
+        using var centerRoi = new Mat(result, new Rect(padding.Left, padding.Top, source.Width, source.Height));
+        Assert.True(MatsAreEqual(centerRoi, source));
+    }
+
     private static bool MatsAreEqual(Mat a, Mat b)
     {
         using var diff = new Mat();

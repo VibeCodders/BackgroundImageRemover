@@ -8,6 +8,9 @@ public enum UncropFillMode
     SolidColor,
     Replicate,
     Wrap,
+    ZoomBlur,
+    EdgeGradient,
+    PatchSynthesis,
 
     /// <summary>AI outpainting (LaMa). Not yet wired up — no model source has been chosen.</summary>
     AiOutpaint

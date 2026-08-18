@@ -126,7 +126,7 @@ public partial class DocumentViewModel
 
         bool isActualCutout = BackgroundCompositingService.HasMeaningfulTransparency(_loadedImage.FullAlpha);
         PreviewBitmap = isActualCutout
-            ? BuildPreviewBitmapWithAlpha(preview, _loadedImage.FullAlpha!)
+            ? preview.Bgr.BuildPreviewWithAlpha(_loadedImage.FullAlpha!)
             : preview.Bgr.ToBitmapSource();
         ResultBitmap = null;
         IsImageLoaded = true;
@@ -449,7 +449,7 @@ public partial class DocumentViewModel
             preview = _downscaler.CreatePreview(loaded.OriginalBgr);
 
             var previewBitmap = loaded.OriginalAlpha is not null
-                ? BuildPreviewBitmapWithAlpha(preview, loaded.OriginalAlpha)
+                ? preview.Bgr.BuildPreviewWithAlpha(loaded.OriginalAlpha)
                 : preview.Bgr.ToBitmapSource();
 
             // Restore settings while IsImageLoaded is still false so strategy-change handlers

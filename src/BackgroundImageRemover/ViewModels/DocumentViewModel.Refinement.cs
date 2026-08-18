@@ -309,15 +309,4 @@ public partial class DocumentViewModel
             IsBusy = false;
         }
     }
-
-    private static Mat? ResizeScribbleToSize(Mat? scribble, Size targetSize)
-    {
-        if (scribble is null)
-        {
-            return null;
-        }
-        var resized = new Mat();
-        Cv2.Resize(scribble, resized, targetSize, interpolation: InterpolationFlags.Nearest);
-        return resized;
-    }
 }

@@ -160,7 +160,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
         bool isActualCutout = BackgroundCompositingService.HasMeaningfulTransparency(_sourceImage.FullAlpha);
         PreviewBitmap = isActualCutout
-            ? BuildPreviewBitmapWithAlpha(preview, _sourceImage.FullAlpha!)
+            ? preview.Bgr.BuildPreviewWithAlpha(_sourceImage.FullAlpha!)
             : preview.Bgr.ToBitmapSource();
 
         ChromaKey.DetectedColorBgr = ChromaKeyStrategy.DetectDominantBorderColor(_preview.Bgr);
@@ -363,16 +363,6 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         };
     }
 
-    private static BitmapSource BuildPreviewBitmapWithAlpha(PreviewImage preview, Mat fullAlpha)
-    {
-        using var previewAlpha = new Mat();
-        Cv2.Resize(fullAlpha, previewAlpha, preview.Bgr.Size(), interpolation: InterpolationFlags.Area);
-        using var bgra = new Mat();
-        Cv2.CvtColor(preview.Bgr, bgra, ColorConversionCodes.BGR2BGRA);
-        BackgroundCompositingService.ReplaceAlphaChannel(bgra, previewAlpha);
-        return bgra.ToBitmapSource();
-    }
-
     // --- Scribble & interaction handlers ---
 
     public void OnOriginalSamPointClicked(Point imagePoint)
@@ -493,14 +483,6 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         ScribblesCleared?.Invoke(this, EventArgs.Empty);
     }
 
-    private static Mat? ResizeScribbleToSize(Mat? scribble, Size targetSize)
-    {
-        if (scribble is null) return null;
-        var resized = new Mat();
-        Cv2.Resize(scribble, resized, targetSize, interpolation: InterpolationFlags.Nearest);
-        return resized;
-    }
-
     public override async Task ApplyAsync()
     {
         if (_sourceImage is null || _preview is null || !_strategies.TryGetValue(SelectedStrategy, out var strategy))
@@ -521,8 +503,8 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
             var context = BuildContext(_preview.ScaleFactor);
             if (SelectedStrategy == StrategyKind.GrabCut && HasNonEmptyScribbles())
             {
-                using var fgFull = ResizeScribbleToSize(_grabCutFgScribble, _sourceImage.FullBgr.Size());
-                using var bgFull = ResizeScribbleToSize(_grabCutBgScribble, _sourceImage.FullBgr.Size());
+                using var fgFull = _grabCutFgScribble.ResizeScribble(_sourceImage.FullBgr.Size());
+                using var bgFull = _grabCutBgScribble.ResizeScribble(_sourceImage.FullBgr.Size());
                 context = context with { GrabCutForegroundScribble = fgFull, GrabCutBackgroundScribble = bgFull };
             }
 

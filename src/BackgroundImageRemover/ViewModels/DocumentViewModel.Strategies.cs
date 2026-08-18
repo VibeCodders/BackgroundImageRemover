@@ -1,4 +1,5 @@
 using System.Windows.Media.Imaging;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Onnx;
@@ -160,17 +161,6 @@ public partial class DocumentViewModel
         };
     }
 
-    /// <summary>Builds a preview-resolution BGRA bitmap from the preview BGR plus a downscaled alpha channel.</summary>
-    private static BitmapSource BuildPreviewBitmapWithAlpha(PreviewImage preview, Mat fullAlpha)
-    {
-        using var previewAlpha = new Mat();
-        Cv2.Resize(fullAlpha, previewAlpha, preview.Bgr.Size(), interpolation: InterpolationFlags.Area);
-        using var bgra = new Mat();
-        Cv2.CvtColor(preview.Bgr, bgra, ColorConversionCodes.BGR2BGRA);
-        BackgroundCompositingService.ReplaceAlphaChannel(bgra, previewAlpha);
-        return bgra.ToBitmapSource();
-    }
-
     private void AdoptLoadedCutout()
     {
         if (_loadedImage?.FullAlpha is not { } alpha)
@@ -262,8 +252,8 @@ public partial class DocumentViewModel
 
         if (SelectedStrategy == StrategyKind.GrabCut && HasNonEmptyScribbles())
         {
-            using var fgFull = ResizeScribbleToSize(_grabCutFgScribble, _loadedImage.FullBgr.Size());
-            using var bgFull = ResizeScribbleToSize(_grabCutBgScribble, _loadedImage.FullBgr.Size());
+            using var fgFull = _grabCutFgScribble.ResizeScribble(_loadedImage.FullBgr.Size());
+            using var bgFull = _grabCutBgScribble.ResizeScribble(_loadedImage.FullBgr.Size());
             context = context with { GrabCutForegroundScribble = fgFull, GrabCutBackgroundScribble = bgFull };
             return await strategy.RunFullAsync(_loadedImage.FullBgr, context, ct);
         }

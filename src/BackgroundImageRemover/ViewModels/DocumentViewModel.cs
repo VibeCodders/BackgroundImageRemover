@@ -126,19 +126,6 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     {
         if (_loadedImage is null) return;
 
-        // If dimensions changed (e.g. from Uncrop), reinitialize loaded image size
-        if (_loadedImage.FullBgr.Size() != newBgr.Size())
-        {
-            var newLoaded = new LoadedImage(_loadedImage.FilePath, newBgr.Clone(), newAlpha.Clone());
-            _loadedImage.Dispose();
-            _preview?.Dispose();
-            _loadedImage = newLoaded;
-
-            var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
-            _preview = preview;
-            PreviewBitmap = BuildPreviewBitmapWithAlpha(preview, newAlpha);
-        }
-
         // Push previous alpha state to undo stack before replacing
         if (_workingAlpha is not null)
         {
@@ -152,10 +139,29 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _workingResultIsLoadedCutout = false;
         _workingResultHandEdited = true;
 
+        // If dimensions changed (e.g. from Uncrop), reinitialize loaded image size and preview
+        if (_loadedImage.FullBgr.Size() != newBgr.Size())
+        {
+            var newLoaded = new LoadedImage(_loadedImage.FilePath, newBgr.Clone(), newAlpha.Clone());
+            _loadedImage.Dispose();
+            _preview?.Dispose();
+            _loadedImage = newLoaded;
+
+            var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
+            _preview = preview;
+        }
+
+        // Update preview bitmap with the new alpha mask so both single and split views reflect changes
+        if (_preview is not null)
+        {
+            PreviewBitmap = _preview.Bgr.BuildPreviewWithAlpha(_workingAlpha);
+        }
+
         IsDirty = true;
         IsCutout = BackgroundCompositingService.HasMeaningfulTransparency(_workingAlpha);
         RefreshUndoRedoState();
         RefreshResultBitmapFromWorking();
+        OnPropertyChanged(nameof(DisplayBitmap));
         StatusMessage = $"Applied {operationName}.";
     }
 

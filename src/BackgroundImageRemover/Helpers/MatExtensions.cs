@@ -103,4 +103,34 @@ public static class MatExtensions
             }
         }
     }
+
+    /// <summary>
+    /// Builds a preview-resolution BGRA BitmapSource from a preview BGR Mat plus a full-resolution alpha Mat.
+    /// </summary>
+    public static System.Windows.Media.Imaging.BitmapSource BuildPreviewWithAlpha(this OpenCvSharp.Mat previewBgr, OpenCvSharp.Mat fullAlpha)
+    {
+        ArgumentNullException.ThrowIfNull(previewBgr);
+        ArgumentNullException.ThrowIfNull(fullAlpha);
+
+        using var previewAlpha = new Mat();
+        Cv2.Resize(fullAlpha, previewAlpha, previewBgr.Size(), interpolation: InterpolationFlags.Area);
+        using var bgra = new Mat();
+        Cv2.CvtColor(previewBgr, bgra, ColorConversionCodes.BGR2BGRA);
+        BackgroundImageRemover.Services.Compositing.BackgroundCompositingService.ReplaceAlphaChannel(bgra, previewAlpha);
+        return OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(bgra);
+    }
+
+    /// <summary>
+    /// Resizes a scribble mask Mat to a target size using nearest neighbor interpolation. Returns null if scribble is null.
+    /// </summary>
+    public static Mat? ResizeScribble(this Mat? scribble, Size targetSize)
+    {
+        if (scribble is null)
+        {
+            return null;
+        }
+        var resized = new Mat();
+        Cv2.Resize(scribble, resized, targetSize, interpolation: InterpolationFlags.Nearest);
+        return resized;
+    }
 }

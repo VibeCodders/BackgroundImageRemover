@@ -34,6 +34,7 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:AssemblyName=BackgroundImageRemover-win-x64
           -o publish/self-contained
 
       - name: Publish framework-dependent single-file executable
@@ -43,18 +44,18 @@ jobs:
           -r win-x64
           --self-contained false
           -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:AssemblyName=BackgroundImageRemover-win-x64-framework-dependent
           -o publish/framework-dependent
 
-      - name: Rename executables
+      - name: Collect release files
         shell: pwsh
         run: |
-          Rename-Item `
-            "publish/self-contained/BackgroundImageRemover.exe" `
+          Copy-Item `
+            "publish/self-contained/BackgroundImageRemover-win-x64.exe" `
             "publish/BackgroundImageRemover-win-x64.exe"
 
-          Rename-Item `
-            "publish/framework-dependent/BackgroundImageRemover.exe" `
+          Copy-Item `
+            "publish/framework-dependent/BackgroundImageRemover-win-x64-framework-dependent.exe" `
             "publish/BackgroundImageRemover-win-x64-framework-dependent.exe"
 
       - name: Set release tag
@@ -68,7 +69,7 @@ jobs:
         shell: bash
         run: |
           gh release create "${{ steps.tag.outputs.tag }}" \
-            publish/BackgroundImageRemover-win-x64.exe \
-            publish/BackgroundImageRemover-win-x64-framework-dependent.exe \
+            "publish/BackgroundImageRemover-win-x64.exe" \
+            "publish/BackgroundImageRemover-win-x64-framework-dependent.exe" \
             --title "Build ${{ steps.tag.outputs.tag }}" \
             --notes "Automated build from commit ${{ github.sha }}"

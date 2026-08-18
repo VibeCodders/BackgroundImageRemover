@@ -90,17 +90,23 @@ public class ShellViewModelTests
         var settings = new FakeSettingsService();
         var fakeDialogs = new FakeNewProjectDialogService((Models.NewProjectType.Uncrop, false));
 
-        var fakeUncrop = new FakeUncropTab();
+        var uncropVm = new UncropViewModel(
+            new FakeUncropFillService(),
+            fakeDialogs,
+            new FakeImageLoaderService(),
+            new FakeImageExportService(),
+            new FakeFileLogService());
+
         var shell = new ShellViewModel(
             () => throw new InvalidOperationException("Should not create DocumentViewModel"),
-            () => (UncropViewModel)(object)fakeUncrop,
+            () => uncropVm,
             fakeDialogs,
             settings);
 
         await shell.NewProjectCommand.ExecuteAsync(null);
 
         Assert.Single(shell.Documents);
-        Assert.Same(fakeUncrop, shell.SelectedDocument);
+        Assert.Same(uncropVm, shell.SelectedDocument);
     }
 
     private sealed class FakeNewProjectDialogService : IDialogService

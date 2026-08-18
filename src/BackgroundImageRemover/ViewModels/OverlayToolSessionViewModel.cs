@@ -114,7 +114,7 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
     partial void OnBlendChanged(OverlayBlendMode value) => RefreshResult();
 
     [RelayCommand]
-    private void PickOverlay()
+    private async Task PickOverlayAsync()
     {
         var path = _dialogs.ShowOpenImageDialog();
         if (path is null)
@@ -122,7 +122,9 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
             return;
         }
 
-        var loaded = _imageLoader.LoadAsync(path).GetAwaiter().GetResult();
+        // Decode off the UI thread: the previous sync GetAwaiter().GetResult() here froze
+        // the window while large overlay PNGs were being read from disk.
+        var loaded = await _imageLoader.LoadAsync(path);
         _overlayBgra?.Dispose();
         using var alpha = loaded.FullAlpha?.Clone()
             ?? new Mat(loaded.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));

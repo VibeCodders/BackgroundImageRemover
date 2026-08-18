@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Views.Controls;
@@ -58,6 +59,66 @@ public class ImagePreviewControlTests
         Assert.True(sample.Value.A > 0, $"transparent region rendered as fully transparent (nothing behind it): {sample}");
         Assert.True(sample.Value.R > 150 && sample.Value.G > 150 && sample.Value.B > 150,
             $"expected light checkerboard behind transparent pixels (alpha preserved by ToBitmapSource), got {sample}");
+    }
+
+    /// <summary>Ctrl+Plus must zoom in and Ctrl+0 must restore the fit view.</summary>
+    [Fact]
+    public void KeyboardZoom_PlusZoomsInAndZeroFits()
+    {
+        double? scaleAfterPlus = null;
+        double? scaleAfterZero = null;
+        RunOnSta(control =>
+        {
+            control.HandleZoomShortcut(Key.OemPlus, controlPressed: true);
+            scaleAfterPlus = control.ZoomScale.ScaleX;
+
+            control.HandleZoomShortcut(Key.D0, controlPressed: true);
+            scaleAfterZero = control.ZoomScale.ScaleX;
+        });
+
+        Assert.NotNull(scaleAfterPlus);
+        Assert.True(scaleAfterPlus > 1.0, $"expected zoom-in to increase scale, got {scaleAfterPlus}");
+        Assert.Equal(1.0, scaleAfterZero);
+    }
+
+    /// <summary>Ctrl+Minus must zoom out, and without the Ctrl modifier nothing may change.</summary>
+    [Fact]
+    public void KeyboardZoom_MinusZoomsOutAndNoModifierIsIgnored()
+    {
+        double? initial = null;
+        double? withoutCtrl = null;
+        double? afterMinus = null;
+        RunOnSta(control =>
+        {
+            initial = control.ZoomScale.ScaleX;
+            control.HandleZoomShortcut(Key.OemMinus, controlPressed: false);
+            withoutCtrl = control.ZoomScale.ScaleX;
+            control.HandleZoomShortcut(Key.OemMinus, controlPressed: true);
+            afterMinus = control.ZoomScale.ScaleX;
+        });
+
+        Assert.Equal(initial, withoutCtrl);
+        Assert.True(afterMinus < withoutCtrl, $"expected zoom-out to decrease scale, got {afterMinus}");
+    }
+
+    private static void RunOnSta(Action<ImagePreviewControl> action)
+    {
+        var thread = new Thread(() =>
+        {
+            var control = new ImagePreviewControl
+            {
+                ImageSource = CreateBgraBitmapSource(),
+                Width = 120,
+                Height = 120
+            };
+            control.Measure(new WpfSize(120, 120));
+            control.Arrange(new WpfRect(0, 0, 120, 120));
+            control.UpdateLayout();
+            action(control);
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(20)), "STA thread timed out");
     }
 
     private static (Color? Sample, Exception? Failure) RenderAndSample(Func<BitmapSource> createBitmap)

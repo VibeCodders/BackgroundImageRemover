@@ -30,6 +30,10 @@ public partial class ImagePreviewControl
 
     private void RootGrid_MouseDown(object sender, MouseButtonEventArgs e)
     {
+        // Give the preview keyboard focus on click so the zoom shortcuts (Ctrl+Plus etc.)
+        // work without the user having to tab to the control first.
+        RootGrid.Focus();
+
         if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
         {
             ResetView();

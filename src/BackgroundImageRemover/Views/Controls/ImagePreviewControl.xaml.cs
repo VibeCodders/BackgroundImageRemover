@@ -129,6 +129,63 @@ public partial class ImagePreviewControl : UserControl
 
     private void ZoomFit_Click(object sender, RoutedEventArgs e) => ResetView();
 
+    /// <summary>
+    /// Keyboard zoom shortcuts while the preview has focus: Ctrl+Plus / Ctrl+Minus zoom in/out
+    /// centered on the viewport, Ctrl+0 fits the image, Ctrl+1 shows it at actual pixels.
+    /// Public so the shortcut mapping can be exercised from unit tests.
+    /// </summary>
+    public void HandleZoomShortcut(Key key, bool controlPressed)
+    {
+        if (!controlPressed)
+        {
+            return;
+        }
+
+        switch (key)
+        {
+            case Key.OemPlus:
+            case Key.Add:
+                ZoomBy(1.1);
+                break;
+            case Key.OemMinus:
+            case Key.Subtract:
+                ZoomBy(1.0 / 1.1);
+                break;
+            case Key.D0:
+            case Key.NumPad0:
+                ResetView();
+                break;
+            case Key.D1:
+            case Key.NumPad1:
+                ZoomActual_Click(this, new RoutedEventArgs());
+                break;
+        }
+    }
+
+    private void RootGrid_KeyDown(object sender, KeyEventArgs e)
+        => HandleZoomShortcut(e.Key, Keyboard.Modifiers == ModifierKeys.Control);
+
+    /// <summary>Zooms the view around the center of the viewport by the given factor.</summary>
+    private void ZoomBy(double factor)
+    {
+        if (ImageSource is null)
+        {
+            return;
+        }
+
+        var center = new Point(OverlayCanvas.ActualWidth / 2, OverlayCanvas.ActualHeight / 2);
+        var currentTranslate = new Point(PanTranslate.X, PanTranslate.Y);
+        int wheelDelta = factor >= 1 ? 120 : -120;
+        if (ViewInteractionHelper.ComputeZoom(center, wheelDelta, ZoomScale.ScaleX, currentTranslate, 0.05, 32.0, out var newScale, out var newTranslate))
+        {
+            ZoomScale.ScaleX = newScale;
+            ZoomScale.ScaleY = newScale;
+            PanTranslate.X = newTranslate.X;
+            PanTranslate.Y = newTranslate.Y;
+            UpdateZoomHud();
+        }
+    }
+
     private void ZoomActual_Click(object sender, RoutedEventArgs e)
     {
         if (ImageSource is null)

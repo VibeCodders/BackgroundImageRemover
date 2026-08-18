@@ -153,6 +153,74 @@ public class ShellViewModelTests
         Assert.Same(docVm, customShell.SelectedDocument);
     }
 
+    private sealed class FakeTab : IDocumentTab
+    {
+        public string Title { get; set; } = "Tab";
+        public string TabTitle => Title;
+        public string WindowTitle => Title;
+        public bool IsDirty { get; set; }
+        public string? DirtyHint => null;
+        public bool IsCutout { get; set; }
+        public string? CutoutHint => null;
+        public Task<bool> TrySaveProjectAsync() => Task.FromResult(true);
+#pragma warning disable CS0067
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+#pragma warning restore CS0067
+        public void Dispose() { }
+    }
+
+    [Fact]
+    public void NextTab_SelectsFollowingTabAndWrapsToFirst()
+    {
+        var shell = CreateShell(new FakeSettingsService());
+        var tab1 = new FakeTab { Title = "A" };
+        var tab2 = new FakeTab { Title = "B" };
+        var tab3 = new FakeTab { Title = "C" };
+        shell.Documents.Add(tab1);
+        shell.Documents.Add(tab2);
+        shell.Documents.Add(tab3);
+        shell.SelectedDocument = tab3;
+
+        shell.NextTabCommand.Execute(null);
+
+        Assert.Same(tab1, shell.SelectedDocument);
+    }
+
+    [Fact]
+    public void PreviousTab_SelectsPrecedingTabAndWrapsToLast()
+    {
+        var shell = CreateShell(new FakeSettingsService());
+        var tab1 = new FakeTab { Title = "A" };
+        var tab2 = new FakeTab { Title = "B" };
+        var tab3 = new FakeTab { Title = "C" };
+        shell.Documents.Add(tab1);
+        shell.Documents.Add(tab2);
+        shell.Documents.Add(tab3);
+        shell.SelectedDocument = tab1;
+
+        shell.PreviousTabCommand.Execute(null);
+
+        Assert.Same(tab3, shell.SelectedDocument);
+    }
+
+    [Fact]
+    public void TabCycling_DoesNothingWithSingleOrNoSelection()
+    {
+        var shell = CreateShell(new FakeSettingsService());
+        var tab = new FakeTab { Title = "A" };
+        shell.Documents.Add(tab);
+        shell.SelectedDocument = tab;
+
+        shell.NextTabCommand.Execute(null);
+        shell.PreviousTabCommand.Execute(null);
+        Assert.Same(tab, shell.SelectedDocument);
+
+        var emptyShell = CreateShell(new FakeSettingsService());
+        emptyShell.Documents.Add(new FakeTab { Title = "B" });
+        emptyShell.NextTabCommand.Execute(null);
+        Assert.Null(emptyShell.SelectedDocument);
+    }
+
     private sealed class FakeImageDialogService : IDialogService
     {
         private readonly string? _chosenPath;

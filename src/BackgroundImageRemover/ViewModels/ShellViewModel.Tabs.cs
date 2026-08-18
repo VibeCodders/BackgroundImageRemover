@@ -60,6 +60,30 @@ public partial class ShellViewModel
         await OpenInNewTabAsync(path);
     }
 
+    /// <summary>Selects the tab after the current one (Ctrl+Tab), wrapping around.</summary>
+    [RelayCommand]
+    private void NextTab()
+    {
+        if (Documents.Count < 2 || SelectedDocument is null)
+        {
+            return;
+        }
+        int index = Documents.IndexOf(SelectedDocument);
+        SelectedDocument = Documents[(index + 1) % Documents.Count];
+    }
+
+    /// <summary>Selects the tab before the current one (Ctrl+Shift+Tab), wrapping around.</summary>
+    [RelayCommand]
+    private void PreviousTab()
+    {
+        if (Documents.Count < 2 || SelectedDocument is null)
+        {
+            return;
+        }
+        int index = Documents.IndexOf(SelectedDocument);
+        SelectedDocument = Documents[(index - 1 + Documents.Count) % Documents.Count];
+    }
+
     public async Task OpenInNewTabAsync(string path)
     {
         var document = _documentFactory();

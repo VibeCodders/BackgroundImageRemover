@@ -19,6 +19,11 @@
         <KeyBinding Key="Return" Command="{Binding SelectedDocument.ApplyCommand}" />
         <KeyBinding Key="Escape" Command="{Binding SelectedDocument.CancelCommand}" />
         <KeyBinding Key="E" Modifiers="Control" Command="{Binding SelectedDocument.ExportCommand}" />
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SelectedDocument.SaveProjectCommand}" />
+        <KeyBinding Key="S" Modifiers="Control+Shift" Command="{Binding SelectedDocument.SaveProjectAsCommand}" />
+        <KeyBinding Key="W" Modifiers="Control" Command="{Binding CloseTabCommand}" CommandParameter="{Binding SelectedDocument}" />
+        <KeyBinding Key="Tab" Modifiers="Control" Command="{Binding NextTabCommand}" />
+        <KeyBinding Key="Tab" Modifiers="Control+Shift" Command="{Binding PreviousTabCommand}" />
     </Window.InputBindings>
 
     <Window.Resources>

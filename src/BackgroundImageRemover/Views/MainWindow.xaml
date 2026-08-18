@@ -18,10 +18,19 @@
         <KeyBinding Key="S" Modifiers="Control+Shift" Command="{Binding SelectedDocument.SaveProjectAsCommand}" />
     </Window.InputBindings>
 
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:DocumentViewModel}">
+            <views:DocumentView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UncropViewModel}">
+            <views:UncropView />
+        </DataTemplate>
+    </Window.Resources>
+
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_New project" Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
+                <MenuItem Header="_New project..." Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
                 <MenuItem Header="_Open image..." Command="{Binding NewTabCommand}" />
                 <MenuItem Header="Open _project..." Command="{Binding OpenProjectCommand}" InputGestureText="Ctrl+O" />
                 <Separator />
@@ -54,7 +63,7 @@
 
         <TabControl ItemsSource="{Binding Documents}" SelectedItem="{Binding SelectedDocument}">
             <TabControl.ItemTemplate>
-                <DataTemplate DataType="{x:Type vm:DocumentViewModel}">
+                <DataTemplate>
                     <StackPanel Orientation="Horizontal" ToolTip="{Binding CutoutHint}">
                         <Ellipse Width="10" Height="10" Fill="LimeGreen" Stroke="Gray" StrokeThickness="0.5"
                                  Margin="0,0,6,0" VerticalAlignment="Center"
@@ -71,11 +80,6 @@
                     </StackPanel>
                 </DataTemplate>
             </TabControl.ItemTemplate>
-            <TabControl.ContentTemplate>
-                <DataTemplate DataType="{x:Type vm:DocumentViewModel}">
-                    <views:DocumentView />
-                </DataTemplate>
-            </TabControl.ContentTemplate>
         </TabControl>
     </DockPanel>
 </Window>

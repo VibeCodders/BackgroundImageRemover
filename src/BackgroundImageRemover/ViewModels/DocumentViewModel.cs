@@ -30,7 +30,7 @@ namespace BackgroundImageRemover.ViewModels;
 /// State and logic for a single open image ("document"): one per tab. <see cref="ShellViewModel"/>
 /// owns a collection of these.
 /// </summary>
-public partial class DocumentViewModel : ObservableObject, IDisposable
+public partial class DocumentViewModel : ObservableObject, IDocumentTab
 {
     private readonly IImageLoaderService _imageLoader;
     private readonly IImageExportService _imageExporter;

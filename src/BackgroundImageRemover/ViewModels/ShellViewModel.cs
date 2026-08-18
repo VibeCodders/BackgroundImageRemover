@@ -12,25 +12,25 @@ namespace BackgroundImageRemover.ViewModels;
 public partial class ShellViewModel : ObservableObject
 {
     private readonly Func<DocumentViewModel> _documentFactory;
-    private readonly Func<UncropWindow> _uncropWindowFactory;
+    private readonly Func<UncropViewModel> _uncropFactory;
     private readonly IDialogService _dialogs;
     private readonly ISettingsService _settings;
 
-    public ObservableCollection<DocumentViewModel> Documents { get; } = new();
+    public ObservableCollection<IDocumentTab> Documents { get; } = new();
     public ObservableCollection<string> RecentFiles { get; } = new();
     public ObservableCollection<string> RecentProjects { get; } = new();
 
     [ObservableProperty]
-    private DocumentViewModel? _selectedDocument;
+    private IDocumentTab? _selectedDocument;
 
     public ShellViewModel(
         Func<DocumentViewModel> documentFactory,
-        Func<UncropWindow> uncropWindowFactory,
+        Func<UncropViewModel> uncropFactory,
         IDialogService dialogs,
         ISettingsService settings)
     {
         _documentFactory = documentFactory;
-        _uncropWindowFactory = uncropWindowFactory;
+        _uncropFactory = uncropFactory;
         _dialogs = dialogs;
         _settings = settings;
 
@@ -38,18 +38,18 @@ public partial class ShellViewModel : ObservableObject
         SyncFrom(RecentProjects, _settings.Current.RecentProjects);
     }
 
-    /// <summary>Opens the standalone Uncrop tool, seeding it with the current document's image
-    /// (a clone, so Uncrop's own lifecycle never touches the source document's Mats) when one is
-    /// loaded.</summary>
+    /// <summary>Creates a new Uncrop tab, seeding it with the current document's image
+    /// (a clone, so Uncrop's own lifecycle never touches the source document's Mats) when one is loaded.</summary>
     [RelayCommand]
     private void OpenUncrop()
     {
-        var window = _uncropWindowFactory();
-        if (SelectedDocument?.LoadedImageForUncrop is { } image)
+        var uncropDoc = _uncropFactory();
+        if (SelectedDocument is DocumentViewModel doc && doc.LoadedImageForUncrop is { } image)
         {
-            ((UncropViewModel)window.DataContext).LoadInitialImage(image.Clone());
+            uncropDoc.LoadInitialImage(image.Clone());
         }
-        window.Show();
+        Documents.Add(uncropDoc);
+        SelectedDocument = uncropDoc;
     }
 
     [RelayCommand]
@@ -63,13 +63,45 @@ public partial class ShellViewModel : ObservableObject
         await OpenInNewTabAsync(path);
     }
 
-    /// <summary>Creates a fresh, empty project tab (no image yet).</summary>
+    /// <summary>Prompts the user to choose between Background Remover and Uncrop.</summary>
     [RelayCommand]
-    private void NewProject()
+    private async Task NewProjectAsync()
     {
-        var document = _documentFactory();
-        Documents.Add(document);
-        SelectedDocument = document;
+        var (type, openImageImmediately) = _dialogs.ShowNewProjectDialog();
+        if (type is null)
+        {
+            return;
+        }
+
+        string? imagePath = null;
+        if (openImageImmediately)
+        {
+            imagePath = _dialogs.ShowOpenImageDialog();
+        }
+
+        if (type == Models.NewProjectType.Uncrop)
+        {
+            var uncropDoc = _uncropFactory();
+            Documents.Add(uncropDoc);
+            SelectedDocument = uncropDoc;
+            if (imagePath is not null)
+            {
+                await uncropDoc.LoadAsync(imagePath);
+                RefreshRecentFiles();
+            }
+        }
+        else
+        {
+            var document = _documentFactory();
+            Documents.Add(document);
+            SelectedDocument = document;
+            if (imagePath is not null)
+            {
+                await document.LoadAsync(imagePath);
+                RefreshRecentFiles();
+                RefreshRecentProjects();
+            }
+        }
     }
 
     [RelayCommand]
@@ -100,7 +132,7 @@ public partial class ShellViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task CloseTabAsync(DocumentViewModel document)
+    private async Task CloseTabAsync(IDocumentTab document)
     {
         if (!await ConfirmCloseAsync(document))
         {
@@ -122,7 +154,7 @@ public partial class ShellViewModel : ObservableObject
         }
     }
 
-    private async Task<bool> ConfirmCloseAsync(DocumentViewModel document)
+    private async Task<bool> ConfirmCloseAsync(IDocumentTab document)
     {
         if (!document.IsDirty)
         {

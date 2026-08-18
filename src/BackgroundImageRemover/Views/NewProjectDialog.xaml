@@ -1,0 +1,114 @@
+<Window x:Class="BackgroundImageRemover.Views.NewProjectDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="New Project"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="#FFF8F9FA"
+        Width="580" Height="460">
+    <Window.Resources>
+        <Style x:Key="ProjectCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#FFE0E0E0" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="#FF0078D7" />
+                    <Setter Property="Background" Value="#FFF0F7FF" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel Margin="24">
+        <!-- Header -->
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20">
+            <TextBlock Text="Create a New Project" FontSize="20" FontWeight="Bold" Foreground="#FF222222" />
+            <TextBlock Text="Choose what you would like to do with your image" FontSize="13" Foreground="#FF666666" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <!-- Bottom Action Bar -->
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,20,0,0">
+            <CheckBox x:Name="PickImageCheckBox" Content="Select image immediately after creating" IsChecked="True"
+                      VerticalAlignment="Center" Foreground="#FF444444" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancel" IsCancel="True" Width="85" Height="30" Padding="12,4" Margin="0,0,8,0"
+                        Background="#FFF0F0F0" BorderBrush="#FFCCCCCC" Click="CancelButton_Click" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Selection Cards -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Card: Background Remover -->
+            <Border Grid.Column="0" Style="{StaticResource ProjectCardStyle}"
+                    MouseLeftButtonUp="BackgroundRemoverCard_Click">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Width="48" Height="48" CornerRadius="24" Background="#FFE6F2FB"
+                            HorizontalAlignment="Left" Margin="0,0,0,12">
+                        <!-- Magic Wand / Scissors Icon Symbol -->
+                        <TextBlock Text="✂" FontSize="22" Foreground="#FF0078D7" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+
+                    <TextBlock Grid.Row="1" Text="Background Remover" FontSize="15" FontWeight="SemiBold"
+                               Foreground="#FF111111" Margin="0,0,0,6" />
+
+                    <TextBlock Grid.Row="2" Text="Cut out subjects and erase background using AI ONNX models, SAM, ChromaKey or GrabCut, with full brush retouching."
+                               FontSize="12" Foreground="#FF555555" TextWrapping="Wrap" LineHeight="17" />
+
+                    <Button Grid.Row="3" Content="Select" Margin="0,16,0,0" Height="30" FontWeight="SemiBold"
+                            Background="#FF0078D7" Foreground="White" BorderThickness="0"
+                            Click="BackgroundRemoverButton_Click" />
+                </Grid>
+            </Border>
+
+            <!-- Card: Uncrop -->
+            <Border Grid.Column="2" Style="{StaticResource ProjectCardStyle}"
+                    MouseLeftButtonUp="UncropCard_Click">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Width="48" Height="48" CornerRadius="24" Background="#FFFBF0E6"
+                            HorizontalAlignment="Left" Margin="0,0,0,12">
+                        <!-- Expand / Canvas Icon Symbol -->
+                        <TextBlock Text="⤢" FontSize="24" Foreground="#FFE87000" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+
+                    <TextBlock Grid.Row="1" Text="Uncrop / Outpaint" FontSize="15" FontWeight="SemiBold"
+                               Foreground="#FF111111" Margin="0,0,0,6" />
+
+                    <TextBlock Grid.Row="2" Text="Expand image boundaries and aspect ratios using Content-Aware Inpainting (Telea/Navier-Stokes), Mirror, or custom borders."
+                               FontSize="12" Foreground="#FF555555" TextWrapping="Wrap" LineHeight="17" />
+
+                    <Button Grid.Row="3" Content="Select" Margin="0,16,0,0" Height="30" FontWeight="SemiBold"
+                            Background="#FFE87000" Foreground="White" BorderThickness="0"
+                            Click="UncropButton_Click" />
+                </Grid>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

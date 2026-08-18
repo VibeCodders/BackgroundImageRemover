@@ -18,7 +18,7 @@ namespace BackgroundImageRemover.ViewModels;
 /// <see cref="DocumentViewModel"/>/the background-removal strategy pipeline: it can be opened
 /// empty (with its own "Open image...") or seeded with a document's current image.
 /// </summary>
-public partial class UncropViewModel : ObservableObject, IDisposable
+public partial class UncropViewModel : ObservableObject, IDocumentTab
 {
     private readonly IUncropFillService _fillService;
     private readonly IDialogService _dialogs;
@@ -32,6 +32,33 @@ public partial class UncropViewModel : ObservableObject, IDisposable
 
     public IReadOnlyList<UncropAspectPreset> AspectPresets { get; } = UncropAspectPresets.All;
     public IReadOnlyList<UncropInpaintMethod> InpaintMethods { get; } = Enum.GetValues<UncropInpaintMethod>();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(WindowTitle))]
+    [NotifyPropertyChangedFor(nameof(TabTitle))]
+    private string _title = "Uncrop";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DirtyHint))]
+    [NotifyPropertyChangedFor(nameof(WindowTitle))]
+    [NotifyPropertyChangedFor(nameof(TabTitle))]
+    private bool _isDirty;
+
+    public string? DirtyHint => IsDirty ? "Unsaved changes — export or save your result." : null;
+    public bool IsCutout => false;
+    public string? CutoutHint => null;
+    public string WindowTitle => Title + (IsDirty ? " *" : string.Empty) + " — Background Image Remover";
+    public string TabTitle => IsDirty ? Title + " *" : Title;
+
+    public Task<bool> TrySaveProjectAsync()
+    {
+        // For uncrop, save prompt can trigger SaveAs
+        if (_resultBgra is null)
+        {
+            return Task.FromResult(true);
+        }
+        return Task.FromResult(true);
+    }
 
     [ObservableProperty]
     private BitmapSource? _sourceBitmap;
@@ -169,22 +196,14 @@ public partial class UncropViewModel : ObservableObject, IDisposable
     /// window's own lifecycle/EditHistory never touches the source document's Mats).</summary>
     public void LoadInitialImage(LoadedImage image) => AdoptImage(image);
 
-    private bool CanOpenImage() => !IsBusy;
-
-    [RelayCommand(CanExecute = nameof(CanOpenImage))]
-    private async Task OpenImageAsync()
+    public async Task LoadAsync(string path)
     {
-        var path = _dialogs.ShowOpenImageDialog();
-        if (path is null)
-        {
-            return;
-        }
-
         try
         {
             IsBusy = true;
             StatusMessage = "Loading image...";
             var image = await _imageLoader.LoadAsync(path);
+            Title = Path.GetFileName(path) + " (Uncrop)";
             AdoptImage(image);
             StatusMessage = $"Loaded {Path.GetFileName(path)} ({image.FullBgr.Width}x{image.FullBgr.Height})";
         }
@@ -199,16 +218,35 @@ public partial class UncropViewModel : ObservableObject, IDisposable
         }
     }
 
+    private bool CanOpenImage() => !IsBusy;
+
+    [RelayCommand(CanExecute = nameof(CanOpenImage))]
+    private async Task OpenImageAsync()
+    {
+        var path = _dialogs.ShowOpenImageDialog();
+        if (path is null)
+        {
+            return;
+        }
+
+        await LoadAsync(path);
+    }
+
     private void AdoptImage(LoadedImage image)
     {
         _sourceImage?.Dispose();
         _resultBgra?.Dispose();
         _resultBgra = null;
         _editHistory.Clear();
+        IsDirty = false;
         RefreshUndoRedoState();
         SaveAsCommand.NotifyCanExecuteChanged();
 
         _sourceImage = image;
+        if (string.IsNullOrEmpty(Title) || Title == "Uncrop")
+        {
+            Title = !string.IsNullOrEmpty(image.FilePath) ? Path.GetFileName(image.FilePath) + " (Uncrop)" : "Uncrop";
+        }
         SourceBitmap = image.FullBgr.ToBitmapSource();
         PreviewResult = null;
         IsImageLoaded = true;
@@ -260,6 +298,7 @@ public partial class UncropViewModel : ObservableObject, IDisposable
             RefreshUndoRedoState();
             SaveAsCommand.NotifyCanExecuteChanged();
             PreviewResult = _resultBgra.ToBitmapSource();
+            IsDirty = true;
             StatusMessage = $"Applied {mode} fill.";
         }
         catch (Exception ex)
@@ -291,6 +330,7 @@ public partial class UncropViewModel : ObservableObject, IDisposable
         _resultBgra.Dispose();
         _resultBgra = restored;
         PreviewResult = _resultBgra.ToBitmapSource();
+        IsDirty = true;
         RefreshUndoRedoState();
     }
 
@@ -309,6 +349,7 @@ public partial class UncropViewModel : ObservableObject, IDisposable
         _resultBgra.Dispose();
         _resultBgra = restored;
         PreviewResult = _resultBgra.ToBitmapSource();
+        IsDirty = true;
         RefreshUndoRedoState();
     }
 
@@ -341,6 +382,7 @@ public partial class UncropViewModel : ObservableObject, IDisposable
         {
             IsBusy = true;
             await _imageExporter.ExportPngAsync(_resultBgra, path);
+            IsDirty = false;
             StatusMessage = $"Exported to {path}";
             _log.Info($"Uncrop exported to {path}");
         }

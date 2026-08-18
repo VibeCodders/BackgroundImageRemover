@@ -22,11 +22,12 @@ public class ShellViewModelTests
         public string? ShowOpenProjectDialog() => throw new NotImplementedException();
         public string? ShowSaveProjectDialog(string? suggestedFileName) => throw new NotImplementedException();
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => throw new NotImplementedException();
+        public (Models.NewProjectType? Type, bool OpenImageImmediately) ShowNewProjectDialog() => throw new NotImplementedException();
     }
 
     private static ShellViewModel CreateShell(FakeSettingsService settings) =>
         new(() => throw new NotImplementedException("Document factory not needed for this test"),
-            () => throw new NotImplementedException("Uncrop window factory not needed for this test"),
+            () => throw new NotImplementedException("Uncrop factory not needed for this test"),
             new UnusedDialogService(),
             settings);
 

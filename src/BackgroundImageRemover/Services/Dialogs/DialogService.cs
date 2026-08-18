@@ -1,4 +1,5 @@
 using System.Windows;
+using BackgroundImageRemover.Models;
 using Microsoft.Win32;
 
 namespace BackgroundImageRemover.Services.Dialogs;
@@ -18,6 +19,7 @@ public interface IDialogService
     string? ShowOpenProjectDialog();
     string? ShowSaveProjectDialog(string? suggestedFileName);
     CloseDocumentResult ConfirmCloseDocument(string documentName);
+    (NewProjectType? Type, bool OpenImageImmediately) ShowNewProjectDialog();
 }
 
 public sealed class DialogService : IDialogService
@@ -87,5 +89,18 @@ public sealed class DialogService : IDialogService
             MessageBoxResult.No => CloseDocumentResult.Discard,
             _ => CloseDocumentResult.Cancel
         };
+    }
+
+    public (NewProjectType? Type, bool OpenImageImmediately) ShowNewProjectDialog()
+    {
+        var dialog = new Views.NewProjectDialog
+        {
+            Owner = Application.Current.MainWindow
+        };
+        if (dialog.ShowDialog() == true && dialog.SelectedType.HasValue)
+        {
+            return (dialog.SelectedType.Value, dialog.OpenImageImmediately);
+        }
+        return (null, false);
     }
 }

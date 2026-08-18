@@ -87,6 +87,7 @@ public partial class App : Application
 
         services.AddSingleton<IUncropFillService, UncropFillService>();
         services.AddTransient<UncropViewModel>();
+        services.AddSingleton<Func<UncropViewModel>>(sp => sp.GetRequiredService<UncropViewModel>);
         services.AddTransient<UncropWindow>();
         services.AddSingleton<Func<UncropWindow>>(sp => sp.GetRequiredService<UncropWindow>);
 

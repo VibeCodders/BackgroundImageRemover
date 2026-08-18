@@ -51,17 +51,10 @@ public partial class DocumentViewModel
             return;
         }
 
-        try
+        if (!ViewInteractionHelper.RevealInExplorer(LastExportedFilePath))
         {
-            string argument = File.Exists(LastExportedFilePath)
-                ? $"/select,\"{LastExportedFilePath}\""
-                : $"\"{Path.GetDirectoryName(LastExportedFilePath)}\"";
-            Process.Start(new ProcessStartInfo("explorer.exe", argument) { UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Could not open the folder: {ex.Message}";
-            _log.Error("Could not reveal last export in Explorer", ex);
+            StatusMessage = "Could not open the folder in Explorer.";
+            _log.Error("Could not reveal last export in Explorer", null);
         }
     }
 

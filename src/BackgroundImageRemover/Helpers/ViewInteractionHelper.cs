@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -103,6 +104,31 @@ public static class ViewInteractionHelper
         return new Point(
             panStartTranslate.X + (currentPoint.X - panStartPoint.X),
             panStartTranslate.Y + (currentPoint.Y - panStartPoint.Y));
+    }
+
+    /// <summary>
+    /// Opens Explorer at the given file (selecting it) or at its containing folder, without
+    /// throwing: a failed launch is reported by returning false.
+    /// </summary>
+    public static bool RevealInExplorer(string path)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return false;
+            }
+
+            string argument = File.Exists(path)
+                ? $"/select,\"{path}\""
+                : $"\"{Path.GetDirectoryName(path)}\"";
+            Process.Start(new ProcessStartInfo("explorer.exe", argument) { UseShellExecute = true });
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>

@@ -15,9 +15,24 @@ public interface IFileLogService
 public sealed class FileLogService : IFileLogService
 {
     private readonly object _lock = new();
-    private readonly string _logDirectory = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "BackgroundImageRemover", "logs");
+    private readonly string _logDirectory;
+
+    /// <summary>Log files older than this are deleted on startup to keep the folder bounded.</summary>
+    private static readonly TimeSpan MaxLogAge = TimeSpan.FromDays(30);
+
+    public FileLogService()
+        : this(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "BackgroundImageRemover", "logs"))
+    {
+    }
+
+    /// <summary>Internal for tests: logs into the given directory instead of %LOCALAPPDATA%.</summary>
+    internal FileLogService(string logDirectory)
+    {
+        _logDirectory = logDirectory;
+        PruneOldLogs();
+    }
 
     private string CurrentLogFile => Path.Combine(_logDirectory, $"{DateTime.Now:yyyy-MM-dd}.log");
 
@@ -39,6 +54,31 @@ public sealed class FileLogService : IFileLogService
         catch
         {
             // Logging must never throw and take down the app.
+        }
+    }
+
+    /// <summary>Deletes log files older than <see cref="MaxLogAge"/> (best-effort, once per process).</summary>
+    private void PruneOldLogs()
+    {
+        try
+        {
+            if (!Directory.Exists(_logDirectory))
+            {
+                return;
+            }
+
+            var cutoff = DateTime.Now - MaxLogAge;
+            foreach (var file in Directory.EnumerateFiles(_logDirectory, "*.log"))
+            {
+                if (File.GetLastWriteTime(file) < cutoff)
+                {
+                    File.Delete(file);
+                }
+            }
+        }
+        catch
+        {
+            // Best-effort cleanup; logging must never crash startup.
         }
     }
 }

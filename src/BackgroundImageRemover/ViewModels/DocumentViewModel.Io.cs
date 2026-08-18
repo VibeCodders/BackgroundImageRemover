@@ -36,6 +36,21 @@ public partial class DocumentViewModel
         }
     }
 
+    /// <summary>Opens Explorer at the loaded source file, selecting it in its folder.</summary>
+    [RelayCommand]
+    private void RevealSourceFileInExplorer()
+    {
+        if (FilePath is null)
+        {
+            return;
+        }
+
+        if (!ViewInteractionHelper.RevealInExplorer(FilePath))
+        {
+            StatusMessage = "Could not open the file's folder in Explorer.";
+        }
+    }
+
     /// <summary>
     /// Asks the user whether to discard the current (possibly dirty) document before it is
     /// replaced by opening or pasting another image. Returns false when the user cancels.

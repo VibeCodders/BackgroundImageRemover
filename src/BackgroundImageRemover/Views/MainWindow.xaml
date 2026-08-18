@@ -102,6 +102,7 @@
                 <MenuItem Header="Open in _new tab..." Command="{Binding NewTabCommand}" />
                 <MenuItem Header="Open _project..." Command="{Binding OpenProjectCommand}" InputGestureText="Ctrl+O" />
                 <MenuItem Header="_Duplicate tab" Command="{Binding DuplicateTabCommand}" CommandParameter="{Binding SelectedDocument}" InputGestureText="Ctrl+Shift+D" />
+                <MenuItem Header="Show _in Explorer" Command="{Binding SelectedDocument.RevealSourceFileInExplorerCommand}" />
                 <Separator />
                 <MenuItem Header="_Save project" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+S" />
                 <MenuItem Header="Save project _as..." Command="{Binding SelectedDocument.SaveProjectAsCommand}" InputGestureText="Ctrl+Shift+S" />
@@ -147,7 +148,7 @@
         <TabControl ItemsSource="{Binding Documents}" SelectedItem="{Binding SelectedDocument}">
             <TabControl.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Horizontal" ToolTip="{Binding CutoutHint}">
+                    <StackPanel Orientation="Horizontal" ToolTip="{Binding CutoutHint}" MouseDown="TabHeader_MouseDown">
                         <Ellipse Width="10" Height="10" Fill="LimeGreen" Stroke="Gray" StrokeThickness="0.5"
                                  Margin="0,0,6,0" VerticalAlignment="Center"
                                  ToolTip="{Binding CutoutHint}"

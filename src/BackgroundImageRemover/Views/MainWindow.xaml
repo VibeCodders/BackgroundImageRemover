@@ -18,6 +18,7 @@
         <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenProjectCommand}" />
         <KeyBinding Key="Return" Command="{Binding SelectedDocument.ApplyCommand}" />
         <KeyBinding Key="Escape" Command="{Binding SelectedDocument.CancelCommand}" />
+        <KeyBinding Key="E" Modifiers="Control" Command="{Binding SelectedDocument.ExportCommand}" />
     </Window.InputBindings>
 
     <Window.Resources>
@@ -121,6 +122,11 @@
                 <Separator />
                 <MenuItem Header="_Paste image" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" InputGestureText="Ctrl+V" />
                 <MenuItem Header="_Copy cutout" Command="{Binding SelectedDocument.CopyToClipboardCommand}" InputGestureText="Ctrl+Shift+C" />
+                <Separator />
+                <MenuItem Header="_Export PNG (no crop)" Command="{Binding SelectedDocument.ExportCommand}" InputGestureText="Ctrl+E" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About Background Image Remover" Click="About_Click" />
             </MenuItem>
         </Menu>
 

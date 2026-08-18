@@ -4,7 +4,7 @@ using BackgroundImageRemover.Services.Strategies;
 
 namespace BackgroundImageRemover.Services.Batch;
 
-public readonly record struct BatchProgress(int Completed, int Total, string CurrentFile);
+public readonly record struct BatchProgress(int Completed, int Total, string CurrentFile, int Failed = 0);
 
 public interface IBatchProcessingService
 {
@@ -43,11 +43,12 @@ public sealed class BatchProcessingService : IBatchProcessingService
     {
         Directory.CreateDirectory(outputFolder);
 
+        int failed = 0;
         for (int i = 0; i < inputFiles.Count; i++)
         {
             ct.ThrowIfCancellationRequested();
             string file = inputFiles[i];
-            progress?.Report(new BatchProgress(i, inputFiles.Count, file));
+            progress?.Report(new BatchProgress(i, inputFiles.Count, file, failed));
 
             try
             {
@@ -63,9 +64,10 @@ public sealed class BatchProcessingService : IBatchProcessingService
             catch
             {
                 // Skip files that fail to load/process; the batch continues with the rest.
+                failed++;
             }
         }
 
-        progress?.Report(new BatchProgress(inputFiles.Count, inputFiles.Count, string.Empty));
+        progress?.Report(new BatchProgress(inputFiles.Count, inputFiles.Count, string.Empty, failed));
     }
 }

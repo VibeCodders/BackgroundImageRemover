@@ -16,6 +16,7 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
     private LoadedImage? _sourceImage;
     private Mat? _workingAlpha;
     private Mat? _paintedMask;
+    private WpfPoint? _brushLastPoint;
 
     public override string ToolBadge => "▦ Mosaic";
     public override string AccentColor => "#EA580C";
@@ -106,13 +107,24 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
     }
 
     public void OnBrushStrokeStart(WpfPoint imagePoint, double pixelRadius)
-        => StampMask(imagePoint, imagePoint, pixelRadius);
+    {
+        _brushLastPoint = imagePoint;
+        StampMask(imagePoint, imagePoint, pixelRadius);
+    }
 
     public void OnBrushStrokeMove(WpfPoint imagePoint, double pixelRadius)
-        => StampMask(imagePoint, imagePoint, pixelRadius);
+    {
+        // Connect to the previous point so fast strokes paint continuously.
+        if (_brushLastPoint is { } last)
+        {
+            StampMask(last, imagePoint, pixelRadius);
+        }
+        _brushLastPoint = imagePoint;
+    }
 
     public void OnBrushStrokeEnd()
     {
+        _brushLastPoint = null;
         HasPaintedMask = _paintedMask is not null && Cv2.CountNonZero(_paintedMask) > 0;
         RefreshResult();
     }
@@ -120,9 +132,7 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
     private void StampMask(WpfPoint from, WpfPoint to, double pixelRadius)
     {
         if (_paintedMask is null) return;
-        int r = Math.Max(1, (int)Math.Round(pixelRadius));
-        Cv2.Line(_paintedMask, new Point((int)from.X, (int)from.Y), new Point((int)to.X, (int)to.Y), Scalar.All(255), r * 2);
-        Cv2.Circle(_paintedMask, new Point((int)to.X, (int)to.Y), r, Scalar.All(255), -1);
+        MaskBrushHelper.StampSegment(_paintedMask, from, to, pixelRadius);
         HasPaintedMask = true;
     }
 

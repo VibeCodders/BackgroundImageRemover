@@ -16,7 +16,7 @@ public interface IDialogService
     string? ShowOpenImageDialog();
     string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG");
     string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG");
-    string? ShowOpenFolderDialog(string title);
+    string? ShowOpenFolderDialog(string title, string? initialDirectory = null);
     string? ShowOpenProjectDialog();
     string? ShowSaveProjectDialog(string? suggestedFileName);
     CloseDocumentResult ConfirmCloseDocument(string documentName);
@@ -58,9 +58,13 @@ public sealed class DialogService : IDialogService
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
-    public string? ShowOpenFolderDialog(string title)
+    public string? ShowOpenFolderDialog(string title, string? initialDirectory = null)
     {
         var dialog = new OpenFolderDialog { Title = title };
+        if (!string.IsNullOrWhiteSpace(initialDirectory))
+        {
+            dialog.InitialDirectory = initialDirectory;
+        }
         return dialog.ShowDialog() == true ? dialog.FolderName : null;
     }
 

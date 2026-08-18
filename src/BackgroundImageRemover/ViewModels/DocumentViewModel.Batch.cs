@@ -43,16 +43,27 @@ public partial class DocumentViewModel
             return;
         }
 
-        string outputFolder = Path.Combine(inputFolder, "cutouts");
+        // Let the user pick where the cutouts go; default to the input folder's "cutouts" subfolder.
+        var defaultOutput = Path.Combine(inputFolder, "cutouts");
+        var outputFolder = _dialogs.ShowOpenFolderDialog("Select output folder for cutouts", defaultOutput) ?? defaultOutput;
         var context = BuildContext();
 
+        BatchProgress? lastReported = null;
         try
         {
             IsBatchRunning = true;
             var progress = new Progress<BatchProgress>(p =>
-                BatchStatus = p.Completed >= p.Total ? "Batch complete." : $"Processing {p.Completed + 1}/{p.Total}: {Path.GetFileName(p.CurrentFile)}");
+            {
+                lastReported = p;
+                BatchStatus = p.Completed >= p.Total
+                    ? "Batch complete."
+                    : $"Processing {p.Completed + 1}/{p.Total}: {Path.GetFileName(p.CurrentFile)}";
+            });
             await _batchProcessor.RunAsync(files, strategy, context, outputFolder, progress, CancellationToken.None);
-            StatusMessage = $"Batch complete: {files.Count} image(s) exported to {outputFolder}";
+
+            int failed = lastReported?.Failed ?? 0;
+            var summary = $"Batch complete: {files.Count - failed}/{files.Count} image(s) exported to {outputFolder}";
+            StatusMessage = failed > 0 ? summary + $" ({failed} failed)" : summary;
         }
         catch (Exception ex)
         {

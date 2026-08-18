@@ -19,7 +19,7 @@ public class ShellViewModelTests
         public string? ShowOpenImageDialog() => throw new NotImplementedException();
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => throw new NotImplementedException();
         public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => throw new NotImplementedException();
-        public string? ShowOpenFolderDialog(string title) => throw new NotImplementedException();
+        public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => throw new NotImplementedException();
         public string? ShowOpenProjectDialog() => throw new NotImplementedException();
         public string? ShowSaveProjectDialog(string? suggestedFileName) => throw new NotImplementedException();
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => throw new NotImplementedException();
@@ -160,7 +160,7 @@ public class ShellViewModelTests
         public string? ShowOpenImageDialog() => _chosenPath;
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
         public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
-        public string? ShowOpenFolderDialog(string title) => null;
+        public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
         public string? ShowOpenProjectDialog() => null;
         public string? ShowSaveProjectDialog(string? suggestedFileName) => null;
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;

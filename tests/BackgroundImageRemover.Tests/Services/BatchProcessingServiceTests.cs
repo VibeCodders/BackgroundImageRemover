@@ -84,6 +84,24 @@ public class BatchProcessingServiceTests
     }
 
     [Fact]
+    public async Task RunAsync_ReportsFailedCountInFinalProgress()
+    {
+        var loader = new FakeImageLoaderService { PathToFail = "bad.png" };
+        var exporter = new FakeImageExportService();
+        var service = new BatchProcessingService(loader, exporter);
+        var reported = new List<BatchProgress>();
+
+        var files = new[] { "ok1.png", "bad.png", "ok2.png" };
+        await service.RunAsync(files, new FakeStrategy(), new StrategyContext(), "out",
+            new CollectingProgress(reported), CancellationToken.None);
+
+        var final = reported.Last();
+        Assert.Equal(3, final.Total);
+        Assert.Equal(1, final.Failed);
+        Assert.Equal(2, exporter.ExportedPaths.Count);
+    }
+
+    [Fact]
     public async Task RunAsync_ReportsProgressForEveryFile()
     {
         var loader = new FakeImageLoaderService();

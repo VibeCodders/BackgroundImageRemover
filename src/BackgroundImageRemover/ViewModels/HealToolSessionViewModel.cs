@@ -16,6 +16,7 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase
     private Mat? _workingBgr;
     private Mat? _workingAlpha;
     private Mat? _healMask;
+    private WpfPoint? _brushLastPoint;
 
     public override string ToolBadge => "🩹 Heal";
     public override string AccentColor => "#DC2626";
@@ -79,13 +80,24 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase
     partial void OnInpaintMethodChanged(InpaintMethod value) => RefreshResult();
 
     public void OnResultStrokeStart(WpfPoint imagePoint, double pixelRadius)
-        => StampMask(imagePoint, imagePoint, pixelRadius);
+    {
+        _brushLastPoint = imagePoint;
+        StampMask(imagePoint, imagePoint, pixelRadius);
+    }
 
     public void OnResultStrokeMove(WpfPoint imagePoint, double pixelRadius)
-        => StampMask(imagePoint, imagePoint, pixelRadius);
+    {
+        // Connect to the previous point so fast strokes paint continuously.
+        if (_brushLastPoint is { } last)
+        {
+            StampMask(last, imagePoint, pixelRadius);
+        }
+        _brushLastPoint = imagePoint;
+    }
 
     public void OnResultStrokeEnd()
     {
+        _brushLastPoint = null;
         IsDirty = Cv2.CountNonZero(_healMask!) > 0;
         RefreshResult();
     }
@@ -93,9 +105,7 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase
     private void StampMask(WpfPoint from, WpfPoint to, double pixelRadius)
     {
         if (_healMask is null) return;
-        int r = Math.Max(1, (int)Math.Round(pixelRadius));
-        Cv2.Line(_healMask, new Point((int)from.X, (int)from.Y), new Point((int)to.X, (int)to.Y), Scalar.All(255), r * 2);
-        Cv2.Circle(_healMask, new Point((int)to.X, (int)to.Y), r, Scalar.All(255), -1);
+        MaskBrushHelper.StampSegment(_healMask, from, to, pixelRadius);
         IsDirty = true;
     }
 

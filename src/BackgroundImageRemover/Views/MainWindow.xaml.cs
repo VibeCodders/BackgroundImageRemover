@@ -23,6 +23,11 @@ public partial class MainWindow : Window
         }
     }
 
+    private void About_Click(object sender, RoutedEventArgs e)
+    {
+        new AboutWindow { Owner = this }.ShowDialog();
+    }
+
     private void RecentMenu_SubmenuOpened(object sender, RoutedEventArgs e) => RefreshRecentMenus();
 
     private void RecentProjectsMenu_SubmenuOpened(object sender, RoutedEventArgs e) => RefreshRecentMenus();

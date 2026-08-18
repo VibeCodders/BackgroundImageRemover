@@ -46,7 +46,7 @@ public class UncropViewModelTests
     private sealed class DummyDialogService : IDialogService
     {
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
-        public string? ShowOpenFolderDialog(string title) => null;
+        public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
         public string? ShowOpenImageDialog() => null;
         public string? ShowOpenProjectDialog() => null;
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;

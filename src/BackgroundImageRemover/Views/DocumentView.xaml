@@ -7,7 +7,7 @@
              xmlns:models="clr-namespace:BackgroundImageRemover.Models"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d"
-             d:DesignHeight="760" d:DesignWidth="1300"
+             d:DesignHeight="800" d:DesignWidth="1300"
              AllowDrop="True" Drop="DocumentView_Drop" DragOver="DocumentView_DragOver">
     <UserControl.Resources>
         <ObjectDataProvider x:Key="StrategyKindValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
@@ -15,32 +15,79 @@
                 <x:Type TypeName="models:StrategyKind" />
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
+        <Style x:Key="ToolTabRadioButton" TargetType="RadioButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#FF333333" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FFEAEAEA" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="#FFD0D0D0" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FFE6F2FB" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="#FF0078D7" />
+                                <Setter Property="Foreground" Value="#FF0078D7" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <DockPanel>
-        <!-- Toolbar -->
-        <ToolBar DockPanel.Dock="Top">
-            <Button Content="Open image" Command="{Binding OpenFileCommand}" Padding="8,2"
-                    ToolTip="Open an image into this tab" />
-            <Separator />
-            <Button Content="Undo" Command="{Binding UndoCommand}" Padding="8,2" />
-            <Button Content="Redo" Command="{Binding RedoCommand}" Padding="8,2" />
-            <Separator />
-            <Button Content="Save" Command="{Binding SaveProjectCommand}" Padding="8,2"
-                    ToolTip="Ctrl+S — save the project (.ibrproj) so you can reopen and continue later" />
-            <Menu VerticalAlignment="Center">
-                <MenuItem Header="Export PNG...">
-                    <MenuItem Header="With crop" Command="{Binding ExportCroppedCommand}"
-                              ToolTip="Trim transparent borders around the subject" />
-                    <MenuItem Header="Without crop" Command="{Binding ExportCommand}"
-                              ToolTip="Export at the original image size" />
-                </MenuItem>
-            </Menu>
-            <Separator />
-            <Button Content="Batch..." Command="{Binding BatchCommand}" Padding="8,2" />
-            <TextBlock Text="{Binding BatchStatus}" VerticalAlignment="Center" Margin="8,0"
-                       Visibility="{Binding IsBatchRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
-        </ToolBar>
+        <!-- Top Main Tools Ribbon / Toolbar -->
+        <Border DockPanel.Dock="Top" Background="#FFF5F6F8" BorderBrush="#FFDDDDDD" BorderThickness="0,0,0,1" Padding="8,4">
+            <DockPanel>
+                <!-- Quick File Actions -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,16,0">
+                    <Button Content="Open image" Command="{Binding OpenFileCommand}" Padding="8,4" Margin="0,0,4,0"
+                            ToolTip="Open an image file into this tab" />
+                    <Button Content="Save" Command="{Binding SaveProjectCommand}" Padding="8,4" Margin="0,0,4,0"
+                            ToolTip="Ctrl+S — save project (.ibrproj)" />
+                    <Menu VerticalAlignment="Center" Margin="0,0,4,0">
+                        <MenuItem Header="Export PNG...">
+                            <MenuItem Header="With crop" Command="{Binding ExportCroppedCommand}"
+                                      ToolTip="Trim transparent borders around the subject" />
+                            <MenuItem Header="Without crop" Command="{Binding ExportCommand}"
+                                      ToolTip="Export at the original image size" />
+                        </MenuItem>
+                    </Menu>
+                    <Separator Margin="4,0" />
+                    <Button Content="Undo" Command="{Binding UndoCommand}" Padding="8,4" Margin="0,0,2,0" />
+                    <Button Content="Redo" Command="{Binding RedoCommand}" Padding="8,4" Margin="0,0,4,0" />
+                    <Separator Margin="4,0" />
+                    <Button Content="Batch..." Command="{Binding BatchCommand}" Padding="8,4" />
+                </StackPanel>
+
+                <!-- Tool Category Selector (Center/Right) -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="Tool:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#FF555555" />
+                    <RadioButton Content="✂ Background Remover" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
+                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=RemoveBackground}" />
+                    <RadioButton Content="⤢ Uncrop / Expand" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
+                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Uncrop}" />
+                    <RadioButton Content="🖌 Retouch &amp; Brush" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
+                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Retouch}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <!-- Status bar -->
         <StatusBar DockPanel.Dock="Bottom">
@@ -55,183 +102,316 @@
                     <TextBlock Text="{Binding StatusMessage}" />
                 </StackPanel>
             </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ProgressBar IsIndeterminate="True" Width="100" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding BusyMessage}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" Foreground="#FF555555" />
+                </StackPanel>
+            </StatusBarItem>
         </StatusBar>
 
-        <!-- Strategy + refinement controls -->
-        <Border DockPanel.Dock="Right" Width="320" Padding="12" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0">
+        <!-- Dynamic Contextual Side Panel -->
+        <Border DockPanel.Dock="Right" Width="330" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <TextBlock Text="Strategy" FontWeight="Bold" Margin="0,0,0,8" />
-                <ComboBox ItemsSource="{Binding Source={StaticResource StrategyKindValues}}"
-                          SelectedItem="{Binding SelectedStrategy}"
-                          Margin="0,0,0,16" />
+                <StackPanel>
+                    <!-- ==================== PANEL 1: REMOVE BACKGROUND ==================== -->
+                    <StackPanel Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground}">
+                        <TextBlock Text="Background Removal" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                        <TextBlock Text="Strategy" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <ComboBox ItemsSource="{Binding Source={StaticResource StrategyKindValues}}"
+                                  SelectedItem="{Binding SelectedStrategy}"
+                                  Margin="0,0,0,16" />
 
-                <!-- Chroma Key options -->
-                <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ChromaKey}">
-                    <TextBlock Text="Detected background color:" />
-                    <Rectangle Height="24" Fill="{Binding ChromaKey.DetectedColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" Margin="0,4,0,12" />
-                    <TextBlock Text="Tolerance" />
-                    <Slider Minimum="0" Maximum="100" Value="{Binding ChromaKey.Tolerance}" TickFrequency="5" />
-                    <CheckBox Content="Spill suppression" IsChecked="{Binding ChromaKey.SpillSuppression}" Margin="0,8,0,0" />
-                </StackPanel>
+                        <!-- Chroma Key options -->
+                        <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ChromaKey}">
+                            <TextBlock Text="Detected background color:" />
+                            <Rectangle Height="24" Fill="{Binding ChromaKey.DetectedColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" Margin="0,4,0,12" />
+                            <TextBlock Text="Tolerance" />
+                            <Slider Minimum="0" Maximum="100" Value="{Binding ChromaKey.Tolerance}" TickFrequency="5" />
+                            <CheckBox Content="Spill suppression" IsChecked="{Binding ChromaKey.SpillSuppression}" Margin="0,8,0,0" />
+                        </StackPanel>
 
-                <!-- GrabCut options -->
-                <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=GrabCut}">
-                    <TextBlock Text="Mark the subject on the left image using any combination of a rectangle and foreground/background scribbles." TextWrapping="Wrap" Margin="0,0,0,8" />
-                    <TextBlock Text="{Binding GrabCut.HasValidRect, StringFormat='Rectangle selected: {0}'}" Margin="0,0,0,8" />
+                        <!-- GrabCut options -->
+                        <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=GrabCut}">
+                            <TextBlock Text="Mark the subject on the left image using a rectangle and foreground/background scribbles." TextWrapping="Wrap" Margin="0,0,0,8" />
+                            <TextBlock Text="{Binding GrabCut.HasValidRect, StringFormat='Rectangle selected: {0}'}" Margin="0,0,0,8" />
 
-                    <TextBlock Text="Tool:" FontWeight="SemiBold" Margin="0,4,0,4" />
-                    <UniformGrid Columns="3" Margin="0,0,0,4">
-                        <RadioButton Content="Rectangle" GroupName="ScribbleMode" Margin="0,0,4,4"
-                                     IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=DrawRect, Mode=OneWay}"
-                                     Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.DrawRect}" />
-                        <RadioButton Content="Foreground" GroupName="ScribbleMode" Margin="4,0,4,4"
-                                     IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ScribbleForeground, Mode=OneWay}"
-                                     Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.ScribbleForeground}" />
-                        <RadioButton Content="Background" GroupName="ScribbleMode" Margin="4,0,0,4"
-                                     IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ScribbleBackground, Mode=OneWay}"
-                                     Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.ScribbleBackground}" />
-                    </UniformGrid>
-                    <Button Content="Update preview" Command="{Binding RefineGrabCutPreviewCommand}"
-                            Visibility="{Binding GrabCut.HasScribbles, Converter={StaticResource BoolToVisibilityConverter}}" />
-                </StackPanel>
+                            <TextBlock Text="Mode:" FontWeight="SemiBold" Margin="0,4,0,4" />
+                            <UniformGrid Columns="3" Margin="0,0,0,4">
+                                <RadioButton Content="Rectangle" GroupName="ScribbleMode" Margin="0,0,4,4"
+                                             IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=DrawRect, Mode=OneWay}"
+                                             Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.DrawRect}" />
+                                <RadioButton Content="Foreground" GroupName="ScribbleMode" Margin="4,0,4,4"
+                                             IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ScribbleForeground, Mode=OneWay}"
+                                             Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.ScribbleForeground}" />
+                                <RadioButton Content="Background" GroupName="ScribbleMode" Margin="4,0,0,4"
+                                             IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ScribbleBackground, Mode=OneWay}"
+                                             Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.ScribbleBackground}" />
+                            </UniformGrid>
+                            <Button Content="Update preview" Command="{Binding RefineGrabCutPreviewCommand}"
+                                    Visibility="{Binding GrabCut.HasScribbles, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,4,0,0" />
+                        </StackPanel>
 
-                <!-- ONNX options -->
-                <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Onnx}">
-                    <TextBlock Text="Model" />
-                    <ComboBox ItemsSource="{Binding Onnx.AvailableModels}" SelectedItem="{Binding Onnx.SelectedModel}" Margin="0,0,0,8" />
-                    <StackPanel Visibility="{Binding Onnx.IsDownloading, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Downloading model..." Margin="0,0,0,4" />
-                        <ProgressBar Height="16" Minimum="0" Maximum="1" Value="{Binding Onnx.DownloadFraction, Mode=OneWay}" />
+                        <!-- ONNX options -->
+                        <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Onnx}">
+                            <TextBlock Text="Model" />
+                            <ComboBox ItemsSource="{Binding Onnx.AvailableModels}" SelectedItem="{Binding Onnx.SelectedModel}" Margin="0,0,0,8" />
+                            <StackPanel Visibility="{Binding Onnx.IsDownloading, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Downloading model..." Margin="0,0,0,4" />
+                                <ProgressBar Height="16" Minimum="0" Maximum="1" Value="{Binding Onnx.DownloadFraction, Mode=OneWay}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Onnx.ErrorMessage}" Foreground="Red" TextWrapping="Wrap"
+                                       Visibility="{Binding Onnx.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
+                            <Button Content="Retry download" Command="{Binding RetryOnnxDownloadCommand}"
+                                    Visibility="{Binding Onnx.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,4,0,8" />
+                            <TextBlock Text="Edge feather" Margin="0,8,0,0" />
+                            <Slider Minimum="0" Maximum="15" Value="{Binding Onnx.FeatherPixels}" />
+                            <CheckBox Content="Alpha matting refinement (slower)" IsChecked="{Binding Onnx.EnableAlphaMatting}" Margin="0,8,0,0" />
+                            <CheckBox Content="Use GPU (DirectML)" IsChecked="{Binding UseGpuForOnnx}" Margin="0,8,0,0" />
+                        </StackPanel>
+
+                        <!-- SAM options -->
+                        <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Sam}">
+                            <TextBlock Text="Click on the subject in the Original image." TextWrapping="Wrap" Margin="0,0,0,8" />
+                            <TextBlock Text="{Binding Sam.HasClickedPoint, StringFormat='Point selected: {0}'}" Margin="0,0,0,8" />
+                            <StackPanel Visibility="{Binding Sam.IsDownloading, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Downloading SAM model..." Margin="0,0,0,4" />
+                                <ProgressBar Height="16" Minimum="0" Maximum="1" Value="{Binding Sam.DownloadFraction, Mode=OneWay}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Sam.ErrorMessage}" Foreground="Red" TextWrapping="Wrap"
+                                       Visibility="{Binding Sam.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
+                            <Button Content="Retry download" Command="{Binding RetrySamDownloadCommand}"
+                                    Visibility="{Binding Sam.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,4,0,8" />
+                        </StackPanel>
+
+                        <Separator Margin="0,16"/>
+
+                        <!-- Export background options -->
+                        <TextBlock Text="Export background" FontWeight="Bold" Margin="0,0,0,8" />
+                        <RadioButton Content="Transparent" GroupName="ExportBg" Margin="0,0,0,4"
+                                     IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Transparent}" />
+                        <RadioButton Content="Solid color" GroupName="ExportBg" Margin="0,0,0,4"
+                                     IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
+                        <StackPanel Orientation="Horizontal"
+                                    Visibility="{Binding ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}"
+                                    Margin="16,0,0,8">
+                            <Rectangle Width="24" Height="24" Fill="{Binding ExportSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                            <Button x:Name="ChooseColorButton" Content="Choose..." Margin="8,0,0,0"
+                                    Click="ChooseColorButton_Click" />
+                            <Popup IsOpen="{Binding IsColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseColorButton}"
+                                   StaysOpen="False" AllowsTransparency="True" Placement="Right">
+                                <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                    <controls:SimpleColorPickerControl SelectedColor="{Binding ExportSolidColor}" />
+                                </Border>
+                            </Popup>
+                        </StackPanel>
+                        <RadioButton Content="Image" GroupName="ExportBg" Margin="0,0,0,4"
+                                     IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}" />
+                        <StackPanel Orientation="Horizontal"
+                                    Visibility="{Binding ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Image}"
+                                    Margin="16,0,0,8">
+                            <Button Content="Choose image..." Command="{Binding PickBackgroundImageCommand}" />
+                        </StackPanel>
                     </StackPanel>
-                    <TextBlock Text="{Binding Onnx.ErrorMessage}" Foreground="Red" TextWrapping="Wrap"
-                               Visibility="{Binding Onnx.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
-                    <Button Content="Retry download" Command="{Binding RetryOnnxDownloadCommand}"
-                            Visibility="{Binding Onnx.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,4,0,8" />
-                    <TextBlock Text="Edge feather" Margin="0,8,0,0" />
-                    <Slider Minimum="0" Maximum="15" Value="{Binding Onnx.FeatherPixels}" />
-                    <CheckBox Content="Alpha matting refinement (slower)" IsChecked="{Binding Onnx.EnableAlphaMatting}" Margin="0,8,0,0" />
-                    <CheckBox Content="Use GPU (DirectML)" IsChecked="{Binding UseGpuForOnnx}" Margin="0,8,0,0" />
-                </StackPanel>
 
-                <!-- SAM options -->
-                <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Sam}">
-                    <TextBlock Text="Click on the subject in the Original image." TextWrapping="Wrap" Margin="0,0,0,8" />
-                    <TextBlock Text="{Binding Sam.HasClickedPoint, StringFormat='Point selected: {0}'}" Margin="0,0,0,8" />
-                    <StackPanel Visibility="{Binding Sam.IsDownloading, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Downloading SAM model..." Margin="0,0,0,4" />
-                        <ProgressBar Height="16" Minimum="0" Maximum="1" Value="{Binding Sam.DownloadFraction, Mode=OneWay}" />
+                    <!-- ==================== PANEL 2: UNCROP / CANVAS EXPAND ==================== -->
+                    <StackPanel Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Uncrop}">
+                        <TextBlock Text="Uncrop / Outpaint" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+
+                        <TextBlock Text="Aspect ratio" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <ComboBox ItemsSource="{Binding AspectPresets}" DisplayMemberPath="Label"
+                                  SelectedItem="{Binding SelectedUncropPreset}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Padding (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Left" VerticalAlignment="Center" Margin="0,0,4,4" />
+                            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,8,4" Text="{Binding UncropPaddingLeftPx, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Top" VerticalAlignment="Center" Margin="0,0,4,4" />
+                            <TextBox Grid.Row="0" Grid.Column="3" Margin="0,0,0,4" Text="{Binding UncropPaddingTopPx, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Right" VerticalAlignment="Center" Margin="0,0,4,0" />
+                            <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,0" Text="{Binding UncropPaddingRightPx, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Grid.Row="1" Grid.Column="2" Text="Bottom" VerticalAlignment="Center" Margin="0,0,4,0" />
+                            <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding UncropPaddingBottomPx, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+
+                        <TextBlock Text="Fill method" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <!-- Mirror -->
+                        <RadioButton Content="Mirror reflection" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
+                                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}" />
+                        <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Mirror}">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <RadioButton Content="Reflect 101" GroupName="UncropMirrorTypeDoc" Margin="0,0,8,0"
+                                             IsChecked="{Binding SelectedUncropMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect101}" />
+                                <RadioButton Content="Reflect" GroupName="UncropMirrorTypeDoc"
+                                             IsChecked="{Binding SelectedUncropMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect}" />
+                            </StackPanel>
+                            <DockPanel Margin="0,0,0,4">
+                                <TextBlock Text="Blur:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="40" />
+                                <TextBlock Text="{Binding UncropMirrorBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                                <Slider Minimum="0" Maximum="50" Value="{Binding UncropMirrorBlurRadius}" SmallChange="2" LargeChange="10" />
+                            </DockPanel>
+                            <DockPanel Margin="0,0,0,4">
+                                <TextBlock Text="Fade:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="40" />
+                                <TextBlock Text="{Binding UncropMirrorFadeOpacity, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                                <Slider Minimum="0.0" Maximum="1.0" Value="{Binding UncropMirrorFadeOpacity}" SmallChange="0.05" LargeChange="0.2" />
+                            </DockPanel>
+                        </StackPanel>
+
+                        <!-- Inpaint -->
+                        <RadioButton Content="Content-aware inpaint" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
+                                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Inpaint}" />
+                        <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Inpaint}">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <RadioButton Content="Telea" GroupName="UncropInpaintMethodDoc" Margin="0,0,8,0"
+                                             IsChecked="{Binding SelectedUncropInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Telea}" />
+                                <RadioButton Content="Navier-Stokes" GroupName="UncropInpaintMethodDoc"
+                                             IsChecked="{Binding SelectedUncropInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NavierStokes}" />
+                            </StackPanel>
+                            <DockPanel Margin="0,0,0,4">
+                                <TextBlock Text="Radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
+                                <TextBlock Text="{Binding UncropInpaintRadius, StringFormat={}{0:F0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                                <Slider Minimum="1" Maximum="30" Value="{Binding UncropInpaintRadius}" />
+                            </DockPanel>
+                            <CheckBox Content="Pre-fill with edge colors" IsChecked="{Binding UncropInpaintPreFillEdgeAverage}" Margin="0,4,0,0" FontSize="11" />
+                        </StackPanel>
+
+                        <!-- Solid color / blur -->
+                        <RadioButton Content="Solid / Blurred Color" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
+                                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
+                        <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}">
+                            <ComboBox ItemsSource="{Binding ColorSources}" SelectedItem="{Binding SelectedUncropColorSource}" Margin="0,0,0,6" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6"
+                                        Visibility="{Binding SelectedUncropColorSource, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=CustomColor}">
+                                <Rectangle Width="24" Height="24" Fill="{Binding UncropCustomSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                                <Button x:Name="ChooseUncropColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseUncropColorButton_Click" />
+                                <Popup IsOpen="{Binding IsUncropColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseUncropColorButton}"
+                                       StaysOpen="False" AllowsTransparency="True" Placement="Right">
+                                    <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                        <controls:SimpleColorPickerControl SelectedColor="{Binding UncropCustomSolidColor}" />
+                                    </Border>
+                                </Popup>
+                            </StackPanel>
+                            <CheckBox Content="Blur fill" IsChecked="{Binding UncropBlurredColorFill}" Margin="0,0,0,4" FontSize="11" />
+                            <DockPanel Visibility="{Binding UncropBlurredColorFill, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Blur:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="40" />
+                                <Slider Minimum="3" Maximum="101" Value="{Binding UncropBlurRadius}" />
+                            </DockPanel>
+                        </StackPanel>
+
+                        <!-- Replicate / Clamp -->
+                        <RadioButton Content="Edge clamp (Replicate)" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
+                                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
+
+                        <!-- Zoom Blur -->
+                        <RadioButton Content="Zoom blur" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
+                                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ZoomBlur}" />
+
+                        <!-- Gradient -->
+                        <RadioButton Content="Edge gradient" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
+                                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeGradient}" />
+
+                        <!-- Patch Synthesis -->
+                        <RadioButton Content="Patch synthesis (Texture)" GroupName="UncropFillModeDoc" Margin="0,0,0,8"
+                                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PatchSynthesis}" />
+
+                        <Button Content="Apply Uncrop Fill" Command="{Binding ApplyUncropCommand}"
+                                Height="32" FontWeight="SemiBold" Background="#FF0078D7" Foreground="White" BorderThickness="0" Margin="0,8,0,0" />
+                        <Button Content="Cancel Fill" Command="{Binding CancelUncropCommand}"
+                                Margin="0,4,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </StackPanel>
-                    <TextBlock Text="{Binding Sam.ErrorMessage}" Foreground="Red" TextWrapping="Wrap"
-                               Visibility="{Binding Sam.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
-                    <Button Content="Retry download" Command="{Binding RetrySamDownloadCommand}"
-                            Visibility="{Binding Sam.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,4,0,8" />
+
+                    <!-- ==================== PANEL 3: RETOUCH & BRUSH ==================== -->
+                    <StackPanel Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Retouch}">
+                        <TextBlock Text="Retouch &amp; Refinement" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+
+                        <TextBlock Text="Active Tool:" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <UniformGrid Columns="3" Margin="0,0,0,8">
+                            <Button Content="None" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.None}" Margin="0,0,2,0" />
+                            <Button Content="Brush" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.Brush}" Margin="2,0" />
+                            <Button Content="Wand" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.MagicWand}" Margin="2,0,0,0" />
+                        </UniformGrid>
+
+                        <TextBlock Text="Brush Action:" FontWeight="SemiBold" Margin="0,4,0,4" />
+                        <UniformGrid Columns="2" Margin="0,0,0,8">
+                            <RadioButton Content="Restore" GroupName="BrushModeDoc" Margin="0,0,4,0"
+                                         IsChecked="{Binding BrushMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Restore}" />
+                            <RadioButton Content="Erase" GroupName="BrushModeDoc" Margin="4,0,0,0"
+                                         IsChecked="{Binding BrushMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Erase}" />
+                        </UniformGrid>
+
+                        <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Brush}">
+                            <TextBlock Text="Brush size" Margin="0,4,0,0" />
+                            <Slider Minimum="2" Maximum="120" Value="{Binding BrushRadius}" />
+                            <TextBlock Text="Brush hardness" Margin="0,4,0,0" />
+                            <Slider Minimum="0" Maximum="0.95" Value="{Binding BrushHardness}" />
+                        </StackPanel>
+
+                        <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=MagicWand}">
+                            <TextBlock Text="Wand tolerance" Margin="0,4,0,0" />
+                            <Slider Minimum="1" Maximum="100" Value="{Binding MagicWandTolerance}" />
+                        </StackPanel>
+
+                        <CheckBox Content="Compare before/after (Split View)" IsChecked="{Binding IsCompareMode}" Margin="0,16,0,16" />
+                    </StackPanel>
                 </StackPanel>
-
-                <Separator Margin="0,16"/>
-
-                <!-- Result refinement tools -->
-                <TextBlock Text="Retouch result" FontWeight="Bold" Margin="0,0,0,8" />
-                <UniformGrid Columns="3" Margin="0,0,0,8">
-                    <Button Content="None" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.None}" Margin="0,0,2,0" />
-                    <Button Content="Brush" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.Brush}" Margin="2,0" />
-                    <Button Content="Wand" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.MagicWand}" Margin="2,0,0,0" />
-                </UniformGrid>
-
-                <UniformGrid Columns="2" Margin="0,0,0,8">
-                    <RadioButton Content="Restore" GroupName="BrushMode" Margin="0,0,4,0"
-                                 IsChecked="{Binding BrushMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Restore}" />
-                    <RadioButton Content="Erase" GroupName="BrushMode" Margin="4,0,0,0"
-                                 IsChecked="{Binding BrushMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Erase}" />
-                </UniformGrid>
-
-                <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Brush}">
-                    <TextBlock Text="Brush size" />
-                    <Slider Minimum="2" Maximum="120" Value="{Binding BrushRadius}" />
-                    <TextBlock Text="Brush hardness" />
-                    <Slider Minimum="0" Maximum="0.95" Value="{Binding BrushHardness}" />
-                </StackPanel>
-
-                <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=MagicWand}">
-                    <TextBlock Text="Wand tolerance" />
-                    <Slider Minimum="1" Maximum="100" Value="{Binding MagicWandTolerance}" />
-                </StackPanel>
-
-                <CheckBox Content="Compare before/after" IsChecked="{Binding IsCompareMode}" Margin="0,8,0,16" />
-
-                <Separator Margin="0,0,0,16"/>
-
-                <!-- Export options -->
-                <TextBlock Text="Export background" FontWeight="Bold" Margin="0,0,0,8" />
-                <RadioButton Content="Transparent" GroupName="ExportBg" Margin="0,0,0,4"
-                             IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Transparent}" />
-                <RadioButton Content="Solid color" GroupName="ExportBg" Margin="0,0,0,4"
-                             IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
-                <StackPanel Orientation="Horizontal"
-                            Visibility="{Binding ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}"
-                            Margin="16,0,0,8">
-                    <Rectangle Width="24" Height="24" Fill="{Binding ExportSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                    <Button x:Name="ChooseColorButton" Content="Choose..." Margin="8,0,0,0"
-                            Click="ChooseColorButton_Click" />
-                    <Popup IsOpen="{Binding IsColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseColorButton}"
-                           StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                        <Border Background="White" BorderBrush="Gray" BorderThickness="1">
-                            <controls:SimpleColorPickerControl SelectedColor="{Binding ExportSolidColor}" />
-                        </Border>
-                    </Popup>
-                </StackPanel>
-                <RadioButton Content="Image" GroupName="ExportBg" Margin="0,0,0,4"
-                             IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}" />
-                <StackPanel Orientation="Horizontal"
-                            Visibility="{Binding ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Image}"
-                            Margin="16,0,0,8">
-                    <Button Content="Choose image..." Command="{Binding PickBackgroundImageCommand}" />
-                </StackPanel>
-
-                <ProgressBar Height="18" IsIndeterminate="True" Margin="0,20,0,0"
-                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <TextBlock Text="{Binding BusyMessage}" Margin="0,4,0,0"
-                           Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
-            </StackPanel>
             </ScrollViewer>
         </Border>
 
-        <!-- Image panes -->
+        <!-- Central Work Area -->
         <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+            <!-- View when UNPAINT/UNCROP tool is active -->
+            <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Uncrop}" Margin="8">
+                <controls:UncropCanvasControl ImageSource="{Binding PreviewBitmap}"
+                                              ImagePadding="{Binding UncropPadding, Mode=TwoWay}" />
+            </Grid>
 
-            <DockPanel Grid.Column="0" Margin="8">
-                <TextBlock DockPanel.Dock="Top" Text="Original (draw rect / scribbles / SAM click here)" FontWeight="Bold" Margin="0,0,0,4" />
-                <controls:ImagePreviewControl x:Name="OriginalPreview"
-                                               ImageSource="{Binding PreviewBitmap}"
-                                               Mode="{Binding OriginalMode}"
-                                               RectSelected="OriginalPreview_RectSelected"
-                                               StrokeStart="OriginalPreview_StrokeStart"
-                                               StrokeMove="OriginalPreview_StrokeMove"
-                                               StrokeEnd="OriginalPreview_StrokeEnd"
-                                               SamPointClicked="OriginalPreview_SamPointClicked" />
-            </DockPanel>
+            <!-- Dual-pane image view when Background Remover or Retouch is active -->
+            <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground|Retouch}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-            <DockPanel Grid.Column="1" Margin="8">
-                <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
+                <DockPanel Grid.Column="0" Margin="8">
+                    <TextBlock DockPanel.Dock="Top" Text="Original (draw rect / scribbles / SAM click)" FontWeight="Bold" Margin="0,0,0,4" />
+                    <controls:ImagePreviewControl x:Name="OriginalPreview"
+                                                   ImageSource="{Binding PreviewBitmap}"
+                                                   Mode="{Binding OriginalMode}"
+                                                   RectSelected="OriginalPreview_RectSelected"
+                                                   StrokeStart="OriginalPreview_StrokeStart"
+                                                   StrokeMove="OriginalPreview_StrokeMove"
+                                                   StrokeEnd="OriginalPreview_StrokeEnd"
+                                                   SamPointClicked="OriginalPreview_SamPointClicked" />
+                </DockPanel>
 
-                <controls:CompareImageControl BeforeSource="{Binding PreviewBitmap}" AfterSource="{Binding ResultBitmap}"
-                                               DividerPosition="{Binding CompareDividerPosition}"
-                                               Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <DockPanel Grid.Column="1" Margin="8">
+                    <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
 
-                <controls:ImagePreviewControl x:Name="ResultEditPreview"
-                                               ImageSource="{Binding ResultBitmap}"
-                                               Mode="{Binding ResultMode}"
-                                               BrushRadius="{Binding BrushRadius}"
-                                               StrokeStart="ResultEditPreview_StrokeStart"
-                                               StrokeMove="ResultEditPreview_StrokeMove"
-                                               StrokeEnd="ResultEditPreview_StrokeEnd"
-                                               WandClicked="ResultEditPreview_WandClicked"
-                                               Visibility="{Binding IsCompareMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
-            </DockPanel>
+                    <controls:CompareImageControl BeforeSource="{Binding PreviewBitmap}" AfterSource="{Binding ResultBitmap}"
+                                                   DividerPosition="{Binding CompareDividerPosition}"
+                                                   Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                    <controls:ImagePreviewControl x:Name="ResultEditPreview"
+                                                   ImageSource="{Binding ResultBitmap}"
+                                                   Mode="{Binding ResultMode}"
+                                                   BrushRadius="{Binding BrushRadius}"
+                                                   StrokeStart="ResultEditPreview_StrokeStart"
+                                                   StrokeMove="ResultEditPreview_StrokeMove"
+                                                   StrokeEnd="ResultEditPreview_StrokeEnd"
+                                                   WandClicked="ResultEditPreview_WandClicked"
+                                                   Visibility="{Binding IsCompareMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                </DockPanel>
+            </Grid>
         </Grid>
     </DockPanel>
 </UserControl>

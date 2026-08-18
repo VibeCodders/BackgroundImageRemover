@@ -6,7 +6,7 @@
         xmlns:views="clr-namespace:BackgroundImageRemover.Views"
         xmlns:vm="clr-namespace:BackgroundImageRemover.ViewModels"
         mc:Ignorable="d"
-        Title="{Binding SelectedDocument.WindowTitle, FallbackValue='Background Image Remover'}"
+        Title="{Binding SelectedDocument.WindowTitle, FallbackValue='Image Editor'}"
         Closing="MainWindow_Closing"
         Height="800" Width="1360" WindowState="Maximized">
     <Window.InputBindings>
@@ -28,9 +28,9 @@
     </Window.Resources>
 
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
+        <Menu DockPanel.Dock="Top" Background="#FFF5F6F8" BorderBrush="#FFDDDDDD" BorderThickness="0,0,0,1" Padding="4,2">
             <MenuItem Header="_File">
-                <MenuItem Header="_New project..." Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
+                <MenuItem Header="_New / Open image..." Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
                 <MenuItem Header="_Open image..." Command="{Binding NewTabCommand}" />
                 <MenuItem Header="Open _project..." Command="{Binding OpenProjectCommand}" InputGestureText="Ctrl+O" />
                 <Separator />
@@ -55,9 +55,6 @@
                         </Style>
                     </MenuItem.ItemContainerStyle>
                 </MenuItem>
-            </MenuItem>
-            <MenuItem Header="_Tools">
-                <MenuItem Header="_Uncrop..." Command="{Binding OpenUncropCommand}" />
             </MenuItem>
         </Menu>
 

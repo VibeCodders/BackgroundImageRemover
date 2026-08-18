@@ -90,4 +90,9 @@ public partial class DocumentView : UserControl
     {
         if (ViewModel is not null) ViewModel.IsColorPickerOpen = !ViewModel.IsColorPickerOpen;
     }
+
+    private void ChooseUncropColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is not null) ViewModel.IsUncropColorPickerOpen = !ViewModel.IsUncropColorPickerOpen;
+    }
 }

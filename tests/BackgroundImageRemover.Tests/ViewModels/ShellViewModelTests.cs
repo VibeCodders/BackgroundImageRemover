@@ -22,7 +22,6 @@ public class ShellViewModelTests
         public string? ShowOpenProjectDialog() => throw new NotImplementedException();
         public string? ShowSaveProjectDialog(string? suggestedFileName) => throw new NotImplementedException();
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => throw new NotImplementedException();
-        public (Models.NewProjectType? Type, bool OpenImageImmediately) ShowNewProjectDialog() => throw new NotImplementedException();
     }
 
     private static ShellViewModel CreateShell(FakeSettingsService settings) =>
@@ -85,37 +84,44 @@ public class ShellViewModelTests
     }
 
     [Fact]
-    public async Task NewProjectAsync_WhenUncropSelected_AddsUncropTab()
+    public async Task NewProjectAsync_WhenImageSelected_OpensDocumentInNewTab()
     {
         var settings = new FakeSettingsService();
-        var fakeDialogs = new FakeNewProjectDialogService((Models.NewProjectType.Uncrop, false));
+        var fakeDialogs = new FakeImageDialogService("photo.png");
 
-        var uncropVm = new UncropViewModel(
-            new FakeUncropFillService(),
-            fakeDialogs,
+        var docVm = new DocumentViewModel(
             new FakeImageLoaderService(),
             new FakeImageExportService(),
-            new FakeFileLogService());
+            new FakeDownscaleService(),
+            fakeDialogs,
+            new FakeBatchProcessingService(),
+            settings,
+            new FakeProjectService(),
+            new FakeFileLogService(),
+            Array.Empty<BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy>(),
+            new BackgroundImageRemover.Services.Strategies.OnnxStrategy(new BackgroundImageRemover.Services.Onnx.OnnxInferenceEngine(new FakeModelCacheService(), new FakeFileLogService())),
+            new BackgroundImageRemover.Services.Strategies.GrabCutStrategy(),
+            new BackgroundImageRemover.Services.Strategies.SamStrategy(new BackgroundImageRemover.Services.Sam.SamInferenceEngine(new FakeModelCacheService())),
+            new FakeUncropFillService());
 
         var shell = new ShellViewModel(
-            () => throw new InvalidOperationException("Should not create DocumentViewModel"),
-            () => uncropVm,
+            () => docVm,
+            () => throw new InvalidOperationException("Should not create uncrop tab directly"),
             fakeDialogs,
             settings);
 
         await shell.NewProjectCommand.ExecuteAsync(null);
 
         Assert.Single(shell.Documents);
-        Assert.Same(uncropVm, shell.SelectedDocument);
+        Assert.Same(docVm, shell.SelectedDocument);
     }
 
-    private sealed class FakeNewProjectDialogService : IDialogService
+    private sealed class FakeImageDialogService : IDialogService
     {
-        private readonly (Models.NewProjectType? Type, bool OpenImageImmediately) _result;
-        public FakeNewProjectDialogService((Models.NewProjectType? Type, bool OpenImageImmediately) result) => _result = result;
+        private readonly string? _chosenPath;
+        public FakeImageDialogService(string? chosenPath) => _chosenPath = chosenPath;
 
-        public (Models.NewProjectType? Type, bool OpenImageImmediately) ShowNewProjectDialog() => _result;
-        public string? ShowOpenImageDialog() => null;
+        public string? ShowOpenImageDialog() => _chosenPath;
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
         public string? ShowOpenFolderDialog(string title) => null;
         public string? ShowOpenProjectDialog() => null;
@@ -166,5 +172,41 @@ public class ShellViewModelTests
         public void Error(string message, Exception? ex = null) { }
         public void Info(string message) { }
         public void Warn(string message) { }
+    }
+
+    private sealed class FakeDownscaleService : BackgroundImageRemover.Services.Preview.IDownscaleService
+    {
+        public Models.PreviewImage CreatePreview(OpenCvSharp.Mat full, int maxDim = 800)
+            => new(full.Clone(), 1.0);
+    }
+
+    private sealed class FakeBatchProcessingService : BackgroundImageRemover.Services.Batch.IBatchProcessingService
+    {
+        public Task RunAsync(IReadOnlyList<string> filePaths, BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy strategy, BackgroundImageRemover.Services.Strategies.StrategyContext context, string outputFolder, IProgress<BackgroundImageRemover.Services.Batch.BatchProgress>? progress = null, CancellationToken ct = default)
+            => Task.CompletedTask;
+    }
+
+    private sealed class FakeProjectService : BackgroundImageRemover.Services.Projects.IProjectService
+    {
+        public Task SaveAsync(string path, OpenCvSharp.Mat originalBgr, OpenCvSharp.Mat? originalAlpha, OpenCvSharp.Mat? workingBgr, OpenCvSharp.Mat? workingAlpha, BackgroundImageRemover.Models.ProjectDocument settings, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task<BackgroundImageRemover.Services.Projects.LoadedProject> LoadAsync(string path, CancellationToken ct = default)
+            => Task.FromResult(new BackgroundImageRemover.Services.Projects.LoadedProject
+            {
+                Settings = new BackgroundImageRemover.Models.ProjectDocument(),
+                OriginalBgr = new OpenCvSharp.Mat(1, 1, OpenCvSharp.MatType.CV_8UC3)
+            });
+    }
+
+    private sealed class FakeModelCacheService : BackgroundImageRemover.Services.Onnx.IModelCacheService
+    {
+        public string CachedModelPath(BackgroundImageRemover.Models.OnnxModelKind kind) => "";
+        public bool IsModelCached(BackgroundImageRemover.Models.OnnxModelKind kind) => true;
+        public Task<string> EnsureModelAvailableAsync(BackgroundImageRemover.Models.OnnxModelKind kind, IProgress<BackgroundImageRemover.Services.Onnx.ModelDownloadProgress>? progress, CancellationToken ct)
+            => Task.FromResult("");
+        public Task<string> EnsureNamedFileAvailableAsync(string fileName, string url, IProgress<BackgroundImageRemover.Services.Onnx.ModelDownloadProgress>? progress, CancellationToken ct)
+            => Task.FromResult("");
+        public bool IsNamedFileCached(string fileName) => true;
     }
 }

@@ -10,6 +10,7 @@ using BackgroundImageRemover.Services.Editing;
 using BackgroundImageRemover.Services.ImageIo;
 using BackgroundImageRemover.Services.Logging;
 using BackgroundImageRemover.Services.Onnx;
+using BackgroundImageRemover.Services.Outpaint;
 using BackgroundImageRemover.Services.Preview;
 using BackgroundImageRemover.Services.Projects;
 using BackgroundImageRemover.Services.Refinement;
@@ -44,11 +45,13 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
     private readonly OnnxStrategy _onnxStrategy;
     private readonly GrabCutStrategy _grabCutStrategy;
     private readonly SamStrategy _samStrategy;
+    private readonly IUncropFillService _uncropFillService;
     private readonly EditHistory _editHistory = new();
 
     private readonly DispatcherTimer _debounceTimer;
     private CancellationTokenSource? _previewCts;
     private CancellationTokenSource? _processCts;
+    private CancellationTokenSource? _uncropCts;
 
     private LoadedImage? _loadedImage;
     private PreviewImage? _preview;
@@ -79,6 +82,15 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
     public OnnxStrategyViewModel Onnx { get; } = new();
     public SamStrategyViewModel Sam { get; } = new();
 
+    public IReadOnlyList<UncropAspectPreset> AspectPresets { get; } = UncropAspectPresets.All;
+    public IReadOnlyList<UncropInpaintMethod> InpaintMethods { get; } = Enum.GetValues<UncropInpaintMethod>();
+    public IReadOnlyList<UncropMirrorType> MirrorTypes { get; } = Enum.GetValues<UncropMirrorType>();
+    public IReadOnlyList<UncropColorSource> ColorSources { get; } = Enum.GetValues<UncropColorSource>();
+    public IReadOnlyList<UncropGradientMode> GradientModes { get; } = Enum.GetValues<UncropGradientMode>();
+
+    [ObservableProperty]
+    private EditorTool _activeTool = EditorTool.RemoveBackground;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
     [NotifyPropertyChangedFor(nameof(TabTitle))]
@@ -98,11 +110,14 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
     [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ApplyUncropCommand))]
     private bool _isImageLoaded;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
     [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ApplyUncropCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelUncropCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -120,6 +135,99 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
 
     [ObservableProperty]
     private bool _isCompareMode;
+
+    // --- Uncrop Options ---
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ApplyUncropCommand))]
+    private CanvasPadding _uncropPadding = CanvasPadding.Zero;
+
+    [ObservableProperty]
+    private UncropAspectPreset _selectedUncropPreset = UncropAspectPresets.Free;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ApplyUncropCommand))]
+    private UncropFillMode _selectedUncropFillMode = UncropFillMode.Mirror;
+
+    [ObservableProperty]
+    private UncropMirrorType _selectedUncropMirrorType = UncropMirrorType.Reflect101;
+
+    [ObservableProperty]
+    private int _uncropMirrorBlurRadius = 0;
+
+    [ObservableProperty]
+    private double _uncropMirrorFadeOpacity = 1.0;
+
+    [ObservableProperty]
+    private UncropInpaintMethod _selectedUncropInpaintMethod = UncropInpaintMethod.Telea;
+
+    [ObservableProperty]
+    private double _uncropInpaintRadius = 5.0;
+
+    [ObservableProperty]
+    private int _uncropBlendMargin = 0;
+
+    [ObservableProperty]
+    private bool _uncropInpaintPreFillEdgeAverage;
+
+    [ObservableProperty]
+    private UncropColorSource _selectedUncropColorSource = UncropColorSource.EdgeAverage;
+
+    [ObservableProperty]
+    private WpfColor _uncropCustomSolidColor = WpfColor.FromRgb(255, 255, 255);
+
+    [ObservableProperty]
+    private bool _isUncropColorPickerOpen;
+
+    [ObservableProperty]
+    private bool _uncropBlurredColorFill;
+
+    [ObservableProperty]
+    private int _uncropBlurRadius = 0;
+
+    [ObservableProperty]
+    private int _uncropReplicateSmoothRadius = 0;
+
+    [ObservableProperty]
+    private int _uncropZoomBlurRadius = 35;
+
+    [ObservableProperty]
+    private double _uncropZoomScale = 1.25;
+
+    [ObservableProperty]
+    private UncropGradientMode _selectedUncropGradientMode = UncropGradientMode.PerEdgeSplay;
+
+    [ObservableProperty]
+    private double _uncropGradientNoiseAmount = 0.0;
+
+    [ObservableProperty]
+    private int _uncropPatchSize = 32;
+
+    [ObservableProperty]
+    private int _uncropPatchBlendOverlap = 8;
+
+    public int UncropPaddingLeftPx
+    {
+        get => UncropPadding.Left;
+        set => SetUncropPaddingFromUser(UncropPadding with { Left = Math.Max(0, value) });
+    }
+
+    public int UncropPaddingTopPx
+    {
+        get => UncropPadding.Top;
+        set => SetUncropPaddingFromUser(UncropPadding with { Top = Math.Max(0, value) });
+    }
+
+    public int UncropPaddingRightPx
+    {
+        get => UncropPadding.Right;
+        set => SetUncropPaddingFromUser(UncropPadding with { Right = Math.Max(0, value) });
+    }
+
+    public int UncropPaddingBottomPx
+    {
+        get => UncropPadding.Bottom;
+        set => SetUncropPaddingFromUser(UncropPadding with { Bottom = Math.Max(0, value) });
+    }
 
     /// <summary>True when the opened file already carries an alpha channel (a previously cleaned cutout).</summary>
     [ObservableProperty]
@@ -226,7 +334,8 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
         IEnumerable<IBackgroundRemovalStrategy> strategies,
         OnnxStrategy onnxStrategy,
         GrabCutStrategy grabCutStrategy,
-        SamStrategy samStrategy)
+        SamStrategy samStrategy,
+        IUncropFillService uncropFillService)
     {
         _imageLoader = imageLoader;
         _imageExporter = imageExporter;
@@ -240,6 +349,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
         _onnxStrategy = onnxStrategy;
         _grabCutStrategy = grabCutStrategy;
         _samStrategy = samStrategy;
+        _uncropFillService = uncropFillService;
 
         _useGpuForOnnx = settings.Current.UseGpuForOnnx;
         _onnxStrategy.SetUseGpu(_useGpuForOnnx);
@@ -296,6 +406,82 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
                 RequestPreviewDebounced();
             }
         };
+    }
+
+    partial void OnActiveToolChanged(EditorTool value)
+    {
+        switch (value)
+        {
+            case EditorTool.RemoveBackground:
+                ResultMode = InteractionMode.None;
+                OriginalMode = SelectedStrategy switch
+                {
+                    StrategyKind.GrabCut => InteractionMode.DrawRect,
+                    StrategyKind.Sam => InteractionMode.SamClick,
+                    _ => InteractionMode.None
+                };
+                break;
+            case EditorTool.Retouch:
+                OriginalMode = InteractionMode.None;
+                if (ResultMode == InteractionMode.None)
+                {
+                    ResultMode = InteractionMode.Brush;
+                }
+                break;
+            case EditorTool.Uncrop:
+                OriginalMode = InteractionMode.None;
+                ResultMode = InteractionMode.None;
+                break;
+        }
+    }
+
+    partial void OnUncropPaddingChanged(CanvasPadding value)
+    {
+        OnPropertyChanged(nameof(UncropPaddingLeftPx));
+        OnPropertyChanged(nameof(UncropPaddingTopPx));
+        OnPropertyChanged(nameof(UncropPaddingRightPx));
+        OnPropertyChanged(nameof(UncropPaddingBottomPx));
+    }
+
+    partial void OnSelectedUncropPresetChanged(UncropAspectPreset value)
+    {
+        if (_loadedImage is null || value.Ratio is not { } ratio)
+        {
+            return;
+        }
+        UncropPadding = ComputeCenteredPadding(_loadedImage.FullBgr.Size(), ratio);
+    }
+
+    private void SetUncropPaddingFromUser(CanvasPadding value)
+    {
+        if (UncropPadding.Equals(value))
+        {
+            return;
+        }
+        UncropPadding = value;
+        if (SelectedUncropPreset.Ratio is not null)
+        {
+            SelectedUncropPreset = UncropAspectPresets.Custom;
+        }
+    }
+
+    private static CanvasPadding ComputeCenteredPadding(Size sourceSize, double targetRatio)
+    {
+        double currentRatio = (double)sourceSize.Width / sourceSize.Height;
+        if (targetRatio > currentRatio)
+        {
+            int targetWidth = (int)Math.Round(sourceSize.Height * targetRatio);
+            int extra = Math.Max(0, targetWidth - sourceSize.Width);
+            int half = extra / 2;
+            return new CanvasPadding(half, 0, extra - half, 0);
+        }
+        else
+        {
+            int targetHeight = (int)Math.Round(sourceSize.Width / targetRatio);
+            int extra = Math.Max(0, targetHeight - sourceSize.Height);
+            int half = extra / 2;
+            return new CanvasPadding(0, half, 0, extra - half);
+        }
     }
 
     partial void OnOriginalModeChanged(InteractionMode value) => RefreshUndoRedoState();
@@ -1480,8 +1666,126 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
         }
     }
 
+    // --- Uncrop Commands ---
+    private bool CanApplyUncrop() => IsImageLoaded && !IsBusy
+        && SelectedUncropFillMode != UncropFillMode.AiOutpaint
+        && !UncropPadding.IsZero;
+
+    private bool CanCancelUncrop() => IsBusy && _uncropCts is not null && !_uncropCts.IsCancellationRequested;
+
+    [RelayCommand(CanExecute = nameof(CanCancelUncrop))]
+    private void CancelUncrop()
+    {
+        if (_uncropCts is not null && !_uncropCts.IsCancellationRequested)
+        {
+            _uncropCts.Cancel();
+            StatusMessage = "Cancelling uncrop operation...";
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanApplyUncrop))]
+    private async Task ApplyUncropAsync()
+    {
+        if (_loadedImage is null)
+        {
+            return;
+        }
+
+        var sourceBgr = _loadedImage.FullBgr;
+        var padding = UncropPadding;
+        var mode = SelectedUncropFillMode;
+        var mirrorType = SelectedUncropMirrorType;
+        var mirrorBlur = UncropMirrorBlurRadius;
+        var mirrorFade = UncropMirrorFadeOpacity;
+        var inpaintMethod = SelectedUncropInpaintMethod;
+        var inpaintRadius = UncropInpaintRadius;
+        var blendMargin = UncropBlendMargin;
+        var inpaintPreFill = UncropInpaintPreFillEdgeAverage;
+        var blurred = UncropBlurredColorFill;
+        var blurRadius = UncropBlurRadius;
+        var replicateSmooth = UncropReplicateSmoothRadius;
+        var zoomBlurRadius = UncropZoomBlurRadius;
+        var zoomScale = UncropZoomScale;
+        var gradientMode = SelectedUncropGradientMode;
+        var gradientNoise = UncropGradientNoiseAmount;
+        var patchSize = UncropPatchSize;
+        var patchOverlap = UncropPatchBlendOverlap;
+        var colorSource = SelectedUncropColorSource;
+        var customColor = colorSource == UncropColorSource.CustomColor
+            ? new Scalar(UncropCustomSolidColor.B, UncropCustomSolidColor.G, UncropCustomSolidColor.R)
+            : (Scalar?)null;
+
+        _uncropCts?.Dispose();
+        _uncropCts = new CancellationTokenSource();
+        var ct = _uncropCts.Token;
+
+        try
+        {
+            IsBusy = true;
+            CancelUncropCommand.NotifyCanExecuteChanged();
+            StatusMessage = "Applying uncrop expansion...";
+
+            using var filledBgr = await Task.Run(() => mode switch
+            {
+                UncropFillMode.Mirror => _uncropFillService.FillMirror(sourceBgr, padding, mirrorType, mirrorBlur, mirrorFade, ct),
+                UncropFillMode.Inpaint => _uncropFillService.FillInpaint(sourceBgr, padding, inpaintMethod, inpaintRadius, blendMargin, inpaintPreFill, ct),
+                UncropFillMode.SolidColor => _uncropFillService.FillSolidColor(sourceBgr, padding, blurred, customColor, blurRadius, ct),
+                UncropFillMode.Replicate => _uncropFillService.FillReplicate(sourceBgr, padding, replicateSmooth, ct),
+                UncropFillMode.Wrap => _uncropFillService.FillWrap(sourceBgr, padding, ct),
+                UncropFillMode.ZoomBlur => _uncropFillService.FillZoomBlur(sourceBgr, padding, zoomBlurRadius, zoomScale, blendMargin, ct),
+                UncropFillMode.EdgeGradient => _uncropFillService.FillEdgeGradient(sourceBgr, padding, gradientMode, customColor, gradientNoise, ct),
+                UncropFillMode.PatchSynthesis => _uncropFillService.FillPatchSynthesis(sourceBgr, padding, patchSize, patchOverlap, blendMargin, ct),
+                _ => throw new InvalidOperationException($"Fill mode {mode} is not available.")
+            }, ct);
+
+            // Create new LoadedImage from the filled result
+            var newLoadedImage = new LoadedImage(_loadedImage.FilePath, filledBgr.Clone());
+            _loadedImage?.Dispose();
+            _preview?.Dispose();
+            _loadedImage = newLoadedImage;
+
+            var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
+            _preview = preview;
+            PreviewBitmap = preview.Bgr.ToBitmapSource();
+
+            // Set as new working image
+            DisposeWorkingResult();
+            _workingBgr = _loadedImage.FullBgr.Clone();
+            _workingAlpha = new Mat(_loadedImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+            _workingResultIsLoadedCutout = false;
+            _workingResultHandEdited = true;
+
+            _editHistory.Clear();
+            RefreshUndoRedoState();
+            RefreshResultBitmapFromWorking();
+
+            UncropPadding = CanvasPadding.Zero;
+            SelectedUncropPreset = UncropAspectPresets.Free;
+            IsDirty = true;
+            StatusMessage = $"Applied {mode} uncrop ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height}).";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Uncrop operation cancelled.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Uncrop failed: {ex.Message}";
+            _log.Error("Uncrop failed", ex);
+        }
+        finally
+        {
+            _uncropCts?.Dispose();
+            _uncropCts = null;
+            IsBusy = false;
+            CancelUncropCommand.NotifyCanExecuteChanged();
+        }
+    }
+
     public void Dispose()
     {
+        _uncropCts?.Cancel();
+        _uncropCts?.Dispose();
         _loadedImage?.Dispose();
         _preview?.Dispose();
         _lastPreviewResult?.Dispose();

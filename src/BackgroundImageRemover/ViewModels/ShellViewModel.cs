@@ -63,45 +63,17 @@ public partial class ShellViewModel : ObservableObject
         await OpenInNewTabAsync(path);
     }
 
-    /// <summary>Prompts the user to choose between Background Remover and Uncrop.</summary>
+    /// <summary>Creates a new editor document tab, opening an image file directly.</summary>
     [RelayCommand]
     private async Task NewProjectAsync()
     {
-        var (type, openImageImmediately) = _dialogs.ShowNewProjectDialog();
-        if (type is null)
+        var imagePath = _dialogs.ShowOpenImageDialog();
+        if (imagePath is null)
         {
             return;
         }
 
-        string? imagePath = null;
-        if (openImageImmediately)
-        {
-            imagePath = _dialogs.ShowOpenImageDialog();
-        }
-
-        if (type == Models.NewProjectType.Uncrop)
-        {
-            var uncropDoc = _uncropFactory();
-            Documents.Add(uncropDoc);
-            SelectedDocument = uncropDoc;
-            if (imagePath is not null)
-            {
-                await uncropDoc.LoadAsync(imagePath);
-                RefreshRecentFiles();
-            }
-        }
-        else
-        {
-            var document = _documentFactory();
-            Documents.Add(document);
-            SelectedDocument = document;
-            if (imagePath is not null)
-            {
-                await document.LoadAsync(imagePath);
-                RefreshRecentFiles();
-                RefreshRecentProjects();
-            }
-        }
+        await OpenInNewTabAsync(imagePath);
     }
 
     [RelayCommand]

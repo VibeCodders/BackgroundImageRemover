@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -20,20 +21,7 @@ public sealed class EditHistory : IDisposable
     public void Push(Mat state)
     {
         _undo.Push(state.Clone());
-        while (_undo.Count > MaxDepth)
-        {
-            // Drop the oldest entry; Stack doesn't support removing from the bottom directly,
-            // so rebuild via a temporary array (small, bounded, infrequent).
-            // Stack.ToArray() returns elements from top (newest) to bottom (oldest),
-            // so items[0] is newest and items[^1] is oldest.
-            var items = _undo.ToArray();
-            _undo.Clear();
-            for (int i = MaxDepth - 1; i >= 0; i--)
-            {
-                _undo.Push(items[i]);
-            }
-            items[^1].Dispose();
-        }
+        _undo.TrimStack(MaxDepth, s => s.Dispose());
 
         foreach (var redoState in _redo)
         {

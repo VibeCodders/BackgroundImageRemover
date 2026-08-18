@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Batch;
 using BackgroundImageRemover.Services.Compositing;
@@ -980,14 +981,11 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         }
 
         _scribbleUndo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
-        while (_scribbleUndo.Count > MaxScribbleHistoryDepth)
+        _scribbleUndo.TrimStack(MaxScribbleHistoryDepth, drop =>
         {
-            var items = _scribbleUndo.ToArray();
-            _scribbleUndo.Clear();
-            for (int i = MaxScribbleHistoryDepth - 1; i >= 0; i--) _scribbleUndo.Push(items[i]);
-            items[^1].Fg.Dispose();
-            items[^1].Bg.Dispose();
-        }
+            drop.Fg.Dispose();
+            drop.Bg.Dispose();
+        });
 
         foreach (var (fg, bg) in _scribbleRedo) { fg.Dispose(); bg.Dispose(); }
         _scribbleRedo.Clear();

@@ -355,6 +355,7 @@ public partial class ImagePreviewControl : UserControl
         if (Mode is InteractionMode.ScribbleForeground or InteractionMode.ScribbleBackground)
         {
             _scribbleUndoVisuals.Push(_activeStrokeVisual);
+            _scribbleUndoVisuals.TrimStack(20, line => OverlayCanvas.Children.Remove(line));
             _scribbleRedoVisuals.Clear();
         }
 

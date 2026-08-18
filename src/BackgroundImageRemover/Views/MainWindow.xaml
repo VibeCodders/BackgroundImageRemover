@@ -15,8 +15,8 @@
         <KeyBinding Key="V" Modifiers="Control" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" />
         <KeyBinding Key="N" Modifiers="Control" Command="{Binding NewProjectCommand}" />
         <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenProjectCommand}" />
-        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SelectedDocument.SaveProjectCommand}" />
-        <KeyBinding Key="S" Modifiers="Control+Shift" Command="{Binding SelectedDocument.SaveProjectAsCommand}" />
+        <KeyBinding Key="Return" Command="{Binding SelectedDocument.ApplyCommand}" />
+        <KeyBinding Key="Escape" Command="{Binding SelectedDocument.CancelCommand}" />
     </Window.InputBindings>
 
     <Window.Resources>
@@ -25,6 +25,18 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:UncropViewModel}">
             <views:UncropView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UncropToolSessionViewModel}">
+            <views:UncropToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BackgroundRemoverToolSessionViewModel}">
+            <views:BackgroundRemoverToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RetouchToolSessionViewModel}">
+            <views:RetouchToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AdjustmentsToolSessionViewModel}">
+            <views:AdjustmentsToolSessionView />
         </DataTemplate>
     </Window.Resources>
 

@@ -82,6 +82,84 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab
     public OnnxStrategyViewModel Onnx { get; } = new();
     public SamStrategyViewModel Sam { get; } = new();
 
+    private ShellViewModel? _shell;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasActiveToolSession))]
+    private IToolSessionTab? _activeToolSession;
+
+    public bool HasActiveToolSession => ActiveToolSession is not null;
+
+    public void SetShell(ShellViewModel shell) => _shell = shell;
+
+    /// <summary>
+    /// Opens the specified tool in a dedicated modal tab.
+    /// </summary>
+    [RelayCommand]
+    public void OpenToolTab(EditorTool tool)
+    {
+        if (!IsImageLoaded || _shell is null) return;
+        _shell.OpenToolSession(this, tool);
+    }
+
+    /// <summary>
+    /// Creates a self-contained LoadedImage snapshot of the current state of this document
+    /// (the working result if available, or the source image).
+    /// </summary>
+    public LoadedImage CreateCurrentStateSnapshot()
+    {
+        if (_workingBgr is not null && _workingAlpha is not null)
+        {
+            return new LoadedImage(_loadedImage?.FilePath ?? "Image", _workingBgr.Clone(), _workingAlpha.Clone());
+        }
+        if (_loadedImage is not null)
+        {
+            return _loadedImage.Clone();
+        }
+        throw new InvalidOperationException("No image is currently loaded.");
+    }
+
+    /// <summary>
+    /// Applies the result returned by a dedicated tool tab back into this document,
+    /// recording it into the Undo history.
+    /// </summary>
+    public void ApplyToolResult(Mat newBgr, Mat newAlpha, string operationName = "Edit")
+    {
+        if (_loadedImage is null) return;
+
+        // If dimensions changed (e.g. from Uncrop), reinitialize loaded image size
+        if (_loadedImage.FullBgr.Size() != newBgr.Size())
+        {
+            var newLoaded = new LoadedImage(_loadedImage.FilePath, newBgr.Clone(), newAlpha.Clone());
+            _loadedImage.Dispose();
+            _preview?.Dispose();
+            _loadedImage = newLoaded;
+
+            var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
+            _preview = preview;
+            PreviewBitmap = BuildPreviewBitmapWithAlpha(preview, newAlpha);
+        }
+
+        // Push previous alpha state to undo stack before replacing
+        if (_workingAlpha is not null)
+        {
+            _editHistory.Push(_workingAlpha);
+        }
+
+        _workingBgr?.Dispose();
+        _workingAlpha?.Dispose();
+        _workingBgr = newBgr;
+        _workingAlpha = newAlpha;
+        _workingResultIsLoadedCutout = false;
+        _workingResultHandEdited = true;
+
+        IsDirty = true;
+        IsCutout = BackgroundCompositingService.HasMeaningfulTransparency(_workingAlpha);
+        RefreshUndoRedoState();
+        RefreshResultBitmapFromWorking();
+        StatusMessage = $"Applied {operationName}.";
+    }
+
     public IReadOnlyList<UncropAspectPreset> AspectPresets { get; } = UncropAspectPresets.All;
     public IReadOnlyList<UncropInpaintMethod> InpaintMethods { get; } = Enum.GetValues<UncropInpaintMethod>();
     public IReadOnlyList<UncropMirrorType> MirrorTypes { get; } = Enum.GetValues<UncropMirrorType>();

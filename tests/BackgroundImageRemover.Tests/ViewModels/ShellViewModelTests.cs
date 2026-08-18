@@ -24,11 +24,35 @@ public class ShellViewModelTests
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => throw new NotImplementedException();
     }
 
-    private static ShellViewModel CreateShell(FakeSettingsService settings) =>
-        new(() => throw new NotImplementedException("Document factory not needed for this test"),
+    private static ShellViewModel CreateShell(FakeSettingsService settings, IDialogService? dialogs = null)
+    {
+        var log = new FakeFileLogService();
+        var modelCache = new FakeModelCacheService();
+        var onnxEngine = new BackgroundImageRemover.Services.Onnx.OnnxInferenceEngine(modelCache, log);
+        var samEngine = new BackgroundImageRemover.Services.Sam.SamInferenceEngine(modelCache);
+        var onnxStrategy = new BackgroundImageRemover.Services.Strategies.OnnxStrategy(onnxEngine);
+        var grabCutStrategy = new BackgroundImageRemover.Services.Strategies.GrabCutStrategy();
+        var samStrategy = new BackgroundImageRemover.Services.Strategies.SamStrategy(samEngine);
+        var uncropFillService = new FakeUncropFillService();
+        var imageLoader = new FakeImageLoaderService();
+        var imageExporter = new FakeImageExportService();
+        var downscaler = new FakeDownscaleService();
+
+        return new ShellViewModel(
+            () => throw new NotImplementedException("Document factory not needed for this test"),
             () => throw new NotImplementedException("Uncrop factory not needed for this test"),
-            new UnusedDialogService(),
-            settings);
+            dialogs ?? new UnusedDialogService(),
+            settings,
+            downscaler,
+            log,
+            Array.Empty<BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy>(),
+            onnxStrategy,
+            grabCutStrategy,
+            samStrategy,
+            uncropFillService,
+            imageLoader,
+            imageExporter);
+    }
 
     [Fact]
     public void Constructor_PopulatesRecentListsFromSettings()
@@ -104,16 +128,27 @@ public class ShellViewModelTests
             new BackgroundImageRemover.Services.Strategies.SamStrategy(new BackgroundImageRemover.Services.Sam.SamInferenceEngine(new FakeModelCacheService())),
             new FakeUncropFillService());
 
-        var shell = new ShellViewModel(
+        var shell = CreateShell(settings, fakeDialogs);
+        // Swap doc factory for this specific test
+        var customShell = new ShellViewModel(
             () => docVm,
             () => throw new InvalidOperationException("Should not create uncrop tab directly"),
             fakeDialogs,
-            settings);
+            settings,
+            new FakeDownscaleService(),
+            new FakeFileLogService(),
+            Array.Empty<BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy>(),
+            new BackgroundImageRemover.Services.Strategies.OnnxStrategy(new BackgroundImageRemover.Services.Onnx.OnnxInferenceEngine(new FakeModelCacheService(), new FakeFileLogService())),
+            new BackgroundImageRemover.Services.Strategies.GrabCutStrategy(),
+            new BackgroundImageRemover.Services.Strategies.SamStrategy(new BackgroundImageRemover.Services.Sam.SamInferenceEngine(new FakeModelCacheService())),
+            new FakeUncropFillService(),
+            new FakeImageLoaderService(),
+            new FakeImageExportService());
 
-        await shell.NewProjectCommand.ExecuteAsync(null);
+        await customShell.NewProjectCommand.ExecuteAsync(null);
 
-        Assert.Single(shell.Documents);
-        Assert.Same(docVm, shell.SelectedDocument);
+        Assert.Single(customShell.Documents);
+        Assert.Same(docVm, customShell.SelectedDocument);
     }
 
     private sealed class FakeImageDialogService : IDialogService

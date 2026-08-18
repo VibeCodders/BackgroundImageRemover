@@ -15,7 +15,7 @@
                 <x:Type TypeName="models:StrategyKind" />
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
-        <Style x:Key="ToolTabRadioButton" TargetType="RadioButton">
+        <Style x:Key="ToolTabActionButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="#FF333333" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -27,7 +27,7 @@
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
+                    <ControlTemplate TargetType="Button">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
@@ -36,13 +36,15 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#FFEAEAEA" />
-                                <Setter TargetName="border" Property="BorderBrush" Value="#FFD0D0D0" />
+                                <Setter TargetName="border" Property="Background" Value="#FFE0E7FF" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="#FF6366F1" />
+                                <Setter Property="Foreground" Value="#FF4338CA" />
                             </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#FFE6F2FB" />
-                                <Setter TargetName="border" Property="BorderBrush" Value="#FF0078D7" />
-                                <Setter Property="Foreground" Value="#FF0078D7" />
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FFC7D2FE" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -78,21 +80,31 @@
                     <Button Content="Batch..." Command="{Binding BatchCommand}" Padding="8,4" />
                 </StackPanel>
 
-                <!-- Tool Category Selector (Center/Right) -->
+                <!-- Tool Openers (Right) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <Border Background="#FFEAEAEA" CornerRadius="6" Padding="2">
                         <StackPanel Orientation="Horizontal">
-                            <RadioButton Content="✂  Background Remover" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
-                                         IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=RemoveBackground}" />
-                            <RadioButton Content="⤢  Uncrop / Expand" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
-                                         IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Uncrop}" />
-                            <RadioButton Content="🖌  Retouch &amp; Brush" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
-                                         IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Retouch}" />
-                            <RadioButton Content="✨  Adjustments" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
-                                         IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Adjustments}" />
+                            <Button Content="✂  Background Remover" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.RemoveBackground}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="⤢  Uncrop / Expand" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Uncrop}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="🖌  Retouch &amp; Brush" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Retouch}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="✨  Adjustments" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Adjustments}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Active Tool Session Modal Banner (when a tool tab is currently open for this doc) -->
+        <Border DockPanel.Dock="Top" Background="#FFF3E8FF" BorderBrush="#FFD8B4FE" BorderThickness="0,0,0,1" Padding="12,6"
+                Visibility="{Binding HasActiveToolSession, Converter={StaticResource BoolToVisibilityConverter}}">
+            <DockPanel>
+                <TextBlock Text="⚡ Modal Tool Session is currently active for this document." FontWeight="SemiBold" Foreground="#FF6B21A8" VerticalAlignment="Center" />
+                <Button Content="Return to Tool Tab →" Command="{Binding OpenToolTabCommand}" CommandParameter="{Binding ActiveTool}"
+                        HorizontalAlignment="Right" Padding="10,3" Background="#FF7E22CE" Foreground="White" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand" />
             </DockPanel>
         </Border>
 

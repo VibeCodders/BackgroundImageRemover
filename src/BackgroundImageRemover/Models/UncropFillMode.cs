@@ -6,6 +6,8 @@ public enum UncropFillMode
     Mirror,
     Inpaint,
     SolidColor,
+    Replicate,
+    Wrap,
 
     /// <summary>AI outpainting (LaMa). Not yet wired up — no model source has been chosen.</summary>
     AiOutpaint

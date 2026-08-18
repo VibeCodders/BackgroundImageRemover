@@ -6,7 +6,7 @@
         xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
         mc:Ignorable="d"
         Title="Uncrop — Background Image Remover"
-        Height="760" Width="1200">
+        Height="800" Width="1200">
     <Window.InputBindings>
         <KeyBinding Key="Z" Modifiers="Control" Command="{Binding UndoCommand}" />
         <KeyBinding Key="Y" Modifiers="Control" Command="{Binding RedoCommand}" />
@@ -23,7 +23,7 @@
             </StatusBarItem>
         </StatusBar>
 
-        <Grid DockPanel.Dock="Left" Width="280" Margin="12">
+        <Grid DockPanel.Dock="Left" Width="290" Margin="12">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -68,22 +68,94 @@
                     </Grid>
 
                     <TextBlock Text="Fill mode" FontWeight="Bold" Margin="0,0,0,4" />
+
+                    <!-- Mirror Mode -->
                     <RadioButton Content="Mirror" GroupName="FillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Mirror}">
+                        <TextBlock Text="Mirror reflection type:" FontSize="11" Foreground="#FF666666" Margin="0,0,0,2" />
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton Content="Reflect 101" GroupName="MirrorType" Margin="0,0,8,0"
+                                         IsChecked="{Binding SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect101}" />
+                            <RadioButton Content="Reflect" GroupName="MirrorType"
+                                         IsChecked="{Binding SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Inpaint Mode -->
                     <RadioButton Content="Content-aware inpaint" GroupName="FillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Inpaint}" />
-                    <StackPanel Orientation="Horizontal" Margin="16,0,0,4"
+                    <StackPanel Margin="16,0,0,8"
                                 Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Inpaint}">
-                        <RadioButton Content="Telea" GroupName="InpaintMethod" Margin="0,0,8,0"
-                                     IsChecked="{Binding SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Telea}" />
-                        <RadioButton Content="Navier-Stokes" GroupName="InpaintMethod"
-                                     IsChecked="{Binding SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NavierStokes}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <RadioButton Content="Telea" GroupName="InpaintMethod" Margin="0,0,8,0"
+                                         IsChecked="{Binding SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Telea}" />
+                            <RadioButton Content="Navier-Stokes" GroupName="InpaintMethod"
+                                         IsChecked="{Binding SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NavierStokes}" />
+                        </StackPanel>
+
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding InpaintRadius, StringFormat={}{0:F0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="1" Maximum="50" Value="{Binding InpaintRadius}" SmallChange="1" LargeChange="5" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                        </DockPanel>
+
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Blend margin:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="0" Maximum="30" Value="{Binding BlendMargin}" SmallChange="1" LargeChange="5" TickFrequency="2" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                        </DockPanel>
                     </StackPanel>
+
+                    <!-- Solid / Gradient Color Mode -->
                     <RadioButton Content="Solid color" GroupName="FillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
-                    <CheckBox Content="Blurred gradient instead of flat color" Margin="16,0,0,4"
-                              IsChecked="{Binding BlurredColorFill}"
-                              Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}" />
+                    <StackPanel Margin="16,0,0,8"
+                                Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <RadioButton Content="Edge average" GroupName="ColorSource" Margin="0,0,8,0"
+                                         IsChecked="{Binding SelectedColorSource, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeAverage}" />
+                            <RadioButton Content="Custom color" GroupName="ColorSource"
+                                         IsChecked="{Binding SelectedColorSource, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CustomColor}" />
+                        </StackPanel>
+
+                        <!-- Custom color picker trigger -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6"
+                                    Visibility="{Binding SelectedColorSource, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=CustomColor}">
+                            <Button x:Name="UncropColorPickerButton" Padding="4,2" Click="UncropColorPickerButton_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <Rectangle Width="18" Height="18" Fill="{Binding CustomSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="#FF888888" Margin="0,0,6,0" />
+                                    <TextBlock Text="Choose color..." VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Popup IsOpen="{Binding IsColorPickerOpen}" PlacementTarget="{Binding ElementName=UncropColorPickerButton}"
+                                   StaysOpen="False" AllowsTransparency="True">
+                                <Border Background="#FF2D2D30" BorderBrush="#FF3F3F46" BorderThickness="1" Padding="8" CornerRadius="4">
+                                    <controls:SimpleColorPickerControl SelectedColor="{Binding CustomSolidColor, Mode=TwoWay}" />
+                                </Border>
+                            </Popup>
+                        </StackPanel>
+
+                        <CheckBox Content="Blurred gradient fill" Margin="0,0,0,4"
+                                  IsChecked="{Binding BlurredColorFill}" />
+
+                        <DockPanel Margin="0,0,0,4"
+                                   Visibility="{Binding BlurredColorFill, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="{Binding BlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="0" Maximum="101" Value="{Binding BlurRadius}" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </StackPanel>
+
+                    <!-- Replicate / Clamp Mode -->
+                    <RadioButton Content="Edge stretch (Replicate)" GroupName="FillMode" Margin="0,0,0,4"
+                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
+
+                    <!-- Wrap / Tile Mode -->
+                    <RadioButton Content="Tile / Pattern (Wrap)" GroupName="FillMode" Margin="0,0,0,4"
+                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Wrap}" />
+
+                    <!-- AI Outpaint Mode -->
                     <RadioButton Content="AI outpainting (coming soon)" GroupName="FillMode" Margin="0,0,0,4"
                                  IsEnabled="False"
                                  ToolTip="Not available yet: no AI outpainting model is configured in this build."

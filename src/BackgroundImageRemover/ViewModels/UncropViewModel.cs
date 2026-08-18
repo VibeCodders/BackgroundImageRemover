@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
+using WpfColor = System.Windows.Media.Color;
 
 namespace BackgroundImageRemover.ViewModels;
 
@@ -32,6 +33,8 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
 
     public IReadOnlyList<UncropAspectPreset> AspectPresets { get; } = UncropAspectPresets.All;
     public IReadOnlyList<UncropInpaintMethod> InpaintMethods { get; } = Enum.GetValues<UncropInpaintMethod>();
+    public IReadOnlyList<UncropMirrorType> MirrorTypes { get; } = Enum.GetValues<UncropMirrorType>();
+    public IReadOnlyList<UncropColorSource> ColorSources { get; } = Enum.GetValues<UncropColorSource>();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
@@ -85,10 +88,31 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
     private UncropFillMode _selectedFillMode = UncropFillMode.Mirror;
 
     [ObservableProperty]
+    private UncropMirrorType _selectedMirrorType = UncropMirrorType.Reflect101;
+
+    [ObservableProperty]
     private UncropInpaintMethod _selectedInpaintMethod = UncropInpaintMethod.Telea;
 
     [ObservableProperty]
+    private double _inpaintRadius = 5.0;
+
+    [ObservableProperty]
+    private int _blendMargin = 0;
+
+    [ObservableProperty]
+    private UncropColorSource _selectedColorSource = UncropColorSource.EdgeAverage;
+
+    [ObservableProperty]
+    private WpfColor _customSolidColor = WpfColor.FromRgb(255, 255, 255);
+
+    [ObservableProperty]
+    private bool _isColorPickerOpen;
+
+    [ObservableProperty]
     private bool _blurredColorFill;
+
+    [ObservableProperty]
+    private int _blurRadius = 0;
 
     [ObservableProperty]
     private BitmapSource? _previewResult;
@@ -269,8 +293,16 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
         var sourceBgr = _sourceImage.FullBgr;
         var padding = Padding;
         var mode = SelectedFillMode;
+        var mirrorType = SelectedMirrorType;
         var inpaintMethod = SelectedInpaintMethod;
+        var inpaintRadius = InpaintRadius;
+        var blendMargin = BlendMargin;
         var blurred = BlurredColorFill;
+        var blurRadius = BlurRadius;
+        var colorSource = SelectedColorSource;
+        var customColor = colorSource == UncropColorSource.CustomColor
+            ? new Scalar(CustomSolidColor.B, CustomSolidColor.G, CustomSolidColor.R)
+            : (Scalar?)null;
 
         try
         {
@@ -279,9 +311,11 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
 
             using var filledBgr = await Task.Run(() => mode switch
             {
-                UncropFillMode.Mirror => _fillService.FillMirror(sourceBgr, padding),
-                UncropFillMode.Inpaint => _fillService.FillInpaint(sourceBgr, padding, inpaintMethod),
-                UncropFillMode.SolidColor => _fillService.FillSolidColor(sourceBgr, padding, blurred),
+                UncropFillMode.Mirror => _fillService.FillMirror(sourceBgr, padding, mirrorType),
+                UncropFillMode.Inpaint => _fillService.FillInpaint(sourceBgr, padding, inpaintMethod, inpaintRadius, blendMargin),
+                UncropFillMode.SolidColor => _fillService.FillSolidColor(sourceBgr, padding, blurred, customColor, blurRadius),
+                UncropFillMode.Replicate => _fillService.FillReplicate(sourceBgr, padding),
+                UncropFillMode.Wrap => _fillService.FillWrap(sourceBgr, padding),
                 _ => throw new InvalidOperationException($"Fill mode {mode} is not available yet.")
             });
 

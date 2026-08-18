@@ -26,4 +26,12 @@ public partial class UncropView : UserControl
             await ViewModel.LoadAsync(files[0]);
         }
     }
+
+    private void UncropColorPickerButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is not null)
+        {
+            ViewModel.IsColorPickerOpen = !ViewModel.IsColorPickerOpen;
+        }
+    }
 }

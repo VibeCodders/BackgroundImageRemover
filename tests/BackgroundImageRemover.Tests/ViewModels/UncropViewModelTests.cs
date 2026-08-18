@@ -18,13 +18,19 @@ public class UncropViewModelTests
             return new Mat(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
         }
 
-        public Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method)
+        public Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0)
             => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
 
-        public Mat FillMirror(Mat sourceBgr, CanvasPadding padding)
+        public Mat FillMirror(Mat sourceBgr, CanvasPadding padding, UncropMirrorType mirrorType = UncropMirrorType.Reflect101)
             => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
 
-        public Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred)
+        public Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred, Scalar? customColor = null, int blurRadius = 0)
+            => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
+
+        public Mat FillReplicate(Mat sourceBgr, CanvasPadding padding)
+            => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
+
+        public Mat FillWrap(Mat sourceBgr, CanvasPadding padding)
             => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
     }
 
@@ -101,5 +107,30 @@ public class UncropViewModelTests
         vm.Padding = new CanvasPadding(20, 20, 20, 20);
         await vm.ApplyFillCommand.ExecuteAsync(null);
         Assert.True(vm.CanUndo);
+    }
+
+    [Theory]
+    [InlineData(UncropFillMode.Mirror)]
+    [InlineData(UncropFillMode.Inpaint)]
+    [InlineData(UncropFillMode.SolidColor)]
+    [InlineData(UncropFillMode.Replicate)]
+    [InlineData(UncropFillMode.Wrap)]
+    public async Task ApplyFillAsync_SupportsAllFillModes(UncropFillMode fillMode)
+    {
+        using var vm = CreateViewModel();
+        await vm.LoadAsync("test_photo.jpg");
+        vm.Padding = new CanvasPadding(15, 15, 15, 15);
+        vm.SelectedFillMode = fillMode;
+        vm.InpaintRadius = 10;
+        vm.BlendMargin = 4;
+        vm.SelectedMirrorType = UncropMirrorType.Reflect;
+        vm.SelectedColorSource = UncropColorSource.CustomColor;
+        vm.BlurRadius = 21;
+
+        Assert.True(vm.ApplyFillCommand.CanExecute(null));
+        await vm.ApplyFillCommand.ExecuteAsync(null);
+
+        Assert.True(vm.IsDirty);
+        Assert.NotNull(vm.PreviewResult);
     }
 }

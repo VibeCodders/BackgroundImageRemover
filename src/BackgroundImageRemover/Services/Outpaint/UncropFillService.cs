@@ -21,30 +21,39 @@ public sealed class UncropFillService : IUncropFillService
         return expanded;
     }
 
-    public Mat FillMirror(Mat sourceBgr, CanvasPadding padding)
+    public Mat FillMirror(Mat sourceBgr, CanvasPadding padding, UncropMirrorType mirrorType = UncropMirrorType.Reflect101)
     {
         var result = new Mat();
-        Cv2.CopyMakeBorder(sourceBgr, result, padding.Top, padding.Bottom, padding.Left, padding.Right,
-            BorderTypes.Reflect101);
+        var borderType = mirrorType == UncropMirrorType.Reflect ? BorderTypes.Reflect : BorderTypes.Reflect101;
+        Cv2.CopyMakeBorder(sourceBgr, result, padding.Top, padding.Bottom, padding.Left, padding.Right, borderType);
         return result;
     }
 
-    public Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method)
+    public Mat FillInpaint(Mat sourceBgr, CanvasPadding padding, UncropInpaintMethod method, double inpaintRadius = 5, int blendMargin = 0)
     {
         using var expanded = ExpandCanvas(sourceBgr, padding, out var mask);
         using (mask)
         {
             var result = new Mat();
             var cvMethod = method == UncropInpaintMethod.Telea ? InpaintMethod.Telea : InpaintMethod.NS;
-            // A large inpaintRadius on a wide, freshly-added border can look smeared since
-            // Cv2.Inpaint is designed for filling thin damaged regions, not generating new
-            // content -- an acceptable classic-algorithm limitation for this fill mode.
-            Cv2.Inpaint(expanded, mask, result, inpaintRadius: 5, cvMethod);
+            double radius = Math.Max(1.0, Math.Min(100.0, inpaintRadius));
+            Cv2.Inpaint(expanded, mask, result, inpaintRadius: radius, cvMethod);
+
+            if (blendMargin <= 0)
+            {
+                using var interiorRoi = new Mat(result, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
+                sourceBgr.CopyTo(interiorRoi);
+            }
+            else
+            {
+                BlendInteriorWithFeather(result, sourceBgr, padding, blendMargin);
+            }
+
             return result;
         }
     }
 
-    public Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred)
+    public Mat FillSolidColor(Mat sourceBgr, CanvasPadding padding, bool blurred, Scalar? customColor = null, int blurRadius = 0)
     {
         if (padding.IsZero)
         {
@@ -53,29 +62,50 @@ public sealed class UncropFillService : IUncropFillService
 
         if (blurred)
         {
-            return FillSolidColorBlurred(sourceBgr, padding);
+            return FillSolidColorBlurred(sourceBgr, padding, blurRadius);
         }
 
         var expanded = new Mat();
         Cv2.CopyMakeBorder(sourceBgr, expanded, padding.Top, padding.Bottom, padding.Left, padding.Right,
             BorderTypes.Constant, Scalar.All(0));
-        var edgeColor = SampleEdgeAverageColor(sourceBgr);
-        FillBorderRegions(expanded, padding, sourceBgr.Size(), edgeColor);
+        var color = customColor ?? SampleEdgeAverageColor(sourceBgr);
+        FillBorderRegions(expanded, padding, sourceBgr.Size(), color);
         return expanded;
     }
 
-    private static Mat FillSolidColorBlurred(Mat sourceBgr, CanvasPadding padding)
+    public Mat FillReplicate(Mat sourceBgr, CanvasPadding padding)
     {
-        // Stretch the outermost edge pixels outward (so the fill continues the image's local
-        // color/texture instead of a flat tone), then blur that stretched border into a soft
-        // gradient. The blur is confined to the border by restoring the original, unblurred
-        // pixels back into the interior afterwards.
+        var result = new Mat();
+        Cv2.CopyMakeBorder(sourceBgr, result, padding.Top, padding.Bottom, padding.Left, padding.Right,
+            BorderTypes.Replicate);
+        return result;
+    }
+
+    public Mat FillWrap(Mat sourceBgr, CanvasPadding padding)
+    {
+        var result = new Mat();
+        Cv2.CopyMakeBorder(sourceBgr, result, padding.Top, padding.Bottom, padding.Left, padding.Right,
+            BorderTypes.Wrap);
+        return result;
+    }
+
+    private static Mat FillSolidColorBlurred(Mat sourceBgr, CanvasPadding padding, int blurRadius)
+    {
         using var replicated = new Mat();
         Cv2.CopyMakeBorder(sourceBgr, replicated, padding.Top, padding.Bottom, padding.Left, padding.Right,
             BorderTypes.Replicate);
 
-        int maxPad = Math.Max(Math.Max(padding.Left, padding.Right), Math.Max(padding.Top, padding.Bottom));
-        int kernel = Math.Max(3, (maxPad / 2) | 1); // odd kernel size, scaled with the padding
+        int kernel;
+        if (blurRadius > 0)
+        {
+            kernel = blurRadius % 2 == 0 ? blurRadius + 1 : blurRadius;
+            kernel = Math.Max(3, kernel);
+        }
+        else
+        {
+            int maxPad = Math.Max(Math.Max(padding.Left, padding.Right), Math.Max(padding.Top, padding.Bottom));
+            kernel = Math.Max(3, (maxPad / 2) | 1); // odd kernel size, scaled with the padding
+        }
 
         var result = new Mat();
         Cv2.GaussianBlur(replicated, result, new Size(kernel, kernel), 0);
@@ -116,5 +146,59 @@ public sealed class UncropFillService : IUncropFillService
             using var roi = new Mat(expanded, new Rect(padding.Left + sourceSize.Width, padding.Top, padding.Right, sourceSize.Height));
             roi.SetTo(color);
         }
+    }
+
+    private static void BlendInteriorWithFeather(Mat resultCanvas, Mat sourceBgr, CanvasPadding padding, int featherPx)
+    {
+        int w = sourceBgr.Width;
+        int h = sourceBgr.Height;
+        featherPx = Math.Max(1, Math.Min(featherPx, Math.Min(w, h) / 4));
+
+        using var alphaMask = new Mat(h, w, MatType.CV_32FC1, Scalar.All(1.0));
+        // Soft gradient around outer border of interior
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                int distLeft = x;
+                int distRight = w - 1 - x;
+                int distTop = y;
+                int distBottom = h - 1 - y;
+
+                int minDist = int.MaxValue;
+                if (padding.Left > 0) minDist = Math.Min(minDist, distLeft);
+                if (padding.Right > 0) minDist = Math.Min(minDist, distRight);
+                if (padding.Top > 0) minDist = Math.Min(minDist, distTop);
+                if (padding.Bottom > 0) minDist = Math.Min(minDist, distBottom);
+
+                if (minDist < featherPx)
+                {
+                    float factor = (float)minDist / featherPx;
+                    alphaMask.Set(y, x, factor);
+                }
+            }
+        }
+
+        using var interiorRoi = new Mat(resultCanvas, new Rect(padding.Left, padding.Top, w, h));
+        using var source32F = new Mat();
+        using var interior32F = new Mat();
+        sourceBgr.ConvertTo(source32F, MatType.CV_32FC3);
+        interiorRoi.ConvertTo(interior32F, MatType.CV_32FC3);
+
+        using var alpha3 = new Mat();
+        Cv2.CvtColor(alphaMask, alpha3, ColorConversionCodes.GRAY2BGR);
+
+        using var ones3 = new Mat(alpha3.Size(), MatType.CV_32FC3, Scalar.All(1.0));
+        using var invAlpha = new Mat();
+        Cv2.Subtract(ones3, alpha3, invAlpha);
+
+        using var blendedSource = new Mat();
+        using var blendedInterior = new Mat();
+        Cv2.Multiply(source32F, alpha3, blendedSource);
+        Cv2.Multiply(interior32F, invAlpha, blendedInterior);
+
+        using var blendedTotal = new Mat();
+        Cv2.Add(blendedSource, blendedInterior, blendedTotal);
+        blendedTotal.ConvertTo(interiorRoi, MatType.CV_8UC3);
     }
 }

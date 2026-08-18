@@ -26,7 +26,7 @@ jobs:
       - name: Test
         run: dotnet test tests/BackgroundImageRemover.Tests/BackgroundImageRemover.Tests.csproj -c Release --no-restore
 
-      - name: Publish single-file executable
+      - name: Publish self-contained single-file executable
         run: >
           dotnet publish src/BackgroundImageRemover/BackgroundImageRemover.csproj
           -c Release
@@ -34,7 +34,28 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true
-          -o publish
+          -o publish/self-contained
+
+      - name: Publish framework-dependent single-file executable
+        run: >
+          dotnet publish src/BackgroundImageRemover/BackgroundImageRemover.csproj
+          -c Release
+          -r win-x64
+          --self-contained false
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/framework-dependent
+
+      - name: Rename executables
+        shell: pwsh
+        run: |
+          Rename-Item `
+            "publish/self-contained/BackgroundImageRemover.exe" `
+            "publish/BackgroundImageRemover-win-x64.exe"
+
+          Rename-Item `
+            "publish/framework-dependent/BackgroundImageRemover.exe" `
+            "publish/BackgroundImageRemover-win-x64-framework-dependent.exe"
 
       - name: Set release tag
         id: tag
@@ -47,6 +68,7 @@ jobs:
         shell: bash
         run: |
           gh release create "${{ steps.tag.outputs.tag }}" \
-            "publish/BackgroundImageRemover.exe" \
+            publish/BackgroundImageRemover-win-x64.exe \
+            publish/BackgroundImageRemover-win-x64-framework-dependent.exe \
             --title "Build ${{ steps.tag.outputs.tag }}" \
             --notes "Automated build from commit ${{ github.sha }}"

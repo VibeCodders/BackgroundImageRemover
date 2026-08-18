@@ -273,6 +273,13 @@
                         </StackPanel>
                     </StackPanel>
 
+                    <DockPanel Margin="0,8,0,0">
+                        <TextBlock Text="JPEG quality" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding ParentDocument.ExportJpegQuality, StringFormat='{}{0:0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="1" Maximum="100" Value="{Binding ParentDocument.ExportJpegQuality}" TickFrequency="1" IsSnapToTickEnabled="True"
+                            ToolTip="Quality used when exporting JPEG (Export JPG...)" />
+
                     <!-- Drop shadow (applies to every background mode) -->
                     <CheckBox Content="Drop shadow" IsChecked="{Binding ParentDocument.ExportDropShadowEnabled}" Margin="0,8,0,4" />
                     <StackPanel Visibility="{Binding ParentDocument.ExportDropShadowEnabled, Converter={StaticResource BoolToVisibilityConverter}}" Margin="16,0,0,8">

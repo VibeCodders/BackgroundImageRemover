@@ -78,14 +78,46 @@ public class DocumentViewModelAdjustmentsTests
         Assert.False(doc.UndoCommand.CanExecute(null));
     }
 
-    private static DocumentViewModel CreateDocument(IImageLoaderService loader)
+    [Fact]
+    public async Task ExportJpg_UsesConfiguredJpegQuality()
+    {
+        var exporter = new RecordingImageExportService();
+        var doc = CreateDocument(new AlphaImageLoader(), exporter, new FakeDialogServiceWithJpgPath("out.jpg"));
+        await doc.LoadImageAsync("cutout.png");
+        Assert.True(doc.HasWorkingResult); // the loaded cutout is adopted as the working result
+
+        doc.ExportBackgroundMode = ExportBackgroundMode.Transparent;
+        doc.ExportJpegQuality = 60;
+        await doc.ExportJpgCommand.ExecuteAsync(null);
+
+        Assert.NotNull(exporter.LastJpgPath);
+        Assert.Equal(60, exporter.LastJpgQuality);
+    }
+
+    [Fact]
+    public async Task ExportJpg_DefaultsToHighQuality()
+    {
+        var exporter = new RecordingImageExportService();
+        var doc = CreateDocument(new AlphaImageLoader(), exporter, new FakeDialogServiceWithJpgPath("out.jpg"));
+        await doc.LoadImageAsync("cutout.png");
+
+        await doc.ExportJpgCommand.ExecuteAsync(null);
+
+        Assert.NotNull(exporter.LastJpgPath);
+        Assert.Equal(95, exporter.LastJpgQuality);
+    }
+
+    private static DocumentViewModel CreateDocument(
+        IImageLoaderService loader,
+        IImageExportService? exporter = null,
+        IDialogService? dialogs = null)
     {
         var settings = new FakeSettingsService();
         return new DocumentViewModel(
             loader,
-            new FakeImageExportService(),
+            exporter ?? new FakeImageExportService(),
             new FakeDownscaleService(),
-            new FakeDialogService(),
+            dialogs ?? new FakeDialogService(),
             new FakeBatchProcessingService(),
             settings,
             new FakeProjectService(),
@@ -95,6 +127,30 @@ public class DocumentViewModelAdjustmentsTests
             new GrabCutStrategy(),
             new SamStrategy(new SamInferenceEngine(new FakeModelCacheService())),
             new FakeUncropFillService());
+    }
+
+    private sealed class RecordingImageExportService : IImageExportService
+    {
+        public string? LastJpgPath { get; private set; }
+        public int LastJpgQuality { get; private set; }
+
+        public Task ExportPngAsync(Mat imageBgra, string destinationPath, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task ExportJpgAsync(Mat bgr, string destinationPath, int quality = 95, CancellationToken ct = default)
+        {
+            LastJpgPath = destinationPath;
+            LastJpgQuality = quality;
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FakeDialogServiceWithJpgPath : FakeDialogService
+    {
+        private readonly string? _jpgPath;
+        public FakeDialogServiceWithJpgPath(string? jpgPath) => _jpgPath = jpgPath;
+
+        public override string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => _jpgPath;
     }
 
     private sealed class AlphaImageLoader : IImageLoaderService
@@ -123,16 +179,16 @@ public class DocumentViewModelAdjustmentsTests
         public void ClearRecentProjects() { }
     }
 
-    private sealed class FakeDialogService : IDialogService
+    private class FakeDialogService : IDialogService
     {
-        public string? ShowOpenImageDialog() => null;
-        public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
-        public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
-        public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
-        public string? ShowOpenProjectDialog() => null;
-        public string? ShowSaveProjectDialog(string? suggestedFileName) => null;
-        public BatchExportOptions? ShowBatchOptionsDialog() => null;
-        public CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
+        public virtual string? ShowOpenImageDialog() => null;
+        public virtual string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
+        public virtual string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
+        public virtual string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
+        public virtual string? ShowOpenProjectDialog() => null;
+        public virtual string? ShowSaveProjectDialog(string? suggestedFileName) => null;
+        public virtual BatchExportOptions? ShowBatchOptionsDialog() => null;
+        public virtual CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
     }
 
     private sealed class FakeImageExportService : IImageExportService

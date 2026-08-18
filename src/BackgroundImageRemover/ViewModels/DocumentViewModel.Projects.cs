@@ -112,6 +112,7 @@ public partial class DocumentViewModel
             ExportShadowOffset = ExportShadowOffset,
             ExportShadowBlur = ExportShadowBlur,
             ExportShadowOpacity = ExportShadowOpacity,
+            ExportJpegQuality = ExportJpegQuality,
             BrushRadius = BrushRadius,
             BrushHardness = BrushHardness,
             BrushMode = BrushMode.ToString(),
@@ -169,6 +170,10 @@ public partial class DocumentViewModel
         ExportShadowOffset = p.ExportShadowOffset;
         ExportShadowBlur = p.ExportShadowBlur;
         ExportShadowOpacity = p.ExportShadowOpacity;
+        if (p.ExportJpegQuality is >= 1 and <= 100)
+        {
+            ExportJpegQuality = p.ExportJpegQuality;
+        }
 
         BrushRadius = p.BrushRadius;
         BrushHardness = p.BrushHardness;

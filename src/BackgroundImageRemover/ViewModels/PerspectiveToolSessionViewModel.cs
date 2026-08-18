@@ -120,8 +120,19 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
                 Math.Max(1, OutputWidth),
                 Math.Max(1, OutputHeight),
                 ToInterpolation(Method));
-            using var alpha = new Mat(corrected.Size(), MatType.CV_8UC1, new Scalar(255));
-            ResultBitmap = corrected.ToBitmapSource(alpha);
+            // The alpha channel must go through the same warp as the pixels, otherwise the
+            // preview (and the Apply below) would replace a cutout's transparency with an
+            // opaque rectangle.
+            using var correctedAlpha = PerspectiveService.Correct(
+                _workingAlpha,
+                new Point2f(TopLeftX, TopLeftY),
+                new Point2f(TopRightX, TopRightY),
+                new Point2f(BottomRightX, BottomRightY),
+                new Point2f(BottomLeftX, BottomLeftY),
+                Math.Max(1, OutputWidth),
+                Math.Max(1, OutputHeight),
+                ToInterpolation(Method));
+            ResultBitmap = corrected.ToBitmapSource(correctedAlpha);
             IsDirty = true;
         }
         catch (Exception ex)
@@ -132,7 +143,7 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
-        if (_sourceImage is not null)
+        if (_sourceImage is not null && _workingAlpha is not null)
         {
             var bgr = PerspectiveService.Correct(
                 _sourceImage.FullBgr,
@@ -143,7 +154,16 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
                 Math.Max(1, OutputWidth),
                 Math.Max(1, OutputHeight),
                 ToInterpolation(Method));
-            using var alpha = new Mat(bgr.Size(), MatType.CV_8UC1, new Scalar(255));
+            // Ownership of both Mats transfers to the document (do not dispose here).
+            var alpha = PerspectiveService.Correct(
+                _workingAlpha,
+                new Point2f(TopLeftX, TopLeftY),
+                new Point2f(TopRightX, TopRightY),
+                new Point2f(BottomRightX, BottomRightY),
+                new Point2f(BottomLeftX, BottomLeftY),
+                Math.Max(1, OutputWidth),
+                Math.Max(1, OutputHeight),
+                ToInterpolation(Method));
             _parentDocument.ApplyToolResult(bgr, alpha, "Perspective");
         }
         _shell.CloseTabDirect(this);

@@ -35,6 +35,7 @@ public sealed class ProjectDocument
     public string ExportGradientTopColor { get; set; } = "#FFFFFFFF";
     public string ExportGradientBottomColor { get; set; } = "#FF787878";
     public bool ExportDropShadowEnabled { get; set; }
+    public int ExportJpegQuality { get; set; } = 95;
     public double ExportShadowOffset { get; set; } = 12;
     public double ExportShadowBlur { get; set; } = 6;
     public double ExportShadowOpacity { get; set; } = 0.45;

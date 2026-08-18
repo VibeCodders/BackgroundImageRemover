@@ -218,6 +218,13 @@
             </StackPanel>
         </StackPanel>
 
+        <DockPanel Margin="0,8,0,0">
+            <TextBlock Text="JPEG quality" DockPanel.Dock="Left" />
+            <TextBlock Text="{Binding ExportJpegQuality, StringFormat='{}{0:0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+        </DockPanel>
+        <Slider Minimum="1" Maximum="100" Value="{Binding ExportJpegQuality}" TickFrequency="1" IsSnapToTickEnabled="True"
+                ToolTip="Quality used when exporting JPEG (Export JPG...)" />
+
         <CheckBox Content="Drop shadow" IsChecked="{Binding ExportDropShadowEnabled}" Margin="0,8,0,4" />
         <StackPanel Visibility="{Binding ExportDropShadowEnabled, Converter={StaticResource BoolToVisibilityConverter}}" Margin="16,0,0,8">
             <TextBlock Text="Offset" />

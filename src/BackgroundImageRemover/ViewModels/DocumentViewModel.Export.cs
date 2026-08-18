@@ -32,6 +32,9 @@ public partial class DocumentViewModel
     private WpfColor _exportGradientBottomColor = WpfColor.FromRgb(120, 120, 120);
 
     [ObservableProperty]
+    private int _exportJpegQuality = 95;
+
+    [ObservableProperty]
     private bool _exportDropShadowEnabled;
 
     [ObservableProperty]
@@ -244,7 +247,7 @@ public partial class DocumentViewModel
 
     private async Task ExportBgrAsJpgAsync(Mat bgr, string path)
     {
-        await _imageExporter.ExportJpgAsync(bgr, path);
+        await _imageExporter.ExportJpgAsync(bgr, path, Math.Clamp(ExportJpegQuality, 1, 100));
     }
 
     [RelayCommand]

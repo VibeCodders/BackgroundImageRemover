@@ -20,7 +20,7 @@
             <DockPanel>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
                     <Border Background="#FFEA580C" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
-                        <TextBlock Text="▦ MOSAIC / CENSOR" Foreground="White" FontWeight="Bold" FontSize="11" />
+                        <TextBlock Text="▦ MOSAIC" Foreground="White" FontWeight="Bold" FontSize="11" />
                     </Border>
                     <TextBlock Text="{Binding Title}" Foreground="#FFDDDDDD" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
                 </StackPanel>
@@ -38,7 +38,7 @@
         <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="Censor" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Mosaic" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
 
                     <CheckBox Content="Paint region with brush" IsChecked="{Binding PaintMode}" Margin="0,0,0,8" />
 
@@ -49,43 +49,51 @@
                         </DockPanel>
                         <Slider Minimum="2" Maximum="150" Value="{Binding BrushRadius}" Margin="0,2,0,8" />
                         <Button Content="✕ Clear painted mask" Command="{Binding ClearMaskCommand}" Margin="0,0,0,8" />
-                        <TextBlock Text="Paint on the left image to censor just the painted area." TextWrapping="Wrap" Foreground="#FF666666" Margin="0,0,0,12" />
+                        <TextBlock Text="Paint on the left image to mosaic just the painted area." TextWrapping="Wrap" Foreground="#FF666666" Margin="0,0,0,12" />
                     </StackPanel>
 
                     <StackPanel Visibility="{Binding PaintMode, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                         <CheckBox Content="Apply to whole image" IsChecked="{Binding WholeImage}" Margin="0,0,0,8" />
-                        <TextBlock Text="Drag a rectangle on the left to censor just a region." TextWrapping="Wrap" Foreground="#FF666666" Margin="0,0,0,12"
+                        <TextBlock Text="Drag a rectangle on the left to mosaic just a region." TextWrapping="Wrap" Foreground="#FF666666" Margin="0,0,0,12"
                                    Visibility="{Binding WholeImage, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
                     </StackPanel>
 
                     <TextBlock Text="Effect" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource MosaicModeValues}}" SelectedItem="{Binding Mode}" Margin="0,0,0,12" />
 
-                    <CheckBox Content="Censor everything outside selection" IsChecked="{Binding InvertRegion}" Margin="0,0,0,8" />
+                    <CheckBox Content="Mosaic everything outside selection" IsChecked="{Binding InvertRegion}" Margin="0,0,0,8" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Cell size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding CellSize, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="2" Maximum="64" Value="{Binding CellSize}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
+                    <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Pixelate|Crystallize}">
+                        <DockPanel Margin="0,4,0,0">
+                            <TextBlock Text="Cell size" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding CellSize, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="2" Maximum="64" Value="{Binding CellSize}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
+                    </StackPanel>
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Blur radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="80" Value="{Binding BlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
+                    <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Blur|Median}">
+                        <DockPanel Margin="0,4,0,0">
+                            <TextBlock Text="Blur radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="1" Maximum="80" Value="{Binding BlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
+                    </StackPanel>
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Blur strength" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Strength, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.05" Maximum="1" Value="{Binding Strength}" Margin="0,2,0,12" />
+                    <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Blur}">
+                        <DockPanel Margin="0,4,0,0">
+                            <TextBlock Text="Blur strength" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding Strength, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="0.05" Maximum="1" Value="{Binding Strength}" Margin="0,2,0,12" />
+                    </StackPanel>
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Crystal jitter" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Jitter, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="32" Value="{Binding Jitter}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
+                    <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Crystallize}">
+                        <DockPanel Margin="0,4,0,0">
+                            <TextBlock Text="Crystal jitter" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding Jitter, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="0" Maximum="32" Value="{Binding Jitter}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
+                    </StackPanel>
 
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" />
                 </StackPanel>

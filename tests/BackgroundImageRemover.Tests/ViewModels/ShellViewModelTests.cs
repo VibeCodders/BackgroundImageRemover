@@ -83,4 +83,50 @@ public class ShellViewModelTests
 
         Assert.Equal(new[] { "only.png" }, shell.RecentFiles);
     }
+
+    [Fact]
+    public async Task NewProjectAsync_WhenUncropSelected_AddsUncropTab()
+    {
+        var settings = new FakeSettingsService();
+        var fakeDialogs = new FakeNewProjectDialogService((Models.NewProjectType.Uncrop, false));
+
+        var fakeUncrop = new FakeUncropTab();
+        var shell = new ShellViewModel(
+            () => throw new InvalidOperationException("Should not create DocumentViewModel"),
+            () => (UncropViewModel)(object)fakeUncrop,
+            fakeDialogs,
+            settings);
+
+        await shell.NewProjectCommand.ExecuteAsync(null);
+
+        Assert.Single(shell.Documents);
+        Assert.Same(fakeUncrop, shell.SelectedDocument);
+    }
+
+    private sealed class FakeNewProjectDialogService : IDialogService
+    {
+        private readonly (Models.NewProjectType? Type, bool OpenImageImmediately) _result;
+        public FakeNewProjectDialogService((Models.NewProjectType? Type, bool OpenImageImmediately) result) => _result = result;
+
+        public (Models.NewProjectType? Type, bool OpenImageImmediately) ShowNewProjectDialog() => _result;
+        public string? ShowOpenImageDialog() => null;
+        public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
+        public string? ShowOpenFolderDialog(string title) => null;
+        public string? ShowOpenProjectDialog() => null;
+        public string? ShowSaveProjectDialog(string? suggestedFileName) => null;
+        public CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
+    }
+
+    private sealed class FakeUncropTab : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDocumentTab
+    {
+        public string Title => "Uncrop";
+        public string TabTitle => "Uncrop";
+        public string WindowTitle => "Uncrop — Background Image Remover";
+        public bool IsDirty => false;
+        public string? DirtyHint => null;
+        public bool IsCutout => false;
+        public string? CutoutHint => null;
+        public Task<bool> TrySaveProjectAsync() => Task.FromResult(true);
+        public void Dispose() { }
+    }
 }

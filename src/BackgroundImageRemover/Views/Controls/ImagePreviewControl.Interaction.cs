@@ -93,6 +93,7 @@ public partial class ImagePreviewControl
 
     private void RootGrid_MouseMove(object sender, MouseEventArgs e)
     {
+        RaiseCursorImagePosition(e);
         UpdateBrushCursorHover(e);
 
         if (_panStart is { } panStart && e.MiddleButton == MouseButtonState.Pressed)
@@ -127,7 +128,31 @@ public partial class ImagePreviewControl
     }
 
     private void RootGrid_MouseLeave(object sender, MouseEventArgs e)
-        => BrushCursorPreview.Visibility = Visibility.Collapsed;
+    {
+        BrushCursorPreview.Visibility = Visibility.Collapsed;
+        CursorImagePositionChanged?.Invoke(this, null);
+    }
+
+    /// <summary>Reports the image-pixel coordinates under the cursor (or null outside the image).</summary>
+    private void RaiseCursorImagePosition(MouseEventArgs e)
+    {
+        if (CursorImagePositionChanged is null)
+        {
+            return;
+        }
+
+        if (ImagePixelAt(e) is { } p
+            && ImageSource is not null
+            && p.X >= 0 && p.Y >= 0
+            && p.X < ImageSource.PixelWidth && p.Y < ImageSource.PixelHeight)
+        {
+            CursorImagePositionChanged(this, p);
+        }
+        else
+        {
+            CursorImagePositionChanged(this, null);
+        }
+    }
 
     /// <summary>Shows a brush-size circle under the cursor while hovering in Brush mode, so the
     /// user can see exactly where and how large the next stroke will be before painting.</summary>

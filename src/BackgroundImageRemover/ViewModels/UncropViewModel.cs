@@ -44,10 +44,19 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
     public string WindowTitle => Title + (IsDirty ? " *" : string.Empty) + " — Background Image Remover";
     public string TabTitle => IsDirty ? Title + " *" : Title;
 
-    public Task<bool> TrySaveProjectAsync()
+    /// <summary>
+    /// "Save" for an uncrop document means exporting the result to a PNG. Returns false when
+    /// the user cancels the save dialog or the export fails, so the caller knows not to close.
+    /// </summary>
+    public async Task<bool> TrySaveProjectAsync()
     {
-        // For uncrop, save prompt can trigger SaveAs
-        return Task.FromResult(true);
+        if (!IsDirty)
+        {
+            return true;
+        }
+
+        await _resultSession.SaveAsync();
+        return !IsDirty;
     }
 
     [ObservableProperty]

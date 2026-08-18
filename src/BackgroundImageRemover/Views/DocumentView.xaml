@@ -209,6 +209,9 @@
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="CursorPositionLabel" VerticalAlignment="Center" Margin="0,0,12,0"
+                               Foreground="#FF555555" FontSize="11" MinWidth="72"
+                               ToolTip="Image pixel coordinates under the cursor" />
                     <TextBlock Text="{Binding ImageDimensions}" VerticalAlignment="Center" Margin="0,0,12,0"
                                Foreground="#FF555555" FontSize="11" ToolTip="Current image dimensions in pixels" />
                     <Button Content="📂 Open folder" Command="{Binding RevealLastExportInExplorerCommand}"

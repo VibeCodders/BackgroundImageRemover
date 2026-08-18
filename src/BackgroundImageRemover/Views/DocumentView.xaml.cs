@@ -21,8 +21,16 @@ public partial class DocumentView : UserControl
     public DocumentView()
     {
         InitializeComponent();
+        SinglePreview.CursorImagePositionChanged += OnCursorImagePositionChanged;
+        OriginalPreview.CursorImagePositionChanged += OnCursorImagePositionChanged;
+        ResultEditPreview.CursorImagePositionChanged += OnCursorImagePositionChanged;
         Loaded += DocumentView_Loaded;
         Unloaded += DocumentView_Unloaded;
+    }
+
+    private void OnCursorImagePositionChanged(object? sender, Point? position)
+    {
+        CursorPositionLabel.Text = position is { } p ? $"x: {(int)p.X}  y: {(int)p.Y}" : string.Empty;
     }
 
     private void DocumentView_Loaded(object sender, RoutedEventArgs e)

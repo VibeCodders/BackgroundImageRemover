@@ -43,16 +43,39 @@ public class UncropViewModelTests
             => new(sourceBgr.Height + padding.Top + padding.Bottom, sourceBgr.Width + padding.Left + padding.Right, MatType.CV_8UC3, Scalar.All(255));
     }
 
-    private sealed class DummyDialogService : IDialogService
+    private class DummyDialogService : IDialogService
     {
-        public CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
-        public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
-        public string? ShowOpenImageDialog() => null;
-        public string? ShowOpenProjectDialog() => null;
-        public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
-        public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
-        public string? ShowSaveProjectDialog(string? suggestedFileName) => null;
-        public BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
+        public virtual CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
+        public virtual string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
+        public virtual string? ShowOpenImageDialog() => null;
+        public virtual string? ShowOpenProjectDialog() => null;
+        public virtual string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
+        public virtual string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
+        public virtual string? ShowSaveProjectDialog(string? suggestedFileName) => null;
+        public virtual BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
+    }
+
+    /// <summary>Returns a configurable path for the PNG save dialog.</summary>
+    private sealed class SaveDialogService : DummyDialogService
+    {
+        private readonly string? _pngPath;
+        public SaveDialogService(string? pngPath) => _pngPath = pngPath;
+
+        public override string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => _pngPath;
+    }
+
+    private sealed class RecordingExportService : IImageExportService
+    {
+        public string? LastPngPath { get; private set; }
+
+        public Task ExportPngAsync(Mat imageBgra, string destinationPath, CancellationToken ct = default)
+        {
+            LastPngPath = destinationPath;
+            return Task.CompletedTask;
+        }
+
+        public Task ExportJpgAsync(Mat bgr, string destinationPath, int quality = 95, CancellationToken ct = default)
+            => Task.CompletedTask;
     }
 
     private sealed class DummyImageLoaderService : IImageLoaderService
@@ -84,6 +107,70 @@ public class UncropViewModelTests
             new DummyImageLoaderService(),
             new DummyImageExportService(),
             new DummyFileLogService());
+
+    private static async Task MakeDirty(UncropViewModel vm)
+    {
+        await vm.LoadAsync("test_photo.jpg");
+        vm.Options.Padding = new CanvasPadding(10, 10, 10, 10);
+        await vm.ApplyFillCommand.ExecuteAsync(null);
+    }
+
+    [Fact]
+    public async Task TrySaveProjectAsync_DirtyDocument_ExportsAndClearsDirty()
+    {
+        var exporter = new RecordingExportService();
+        using var vm = new UncropViewModel(
+            new DummyUncropFillService(),
+            new SaveDialogService("out.png"),
+            new DummyImageLoaderService(),
+            exporter,
+            new DummyFileLogService());
+        await MakeDirty(vm);
+        Assert.True(vm.IsDirty);
+
+        bool saved = await vm.TrySaveProjectAsync();
+
+        Assert.True(saved);
+        Assert.False(vm.IsDirty);
+        Assert.Equal("out.png", exporter.LastPngPath);
+    }
+
+    [Fact]
+    public async Task TrySaveProjectAsync_CancelledDialog_KeepsDirtyAndReturnsFalse()
+    {
+        var exporter = new RecordingExportService();
+        using var vm = new UncropViewModel(
+            new DummyUncropFillService(),
+            new SaveDialogService(null),
+            new DummyImageLoaderService(),
+            exporter,
+            new DummyFileLogService());
+        await MakeDirty(vm);
+
+        bool saved = await vm.TrySaveProjectAsync();
+
+        Assert.False(saved);
+        Assert.True(vm.IsDirty);
+        Assert.Null(exporter.LastPngPath);
+    }
+
+    [Fact]
+    public async Task TrySaveProjectAsync_CleanDocument_ReturnsTrueWithoutExport()
+    {
+        var exporter = new RecordingExportService();
+        using var vm = new UncropViewModel(
+            new DummyUncropFillService(),
+            new SaveDialogService("out.png"),
+            new DummyImageLoaderService(),
+            exporter,
+            new DummyFileLogService());
+        await vm.LoadAsync("test_photo.jpg");
+
+        bool saved = await vm.TrySaveProjectAsync();
+
+        Assert.True(saved);
+        Assert.Null(exporter.LastPngPath);
+    }
 
     [Fact]
     public async Task LoadAsync_SetsImageLoadedAndTitles()

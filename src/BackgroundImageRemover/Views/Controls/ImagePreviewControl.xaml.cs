@@ -93,6 +93,12 @@ public partial class ImagePreviewControl : UserControl
     /// <summary>Raised on a SAM prompt click, with the point in image-pixel coordinates.</summary>
     public event EventHandler<OpenCvSharp.Point>? SamPointClicked;
 
+    /// <summary>
+    /// Raised on mouse move with the image-pixel position under the cursor (null when the
+    /// cursor is outside the image content), so the status bar can show live coordinates.
+    /// </summary>
+    public event EventHandler<Point?>? CursorImagePositionChanged;
+
     private Point? _dragStart;
     private Point? _panStart;
     private Point _panStartTranslate;

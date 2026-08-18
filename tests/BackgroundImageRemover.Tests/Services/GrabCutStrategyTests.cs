@@ -99,15 +99,17 @@ public class GrabCutStrategyTests
     }
 
     [Fact]
-    public void RunFullAsync_WithoutARectOrScribbles_Throws()
+    public async Task RunFullAsync_WithoutARectOrScribbles_DefaultsToFullImageAndSucceeds()
     {
         var strategy = new GrabCutStrategy();
         using var full = MakeSubjectImage(100, 100, new Rect(10, 10, 50, 50));
-        var context = new StrategyContext { GrabCutRect = null };
+        var context = new StrategyContext { GrabCutRect = null, DecontaminateEdges = false };
 
-        var act = async () => await strategy.RunFullAsync(full, context, CancellationToken.None);
+        using var result = await strategy.RunFullAsync(full, context, CancellationToken.None);
 
-        Assert.ThrowsAsync<InvalidOperationException>(act);
+        Assert.Equal(100, result.Bgra.Width);
+        Assert.Equal(100, result.Bgra.Height);
+        Assert.NotNull(strategy.LastLabelMask);
     }
 
     [Fact]

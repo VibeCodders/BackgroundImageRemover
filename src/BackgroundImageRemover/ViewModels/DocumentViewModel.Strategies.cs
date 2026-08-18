@@ -193,10 +193,6 @@ public partial class DocumentViewModel
             return;
         }
 
-        if (SelectedStrategy == StrategyKind.GrabCut && !GrabCut.HasValidRect && !HasNonEmptyScribbles())
-        {
-            return;
-        }
         if (SelectedStrategy == StrategyKind.Onnx && !Onnx.IsModelReady)
         {
             return;

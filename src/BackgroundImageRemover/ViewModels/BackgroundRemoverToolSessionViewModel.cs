@@ -282,10 +282,6 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
             return;
         }
 
-        if (SelectedStrategy == StrategyKind.GrabCut && !GrabCut.HasValidRect && !HasNonEmptyScribbles())
-        {
-            return;
-        }
         if (SelectedStrategy == StrategyKind.Onnx && !Onnx.IsModelReady)
         {
             return;
@@ -495,6 +491,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         var cts = new CancellationTokenSource();
         _processCts = cts;
 
+        bool succeeded = false;
         try
         {
             IsBusy = true;
@@ -513,15 +510,20 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
             fullResult.Dispose();
 
             _parentDocument.ApplyToolResult(bgr, alpha, $"Remove Background ({SelectedStrategy})");
+            succeeded = true;
         }
         catch (Exception ex)
         {
             _log.Error("Failed to apply background removal", ex);
+            StatusMessage = $"Apply failed: {ex.Message}";
         }
         finally
         {
             IsBusy = false;
-            _shell.CloseTabDirect(this);
+            if (succeeded)
+            {
+                _shell.CloseTabDirect(this);
+            }
         }
     }
 

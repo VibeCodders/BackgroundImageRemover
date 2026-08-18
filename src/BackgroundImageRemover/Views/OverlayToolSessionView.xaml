@@ -81,35 +81,39 @@
                     <ComboBox ItemsSource="{Binding Source={StaticResource OverlayBlendModeValues}}" SelectedItem="{Binding Blend}" Margin="0,0,0,12" />
 
                     <CheckBox Content="Color tint" IsChecked="{Binding TintEnabled}" Margin="0,0,0,8" />
-                    <Grid Margin="0,0,0,12">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
-                            <TextBlock Text="R" />
-                            <Slider Minimum="0" Maximum="255" Value="{Binding TintRed}" TickFrequency="1" IsSnapToTickEnabled="True" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Margin="4,0,4,0">
-                            <TextBlock Text="G" />
-                            <Slider Minimum="0" Maximum="255" Value="{Binding TintGreen}" TickFrequency="1" IsSnapToTickEnabled="True" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="2" Margin="4,0,0,0">
-                            <TextBlock Text="B" />
-                            <Slider Minimum="0" Maximum="255" Value="{Binding TintBlue}" TickFrequency="1" IsSnapToTickEnabled="True" />
-                        </StackPanel>
-                    </Grid>
+                    <StackPanel Visibility="{Binding TintEnabled, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                <TextBlock Text="R" />
+                                <Slider Minimum="0" Maximum="255" Value="{Binding TintRed}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="4,0,4,0">
+                                <TextBlock Text="G" />
+                                <Slider Minimum="0" Maximum="255" Value="{Binding TintGreen}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                                <TextBlock Text="B" />
+                                <Slider Minimum="0" Maximum="255" Value="{Binding TintBlue}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
 
                     <CheckBox Content="Drop shadow" IsChecked="{Binding DropShadow}" Margin="0,0,0,8" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Shadow offset" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ShadowOffset, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="40" Value="{Binding ShadowOffset}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
+                    <StackPanel Visibility="{Binding DropShadow, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <DockPanel Margin="0,4,0,0">
+                            <TextBlock Text="Shadow offset" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding ShadowOffset, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="0" Maximum="40" Value="{Binding ShadowOffset}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Shadow opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" Margin="0,2,0,12" />
+                        <DockPanel Margin="0,4,0,0">
+                            <TextBlock Text="Shadow opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" Margin="0,2,0,12" />
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Border>

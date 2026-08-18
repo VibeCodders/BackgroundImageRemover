@@ -45,49 +45,59 @@
                 <StackPanel>
                     <TextBlock Text="Resize" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
 
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                            <TextBlock Text="Width (px)" FontWeight="SemiBold" />
-                            <TextBox Text="{Binding Width, UpdateSourceTrigger=PropertyChanged}" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="Height (px)" FontWeight="SemiBold" />
-                            <TextBox Text="{Binding Height, UpdateSourceTrigger=PropertyChanged}" />
-                        </StackPanel>
-                    </Grid>
-                    <CheckBox Content="Lock aspect ratio" IsChecked="{Binding KeepAspect}" Margin="0,0,0,12" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Percent" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Percent, StringFormat='{}{0:0}%'}" Foreground="#FF666666" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="400" Value="{Binding Percent}" Margin="0,2,0,12" />
-
-                    <TextBlock Text="Interpolation" FontWeight="SemiBold" Margin="0,0,0,4" />
-                    <ComboBox ItemsSource="{Binding Source={StaticResource ResampleMethodValues}}" SelectedItem="{Binding Method}" Margin="0,0,0,12" />
-
                     <TextBlock Text="Mode" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource ResizeModeValues}}" SelectedItem="{Binding Mode}" Margin="0,0,0,12" />
 
-                    <TextBlock Text="Fit / fill box (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
-                            <TextBlock Text="W" />
-                            <TextBox Text="{Binding FitWidth, UpdateSourceTrigger=PropertyChanged}" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="H" />
-                            <TextBox Text="{Binding FitHeight, UpdateSourceTrigger=PropertyChanged}" />
-                        </StackPanel>
-                    </Grid>
+                    <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ExactSize}">
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <TextBlock Text="Width (px)" FontWeight="SemiBold" />
+                                <TextBox Text="{Binding Width, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Height (px)" FontWeight="SemiBold" />
+                                <TextBox Text="{Binding Height, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </Grid>
+                        <CheckBox Content="Lock aspect ratio" IsChecked="{Binding KeepAspect}" Margin="0,0,0,12" />
+                    </StackPanel>
 
-                    <TextBlock Text="Longest side (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
-                    <TextBox Text="{Binding LongestSide, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+                    <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Percent}">
+                        <DockPanel Margin="0,4,0,0">
+                            <TextBlock Text="Percent" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding Percent, StringFormat='{}{0:0}%'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="1" Maximum="400" Value="{Binding Percent}" Margin="0,2,0,12" />
+                    </StackPanel>
 
-                    <TextBlock Text="Megapixels" FontWeight="SemiBold" Margin="0,0,0,4" />
-                    <TextBox Text="{Binding Megapixels, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+                    <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=FitWithin|FillTo}">
+                        <TextBlock Text="Fit / fill box (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                <TextBlock Text="W" />
+                                <TextBox Text="{Binding FitWidth, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="H" />
+                                <TextBox Text="{Binding FitHeight, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=LongestSide}">
+                        <TextBlock Text="Longest side (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding LongestSide, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+                    </StackPanel>
+
+                    <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Megapixels}">
+                        <TextBlock Text="Megapixels" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding Megapixels, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+                    </StackPanel>
+
+                    <TextBlock Text="Interpolation" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <ComboBox ItemsSource="{Binding Source={StaticResource ResampleMethodValues}}" SelectedItem="{Binding Method}" Margin="0,0,0,12" />
 
                     <UniformGrid Columns="2" Margin="0,0,0,12">
                         <Button Content="50%" Command="{Binding PresetHalfCommand}" Margin="0,0,4,4" />

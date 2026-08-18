@@ -31,6 +31,13 @@ public sealed class ProjectDocument
     public string ExportBackgroundMode { get; set; } = nameof(ExportBackgroundModeEnum.Transparent);
     public string ExportSolidColor { get; set; } = "#FFFFFFFF";
     public string? ExportBackgroundImagePath { get; set; }
+    public double ExportBlurRadius { get; set; } = 10;
+    public string ExportGradientTopColor { get; set; } = "#FFFFFFFF";
+    public string ExportGradientBottomColor { get; set; } = "#FF787878";
+    public bool ExportDropShadowEnabled { get; set; }
+    public double ExportShadowOffset { get; set; } = 12;
+    public double ExportShadowBlur { get; set; } = 6;
+    public double ExportShadowOpacity { get; set; } = 0.45;
 
     public double BrushRadius { get; set; } = 20;
     public double BrushHardness { get; set; } = 0.5;

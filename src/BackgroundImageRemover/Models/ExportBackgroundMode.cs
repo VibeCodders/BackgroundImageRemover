@@ -4,5 +4,7 @@ public enum ExportBackgroundMode
 {
     Transparent,
     SolidColor,
-    Image
+    Image,
+    Blur,
+    Gradient
 }

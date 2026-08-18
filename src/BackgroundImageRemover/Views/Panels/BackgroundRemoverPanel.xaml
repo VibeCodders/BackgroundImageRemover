@@ -156,5 +156,47 @@
                     Margin="16,0,0,8">
             <Button Content="Choose image..." Command="{Binding PickBackgroundImageCommand}" />
         </StackPanel>
+        <RadioButton Content="Blur (portrait mode)" GroupName="ExportBg" Margin="0,0,0,4"
+                     IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Blur}" />
+        <StackPanel Visibility="{Binding ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Blur}" Margin="16,0,0,8">
+            <TextBlock Text="Blur radius" />
+            <Slider Minimum="0" Maximum="50" Value="{Binding ExportBlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" />
+        </StackPanel>
+        <RadioButton Content="Gradient" GroupName="ExportBg" Margin="0,0,0,4"
+                     IsChecked="{Binding ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Gradient}" />
+        <StackPanel Visibility="{Binding ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Gradient}" Margin="16,0,0,8">
+            <TextBlock Text="Top color" />
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                <Rectangle Width="24" Height="24" Fill="{Binding ExportGradientTopColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                <Button x:Name="ChooseGradientTopColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseGradientTopColorButton_Click" />
+                <Popup IsOpen="{Binding IsGradientTopColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseGradientTopColorButton}"
+                       StaysOpen="False" AllowsTransparency="True" Placement="Right">
+                    <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                        <controls:SimpleColorPickerControl SelectedColor="{Binding ExportGradientTopColor}" />
+                    </Border>
+                </Popup>
+            </StackPanel>
+            <TextBlock Text="Bottom color" />
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Width="24" Height="24" Fill="{Binding ExportGradientBottomColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                <Button x:Name="ChooseGradientBottomColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseGradientBottomColorButton_Click" />
+                <Popup IsOpen="{Binding IsGradientBottomColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseGradientBottomColorButton}"
+                       StaysOpen="False" AllowsTransparency="True" Placement="Right">
+                    <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                        <controls:SimpleColorPickerControl SelectedColor="{Binding ExportGradientBottomColor}" />
+                    </Border>
+                </Popup>
+            </StackPanel>
+        </StackPanel>
+
+        <CheckBox Content="Drop shadow" IsChecked="{Binding ExportDropShadowEnabled}" Margin="0,8,0,4" />
+        <StackPanel Visibility="{Binding ExportDropShadowEnabled, Converter={StaticResource BoolToVisibilityConverter}}" Margin="16,0,0,8">
+            <TextBlock Text="Offset" />
+            <Slider Minimum="0" Maximum="60" Value="{Binding ExportShadowOffset}" TickFrequency="1" IsSnapToTickEnabled="True" />
+            <TextBlock Text="Blur" />
+            <Slider Minimum="0" Maximum="40" Value="{Binding ExportShadowBlur}" TickFrequency="1" IsSnapToTickEnabled="True" />
+            <TextBlock Text="Opacity" />
+            <Slider Minimum="0" Maximum="1" Value="{Binding ExportShadowOpacity}" TickFrequency="0.05" />
+        </StackPanel>
     </StackPanel>
 </UserControl>

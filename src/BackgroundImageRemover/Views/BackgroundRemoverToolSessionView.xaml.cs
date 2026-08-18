@@ -24,4 +24,19 @@ public partial class BackgroundRemoverToolSessionView : UserControl
     private void OriginalPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel?.OnOriginalStrokeEnd();
     private void OriginalPreview_SamPointClicked(object? sender, OpenCvSharp.Point e) => ViewModel?.OnOriginalSamPointClicked(e);
     private void OriginalPreview_WandClicked(object? sender, OpenCvSharp.Point e) => ViewModel?.OnOriginalWandClicked(e);
+
+    private void ChooseSolidColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel?.ParentDocument is { } doc) doc.IsColorPickerOpen = !doc.IsColorPickerOpen;
+    }
+
+    private void ChooseGradientTopColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel?.ParentDocument is { } doc) doc.IsGradientTopColorPickerOpen = !doc.IsGradientTopColorPickerOpen;
+    }
+
+    private void ChooseGradientBottomColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel?.ParentDocument is { } doc) doc.IsGradientBottomColorPickerOpen = !doc.IsGradientBottomColorPickerOpen;
+    }
 }

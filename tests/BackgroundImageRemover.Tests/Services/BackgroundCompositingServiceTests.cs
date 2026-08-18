@@ -130,4 +130,104 @@ public class BackgroundCompositingServiceTests
         Assert.Equal(30, untouched.Item2);
         Assert.Equal(255, untouched.Item3);
     }
+
+    [Fact]
+    public void CompositeOntoBlurredImage_KeepsOpaqueSubjectOverBlurredBackground()
+    {
+        // Subject: transparent except an opaque red square in the middle.
+        using var bgra = new Mat(10, 10, MatType.CV_8UC4, Scalar.All(0));
+        using (var subject = new Mat(bgra, new Rect(3, 3, 4, 4)))
+        {
+            subject.SetTo(new Scalar(0, 0, 255, 255)); // red (BGR 0,0,255)
+        }
+
+        // Original: uniformly blue. Blurring a uniform image leaves it blue.
+        using var original = new Mat(10, 10, MatType.CV_8UC3, new Scalar(255, 0, 0));
+
+        using var result = BackgroundCompositingService.CompositeOntoBlurredImage(bgra, original, blurSigma: 5);
+
+        Assert.Equal(3, result.Channels());
+        Assert.Equal(10, result.Width);
+        Assert.Equal(10, result.Height);
+
+        // Opaque subject pixel keeps its color.
+        var fg = result.At<Vec3b>(5, 5);
+        Assert.Equal(0, fg.Item0);
+        Assert.Equal(0, fg.Item1);
+        Assert.Equal(255, fg.Item2);
+
+        // Transparent corner shows the blurred original (blue).
+        var bg = result.At<Vec3b>(0, 0);
+        Assert.Equal(255, bg.Item0);
+        Assert.Equal(0, bg.Item1);
+        Assert.Equal(0, bg.Item2);
+    }
+
+    [Fact]
+    public void CompositeOntoGradient_InterpolatesFromTopToBottom()
+    {
+        using var bgra = new Mat(20, 20, MatType.CV_8UC4, Scalar.All(0)); // fully transparent
+
+        using var result = BackgroundCompositingService.CompositeOntoGradient(
+            bgra, new Vec3b(0, 0, 0), new Vec3b(255, 255, 255));
+
+        Assert.Equal(3, result.Channels());
+
+        var top = result.At<Vec3b>(0, 0);
+        Assert.True(top.Item0 < 10 && top.Item1 < 10 && top.Item2 < 10);
+
+        var bottom = result.At<Vec3b>(19, 19);
+        Assert.True(bottom.Item0 > 245 && bottom.Item1 > 245 && bottom.Item2 > 245);
+    }
+
+    [Fact]
+    public void ApplyDropShadow_PadsCanvasAndPlacesShadowUnderSubject()
+    {
+        // A fully opaque red 10x10 cutout.
+        using var bgra = new Mat(10, 10, MatType.CV_8UC4, new Scalar(0, 0, 255, 255));
+
+        using var result = BackgroundCompositingService.ApplyDropShadow(
+            bgra, offsetX: 5, offsetY: 5, blurSigma: 0, opacity: 1.0);
+
+        // pad = ceil(5 + 0 + 1) = 6 on each side => 10 + 12 = 22.
+        Assert.Equal(22, result.Width);
+        Assert.Equal(22, result.Height);
+
+        // Subject top-left corner (placed at the padding offset).
+        var fg = result.At<Vec4b>(6, 6);
+        Assert.Equal(0, fg.Item0);
+        Assert.Equal(0, fg.Item1);
+        Assert.Equal(255, fg.Item2);
+        Assert.Equal(255, fg.Item3);
+
+        // Shadow-only pixel: outside the subject, inside the offset silhouette.
+        var shadow = result.At<Vec4b>(16, 16);
+        Assert.Equal(0, shadow.Item0);
+        Assert.Equal(0, shadow.Item1);
+        Assert.Equal(0, shadow.Item2);
+        Assert.Equal(255, shadow.Item3);
+
+        // Corner is transparent.
+        Assert.Equal(0, result.At<Vec4b>(0, 0).Item3);
+    }
+
+    [Fact]
+    public void ApplyDropShadow_BlurSoftensTheShadowEdge()
+    {
+        using var bgra = new Mat(20, 20, MatType.CV_8UC4, new Scalar(0, 0, 0, 255));
+
+        using var result = BackgroundCompositingService.ApplyDropShadow(
+            bgra, offsetX: 0, offsetY: 0, blurSigma: 3, opacity: 0.5);
+
+        int pad = (int)Math.Ceiling(0d + 3 * 3 + 1); // 10
+        int cx = result.Width / 2;
+        int cy = result.Height / 2;
+
+        // Subject center stays opaque.
+        Assert.Equal(255, result.At<Vec4b>(cy, cx).Item3);
+
+        // Just above the subject's top edge the blurred shadow spills with partial alpha.
+        byte spilled = result.At<Vec4b>(pad - 1, cx).Item3;
+        Assert.True(spilled > 0 && spilled < 255, $"expected a soft edge, got alpha {spilled}");
+    }
 }

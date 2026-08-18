@@ -98,6 +98,128 @@ public static class BackgroundCompositingService
         return CompositeOntoBgr(bgra, resized);
     }
 
+    /// <summary>
+    /// Composites the cutout onto a Gaussian-blurred copy of the original photo ("portrait mode").
+    /// The original is blurred at its native resolution before being resized to match the cutout.
+    /// </summary>
+    public static Mat CompositeOntoBlurredImage(Mat bgra, Mat originalBgr, double blurSigma)
+    {
+        using var blurred = new Mat();
+        if (blurSigma <= 0)
+        {
+            originalBgr.CopyTo(blurred);
+        }
+        else
+        {
+            int kernel = Math.Max(1, (int)Math.Round(blurSigma * 3) * 2 + 1);
+            Cv2.GaussianBlur(originalBgr, blurred, new Size(kernel, kernel), blurSigma, blurSigma);
+        }
+        return CompositeOntoImage(bgra, blurred);
+    }
+
+    /// <summary>Composites the cutout onto a vertical linear gradient between two BGR colors.</summary>
+    public static Mat CompositeOntoGradient(Mat bgra, Vec3b topColorBgr, Vec3b bottomColorBgr)
+    {
+        using var column = new Mat(bgra.Height, 1, MatType.CV_8UC3);
+        for (int y = 0; y < bgra.Height; y++)
+        {
+            double t = bgra.Height <= 1 ? 0 : (double)y / (bgra.Height - 1);
+            var color = new Vec3b(
+                (byte)Math.Round(topColorBgr.Item0 + (bottomColorBgr.Item0 - topColorBgr.Item0) * t),
+                (byte)Math.Round(topColorBgr.Item1 + (bottomColorBgr.Item1 - topColorBgr.Item1) * t),
+                (byte)Math.Round(topColorBgr.Item2 + (bottomColorBgr.Item2 - topColorBgr.Item2) * t));
+            column.Set(y, 0, color);
+        }
+
+        using var gradient = new Mat();
+        Cv2.Resize(column, gradient, bgra.Size(), interpolation: InterpolationFlags.Linear);
+        return CompositeOntoBgr(bgra, gradient);
+    }
+
+    /// <summary>
+    /// Renders a soft drop shadow under the cutout and returns a new, padded BGRA where the
+    /// background stays transparent and the shadow is baked into the alpha channel. The subject
+    /// is placed at the center of the padding; the shadow is offset by <paramref name="offsetX"/>
+    /// (positive = right) and <paramref name="offsetY"/> (positive = down) and softened by
+    /// <paramref name="blurSigma"/>. <paramref name="opacity"/> scales the shadow's alpha (0..1).
+    /// </summary>
+    public static Mat ApplyDropShadow(Mat bgra, double offsetX, double offsetY, double blurSigma, double opacity)
+    {
+        blurSigma = Math.Max(0, blurSigma);
+        opacity = Math.Clamp(opacity, 0.0, 1.0);
+
+        int padX = (int)Math.Ceiling(Math.Abs(offsetX) + 3 * blurSigma + 1);
+        int padY = (int)Math.Ceiling(Math.Abs(offsetY) + 3 * blurSigma + 1);
+        var outSize = new Size(bgra.Width + 2 * padX, bgra.Height + 2 * padY);
+
+        // Subject silhouette as a float alpha (0..1).
+        using var split = ChannelSplit.Of(bgra);
+        using var alphaF = new Mat();
+        split[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
+
+        // Shadow alpha: the silhouette translated by the offset and softened.
+        using var shadowA = new Mat(outSize, MatType.CV_32FC1, Scalar.All(0));
+        using (var translate = new Mat(2, 3, MatType.CV_32FC1))
+        {
+            translate.Set(0, 0, 1f);
+            translate.Set(0, 1, 0f);
+            translate.Set(0, 2, (float)(padX + offsetX));
+            translate.Set(1, 0, 0f);
+            translate.Set(1, 1, 1f);
+            translate.Set(1, 2, (float)(padY + offsetY));
+            Cv2.WarpAffine(alphaF, shadowA, translate, outSize, InterpolationFlags.Linear, BorderTypes.Constant, Scalar.All(0));
+        }
+        if (blurSigma > 0)
+        {
+            Cv2.GaussianBlur(shadowA, shadowA, new Size(0, 0), blurSigma, blurSigma);
+        }
+        if (opacity < 1)
+        {
+            Cv2.Multiply(shadowA, Scalar.All(opacity), shadowA);
+        }
+
+        // Subject placed at the padding offset on a float canvas.
+        using var fgF = new Mat(outSize, MatType.CV_32FC4, Scalar.All(0));
+        using var bgraF = new Mat();
+        bgra.ConvertTo(bgraF, MatType.CV_32FC4, 1.0 / 255.0);
+        using var fgRoi = new Mat(fgF, new Rect(padX, padY, bgra.Width, bgra.Height));
+        bgraF.CopyTo(fgRoi);
+
+        using var fgSplit = ChannelSplit.Of(fgF);
+        var aFg = fgSplit[3];
+
+        // Over-composite: the shadow (black, so it contributes no color) sits under the subject.
+        // outA = aFg + shadowA * (1 - aFg); outB = (cFg * aFg) / outA.
+        using var oneMinusFg = new Mat();
+        Cv2.Subtract(new Mat(outSize, MatType.CV_32FC1, Scalar.All(1.0)), aFg, oneMinusFg);
+        using var shadowContrib = shadowA.Mul(oneMinusFg).ToMat();
+        using var outA = new Mat();
+        Cv2.Add(aFg, shadowContrib, outA);
+
+        using var fgColor = new Mat();
+        Cv2.Merge(new[] { fgSplit[0], fgSplit[1], fgSplit[2] }, fgColor);
+        using var aFg3 = new Mat();
+        Cv2.CvtColor(aFg, aFg3, ColorConversionCodes.GRAY2BGR);
+        using var fgPremul = fgColor.Mul(aFg3).ToMat();
+
+        using var outA3 = new Mat();
+        Cv2.CvtColor(outA, outA3, ColorConversionCodes.GRAY2BGR);
+        using var epsilon = new Mat(outSize, MatType.CV_32FC3, Scalar.All(1e-6));
+        Cv2.Max(outA3, epsilon, outA3); // guard division by zero
+        using var outB = new Mat();
+        Cv2.Divide(fgPremul, outA3, outB);
+
+        using var outFloat = new Mat();
+        Cv2.CvtColor(outB, outFloat, ColorConversionCodes.BGR2BGRA);
+        using var outSplit = ChannelSplit.Of(outFloat);
+        outA.CopyTo(outSplit[3]);
+        Cv2.Merge(outSplit.Channels, outFloat);
+
+        var result = new Mat();
+        outFloat.ConvertTo(result, MatType.CV_8UC4, 255.0);
+        return result;
+    }
+
     private static Mat CompositeOntoBgr(Mat bgra, Mat backgroundBgr)
     {
         using var split = ChannelSplit.Of(bgra);

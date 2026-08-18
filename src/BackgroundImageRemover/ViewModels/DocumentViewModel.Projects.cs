@@ -105,6 +105,13 @@ public partial class DocumentViewModel
             ExportBackgroundMode = ExportBackgroundMode.ToString(),
             ExportSolidColor = ExportSolidColor.ToString(),
             ExportBackgroundImagePath = ExportBackgroundImagePath,
+            ExportBlurRadius = ExportBlurRadius,
+            ExportGradientTopColor = ExportGradientTopColor.ToString(),
+            ExportGradientBottomColor = ExportGradientBottomColor.ToString(),
+            ExportDropShadowEnabled = ExportDropShadowEnabled,
+            ExportShadowOffset = ExportShadowOffset,
+            ExportShadowBlur = ExportShadowBlur,
+            ExportShadowOpacity = ExportShadowOpacity,
             BrushRadius = BrushRadius,
             BrushHardness = BrushHardness,
             BrushMode = BrushMode.ToString(),
@@ -146,6 +153,22 @@ public partial class DocumentViewModel
             ExportSolidColor = solid;
         }
         ExportBackgroundImagePath = p.ExportBackgroundImagePath;
+
+        ExportBlurRadius = p.ExportBlurRadius;
+        if (!string.IsNullOrWhiteSpace(p.ExportGradientTopColor)
+            && System.Windows.Media.ColorConverter.ConvertFromString(p.ExportGradientTopColor) is WpfColor top)
+        {
+            ExportGradientTopColor = top;
+        }
+        if (!string.IsNullOrWhiteSpace(p.ExportGradientBottomColor)
+            && System.Windows.Media.ColorConverter.ConvertFromString(p.ExportGradientBottomColor) is WpfColor bottom)
+        {
+            ExportGradientBottomColor = bottom;
+        }
+        ExportDropShadowEnabled = p.ExportDropShadowEnabled;
+        ExportShadowOffset = p.ExportShadowOffset;
+        ExportShadowBlur = p.ExportShadowBlur;
+        ExportShadowOpacity = p.ExportShadowOpacity;
 
         BrushRadius = p.BrushRadius;
         BrushHardness = p.BrushHardness;

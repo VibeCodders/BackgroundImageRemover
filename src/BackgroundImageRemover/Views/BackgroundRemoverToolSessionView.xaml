@@ -172,6 +172,76 @@
                     <CheckBox Content="Invert mask (keep background)" IsChecked="{Binding InvertMask}" Margin="0,0,0,8" />
                     <TextBlock Text="Edge feather" />
                     <Slider Minimum="0" Maximum="30" Value="{Binding MaskFeatherPixels}" TickFrequency="1" IsSnapToTickEnabled="True" />
+
+                    <!-- Export background options (persisted to the parent document) -->
+                    <Separator Margin="0,16,0,8" />
+                    <TextBlock Text="Export background" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <RadioButton Content="Transparent" GroupName="ExportBgSession" Margin="0,0,0,4"
+                                 IsChecked="{Binding ParentDocument.ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Transparent}" />
+                    <RadioButton Content="Solid color" GroupName="ExportBgSession" Margin="0,0,0,4"
+                                 IsChecked="{Binding ParentDocument.ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding ParentDocument.ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}"
+                                Margin="16,0,0,8">
+                        <Rectangle Width="24" Height="24" Fill="{Binding ParentDocument.ExportSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                        <Button x:Name="ChooseSolidColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseSolidColorButton_Click" />
+                        <Popup IsOpen="{Binding ParentDocument.IsColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseSolidColorButton}"
+                               StaysOpen="False" AllowsTransparency="True" Placement="Right">
+                            <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                <controls:SimpleColorPickerControl SelectedColor="{Binding ParentDocument.ExportSolidColor}" />
+                            </Border>
+                        </Popup>
+                    </StackPanel>
+                    <RadioButton Content="Image" GroupName="ExportBgSession" Margin="0,0,0,4"
+                                 IsChecked="{Binding ParentDocument.ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}" />
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding ParentDocument.ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Image}"
+                                Margin="16,0,0,8">
+                        <Button Content="Choose image..." Command="{Binding ParentDocument.PickBackgroundImageCommand}" />
+                    </StackPanel>
+                    <RadioButton Content="Blur (portrait mode)" GroupName="ExportBgSession" Margin="0,0,0,4"
+                                 IsChecked="{Binding ParentDocument.ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Blur}" />
+                    <StackPanel Visibility="{Binding ParentDocument.ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Blur}" Margin="16,0,0,8">
+                        <TextBlock Text="Blur radius" />
+                        <Slider Minimum="0" Maximum="50" Value="{Binding ParentDocument.ExportBlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                    </StackPanel>
+                    <RadioButton Content="Gradient" GroupName="ExportBgSession" Margin="0,0,0,4"
+                                 IsChecked="{Binding ParentDocument.ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Gradient}" />
+                    <StackPanel Visibility="{Binding ParentDocument.ExportBackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Gradient}" Margin="16,0,0,8">
+                        <TextBlock Text="Top color" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <Rectangle Width="24" Height="24" Fill="{Binding ParentDocument.ExportGradientTopColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                            <Button x:Name="ChooseGradientTopColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseGradientTopColorButton_Click" />
+                            <Popup IsOpen="{Binding ParentDocument.IsGradientTopColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseGradientTopColorButton}"
+                                   StaysOpen="False" AllowsTransparency="True" Placement="Right">
+                                <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                    <controls:SimpleColorPickerControl SelectedColor="{Binding ParentDocument.ExportGradientTopColor}" />
+                                </Border>
+                            </Popup>
+                        </StackPanel>
+                        <TextBlock Text="Bottom color" />
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Width="24" Height="24" Fill="{Binding ParentDocument.ExportGradientBottomColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                            <Button x:Name="ChooseGradientBottomColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseGradientBottomColorButton_Click" />
+                            <Popup IsOpen="{Binding ParentDocument.IsGradientBottomColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseGradientBottomColorButton}"
+                                   StaysOpen="False" AllowsTransparency="True" Placement="Right">
+                                <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                    <controls:SimpleColorPickerControl SelectedColor="{Binding ParentDocument.ExportGradientBottomColor}" />
+                                </Border>
+                            </Popup>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Drop shadow (applies to every background mode) -->
+                    <CheckBox Content="Drop shadow" IsChecked="{Binding ParentDocument.ExportDropShadowEnabled}" Margin="0,8,0,4" />
+                    <StackPanel Visibility="{Binding ParentDocument.ExportDropShadowEnabled, Converter={StaticResource BoolToVisibilityConverter}}" Margin="16,0,0,8">
+                        <TextBlock Text="Offset" />
+                        <Slider Minimum="0" Maximum="60" Value="{Binding ParentDocument.ExportShadowOffset}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                        <TextBlock Text="Blur" />
+                        <Slider Minimum="0" Maximum="40" Value="{Binding ParentDocument.ExportShadowBlur}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                        <TextBlock Text="Opacity" />
+                        <Slider Minimum="0" Maximum="1" Value="{Binding ParentDocument.ExportShadowOpacity}" TickFrequency="0.05" />
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Border>

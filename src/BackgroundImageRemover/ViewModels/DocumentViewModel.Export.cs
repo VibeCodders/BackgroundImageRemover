@@ -21,7 +21,34 @@ public partial class DocumentViewModel
     private string? _exportBackgroundImagePath;
 
     [ObservableProperty]
+    private double _exportBlurRadius = 10;
+
+    [ObservableProperty]
+    private WpfColor _exportGradientTopColor = WpfColor.FromRgb(255, 255, 255);
+
+    [ObservableProperty]
+    private WpfColor _exportGradientBottomColor = WpfColor.FromRgb(120, 120, 120);
+
+    [ObservableProperty]
+    private bool _exportDropShadowEnabled;
+
+    [ObservableProperty]
+    private double _exportShadowOffset = 12;
+
+    [ObservableProperty]
+    private double _exportShadowBlur = 6;
+
+    [ObservableProperty]
+    private double _exportShadowOpacity = 0.45;
+
+    [ObservableProperty]
     private bool _isColorPickerOpen;
+
+    [ObservableProperty]
+    private bool _isGradientTopColorPickerOpen;
+
+    [ObservableProperty]
+    private bool _isGradientBottomColorPickerOpen;
 
     private bool CanExport() => IsImageLoaded && !IsBusy
         && (HasWorkingResult || IsSelectedStrategyReady());
@@ -79,16 +106,23 @@ public partial class DocumentViewModel
             using var cropped = crop ? BackgroundCompositingService.TrimTransparentBorders(bgra) : null;
             var exportBgra = cropped ?? bgra;
 
+            // A drop shadow is baked into a padded, still-transparent canvas before the
+            // background is composited, so it works with every background mode.
+            using var shadowed = ExportDropShadowEnabled
+                ? BackgroundCompositingService.ApplyDropShadow(exportBgra, ExportShadowOffset, ExportShadowOffset, ExportShadowBlur, ExportShadowOpacity)
+                : null;
+            var subject = shadowed ?? exportBgra;
+
             switch (ExportBackgroundMode)
             {
                 case ExportBackgroundMode.Transparent:
-                    await _imageExporter.ExportPngAsync(exportBgra, path);
+                    await _imageExporter.ExportPngAsync(subject, path);
                     break;
 
                 case ExportBackgroundMode.SolidColor:
                 {
                     var colorBgr = new Vec3b(ExportSolidColor.B, ExportSolidColor.G, ExportSolidColor.R);
-                    using var composited = BackgroundCompositingService.CompositeOntoColor(exportBgra, colorBgr);
+                    using var composited = BackgroundCompositingService.CompositeOntoColor(subject, colorBgr);
                     await ExportBgrAsPngAsync(composited, path);
                     break;
                 }
@@ -101,7 +135,28 @@ public partial class DocumentViewModel
                         return;
                     }
                     using var background = await _imageLoader.LoadAsync(ExportBackgroundImagePath);
-                    using var composited = BackgroundCompositingService.CompositeOntoImage(exportBgra, background.FullBgr);
+                    using var composited = BackgroundCompositingService.CompositeOntoImage(subject, background.FullBgr);
+                    await ExportBgrAsPngAsync(composited, path);
+                    break;
+                }
+
+                case ExportBackgroundMode.Blur:
+                {
+                    if (_loadedImage is null)
+                    {
+                        StatusMessage = "No source image available for the blur background.";
+                        return;
+                    }
+                    using var composited = BackgroundCompositingService.CompositeOntoBlurredImage(subject, _loadedImage.FullBgr, ExportBlurRadius);
+                    await ExportBgrAsPngAsync(composited, path);
+                    break;
+                }
+
+                case ExportBackgroundMode.Gradient:
+                {
+                    var top = new Vec3b(ExportGradientTopColor.B, ExportGradientTopColor.G, ExportGradientTopColor.R);
+                    var bottom = new Vec3b(ExportGradientBottomColor.B, ExportGradientBottomColor.G, ExportGradientBottomColor.R);
+                    using var composited = BackgroundCompositingService.CompositeOntoGradient(subject, top, bottom);
                     await ExportBgrAsPngAsync(composited, path);
                     break;
                 }

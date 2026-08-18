@@ -51,8 +51,9 @@ public partial class DocumentView : UserControl
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(DocumentViewModel.PreviewBitmap))
+        if (e.PropertyName is nameof(DocumentViewModel.PreviewBitmap) or nameof(DocumentViewModel.DisplayBitmap))
         {
+            SinglePreview.ResetView();
             OriginalPreview.ResetView();
             ResultEditPreview.ResetView();
         }
@@ -85,9 +86,4 @@ public partial class DocumentView : UserControl
     private void ResultEditPreview_StrokeMove(object? sender, Point e) => ViewModel?.OnResultStrokeMove(e);
     private void ResultEditPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel?.OnResultStrokeEnd();
     private void ResultEditPreview_WandClicked(object? sender, OpenCvSharp.Point e) => ViewModel?.OnResultWandClicked(e);
-
-    private void ChooseColorButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel is not null) ViewModel.IsColorPickerOpen = !ViewModel.IsColorPickerOpen;
-    }
 }

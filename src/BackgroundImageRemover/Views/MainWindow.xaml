@@ -6,16 +6,17 @@
         xmlns:views="clr-namespace:BackgroundImageRemover.Views"
         xmlns:vm="clr-namespace:BackgroundImageRemover.ViewModels"
         mc:Ignorable="d"
-        Title="{Binding SelectedDocument.WindowTitle, FallbackValue='Background Image Remover'}"
+        Title="{Binding SelectedDocument.WindowTitle, FallbackValue='Image Editor'}"
         Closing="MainWindow_Closing"
         Height="800" Width="1360" WindowState="Maximized">
     <Window.InputBindings>
         <KeyBinding Key="Z" Modifiers="Control" Command="{Binding SelectedDocument.UndoCommand}" />
         <KeyBinding Key="Y" Modifiers="Control" Command="{Binding SelectedDocument.RedoCommand}" />
+        <KeyBinding Key="V" Modifiers="Control" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" />
         <KeyBinding Key="N" Modifiers="Control" Command="{Binding NewProjectCommand}" />
         <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenProjectCommand}" />
-        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SelectedDocument.SaveProjectCommand}" />
-        <KeyBinding Key="S" Modifiers="Control+Shift" Command="{Binding SelectedDocument.SaveProjectAsCommand}" />
+        <KeyBinding Key="Return" Command="{Binding SelectedDocument.ApplyCommand}" />
+        <KeyBinding Key="Escape" Command="{Binding SelectedDocument.CancelCommand}" />
     </Window.InputBindings>
 
     <Window.Resources>
@@ -25,17 +26,29 @@
         <DataTemplate DataType="{x:Type vm:UncropViewModel}">
             <views:UncropView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UncropToolSessionViewModel}">
+            <views:UncropToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BackgroundRemoverToolSessionViewModel}">
+            <views:BackgroundRemoverToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RetouchToolSessionViewModel}">
+            <views:RetouchToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AdjustmentsToolSessionViewModel}">
+            <views:AdjustmentsToolSessionView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
+        <Menu DockPanel.Dock="Top" Background="#FFF5F6F8" BorderBrush="#FFDDDDDD" BorderThickness="0,0,0,1" Padding="4,2">
             <MenuItem Header="_File">
-                <MenuItem Header="_New project..." Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
-                <MenuItem Header="_Open image..." Command="{Binding NewTabCommand}" />
+                <MenuItem Header="_Open image..." Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
+                <MenuItem Header="Open in _new tab..." Command="{Binding NewTabCommand}" />
                 <MenuItem Header="Open _project..." Command="{Binding OpenProjectCommand}" InputGestureText="Ctrl+O" />
                 <Separator />
-                <MenuItem Header="_Save" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+S" />
-                <MenuItem Header="Save _as..." Command="{Binding SelectedDocument.SaveProjectAsCommand}" InputGestureText="Ctrl+Shift+S" />
+                <MenuItem Header="_Save project" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+S" />
+                <MenuItem Header="Save project _as..." Command="{Binding SelectedDocument.SaveProjectAsCommand}" InputGestureText="Ctrl+Shift+S" />
                 <Separator />
                 <MenuItem Header="_Recent" ItemsSource="{Binding RecentFiles}" SubmenuOpened="RecentMenu_SubmenuOpened">
                     <MenuItem.ItemContainerStyle>
@@ -56,8 +69,11 @@
                     </MenuItem.ItemContainerStyle>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Header="_Tools">
-                <MenuItem Header="_Uncrop..." Command="{Binding OpenUncropCommand}" />
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Undo" Command="{Binding SelectedDocument.UndoCommand}" InputGestureText="Ctrl+Z" />
+                <MenuItem Header="_Redo" Command="{Binding SelectedDocument.RedoCommand}" InputGestureText="Ctrl+Y" />
+                <Separator />
+                <MenuItem Header="_Paste image" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" InputGestureText="Ctrl+V" />
             </MenuItem>
         </Menu>
 

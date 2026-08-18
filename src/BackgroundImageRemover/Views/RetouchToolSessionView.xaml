@@ -1,0 +1,106 @@
+<UserControl x:Class="BackgroundImageRemover.Views.RetouchToolSessionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
+             xmlns:models="clr-namespace:BackgroundImageRemover.Models"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="1200">
+    <DockPanel>
+        <!-- Modal Tool Session Top Bar -->
+        <Border DockPanel.Dock="Top" Background="#FF1E1E24" Padding="12,8" BorderBrush="#FF33333D" BorderThickness="0,0,0,1">
+            <DockPanel>
+                <!-- Tool identity badge -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
+                    <Border Background="#FF8E24AA" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
+                        <TextBlock Text="🖌 RETOUCH &amp; BRUSH" Foreground="White" FontWeight="Bold" FontSize="11" />
+                    </Border>
+                    <TextBlock Text="{Binding Title}" Foreground="#FFDDDDDD" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Actions: Apply (Enter) & Cancel (Esc) -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
+                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}"
+                            Padding="12,6" Margin="0,0,8,0" Background="#FF2D2D35" Foreground="#FFCCCCCC"
+                            BorderBrush="#FF444450" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
+                    <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}"
+                            Padding="16,6" Background="#FF8E24AA" Foreground="White"
+                            BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Status bar -->
+        <StatusBar DockPanel.Dock="Bottom" Background="#FFF5F6F8">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusMessage}" />
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Side Controls Panel -->
+        <Border DockPanel.Dock="Right" Width="280" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="Retouch Tools" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+
+                    <TextBlock Text="Tool Selection:" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <UniformGrid Columns="2" Margin="0,0,0,12">
+                        <RadioButton Content="Brush" GroupName="RetouchModeTab" Margin="0,0,4,0"
+                                     IsChecked="{Binding ResultMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Brush}" />
+                        <RadioButton Content="Magic Wand" GroupName="RetouchModeTab" Margin="4,0,0,0"
+                                     IsChecked="{Binding ResultMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=MagicWand}" />
+                    </UniformGrid>
+
+                    <TextBlock Text="Action:" FontWeight="SemiBold" Margin="0,4,0,4" />
+                    <UniformGrid Columns="2" Margin="0,0,0,12">
+                        <RadioButton Content="Erase" GroupName="BrushModeTab" Margin="0,0,4,0"
+                                     IsChecked="{Binding BrushMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Erase}" />
+                        <RadioButton Content="Restore" GroupName="BrushModeTab" Margin="4,0,0,0"
+                                     IsChecked="{Binding BrushMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Restore}" />
+                    </UniformGrid>
+
+                    <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Brush}">
+                        <DockPanel Margin="0,4,0,0">
+                            <TextBlock Text="Brush Size:" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding BrushRadius, StringFormat='{}{0:0} px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="2" Maximum="150" Value="{Binding BrushRadius}" Margin="0,2,0,8" />
+
+                        <DockPanel Margin="0,4,0,0">
+                            <TextBlock Text="Hardness:" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding BrushHardness, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="0" Maximum="0.95" Value="{Binding BrushHardness}" Margin="0,2,0,12" />
+                    </StackPanel>
+
+                    <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=MagicWand}">
+                        <DockPanel Margin="0,4,0,0">
+                            <TextBlock Text="Tolerance:" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding MagicWandTolerance, StringFormat='{}{0:0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="1" Maximum="100" Value="{Binding MagicWandTolerance}" Margin="0,2,0,12" />
+                    </StackPanel>
+
+                    <Separator Margin="0,8,0,12" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="↶ Undo" Command="{Binding UndoCommand}" Padding="10,4" Margin="0,0,6,0" />
+                        <Button Content="↷ Redo" Command="{Binding RedoCommand}" Padding="10,4" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Canvas -->
+        <Grid Margin="8">
+            <controls:ImagePreviewControl x:Name="ResultEditPreview"
+                                           ImageSource="{Binding ResultBitmap}"
+                                           Mode="{Binding ResultMode}"
+                                           BrushRadius="{Binding BrushRadius}"
+                                           StrokeStart="ResultEditPreview_StrokeStart"
+                                           StrokeMove="ResultEditPreview_StrokeMove"
+                                           StrokeEnd="ResultEditPreview_StrokeEnd"
+                                           WandClicked="ResultEditPreview_WandClicked" />
+        </Grid>
+    </DockPanel>
+</UserControl>

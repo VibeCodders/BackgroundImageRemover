@@ -46,7 +46,6 @@ public class UncropViewModelTests
     private sealed class DummyDialogService : IDialogService
     {
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
-        public (NewProjectType? Type, bool OpenImageImmediately) ShowNewProjectDialog() => (null, false);
         public string? ShowOpenFolderDialog(string title) => null;
         public string? ShowOpenImageDialog() => null;
         public string? ShowOpenProjectDialog() => null;

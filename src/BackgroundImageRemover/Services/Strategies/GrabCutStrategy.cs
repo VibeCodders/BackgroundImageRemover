@@ -30,11 +30,6 @@ public sealed class GrabCutStrategy : StrategyBase
         bool hasBackground = context.GrabCutBackgroundScribble is not null;
         bool hasScribbles = hasForeground || hasBackground;
 
-        if (rect is null && !hasScribbles && _lastLabelMask is null)
-        {
-            throw new InvalidOperationException("GrabCut requires a rectangle or at least one scribble stroke.");
-        }
-
         var gcMask = new Mat();
         using var bgdModel = new Mat();
         using var fgdModel = new Mat();
@@ -52,6 +47,13 @@ public sealed class GrabCutStrategy : StrategyBase
         else if (rect is { } r)
         {
             Cv2.GrabCut(bgr, gcMask, r, bgdModel, fgdModel, context.GrabCutIterations, GrabCutModes.InitWithRect);
+        }
+        else if (!hasScribbles)
+        {
+            // If no rectangle was drawn and no scribbles exist, default to the entire image
+            // (with a 1px border margin required by OpenCV GrabCut)
+            var fullRect = new Rect(1, 1, Math.Max(1, bgr.Width - 2), Math.Max(1, bgr.Height - 2));
+            Cv2.GrabCut(bgr, gcMask, fullRect, bgdModel, fgdModel, context.GrabCutIterations, GrabCutModes.InitWithRect);
         }
         else
         {

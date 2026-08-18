@@ -179,6 +179,16 @@ public partial class UncropCanvasControl : UserControl
 
     private void RootGrid_MouseDown(object sender, MouseButtonEventArgs e)
     {
+        if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
+        {
+            ZoomScale.ScaleX = 1;
+            ZoomScale.ScaleY = 1;
+            PanTranslate.X = 0;
+            PanTranslate.Y = 0;
+            e.Handled = true;
+            return;
+        }
+
         if (e.MiddleButton == MouseButtonState.Pressed)
         {
             _panStart = e.GetPosition(this);

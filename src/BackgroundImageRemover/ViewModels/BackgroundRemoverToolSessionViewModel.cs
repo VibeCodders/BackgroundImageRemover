@@ -408,13 +408,23 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         _grabCutBgScribble ??= new Mat(size, MatType.CV_8UC1, Scalar.All(0));
     }
 
+    private const int MaxScribbleHistoryDepth = 20;
+
     private void PushScribbleUndoSnapshot()
     {
         if (_grabCutFgScribble is null || _grabCutBgScribble is null) return;
         _scribbleUndo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
+        _scribbleUndo.TrimStack(MaxScribbleHistoryDepth, drop =>
+        {
+            drop.Fg.Dispose();
+            drop.Bg.Dispose();
+        });
         foreach (var (f, b) in _scribbleRedo) { f.Dispose(); b.Dispose(); }
         _scribbleRedo.Clear();
+        UndoScribbleCommand.NotifyCanExecuteChanged();
+        RedoScribbleCommand.NotifyCanExecuteChanged();
     }
+
 
     private void DrawScribbleSegment(WpfPoint from, WpfPoint to)
     {
@@ -465,6 +475,41 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         }
     }
 
+    private bool CanUndoScribble => _scribbleUndo.Count > 0;
+    private bool CanRedoScribble => _scribbleRedo.Count > 0;
+
+    [RelayCommand(CanExecute = nameof(CanUndoScribble))]
+    public void UndoScribble()
+    {
+        if (_scribbleUndo.Count == 0 || _grabCutFgScribble is null || _grabCutBgScribble is null) return;
+        _scribbleRedo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
+        var (fg, bg) = _scribbleUndo.Pop();
+        _grabCutFgScribble.Dispose();
+        _grabCutBgScribble.Dispose();
+        _grabCutFgScribble = fg;
+        _grabCutBgScribble = bg;
+        GrabCut.HasScribbles = HasNonEmptyScribbles();
+        UndoScribbleCommand.NotifyCanExecuteChanged();
+        RedoScribbleCommand.NotifyCanExecuteChanged();
+        ScribbleStrokeUndone?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRedoScribble))]
+    public void RedoScribble()
+    {
+        if (_scribbleRedo.Count == 0 || _grabCutFgScribble is null || _grabCutBgScribble is null) return;
+        _scribbleUndo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
+        var (fg, bg) = _scribbleRedo.Pop();
+        _grabCutFgScribble.Dispose();
+        _grabCutBgScribble.Dispose();
+        _grabCutFgScribble = fg;
+        _grabCutBgScribble = bg;
+        GrabCut.HasScribbles = HasNonEmptyScribbles();
+        UndoScribbleCommand.NotifyCanExecuteChanged();
+        RedoScribbleCommand.NotifyCanExecuteChanged();
+        ScribbleStrokeRedone?.Invoke(this, EventArgs.Empty);
+    }
+
     private void ClearScribbles()
     {
         _grabCutFgScribble?.Dispose();
@@ -476,8 +521,11 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         _scribbleUndo.Clear();
         _scribbleRedo.Clear();
         GrabCut.HasScribbles = false;
+        UndoScribbleCommand.NotifyCanExecuteChanged();
+        RedoScribbleCommand.NotifyCanExecuteChanged();
         ScribblesCleared?.Invoke(this, EventArgs.Empty);
     }
+
 
     public override async Task ApplyAsync()
     {

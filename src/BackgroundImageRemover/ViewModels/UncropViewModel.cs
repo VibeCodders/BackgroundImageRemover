@@ -211,7 +211,7 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
         {
             return;
         }
-        Padding = ComputeCenteredPadding(_sourceImage.FullBgr.Size(), ratio);
+        Padding = CanvasPadding.ComputeCentered(_sourceImage.FullBgr.Size(), ratio);
     }
 
     /// <summary>Applies a padding change coming from the handles or the numeric fields: if a
@@ -230,24 +230,6 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
         }
     }
 
-    private static CanvasPadding ComputeCenteredPadding(Size sourceSize, double targetRatio)
-    {
-        double currentRatio = (double)sourceSize.Width / sourceSize.Height;
-        if (targetRatio > currentRatio)
-        {
-            int targetWidth = (int)Math.Round(sourceSize.Height * targetRatio);
-            int extra = Math.Max(0, targetWidth - sourceSize.Width);
-            int half = extra / 2;
-            return new CanvasPadding(half, 0, extra - half, 0);
-        }
-        else
-        {
-            int targetHeight = (int)Math.Round(sourceSize.Width / targetRatio);
-            int extra = Math.Max(0, targetHeight - sourceSize.Height);
-            int half = extra / 2;
-            return new CanvasPadding(0, half, 0, extra - half);
-        }
-    }
 
     /// <summary>Seeds the window with an image handed in from the main window (a clone, so this
     /// window's own lifecycle/EditHistory never touches the source document's Mats).</summary>

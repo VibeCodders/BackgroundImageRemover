@@ -88,9 +88,15 @@
                                          IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ScribbleBackground, Mode=OneWay}"
                                          Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.ScribbleBackground}" />
                         </UniformGrid>
-                        <Button Content="Update preview" Command="{Binding RefineGrabCutPreviewCommand}"
-                                Visibility="{Binding GrabCut.HasScribbles, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,4,0,0" />
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Button Content="↶ Undo" Command="{Binding UndoScribbleCommand}" Margin="0,0,4,0" Padding="8,3" />
+                            <Button Content="↷ Redo" Command="{Binding RedoScribbleCommand}" Margin="0,0,8,0" Padding="8,3" />
+                            <Button Content="Update preview" Command="{Binding RefineGrabCutPreviewCommand}"
+                                    Visibility="{Binding GrabCut.HasScribbles, Converter={StaticResource BoolToVisibilityConverter}}" Padding="8,3" />
+                        </StackPanel>
                     </StackPanel>
+
+
 
                     <!-- ONNX options -->
                     <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Onnx}">

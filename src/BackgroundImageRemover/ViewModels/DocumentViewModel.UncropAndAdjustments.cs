@@ -110,7 +110,7 @@ public partial class DocumentViewModel
         set => SetUncropPaddingFromUser(UncropPadding with { Bottom = Math.Max(0, value) });
     }
 
-    // --- Image Adjustments (Brightness, Contrast, Saturation, Hue, Blur, Sharpen) ---
+    // --- Image Adjustments (Brightness, Contrast, Saturation, Hue, Temperature, Tint, Vignette, Blur, Sharpen) ---
     [ObservableProperty]
     private double _adjBrightness = 0.0;
 
@@ -122,6 +122,15 @@ public partial class DocumentViewModel
 
     [ObservableProperty]
     private double _adjHueShift = 0.0;
+
+    [ObservableProperty]
+    private double _adjTemperature = 0.0;
+
+    [ObservableProperty]
+    private double _adjTint = 0.0;
+
+    [ObservableProperty]
+    private double _adjVignette = 0.0;
 
     [ObservableProperty]
     private int _adjBlurRadius = 0;
@@ -143,8 +152,9 @@ public partial class DocumentViewModel
         {
             return;
         }
-        UncropPadding = ComputeCenteredPadding(_loadedImage.FullBgr.Size(), ratio);
+        UncropPadding = CanvasPadding.ComputeCentered(_loadedImage.FullBgr.Size(), ratio);
     }
+
 
     private void SetUncropPaddingFromUser(CanvasPadding value)
     {
@@ -159,24 +169,6 @@ public partial class DocumentViewModel
         }
     }
 
-    private static CanvasPadding ComputeCenteredPadding(Size sourceSize, double targetRatio)
-    {
-        double currentRatio = (double)sourceSize.Width / sourceSize.Height;
-        if (targetRatio > currentRatio)
-        {
-            int targetWidth = (int)Math.Round(sourceSize.Height * targetRatio);
-            int extra = Math.Max(0, targetWidth - sourceSize.Width);
-            int half = extra / 2;
-            return new CanvasPadding(half, 0, extra - half, 0);
-        }
-        else
-        {
-            int targetHeight = (int)Math.Round(sourceSize.Width / targetRatio);
-            int extra = Math.Max(0, targetHeight - sourceSize.Height);
-            int half = extra / 2;
-            return new CanvasPadding(0, half, 0, extra - half);
-        }
-    }
 
     // --- Uncrop Commands ---
     private bool CanApplyUncrop() => IsImageLoaded && !IsBusy
@@ -303,6 +295,9 @@ public partial class DocumentViewModel
         AdjContrast = 1.0;
         AdjSaturation = 1.0;
         AdjHueShift = 0.0;
+        AdjTemperature = 0.0;
+        AdjTint = 0.0;
+        AdjVignette = 0.0;
         AdjBlurRadius = 0;
         AdjSharpenStrength = 0.0;
     }
@@ -322,6 +317,9 @@ public partial class DocumentViewModel
             Contrast = AdjContrast,
             Saturation = AdjSaturation,
             HueShift = AdjHueShift,
+            Temperature = AdjTemperature,
+            Tint = AdjTint,
+            Vignette = AdjVignette,
             BlurRadius = AdjBlurRadius,
             SharpenStrength = AdjSharpenStrength
         };
@@ -373,4 +371,5 @@ public partial class DocumentViewModel
             IsBusy = false;
         }
     }
+
 }

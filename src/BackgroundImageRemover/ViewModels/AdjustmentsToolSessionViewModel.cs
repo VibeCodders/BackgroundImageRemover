@@ -43,6 +43,15 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     private double _adjHueShift = 0.0;
 
     [ObservableProperty]
+    private double _adjTemperature = 0.0;
+
+    [ObservableProperty]
+    private double _adjTint = 0.0;
+
+    [ObservableProperty]
+    private double _adjVignette = 0.0;
+
+    [ObservableProperty]
     private int _adjBlurRadius = 0;
 
     [ObservableProperty]
@@ -89,6 +98,9 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     partial void OnAdjContrastChanged(double value) => UpdateLivePreview();
     partial void OnAdjSaturationChanged(double value) => UpdateLivePreview();
     partial void OnAdjHueShiftChanged(double value) => UpdateLivePreview();
+    partial void OnAdjTemperatureChanged(double value) => UpdateLivePreview();
+    partial void OnAdjTintChanged(double value) => UpdateLivePreview();
+    partial void OnAdjVignetteChanged(double value) => UpdateLivePreview();
     partial void OnAdjBlurRadiusChanged(int value) => UpdateLivePreview();
     partial void OnAdjSharpenStrengthChanged(double value) => UpdateLivePreview();
 
@@ -102,6 +114,9 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
             Contrast = AdjContrast,
             Saturation = AdjSaturation,
             HueShift = AdjHueShift,
+            Temperature = AdjTemperature,
+            Tint = AdjTint,
+            Vignette = AdjVignette,
             BlurRadius = AdjBlurRadius,
             SharpenStrength = AdjSharpenStrength
         };
@@ -135,6 +150,9 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
         AdjContrast = 1.0;
         AdjSaturation = 1.0;
         AdjHueShift = 0.0;
+        AdjTemperature = 0.0;
+        AdjTint = 0.0;
+        AdjVignette = 0.0;
         AdjBlurRadius = 0;
         AdjSharpenStrength = 0.0;
         UpdateLivePreview();
@@ -154,6 +172,9 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
             Contrast = AdjContrast,
             Saturation = AdjSaturation,
             HueShift = AdjHueShift,
+            Temperature = AdjTemperature,
+            Tint = AdjTint,
+            Vignette = AdjVignette,
             BlurRadius = AdjBlurRadius,
             SharpenStrength = AdjSharpenStrength
         };
@@ -167,6 +188,7 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
         _shell.CloseTabDirect(this);
         return Task.CompletedTask;
     }
+
 
     public override void Dispose()
     {

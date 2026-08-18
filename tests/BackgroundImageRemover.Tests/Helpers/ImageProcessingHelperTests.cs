@@ -83,4 +83,61 @@ public sealed class ImageProcessingHelperTests
         using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
         Assert.Equal(src.Size(), result.Size());
     }
+
+    [Fact]
+    public void ApplyAdjustments_HueShift_RotatesHue()
+    {
+        // Pure red in BGR: B=0, G=0, R=255 -> HSV Hue is ~0
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(0, 0, 255));
+        var adj = new ImageAdjustments { HueShift = 120 }; // Shifting red by 120 deg leads to green
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+        var pixel = result.At<Vec3b>(0, 0);
+
+        // Green channel should be highest now
+        Assert.True(pixel.Item1 > pixel.Item0 && pixel.Item1 > pixel.Item2);
+    }
+
+    [Fact]
+    public void ApplyAdjustments_WarmTemperature_IncreasesRedDecreasesBlue()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(100, 100, 100));
+        var adj = new ImageAdjustments { Temperature = 40 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+        var pixel = result.At<Vec3b>(0, 0);
+
+        Assert.True(pixel.Item2 > 100); // Red boosted
+        Assert.True(pixel.Item0 < 100); // Blue reduced
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Tint_AdjustsGreenChannel()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(100, 100, 100));
+        var adjGreen = new ImageAdjustments { Tint = -40 };
+        using var resultGreen = ImageProcessingHelper.ApplyAdjustments(src, adjGreen);
+        var pixelGreen = resultGreen.At<Vec3b>(0, 0);
+        Assert.True(pixelGreen.Item1 > 100); // Green boosted
+
+        var adjMagenta = new ImageAdjustments { Tint = 40 };
+        using var resultMagenta = ImageProcessingHelper.ApplyAdjustments(src, adjMagenta);
+        var pixelMagenta = resultMagenta.At<Vec3b>(0, 0);
+        Assert.True(pixelMagenta.Item1 < 100); // Green reduced
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Vignette_DarkensCornersMoreThanCenter()
+    {
+        using var src = new Mat(50, 50, MatType.CV_8UC3, new Scalar(200, 200, 200));
+        var adj = new ImageAdjustments { Vignette = 0.8 };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+        var centerPixel = result.At<Vec3b>(25, 25);
+        var cornerPixel = result.At<Vec3b>(0, 0);
+
+        Assert.True(centerPixel.Item0 > cornerPixel.Item0);
+        Assert.True(cornerPixel.Item0 < 200);
+    }
 }
+

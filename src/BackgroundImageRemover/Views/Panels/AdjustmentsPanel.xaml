@@ -36,12 +36,34 @@
         </DockPanel>
         <Slider Minimum="-180" Maximum="180" Value="{Binding AdjHueShift}" SmallChange="1" LargeChange="15" Margin="0,2,0,8" />
 
+        <!-- Color Temperature -->
+        <DockPanel Margin="0,4,0,0">
+            <TextBlock Text="Temperature" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+            <TextBlock Text="{Binding AdjTemperature, StringFormat='{}{0:0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+        </DockPanel>
+        <Slider Minimum="-100" Maximum="100" Value="{Binding AdjTemperature}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
+
+        <!-- Tint -->
+        <DockPanel Margin="0,4,0,0">
+            <TextBlock Text="Tint" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+            <TextBlock Text="{Binding AdjTint, StringFormat='{}{0:0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+        </DockPanel>
+        <Slider Minimum="-100" Maximum="100" Value="{Binding AdjTint}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
+
+        <!-- Vignette -->
+        <DockPanel Margin="0,4,0,0">
+            <TextBlock Text="Vignette" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+            <TextBlock Text="{Binding AdjVignette, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+        </DockPanel>
+        <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjVignette}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
         <!-- Blur -->
         <DockPanel Margin="0,4,0,0">
             <TextBlock Text="Blur Radius" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
             <TextBlock Text="{Binding AdjBlurRadius, StringFormat='{}{0}px'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
         </DockPanel>
         <Slider Minimum="0" Maximum="50" Value="{Binding AdjBlurRadius}" SmallChange="1" LargeChange="5" Margin="0,2,0,8" />
+
 
         <!-- Sharpen -->
         <DockPanel Margin="0,4,0,0">

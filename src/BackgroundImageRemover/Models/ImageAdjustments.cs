@@ -17,6 +17,15 @@ public record ImageAdjustments
     /// <summary>Hue rotation in degrees in [-180, 180]. Default 0 (no change).</summary>
     public double HueShift { get; init; } = 0.0;
 
+    /// <summary>Color Temperature offset in [-100, 100]. Negative = cooler (blue), Positive = warmer (amber/red).</summary>
+    public double Temperature { get; init; } = 0.0;
+
+    /// <summary>Tint offset in [-100, 100]. Negative = green, Positive = magenta.</summary>
+    public double Tint { get; init; } = 0.0;
+
+    /// <summary>Vignette darkening amount in [0.0, 1.0]. Default 0.0 (no vignette).</summary>
+    public double Vignette { get; init; } = 0.0;
+
     /// <summary>Gaussian blur radius in [0, 50]. Default 0 (no blur).</summary>
     public int BlurRadius { get; init; } = 0;
 
@@ -29,8 +38,12 @@ public record ImageAdjustments
         Math.Abs(Contrast - 1.0) < 1e-4 &&
         Math.Abs(Saturation - 1.0) < 1e-4 &&
         Math.Abs(HueShift) < 1e-4 &&
+        Math.Abs(Temperature) < 1e-4 &&
+        Math.Abs(Tint) < 1e-4 &&
+        Math.Abs(Vignette) < 1e-4 &&
         BlurRadius == 0 &&
         Math.Abs(SharpenStrength) < 1e-4;
 
     public static ImageAdjustments Default { get; } = new();
 }
+

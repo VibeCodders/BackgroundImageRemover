@@ -4,7 +4,7 @@ using OpenCvSharp;
 namespace BackgroundImageRemover.Helpers;
 
 /// <summary>
-/// High-performance vectorized image adjustments (Brightness, Contrast, Saturation, Hue shift, Blur, Sharpen)
+/// High-performance vectorized image adjustments (Brightness, Contrast, Saturation, Hue shift, Temperature, Tint, Vignette, Blur, Sharpen)
 /// implemented via OpenCvSharp.
 /// </summary>
 public static class ImageProcessingHelper
@@ -35,7 +35,39 @@ public static class ImageProcessingHelper
                 current = adjusted;
             }
 
-            // 2. Saturation and Hue shift (in HSV space)
+            // 2. Temperature & Tint (RGB color balance shift)
+            if (Math.Abs(adjustments.Temperature) > 1e-4 || Math.Abs(adjustments.Tint) > 1e-4)
+            {
+                var channels = Cv2.Split(current);
+                try
+                {
+                    // Temperature: warm adds Red/decreases Blue, cool adds Blue/decreases Red
+                    if (Math.Abs(adjustments.Temperature) > 1e-4)
+                    {
+                        double tempShift = adjustments.Temperature * 0.5; // [-50, 50]
+                        Cv2.Add(channels[0], Scalar.All(-tempShift), channels[0]); // Blue channel
+                        Cv2.Add(channels[2], Scalar.All(tempShift), channels[2]);  // Red channel
+                    }
+
+                    // Tint: positive adds Magenta (decreases Green), negative adds Green
+                    if (Math.Abs(adjustments.Tint) > 1e-4)
+                    {
+                        double tintShift = adjustments.Tint * 0.5; // [-50, 50]
+                        Cv2.Add(channels[1], Scalar.All(-tintShift), channels[1]); // Green channel
+                    }
+
+                    var balanced = new Mat();
+                    Cv2.Merge(channels, balanced);
+                    current.Dispose();
+                    current = balanced;
+                }
+                finally
+                {
+                    foreach (var ch in channels) ch.Dispose();
+                }
+            }
+
+            // 3. Saturation and Hue shift (in HSV space)
             if (Math.Abs(adjustments.Saturation - 1.0) > 1e-4 || Math.Abs(adjustments.HueShift) > 1e-4)
             {
                 using var hsv = new Mat();
@@ -52,15 +84,10 @@ public static class ImageProcessingHelper
                         channels[0].ConvertTo(hFloat, MatType.CV_32FC1);
                         Cv2.Add(hFloat, Scalar.All(shift), hFloat);
 
-                        // Wrap modulo 180
+                        // Wrap modulo 180 safely: (h + 360) % 180
                         using var shiftPositive = new Mat();
-                        Cv2.Add(hFloat, Scalar.All(180.0), shiftPositive);
-                        using var mod180 = new Mat();
-                        // Compute (h + 180) % 180
-                        // Since hFloat is in [-90, 270], shiftPositive is in [90, 450]
-                        using var div = new Mat();
-                        shiftPositive.ConvertTo(div, MatType.CV_32FC1, 1.0 / 180.0);
-                        // Convert back to 8UC1 with modulo
+                        Cv2.Add(hFloat, Scalar.All(360.0), shiftPositive);
+
                         for (int r = 0; r < channels[0].Rows; r++)
                         {
                             for (int c = 0; c < channels[0].Cols; c++)
@@ -90,7 +117,7 @@ public static class ImageProcessingHelper
                 }
             }
 
-            // 3. Gaussian Blur
+            // 4. Gaussian Blur
             if (adjustments.BlurRadius > 0)
             {
                 int kSize = adjustments.BlurRadius * 2 + 1;
@@ -100,16 +127,43 @@ public static class ImageProcessingHelper
                 current = blurred;
             }
 
-            // 4. Sharpen (Unsharp Mask)
+            // 5. Sharpen (Unsharp Mask)
             if (adjustments.SharpenStrength > 1e-4)
             {
                 using var blurred = new Mat();
                 Cv2.GaussianBlur(current, blurred, new Size(0, 0), 3);
                 var sharpened = new Mat();
-                // addWeighted: current * (1 + strength) + blurred * (-strength) + 0
                 Cv2.AddWeighted(current, 1.0 + adjustments.SharpenStrength, blurred, -adjustments.SharpenStrength, 0, sharpened);
                 current.Dispose();
                 current = sharpened;
+            }
+
+            // 6. Vignette effect
+            if (adjustments.Vignette > 1e-4)
+            {
+                using var vignetteMask = CreateVignetteMask(current.Size(), adjustments.Vignette);
+                var vignetted = new Mat();
+                using var currentFloat = new Mat();
+                current.ConvertTo(currentFloat, MatType.CV_32FC3);
+
+                var channels = Cv2.Split(currentFloat);
+                try
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        Cv2.Multiply(channels[i], vignetteMask, channels[i]);
+                    }
+                    using var merged = new Mat();
+                    Cv2.Merge(channels, merged);
+                    merged.ConvertTo(vignetted, MatType.CV_8UC3);
+                }
+                finally
+                {
+                    foreach (var ch in channels) ch.Dispose();
+                }
+
+                current.Dispose();
+                current = vignetted;
             }
 
             return current;
@@ -120,4 +174,31 @@ public static class ImageProcessingHelper
             throw;
         }
     }
+
+    /// <summary>
+    /// Creates a smooth radial vignette intensity mask in [0..1] range as CV_32FC1.
+    /// </summary>
+    private static Mat CreateVignetteMask(Size size, double strength)
+    {
+        var mask = new Mat(size, MatType.CV_32FC1);
+        float centerX = size.Width / 2.0f;
+        float centerY = size.Height / 2.0f;
+        float maxDistance = MathF.Sqrt(centerX * centerX + centerY * centerY);
+
+        for (int r = 0; r < size.Height; r++)
+        {
+            float dy = r - centerY;
+            for (int c = 0; c < size.Width; c++)
+            {
+                float dx = c - centerX;
+                float dist = MathF.Sqrt(dx * dx + dy * dy) / maxDistance;
+                // Cosine smooth roll-off
+                float factor = 1.0f - (float)strength * MathF.Pow(dist, 1.8f);
+                mask.Set(r, c, Math.Clamp(factor, 0.0f, 1.0f));
+            }
+        }
+
+        return mask;
+    }
 }
+

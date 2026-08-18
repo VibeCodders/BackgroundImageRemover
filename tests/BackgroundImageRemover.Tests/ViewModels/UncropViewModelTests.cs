@@ -93,7 +93,7 @@ public class UncropViewModelTests
         await vm.ApplyFillCommand.ExecuteAsync(null);
 
         Assert.True(vm.IsDirty);
-        Assert.True(vm.TabTitle.EndsWith("*"));
+        Assert.EndsWith("*", vm.TabTitle);
         Assert.NotNull(vm.PreviewResult);
         Assert.True(vm.CanUndo);
     }

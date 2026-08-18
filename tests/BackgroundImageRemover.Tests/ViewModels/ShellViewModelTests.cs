@@ -123,16 +123,38 @@ public class ShellViewModelTests
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
     }
 
-    private sealed class FakeUncropTab : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDocumentTab
+    private sealed class FakeUncropFillService : BackgroundImageRemover.Services.Outpaint.IUncropFillService
     {
-        public string Title => "Uncrop";
-        public string TabTitle => "Uncrop";
-        public string WindowTitle => "Uncrop — Background Image Remover";
-        public bool IsDirty => false;
-        public string? DirtyHint => null;
-        public bool IsCutout => false;
-        public string? CutoutHint => null;
-        public Task<bool> TrySaveProjectAsync() => Task.FromResult(true);
-        public void Dispose() { }
+        public OpenCvSharp.Mat ExpandCanvas(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, out OpenCvSharp.Mat newAreaMask)
+        {
+            newAreaMask = new OpenCvSharp.Mat(1, 1, OpenCvSharp.MatType.CV_8UC1);
+            return new OpenCvSharp.Mat(1, 1, OpenCvSharp.MatType.CV_8UC3);
+        }
+        public OpenCvSharp.Mat FillInpaint(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, Models.UncropInpaintMethod method)
+            => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
+        public OpenCvSharp.Mat FillMirror(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding)
+            => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
+        public OpenCvSharp.Mat FillSolidColor(OpenCvSharp.Mat sourceBgr, Models.CanvasPadding padding, bool blurred)
+            => new(1, 1, OpenCvSharp.MatType.CV_8UC3);
+    }
+
+    private sealed class FakeImageLoaderService : BackgroundImageRemover.Services.ImageIo.IImageLoaderService
+    {
+        public Task<Models.LoadedImage> LoadAsync(string path, CancellationToken ct = default)
+            => Task.FromResult(new Models.LoadedImage(path, new OpenCvSharp.Mat(1, 1, OpenCvSharp.MatType.CV_8UC3)));
+    }
+
+    private sealed class FakeImageExportService : BackgroundImageRemover.Services.ImageIo.IImageExportService
+    {
+        public Task ExportPngAsync(OpenCvSharp.Mat imageBgra, string destinationPath, CancellationToken ct = default)
+            => Task.CompletedTask;
+    }
+
+    private sealed class FakeFileLogService : BackgroundImageRemover.Services.Logging.IFileLogService
+    {
+        public void Debug(string message) { }
+        public void Error(string message, Exception? ex = null) { }
+        public void Info(string message) { }
+        public void Warn(string message) { }
     }
 }

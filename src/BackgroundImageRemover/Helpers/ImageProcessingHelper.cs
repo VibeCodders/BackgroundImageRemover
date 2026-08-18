@@ -278,6 +278,99 @@ public static class ImageProcessingHelper
                 current = grained;
             }
 
+            // 5.96 Dehaze: local contrast equalization plus a slight saturation lift.
+            if (adjustments.Dehaze > 1e-4)
+            {
+                using var lab = new Mat();
+                Cv2.CvtColor(current, lab, ColorConversionCodes.BGR2Lab);
+                var labChannels = Cv2.Split(lab);
+                Mat enhanced;
+                try
+                {
+                    using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
+                    clahe.Apply(labChannels[0], labChannels[0]);
+                    Cv2.Merge(labChannels, lab);
+                    Cv2.CvtColor(lab, enhanced = new Mat(), ColorConversionCodes.Lab2BGR);
+                }
+                finally
+                {
+                    foreach (var ch in labChannels) ch.Dispose();
+                }
+
+                using (enhanced)
+                {
+                    using var hsv = new Mat();
+                    Cv2.CvtColor(enhanced, hsv, ColorConversionCodes.BGR2HSV);
+                    var sat = Cv2.Split(hsv);
+                    try
+                    {
+                        sat[1].ConvertTo(sat[1], MatType.CV_8UC1, 1.15);
+                        Cv2.Merge(sat, hsv);
+                        Cv2.CvtColor(hsv, enhanced, ColorConversionCodes.HSV2BGR);
+                    }
+                    finally
+                    {
+                        foreach (var ch in sat) ch.Dispose();
+                    }
+
+                    var dehazed = new Mat();
+                    Cv2.AddWeighted(current, 1.0 - adjustments.Dehaze, enhanced, adjustments.Dehaze, 0, dehazed);
+                    current.Dispose();
+                    current = dehazed;
+                }
+            }
+
+            // 5.97 Soften: edge-preserving bilateral smoothing.
+            if (adjustments.Soften > 1e-4)
+            {
+                using var softened = new Mat();
+                Cv2.BilateralFilter(current, softened, 5, adjustments.Soften * 120.0, adjustments.Soften * 60.0);
+                var blended = new Mat();
+                Cv2.AddWeighted(current, 1.0 - adjustments.Soften, softened, adjustments.Soften, 0, blended);
+                current.Dispose();
+                current = blended;
+            }
+
+            // 5.98 Sepia tone blend.
+            if (adjustments.SepiaTone > 1e-4)
+            {
+                using var sepia = new Mat(3, 3, MatType.CV_32FC1);
+                sepia.SetArray(new[]
+                {
+                    0.131f, 0.534f, 0.272f,
+                    0.168f, 0.686f, 0.349f,
+                    0.189f, 0.769f, 0.393f
+                });
+                using var sepiaImg = new Mat();
+                Cv2.Transform(current, sepiaImg, sepia);
+                var blended = new Mat();
+                Cv2.AddWeighted(current, 1.0 - adjustments.SepiaTone, sepiaImg, adjustments.SepiaTone, 0, blended);
+                current.Dispose();
+                current = blended;
+            }
+
+            // 5.99 Invert blend.
+            if (adjustments.InvertAmount > 1e-4)
+            {
+                using var inverted = new Mat();
+                Cv2.BitwiseNot(current, inverted);
+                var blended = new Mat();
+                Cv2.AddWeighted(current, 1.0 - adjustments.InvertAmount, inverted, adjustments.InvertAmount, 0, blended);
+                current.Dispose();
+                current = blended;
+            }
+
+            // 5.995 Posterize.
+            if (adjustments.PosterizeLevels > 0)
+            {
+                int bucket = Math.Max(1, 256 / Math.Max(1, adjustments.PosterizeLevels));
+                using var lut = BuildLut(i => (i / bucket) * bucket);
+                var posterized = new Mat();
+                Cv2.LUT(current, lut, posterized);
+                current.Dispose();
+                current = posterized;
+            }
+
             // 6. Vignette effect
             if (adjustments.Vignette > 1e-4)
             {

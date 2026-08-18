@@ -92,10 +92,50 @@ public static class BackgroundCompositingService
     }
 
     public static Mat CompositeOntoImage(Mat bgra, Mat backgroundBgr)
+        => CompositeOntoImage(bgra, backgroundBgr, Models.BackgroundFitMode.Stretch);
+
+    /// <summary>Composites the cutout onto a background image fitted to the canvas with the requested fit mode.</summary>
+    public static Mat CompositeOntoImage(Mat bgra, Mat backgroundBgr, Models.BackgroundFitMode mode, Vec3b? matte = null)
     {
-        using var resized = new Mat();
-        Cv2.Resize(backgroundBgr, resized, bgra.Size(), interpolation: InterpolationFlags.Area);
-        return CompositeOntoBgr(bgra, resized);
+        var fill = matte ?? new Vec3b(0, 0, 0);
+        using var fitted = FitBackground(backgroundBgr, bgra.Size(), mode, fill);
+        return CompositeOntoBgr(bgra, fitted);
+    }
+
+    /// <summary>Fits a background image to a canvas size according to the requested mode (stretch, cover, contain, tile).</summary>
+    public static Mat FitBackground(Mat background, Size canvas, Models.BackgroundFitMode mode, Vec3b matte)
+    {
+        switch (mode)
+        {
+            case Models.BackgroundFitMode.Tile:
+                return Editing.TransformService.Tile(background, canvas.Width, canvas.Height);
+
+            case Models.BackgroundFitMode.Cover:
+            {
+                double scale = Math.Max((double)canvas.Width / background.Width, (double)canvas.Height / background.Height);
+                using var scaled = Editing.TransformService.Resize(background, scale);
+                return Editing.TransformService.CropCenter(scaled, canvas.Width, canvas.Height, new Scalar(matte.Item0, matte.Item1, matte.Item2));
+            }
+
+            case Models.BackgroundFitMode.Contain:
+            {
+                double scale = Math.Min((double)canvas.Width / background.Width, (double)canvas.Height / background.Height);
+                using var scaled = Editing.TransformService.Resize(background, scale);
+                var result = new Mat(canvas, MatType.CV_8UC3, new Scalar(matte.Item0, matte.Item1, matte.Item2));
+                int x = (canvas.Width - scaled.Width) / 2;
+                int y = (canvas.Height - scaled.Height) / 2;
+                using var dst = new Mat(result, new Rect(x, y, scaled.Width, scaled.Height));
+                scaled.CopyTo(dst);
+                return result;
+            }
+
+            default:
+            {
+                var result = new Mat();
+                Cv2.Resize(background, result, canvas, interpolation: InterpolationFlags.Area);
+                return result;
+            }
+        }
     }
 
     /// <summary>
@@ -119,21 +159,85 @@ public static class BackgroundCompositingService
 
     /// <summary>Composites the cutout onto a vertical linear gradient between two BGR colors.</summary>
     public static Mat CompositeOntoGradient(Mat bgra, Vec3b topColorBgr, Vec3b bottomColorBgr)
+        => CompositeOntoGradient(bgra, topColorBgr, bottomColorBgr, angleDeg: 90);
+
+    /// <summary>
+    /// Composites the cutout onto a linear gradient between two BGR colors at an arbitrary angle
+    /// (degrees; 0 = left→right, 90 = top→bottom).
+    /// </summary>
+    public static Mat CompositeOntoGradient(Mat bgra, Vec3b startBgr, Vec3b endBgr, double angleDeg)
     {
-        using var column = new Mat(bgra.Height, 1, MatType.CV_8UC3);
-        for (int y = 0; y < bgra.Height; y++)
+        using var gradient = BuildAngledGradient(bgra.Size(), startBgr, endBgr, angleDeg);
+        return CompositeOntoBgr(bgra, gradient);
+    }
+
+    /// <summary>Scales the alpha channel of a BGRA cutout by <paramref name="opacity"/> (0..1), fading the subject.</summary>
+    public static Mat ApplySubjectOpacity(Mat bgra, double opacity)
+    {
+        opacity = Math.Clamp(opacity, 0.0, 1.0);
+        using var split = ChannelSplit.Of(bgra);
+        using var alphaF = new Mat();
+        split[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
+        if (Math.Abs(opacity - 1.0) > 1e-6)
         {
-            double t = bgra.Height <= 1 ? 0 : (double)y / (bgra.Height - 1);
-            var color = new Vec3b(
-                (byte)Math.Round(topColorBgr.Item0 + (bottomColorBgr.Item0 - topColorBgr.Item0) * t),
-                (byte)Math.Round(topColorBgr.Item1 + (bottomColorBgr.Item1 - topColorBgr.Item1) * t),
-                (byte)Math.Round(topColorBgr.Item2 + (bottomColorBgr.Item2 - topColorBgr.Item2) * t));
-            column.Set(y, 0, color);
+            Cv2.Multiply(alphaF, Scalar.All(opacity), alphaF);
         }
 
-        using var gradient = new Mat();
-        Cv2.Resize(column, gradient, bgra.Size(), interpolation: InterpolationFlags.Linear);
-        return CompositeOntoBgr(bgra, gradient);
+        using var alpha8 = new Mat();
+        alphaF.ConvertTo(alpha8, MatType.CV_8UC1, 255.0);
+        alpha8.CopyTo(split[3]);
+        var result = new Mat();
+        Cv2.Merge(split.Channels, result);
+        return result;
+    }
+
+    private static Mat BuildAngledGradient(Size size, Vec3b start, Vec3b end, double angleDeg)
+    {
+        double rad = angleDeg * Math.PI / 180.0;
+        double dx = Math.Cos(rad);
+        double dy = Math.Sin(rad);
+
+        using var xRamp = new Mat(size, MatType.CV_32FC1);
+        using var yRamp = new Mat(size, MatType.CV_32FC1);
+        for (int y = 0; y < size.Height; y++)
+        {
+            for (int x = 0; x < size.Width; x++)
+            {
+                xRamp.Set(y, x, (float)x);
+                yRamp.Set(y, x, (float)y);
+            }
+        }
+
+        using var proj = new Mat();
+        Cv2.AddWeighted(xRamp, dx, yRamp, dy, 0, proj);
+        Cv2.MinMaxLoc(proj, out double min, out double max);
+
+        var result = new Mat(size, MatType.CV_8UC3);
+        if (max - min < 1e-9)
+        {
+            result.SetTo(new Scalar(start.Item0, start.Item1, start.Item2));
+            return result;
+        }
+
+        using var t = new Mat();
+        Cv2.Subtract(proj, Scalar.All(min), t);
+        Cv2.Divide(t, Scalar.All(max - min), t);
+        using var ones = new Mat(size, MatType.CV_32FC1, Scalar.All(1.0));
+        using var zeros = new Mat(size, MatType.CV_32FC1, Scalar.All(0.0));
+        Cv2.Min(t, ones, t);
+        Cv2.Max(t, zeros, t);
+
+        using var t3 = new Mat();
+        Cv2.CvtColor(t, t3, ColorConversionCodes.GRAY2BGR);
+        using var oneMinusT = new Mat();
+        using var ones3 = new Mat(size, MatType.CV_32FC3, Scalar.All(1.0));
+        Cv2.Subtract(ones3, t3, oneMinusT);
+
+        using var startF = new Mat(size, MatType.CV_32FC3, new Scalar(start.Item0 / 255.0, start.Item1 / 255.0, start.Item2 / 255.0));
+        using var endF = new Mat(size, MatType.CV_32FC3, new Scalar(end.Item0 / 255.0, end.Item1 / 255.0, end.Item2 / 255.0));
+        using var weighted = (startF.Mul(oneMinusT) + endF.Mul(t3)).ToMat();
+        weighted.ConvertTo(result, MatType.CV_8UC3, 255.0);
+        return result;
     }
 
     /// <summary>

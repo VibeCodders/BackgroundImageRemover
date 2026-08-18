@@ -61,6 +61,24 @@
                     </DockPanel>
                     <Slider Minimum="0.1" Maximum="4" Value="{Binding Gamma}" Margin="0,2,0,16" />
 
+                    <TextBlock Text="Output levels" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                            <TextBlock Text="Black" />
+                            <TextBox Text="{Binding OutputBlack, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="White" />
+                            <TextBox Text="{Binding OutputWhite, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <CheckBox Content="Auto levels" IsChecked="{Binding AutoLevelsEnabled}" Margin="0,0,0,4" />
+                    <CheckBox Content="Auto white balance" IsChecked="{Binding AutoWhiteBalanceEnabled}" Margin="0,0,0,4" />
+                    <CheckBox Content="Equalize (CLAHE)" IsChecked="{Binding EqualizeEnabled}" Margin="0,0,0,4" />
+                    <CheckBox Content="Invert (negative)" IsChecked="{Binding InvertEnabled}" Margin="0,0,0,12" />
+
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" />
                 </StackPanel>
             </ScrollViewer>

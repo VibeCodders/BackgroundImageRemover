@@ -5,8 +5,16 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
              xmlns:models="clr-namespace:BackgroundImageRemover.Models"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
+    <UserControl.Resources>
+        <ObjectDataProvider x:Key="MosaicModeValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:MosaicMode" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
     <DockPanel>
         <Border DockPanel.Dock="Top" Background="#FF1E1E24" Padding="12,8" BorderBrush="#FF33333D" BorderThickness="0,0,0,1">
             <DockPanel>
@@ -36,23 +44,34 @@
                     <TextBlock Text="Drag a rectangle on the left to censor just a region." TextWrapping="Wrap" Foreground="#FF666666" Margin="0,0,0,12"
                                Visibility="{Binding WholeImage, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
 
-                    <CheckBox Content="Use blur instead of mosaic" IsChecked="{Binding BlurMode}" Margin="0,0,0,8" />
+                    <TextBlock Text="Effect" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <ComboBox ItemsSource="{Binding Source={StaticResource MosaicModeValues}}" SelectedItem="{Binding Mode}" Margin="0,0,0,12" />
 
-                    <StackPanel Visibility="{Binding BlurMode, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Cell size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding CellSize, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="2" Maximum="64" Value="{Binding CellSize}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-                    </StackPanel>
+                    <CheckBox Content="Censor everything outside selection" IsChecked="{Binding InvertRegion}" Margin="0,0,0,8" />
 
-                    <StackPanel Visibility="{Binding BlurMode, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Blur radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="1" Maximum="80" Value="{Binding BlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-                    </StackPanel>
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Cell size" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding CellSize, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="2" Maximum="64" Value="{Binding CellSize}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Blur radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="1" Maximum="80" Value="{Binding BlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Blur strength" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding Strength, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.05" Maximum="1" Value="{Binding Strength}" Margin="0,2,0,12" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Crystal jitter" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding Jitter, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="32" Value="{Binding Jitter}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
 
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" />
                 </StackPanel>

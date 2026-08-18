@@ -50,6 +50,11 @@ public static class UncropOperationHelper
         public double Saturation { get; init; } = 1.0;
         public double Contrast { get; init; } = 1.0;
         public double Brightness { get; init; }
+        public double SharpenStrength { get; init; }
+        public int FinishBlurRadius { get; init; }
+        public double Temperature { get; init; }
+        public double Tint { get; init; }
+        public double Denoise { get; init; }
     }
 
     /// <summary>
@@ -142,7 +147,12 @@ public static class UncropOperationHelper
                 Brightness = config.Brightness,
                 Contrast = config.Contrast,
                 Saturation = config.Saturation,
-                Vignette = config.Vignette
+                Vignette = config.Vignette,
+                SharpenStrength = config.SharpenStrength,
+                BlurRadius = config.FinishBlurRadius,
+                Temperature = config.Temperature,
+                Tint = config.Tint,
+                Denoise = config.Denoise
             };
             if (!adjustments.IsIdentity)
             {

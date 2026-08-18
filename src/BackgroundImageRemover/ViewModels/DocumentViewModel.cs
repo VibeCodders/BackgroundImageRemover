@@ -208,6 +208,21 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     [ObservableProperty]
     private double _maskHardness;
 
+    [ObservableProperty]
+    private int _maskThreshold;
+
+    [ObservableProperty]
+    private double _despillStrength = 1.0;
+
+    [ObservableProperty]
+    private int _maskMedianKernel;
+
+    [ObservableProperty]
+    private int _maskBilateralKernel;
+
+    [ObservableProperty]
+    private bool _maskClahe;
+
     /// <summary>
     /// The active display bitmap: shows the processed ResultBitmap if available,
     /// otherwise falls back to the clean loaded PreviewBitmap.
@@ -469,6 +484,16 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     partial void OnMaskGammaChanged(double value) => RequestPreviewDebounced();
 
     partial void OnMaskHardnessChanged(double value) => RequestPreviewDebounced();
+
+    partial void OnMaskThresholdChanged(int value) => RequestPreviewDebounced();
+
+    partial void OnDespillStrengthChanged(double value) => RequestPreviewDebounced();
+
+    partial void OnMaskMedianKernelChanged(int value) => RequestPreviewDebounced();
+
+    partial void OnMaskBilateralKernelChanged(int value) => RequestPreviewDebounced();
+
+    partial void OnMaskClaheChanged(bool value) => RequestPreviewDebounced();
 
     partial void OnUseGpuForOnnxChanged(bool value)
     {

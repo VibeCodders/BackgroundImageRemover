@@ -273,5 +273,66 @@ public sealed class ImageProcessingHelperTests
         Assert.Equal(src.Size(), result.Size());
         Assert.Equal(src.Type(), result.Type());
     }
+
+    [Fact]
+    public void ApplyAdjustments_Dehaze_PreservesSizeAndType()
+    {
+        using var src = new Mat(30, 30, MatType.CV_8UC3, new Scalar(90, 90, 90));
+        using (var bright = new Mat(src, new Rect(10, 10, 10, 10)))
+        {
+            bright.SetTo(new Scalar(200, 200, 200));
+        }
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, new ImageAdjustments { Dehaze = 0.8 });
+
+        Assert.Equal(src.Size(), result.Size());
+        Assert.Equal(src.Type(), result.Type());
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Soften_PreservesSizeAndType()
+    {
+        using var src = new Mat(20, 20, MatType.CV_8UC3, new Scalar(90, 90, 90));
+        using (var bright = new Mat(src, new Rect(8, 8, 4, 4)))
+        {
+            bright.SetTo(new Scalar(200, 200, 200));
+        }
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, new ImageAdjustments { Soften = 0.7 });
+
+        Assert.Equal(src.Size(), result.Size());
+        Assert.Equal(src.Type(), result.Type());
+    }
+
+    [Fact]
+    public void ApplyAdjustments_SepiaTone_AddsWarmTone()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(128, 128, 128));
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, new ImageAdjustments { SepiaTone = 1.0 });
+
+        var px = result.At<Vec3b>(0, 0);
+        Assert.True(px.Item2 > px.Item0); // sepia boosts red more than blue
+    }
+
+    [Fact]
+    public void ApplyAdjustments_InvertAmount_FullInvert()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(100, 100, 100));
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, new ImageAdjustments { InvertAmount = 1.0 });
+
+        Assert.Equal(155, result.At<Vec3b>(0, 0).Item0);
+    }
+
+    [Fact]
+    public void ApplyAdjustments_Posterize_Quantizes()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(130, 130, 130));
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, new ImageAdjustments { PosterizeLevels = 4 });
+
+        Assert.Equal(128, result.At<Vec3b>(0, 0).Item0);
+    }
 }
 

@@ -49,6 +49,12 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
     private Rect? _selectedRect;
 
     [ObservableProperty]
+    private int _targetWidth;
+
+    [ObservableProperty]
+    private int _targetHeight;
+
+    [ObservableProperty]
     private string? _statusMessage;
 
     public CropToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
@@ -97,6 +103,59 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
     }
 
     [RelayCommand]
+    private void TrimWhite() => TrimToColor(new Vec3b(255, 255, 255));
+
+    [RelayCommand]
+    private void TrimBlack() => TrimToColor(new Vec3b(0, 0, 0));
+
+    [RelayCommand]
+    private void AutoStraighten()
+    {
+        if (_sourceBgra is null) return;
+        double skew = TransformService.EstimateSkewAngle(_sourceBgra);
+        Angle = Math.Clamp(-skew, -45, 45);
+        StatusMessage = Math.Abs(skew) < 0.05 ? "No skew detected." : $"Detected {skew:0.0}° skew.";
+    }
+
+    [RelayCommand]
+    private void ApplySize()
+    {
+        if (_sourceBgra is null) return;
+        int width = Math.Clamp(TargetWidth, 1, _sourceBgra.Width);
+        int height = Math.Clamp(TargetHeight, 1, _sourceBgra.Height);
+        SelectedRect = CropService.CenteredRectForSize(_sourceBgra.Size(), width, height);
+        RefreshResult();
+    }
+
+    [RelayCommand]
+    private void Rotate90Clockwise() => Rotate90(clockwise: true);
+
+    [RelayCommand]
+    private void Rotate90CounterClockwise() => Rotate90(clockwise: false);
+
+    private void Rotate90(bool clockwise)
+    {
+        if (_sourceBgra is null) return;
+        var rotated = clockwise
+            ? TransformService.Rotate90Clockwise(_sourceBgra)
+            : TransformService.Rotate90CounterClockwise(_sourceBgra);
+        _sourceBgra.Dispose();
+        _sourceBgra = rotated;
+        SourceBitmap = _sourceBgra.ToBitmapSource();
+        SelectedAspect = UncropAspectPresets.Free;
+        Angle = 0.0;
+        SelectedRect = new Rect(0, 0, _sourceBgra.Width, _sourceBgra.Height);
+        RefreshResult();
+    }
+
+    private void TrimToColor(Vec3b color)
+    {
+        if (_sourceBgra is null) return;
+        SelectedRect = CropService.TrimContentBounds(_sourceBgra, color, 12);
+        RefreshResult();
+    }
+
+    [RelayCommand]
     private void ApplyMargins()
     {
         if (_sourceBgra is null) return;
@@ -116,6 +175,7 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
         SelectedAspect = UncropAspectPresets.Free;
         Angle = 0.0;
         MarginLeft = MarginTop = MarginRight = MarginBottom = 0;
+        TargetWidth = TargetHeight = 0;
         SelectedRect = new Rect(0, 0, _sourceBgra.Width, _sourceBgra.Height);
         RefreshResult();
     }

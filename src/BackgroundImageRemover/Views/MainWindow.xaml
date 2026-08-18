@@ -68,6 +68,21 @@
         <DataTemplate DataType="{x:Type vm:LevelsToolSessionViewModel}">
             <views:LevelsToolSessionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HealToolSessionViewModel}">
+            <views:HealToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LiquifyToolSessionViewModel}">
+            <views:LiquifyToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PerspectiveToolSessionViewModel}">
+            <views:PerspectiveToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:FxToolSessionViewModel}">
+            <views:FxToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TiltShiftToolSessionViewModel}">
+            <views:TiltShiftToolSessionView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel>

@@ -30,6 +30,50 @@ public static class ResizeService
         return ResizeTo(src, width, height, method);
     }
 
+    public static Mat ResizeToHeight(Mat src, int height, ResampleMethod method = ResampleMethod.Lanczos)
+    {
+        height = Math.Max(1, height);
+        int width = Math.Max(1, (int)Math.Round((double)src.Width * height / src.Height));
+        return ResizeTo(src, width, height, method);
+    }
+
+    /// <summary>Scales to the largest size that fits inside the given box while preserving aspect ratio.</summary>
+    public static Mat FitWithin(Mat src, int maxWidth, int maxHeight, ResampleMethod method = ResampleMethod.Lanczos)
+    {
+        maxWidth = Math.Max(1, maxWidth);
+        maxHeight = Math.Max(1, maxHeight);
+        double scale = Math.Min((double)maxWidth / src.Width, (double)maxHeight / src.Height);
+        return ResizePercent(src, scale, method);
+    }
+
+    /// <summary>Scales to cover the given box (cropping overflow) while preserving aspect ratio.</summary>
+    public static Mat FillTo(Mat src, int width, int height, ResampleMethod method = ResampleMethod.Lanczos)
+    {
+        width = Math.Max(1, width);
+        height = Math.Max(1, height);
+        double scale = Math.Max((double)width / src.Width, (double)height / src.Height);
+        using var scaled = ResizePercent(src, scale, method);
+        var rect = CropService.CenteredRectForSize(scaled.Size(), width, height);
+        return CropService.CropRect(scaled, rect);
+    }
+
+    /// <summary>Resizes so the longest side reaches the requested length, preserving aspect ratio.</summary>
+    public static Mat ResizeToLongestSide(Mat src, int longest, ResampleMethod method = ResampleMethod.Lanczos)
+    {
+        longest = Math.Max(1, longest);
+        return src.Width >= src.Height
+            ? ResizeToWidth(src, longest, method)
+            : ResizeToHeight(src, longest, method);
+    }
+
+    /// <summary>Resizes to the requested megapixel count (area), preserving aspect ratio.</summary>
+    public static Mat ResizeToMegapixels(Mat src, double megapixels, ResampleMethod method = ResampleMethod.Lanczos)
+    {
+        megapixels = Math.Max(0.01, megapixels);
+        double scale = Math.Sqrt((megapixels * 1_000_000.0) / (src.Width * (double)src.Height));
+        return ResizePercent(src, scale, method);
+    }
+
     private static InterpolationFlags ToFlags(ResampleMethod method) => method switch
     {
         ResampleMethod.Nearest => InterpolationFlags.Nearest,

@@ -48,9 +48,20 @@
 
                     <RadioButton Content="Image" GroupName="ComposeBg" Margin="0,0,0,4"
                                  IsChecked="{Binding BackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}" />
-                    <StackPanel Orientation="Horizontal" Margin="16,0,0,8"
+                    <StackPanel Margin="16,0,0,8"
                                 Visibility="{Binding BackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Image}">
-                        <Button Content="Choose image..." Command="{Binding PickBackgroundImageCommand}" />
+                        <Button Content="Choose image..." Command="{Binding PickBackgroundImageCommand}" HorizontalAlignment="Left" Margin="0,0,0,6" />
+                        <TextBlock Text="Fit" FontSize="11" Foreground="#FF666666" Margin="0,0,0,2" />
+                        <UniformGrid Columns="2">
+                            <RadioButton Content="Stretch" GroupName="ComposeFit" Margin="0,0,4,0" FontSize="11"
+                                         IsChecked="{Binding FitMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Stretch}" />
+                            <RadioButton Content="Cover" GroupName="ComposeFit" Margin="4,0,0,0" FontSize="11"
+                                         IsChecked="{Binding FitMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Cover}" />
+                            <RadioButton Content="Contain" GroupName="ComposeFit" Margin="0,0,4,0" FontSize="11"
+                                         IsChecked="{Binding FitMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Contain}" />
+                            <RadioButton Content="Tile" GroupName="ComposeFit" Margin="4,0,0,0" FontSize="11"
+                                         IsChecked="{Binding FitMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Tile}" />
+                        </UniformGrid>
                     </StackPanel>
 
                     <RadioButton Content="Blur (portrait)" GroupName="ComposeBg" Margin="0,0,0,4"
@@ -86,16 +97,26 @@
                                 </Border>
                             </Popup>
                         </StackPanel>
+                        <DockPanel Margin="0,6,0,0">
+                            <TextBlock Text="Angle" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding GradientAngle, StringFormat='{}{0:0}°'}" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="0" Maximum="360" Value="{Binding GradientAngle}" TickFrequency="15" />
                     </StackPanel>
 
                     <Separator Margin="0,8,0,12" />
                     <CheckBox Content="Drop shadow" IsChecked="{Binding DropShadowEnabled}" FontWeight="SemiBold" Margin="0,0,0,8" />
                     <StackPanel Visibility="{Binding DropShadowEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
                         <DockPanel>
-                            <TextBlock Text="Offset" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowOffset, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="Distance" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding ShadowDistance, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
                         </DockPanel>
-                        <Slider Minimum="0" Maximum="60" Value="{Binding ShadowOffset}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
+                        <Slider Minimum="0" Maximum="60" Value="{Binding ShadowDistance}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
+                        <DockPanel>
+                            <TextBlock Text="Direction" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding ShadowAngle, StringFormat='{}{0:0}°'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        </DockPanel>
+                        <Slider Minimum="0" Maximum="360" Value="{Binding ShadowAngle}" TickFrequency="15" Margin="0,0,0,8" />
                         <DockPanel>
                             <TextBlock Text="Blur" FontWeight="SemiBold" DockPanel.Dock="Left" />
                             <TextBlock Text="{Binding ShadowBlur, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
@@ -148,7 +169,18 @@
                         <TextBlock Text="Canvas padding" FontWeight="SemiBold" DockPanel.Dock="Left" />
                         <TextBlock Text="{Binding BackgroundPadding, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
                     </DockPanel>
-                    <Slider Minimum="0" Maximum="300" Value="{Binding BackgroundPadding}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                    <Slider Minimum="0" Maximum="300" Value="{Binding BackgroundPadding}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
+
+                    <DockPanel>
+                        <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding SubjectOpacity, StringFormat='{}{0:0}%'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="100" Value="{Binding SubjectOpacity}" TickFrequency="5" Margin="0,0,0,8" />
+
+                    <UniformGrid Columns="2" Margin="0,0,0,4">
+                        <CheckBox Content="Flip H" IsChecked="{Binding SubjectFlipHorizontal}" Margin="0,0,4,0" />
+                        <CheckBox Content="Flip V" IsChecked="{Binding SubjectFlipVertical}" Margin="4,0,0,0" />
+                    </UniformGrid>
                 </StackPanel>
             </ScrollViewer>
         </Border>

@@ -88,7 +88,87 @@
                     <TextBlock Text="{Binding CropAspectRatio, StringFormat='{}{0:0.00}'}" FontSize="11" Foreground="#FF666666" HorizontalAlignment="Center" Margin="0,0,0,4" />
                     <Button Content="Apply crop" Command="{Binding ApplyCropAspectCommand}" Margin="0,0,0,8" />
 
-                    <Button Content="✂ Trim flat border" Command="{Binding TrimBorderCommand}" Margin="0,0,0,16" />
+                    <Button Content="✂ Trim flat border" Command="{Binding TrimBorderCommand}" Margin="0,0,0,12" />
+
+                    <Button Content="📐 Auto-straighten" Command="{Binding AutoStraightenCommand}" Margin="0,0,0,16" />
+
+                    <TextBlock Text="Expand canvas (padding px)" FontWeight="SemiBold" Margin="0,4,0,4" />
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,2,0">
+                            <TextBlock Text="Left" FontSize="10" Foreground="#FF666666" />
+                            <TextBox Text="{Binding PadLeft, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="0,0,2,0">
+                            <TextBlock Text="Top" FontSize="10" Foreground="#FF666666" />
+                            <TextBox Text="{Binding PadTop, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Margin="0,0,2,0">
+                            <TextBlock Text="Right" FontSize="10" Foreground="#FF666666" />
+                            <TextBox Text="{Binding PadRight, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="3">
+                            <TextBlock Text="Bottom" FontSize="10" Foreground="#FF666666" />
+                            <TextBox Text="{Binding PadBottom, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+                    <Button Content="Apply padding" Command="{Binding ApplyPaddingCommand}" Margin="0,0,0,16" />
+
+                    <TextBlock Text="Fit within box (px, keeps aspect)" FontWeight="SemiBold" Margin="0,4,0,4" />
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                            <TextBlock Text="Max width" FontSize="10" Foreground="#FF666666" />
+                            <TextBox Text="{Binding FitWidth, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Max height" FontSize="10" Foreground="#FF666666" />
+                            <TextBox Text="{Binding FitHeight, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+                    <Button Content="Apply fit" Command="{Binding ApplyFitCommand}" Margin="0,0,0,16" />
+
+                    <TextBlock Text="Center crop to size (px)" FontWeight="SemiBold" Margin="0,4,0,4" />
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                            <TextBlock Text="Width" FontSize="10" Foreground="#FF666666" />
+                            <TextBox Text="{Binding CenterCropWidth, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Height" FontSize="10" Foreground="#FF666666" />
+                            <TextBox Text="{Binding CenterCropHeight, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+                    <Button Content="Apply center crop" Command="{Binding ApplyCenterCropCommand}" Margin="0,0,0,16" />
+
+                    <TextBlock Text="Tile to size (px)" FontWeight="SemiBold" Margin="0,4,0,4" />
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                            <TextBlock Text="Width" FontSize="10" Foreground="#FF666666" />
+                            <TextBox Text="{Binding TileWidth, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Height" FontSize="10" Foreground="#FF666666" />
+                            <TextBox Text="{Binding TileHeight, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+                    <Button Content="Apply tile" Command="{Binding ApplyTileCommand}" Margin="0,0,0,16" />
 
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="#FFF0F0F0" Foreground="#FF333333" BorderBrush="#FFCCCCCC" BorderThickness="1" />
                 </StackPanel>

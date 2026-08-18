@@ -110,6 +110,16 @@
                                     IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
                             <Button Content="📊  Levels" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Levels}"
                                     IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="🩹  Heal" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Heal}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="✋  Liquify" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Liquify}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="🔲  Perspective" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Perspective}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="✨  FX" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Fx}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
+                            <Button Content="📐  Tilt-Shift" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.TiltShift}"
+                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

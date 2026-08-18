@@ -99,4 +99,19 @@ public sealed record StrategyContext
 
     /// <summary>Hardens soft mask edges (0 = original, 1 = fully hardened with a smoothstep curve).</summary>
     public double MaskHardness { get; init; }
+
+    /// <summary>Drops mask alpha below this value (0 disables it), removing faint background noise.</summary>
+    public int MaskThreshold { get; init; }
+
+    /// <summary>Scales how strongly the edge decontamination (despill) runs (0..1, default 1.0).</summary>
+    public double DespillStrength { get; init; } = 1.0;
+
+    /// <summary>Median-filter cleanup of the mask (0 disables it), distinct from the Gaussian feather/blur.</summary>
+    public int MaskMedianKernel { get; init; }
+
+    /// <summary>Edge-preserving bilateral cleanup of the mask (0 disables it).</summary>
+    public int MaskBilateralKernel { get; init; }
+
+    /// <summary>Applies CLAHE contrast to the mask alpha to sharpen soft transitions.</summary>
+    public bool MaskClahe { get; init; }
 }

@@ -19,10 +19,15 @@ public sealed record TextOverlayOptions
     public bool Bold { get; init; }
     public int ShadowOffset { get; init; }
     public double ShadowOpacity { get; init; } = 0.5;
+    public Vec3b ShadowColor { get; init; } = new(0, 0, 0);
+    public double ShadowBlur { get; init; }
     public bool BackgroundPlate { get; init; }
     public Vec3b PlateColor { get; init; } = new(0, 0, 0);
     public double PlateOpacity { get; init; } = 0.5;
     public int PlatePadding { get; init; } = 10;
+    public double LetterSpacing { get; init; }
+    public int LineSpacing { get; init; }
+    public bool AutoFitWidth { get; init; }
 }
 
 /// <summary>Renders a text watermark onto a BGR image using OpenCV's built-in Hershey fonts.</summary>
@@ -64,16 +69,32 @@ public static class TextOverlayService
         int baseThickness = Math.Max(1, (int)Math.Round(fontSize / 14.0));
         int thickness = options.Bold ? baseThickness + 2 : baseThickness;
 
-        var textSize = Cv2.GetTextSize(options.Text, HersheyFonts.HersheySimplex, scale, thickness, out int baseline);
+        var lines = options.Text.Replace("\r\n", "\n").Split('\n');
+        double letterSpacing = Math.Max(0, options.LetterSpacing);
+        int lineSpacing = Math.Max(0, options.LineSpacing);
 
         int platePad = options.BackgroundPlate ? options.PlatePadding : 0;
         int outlinePad = options.OutlineThickness * 2;
-        int shadowPad = Math.Abs(options.ShadowOffset);
+        int shadowPad = Math.Abs(options.ShadowOffset) + (int)Math.Ceiling(options.ShadowBlur * 3);
         int blockPad = platePad + outlinePad + shadowPad + 4;
 
-        var blockSize = new Size(textSize.Width + 2 * blockPad, textSize.Height + 2 * blockPad);
+        var measured = Measure(lines, scale, thickness, letterSpacing, lineSpacing);
+
+        if (options.AutoFitWidth)
+        {
+            int available = Math.Max(1, bgr.Width - 2 * margin - 2 * blockPad);
+            if (measured.MaxWidth > available)
+            {
+                double fit = (double)available / measured.MaxWidth;
+                scale *= fit;
+                thickness = Math.Max(1, (int)Math.Round(thickness * fit));
+                measured = Measure(lines, scale, thickness, letterSpacing, lineSpacing);
+            }
+        }
+
+        var blockSize = new Size(measured.MaxWidth + 2 * blockPad, measured.TotalHeight + 2 * blockPad);
         using var block = new Mat(blockSize, MatType.CV_8UC4, Scalar.All(0));
-        var origin = new Point(blockPad, blockPad + textSize.Height);
+        var origin = new Point(blockPad, blockPad + measured.LineHeights[0]);
 
         if (options.BackgroundPlate)
         {
@@ -89,21 +110,32 @@ public static class TextOverlayService
         if (options.ShadowOffset != 0)
         {
             byte sa = (byte)Math.Round(255 * Math.Clamp(options.ShadowOpacity, 0.0, 1.0));
-            Cv2.PutText(block, options.Text,
-                new Point(origin.X + options.ShadowOffset, origin.Y + options.ShadowOffset),
-                HersheyFonts.HersheySimplex, scale, new Scalar(0, 0, 0, sa), thickness, LineTypes.AntiAlias);
+            using var shadow = new Mat(blockSize, MatType.CV_8UC4, Scalar.All(0));
+            var shadowOrigin = new Point(origin.X + options.ShadowOffset, origin.Y + options.ShadowOffset);
+            var shadowColor = new Scalar(options.ShadowColor.Item0, options.ShadowColor.Item1, options.ShadowColor.Item2, sa);
+            DrawTextContent(shadow, lines, measured.LineHeights, shadowOrigin, scale, thickness, shadowColor, letterSpacing, lineSpacing);
+
+            if (options.ShadowBlur > 0)
+            {
+                using var ssplit = ChannelSplit.Of(shadow);
+                int k = Math.Max(1, (int)Math.Round(options.ShadowBlur * 2) * 2 + 1);
+                using var blurred = new Mat();
+                Cv2.GaussianBlur(ssplit[3], blurred, new Size(k, k), options.ShadowBlur, options.ShadowBlur);
+                blurred.CopyTo(ssplit[3]);
+                Cv2.Merge(ssplit.Channels, shadow);
+            }
+
+            BlendOverBgra(block, shadow);
         }
 
         if (options.OutlineThickness > 0)
         {
-            Cv2.PutText(block, options.Text, origin, HersheyFonts.HersheySimplex, scale,
-                new Scalar(options.OutlineColor.Item0, options.OutlineColor.Item1, options.OutlineColor.Item2, 255),
-                thickness + 2 * options.OutlineThickness, LineTypes.AntiAlias);
+            var outlineColor = new Scalar(options.OutlineColor.Item0, options.OutlineColor.Item1, options.OutlineColor.Item2, 255);
+            DrawTextContent(block, lines, measured.LineHeights, origin, scale, thickness + 2 * options.OutlineThickness, outlineColor, letterSpacing, lineSpacing);
         }
 
-        Cv2.PutText(block, options.Text, origin, HersheyFonts.HersheySimplex, scale,
-            new Scalar(options.Color.Item0, options.Color.Item1, options.Color.Item2, 255),
-            thickness, LineTypes.AntiAlias);
+        var mainColor = new Scalar(options.Color.Item0, options.Color.Item1, options.Color.Item2, 255);
+        DrawTextContent(block, lines, measured.LineHeights, origin, scale, thickness, mainColor, letterSpacing, lineSpacing);
 
         Mat finalBlock;
         if (Math.Abs(options.Rotation) > 1e-4)
@@ -120,6 +152,96 @@ public static class TextOverlayService
             var position = ComputeBlockOrigin(new Size(bgr.Width, bgr.Height), new Size(finalBlock.Width, finalBlock.Height), options.Anchor, margin);
             return CompositeTextBlock(bgr, finalBlock, position, opacity);
         }
+    }
+
+    private static (int MaxWidth, int TotalHeight, IReadOnlyList<int> LineHeights) Measure(
+        IReadOnlyList<string> lines, double scale, int thickness, double letterSpacing, int lineSpacing)
+    {
+        var heights = new List<int>(lines.Count);
+        int maxWidth = 0;
+        int totalHeight = 0;
+        foreach (var line in lines)
+        {
+            var size = Cv2.GetTextSize(line, HersheyFonts.HersheySimplex, scale, thickness, out _);
+            int width = size.Width + (int)Math.Round(letterSpacing * Math.Max(0, line.Length - 1));
+            heights.Add(size.Height);
+            maxWidth = Math.Max(maxWidth, width);
+            totalHeight += size.Height;
+        }
+        totalHeight += (lines.Count - 1) * lineSpacing;
+        return (maxWidth, totalHeight, heights);
+    }
+
+    private static void DrawTextContent(
+        Mat dst,
+        IReadOnlyList<string> lines,
+        IReadOnlyList<int> lineHeights,
+        Point firstOrigin,
+        double scale,
+        int thickness,
+        Scalar color,
+        double letterSpacing,
+        int lineSpacing)
+    {
+        int y = firstOrigin.Y;
+        for (int li = 0; li < lines.Count; li++)
+        {
+            string line = lines[li];
+            if (letterSpacing <= 1e-6)
+            {
+                if (line.Length > 0)
+                {
+                    Cv2.PutText(dst, line, new Point(firstOrigin.X, y), HersheyFonts.HersheySimplex, scale, color, thickness, LineTypes.AntiAlias);
+                }
+            }
+            else
+            {
+                int x = firstOrigin.X;
+                foreach (char c in line)
+                {
+                    string s = c.ToString();
+                    Cv2.PutText(dst, s, new Point(x, y), HersheyFonts.HersheySimplex, scale, color, thickness, LineTypes.AntiAlias);
+                    x += Cv2.GetTextSize(s, HersheyFonts.HersheySimplex, scale, thickness, out _).Width + (int)Math.Round(letterSpacing);
+                }
+            }
+
+            if (li < lines.Count - 1)
+            {
+                y += lineHeights[li] + lineSpacing;
+            }
+        }
+    }
+
+    /// <summary>Alpha-composites a BGRA layer over another BGRA layer (both premultiplied-style over blend).</summary>
+    private static void BlendOverBgra(Mat bottom, Mat top)
+    {
+        using var bsplit = ChannelSplit.Of(bottom);
+        using var tsplit = ChannelSplit.Of(top);
+        using var ta = new Mat();
+        tsplit[3].ConvertTo(ta, MatType.CV_32FC1, 1.0 / 255.0);
+        using var ones = new Mat(ta.Size(), ta.Type(), Scalar.All(1.0));
+        using var inv = new Mat();
+        Cv2.Subtract(ones, ta, inv);
+
+        for (int i = 0; i < 3; i++)
+        {
+            using var bf = new Mat();
+            bsplit[i].ConvertTo(bf, MatType.CV_32FC1);
+            using var tf = new Mat();
+            tsplit[i].ConvertTo(tf, MatType.CV_32FC1);
+            using var bWeighted = bf.Mul(inv).ToMat();
+            using var tWeighted = tf.Mul(ta).ToMat();
+            using var sum = (bWeighted + tWeighted).ToMat();
+            sum.ConvertTo(bsplit[i], MatType.CV_8UC1);
+        }
+
+        using var ba = new Mat();
+        bsplit[3].ConvertTo(ba, MatType.CV_32FC1, 1.0 / 255.0);
+        using var baWeighted = ba.Mul(inv).ToMat();
+        using var outA = (ta + baWeighted).ToMat();
+        outA.ConvertTo(bsplit[3], MatType.CV_8UC1, 255.0);
+
+        Cv2.Merge(bsplit.Channels, bottom);
     }
 
     private static Point ComputeBlockOrigin(Size image, Size block, TextAnchor anchor, int margin)

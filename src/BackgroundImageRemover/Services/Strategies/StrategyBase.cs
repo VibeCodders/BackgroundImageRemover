@@ -65,7 +65,16 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
             // in their RGB. Remove that cast so the exported cutout has no halo of the old image.
             if (context.DecontaminateEdges)
             {
-                ColorDecontaminator.Decontaminate(bgra, context.ChromaKeyColor, context.DecontaminationEstimateRadius);
+                double despill = Math.Clamp(context.DespillStrength, 0.0, 1.0);
+                if (despill > 1e-4)
+                {
+                    using var original = bgra.Clone();
+                    ColorDecontaminator.Decontaminate(bgra, context.ChromaKeyColor, context.DecontaminationEstimateRadius);
+                    if (despill < 1.0 - 1e-4)
+                    {
+                        Cv2.AddWeighted(original, 1.0 - despill, bgra, despill, 0, bgra);
+                    }
+                }
             }
 
             sw.Stop();
@@ -131,6 +140,32 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
                 double hardened = t * t * (3.0 - 2.0 * t); // smoothstep
                 return 255.0 * ((1.0 - h) * t + h * hardened);
             });
+        }
+
+        if (context.MaskThreshold > 0)
+        {
+            int threshold = Math.Clamp(context.MaskThreshold, 1, 255);
+            ApplyAlphaLut(mask, i => i < threshold ? 0.0 : i);
+        }
+
+        if (context.MaskMedianKernel > 0)
+        {
+            int k = Math.Max(1, context.MaskMedianKernel) | 1;
+            Cv2.MedianBlur(mask, mask, k);
+        }
+
+        if (context.MaskBilateralKernel > 0)
+        {
+            int d = Math.Max(1, context.MaskBilateralKernel) | 1;
+            using var temp = new Mat();
+            Cv2.BilateralFilter(mask, temp, d, d * 2.0, d / 2.0);
+            temp.CopyTo(mask);
+        }
+
+        if (context.MaskClahe)
+        {
+            using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
+            clahe.Apply(mask, mask);
         }
     }
 

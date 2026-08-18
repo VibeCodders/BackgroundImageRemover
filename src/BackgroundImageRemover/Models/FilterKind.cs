@@ -14,5 +14,10 @@ public enum FilterKind
     Hdr,
     Pencil,
     Dreamy,
-    Cartoon
+    Cartoon,
+    Vivid,
+    Vintage,
+    Cool,
+    Warm,
+    Noir
 }

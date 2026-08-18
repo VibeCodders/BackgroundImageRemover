@@ -169,6 +169,41 @@
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjMonochrome}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
+                    <!-- Dehaze -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Dehaze" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjDehaze, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjDehaze}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <!-- Soften -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Soften (skin)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjSoften, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjSoften}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <!-- Sepia tone -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Sepia tone" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjSepiaTone, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjSepiaTone}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <!-- Invert -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Invert" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjInvertAmount, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjInvertAmount}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
+
+                    <!-- Posterize -->
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Posterize levels (0 = off)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding AdjPosterizeLevels}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="16" Value="{Binding AdjPosterizeLevels}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
+
                     <CheckBox Content="✨ Auto-enhance (one click)" IsChecked="{Binding AdjAutoEnhance}" Margin="0,0,0,12" FontWeight="SemiBold" />
 
                     <CheckBox Content="Split Compare view" IsChecked="{Binding IsCompareMode}" Margin="0,0,0,12" FontWeight="SemiBold" />

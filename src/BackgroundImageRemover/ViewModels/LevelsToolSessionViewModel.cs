@@ -33,6 +33,24 @@ public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
     private LevelsChannel _channel = LevelsChannel.Rgb;
 
     [ObservableProperty]
+    private double _outputBlack = 0.0;
+
+    [ObservableProperty]
+    private double _outputWhite = 255.0;
+
+    [ObservableProperty]
+    private bool _autoLevelsEnabled;
+
+    [ObservableProperty]
+    private bool _autoWhiteBalanceEnabled;
+
+    [ObservableProperty]
+    private bool _equalizeEnabled;
+
+    [ObservableProperty]
+    private bool _invertEnabled;
+
+    [ObservableProperty]
     private string? _statusMessage;
 
     public LevelsToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
@@ -54,13 +72,68 @@ public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
     partial void OnWhitePointChanged(double value) => RefreshResult();
     partial void OnGammaChanged(double value) => RefreshResult();
     partial void OnChannelChanged(LevelsChannel value) => RefreshResult();
+    partial void OnOutputBlackChanged(double value) => RefreshResult();
+    partial void OnOutputWhiteChanged(double value) => RefreshResult();
+    partial void OnAutoLevelsEnabledChanged(bool value) => RefreshResult();
+    partial void OnAutoWhiteBalanceEnabledChanged(bool value) => RefreshResult();
+    partial void OnEqualizeEnabledChanged(bool value) => RefreshResult();
+    partial void OnInvertEnabledChanged(bool value) => RefreshResult();
 
     private void RefreshResult()
     {
         if (_sourceImage is null || _workingAlpha is null) return;
-        using var result = LevelsService.Apply(_sourceImage.FullBgr, BlackPoint, WhitePoint, Gamma, Channel);
+        using var result = BuildResult(_sourceImage.FullBgr);
         ResultBitmap = result.ToBitmapSource(_workingAlpha);
-        IsDirty = Math.Abs(BlackPoint) > 1e-4 || Math.Abs(WhitePoint - 255) > 1e-4 || Math.Abs(Gamma - 1.0) > 1e-4;
+        IsDirty = Math.Abs(BlackPoint) > 1e-4
+            || Math.Abs(WhitePoint - 255) > 1e-4
+            || Math.Abs(Gamma - 1.0) > 1e-4
+            || Math.Abs(OutputBlack) > 1e-4
+            || Math.Abs(OutputWhite - 255) > 1e-4
+            || AutoLevelsEnabled
+            || AutoWhiteBalanceEnabled
+            || EqualizeEnabled
+            || InvertEnabled;
+    }
+
+    private Mat BuildResult(Mat src)
+    {
+        Mat current = src;
+        bool owns = false;
+
+        if (AutoWhiteBalanceEnabled)
+        {
+            current = LevelsService.AutoWhiteBalance(current);
+            owns = true;
+        }
+
+        if (AutoLevelsEnabled)
+        {
+            current = Replace(current, LevelsService.AutoLevels(current), ref owns);
+        }
+
+        current = Replace(current, LevelsService.Apply(current, BlackPoint, WhitePoint, Gamma, Channel, OutputBlack, OutputWhite), ref owns);
+
+        if (EqualizeEnabled)
+        {
+            current = Replace(current, LevelsService.Equalize(current), ref owns);
+        }
+
+        if (InvertEnabled)
+        {
+            current = Replace(current, LevelsService.Invert(current), ref owns);
+        }
+
+        return current;
+    }
+
+    private static Mat Replace(Mat previous, Mat next, ref bool ownsPrevious)
+    {
+        if (ownsPrevious)
+        {
+            previous.Dispose();
+        }
+        ownsPrevious = true;
+        return next;
     }
 
     [RelayCommand]
@@ -70,6 +143,12 @@ public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
         WhitePoint = 255.0;
         Gamma = 1.0;
         Channel = LevelsChannel.Rgb;
+        OutputBlack = 0.0;
+        OutputWhite = 255.0;
+        AutoLevelsEnabled = false;
+        AutoWhiteBalanceEnabled = false;
+        EqualizeEnabled = false;
+        InvertEnabled = false;
         RefreshResult();
     }
 
@@ -81,7 +160,7 @@ public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
             return Task.CompletedTask;
         }
 
-        var bgr = LevelsService.Apply(_sourceImage.FullBgr, BlackPoint, WhitePoint, Gamma, Channel);
+        var bgr = BuildResult(_sourceImage.FullBgr);
         _parentDocument.ApplyToolResult(bgr, _workingAlpha.Clone(), "Levels");
 
         _shell.CloseTabDirect(this);

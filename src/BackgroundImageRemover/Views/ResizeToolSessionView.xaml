@@ -13,6 +13,11 @@
                 <x:Type TypeName="models:ResampleMethod" />
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
+        <ObjectDataProvider x:Key="ResizeModeValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:ResizeMode" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
     </UserControl.Resources>
 
     <DockPanel>
@@ -61,6 +66,28 @@
 
                     <TextBlock Text="Interpolation" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource ResampleMethodValues}}" SelectedItem="{Binding Method}" Margin="0,0,0,12" />
+
+                    <TextBlock Text="Mode" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <ComboBox ItemsSource="{Binding Source={StaticResource ResizeModeValues}}" SelectedItem="{Binding Mode}" Margin="0,0,0,12" />
+
+                    <TextBlock Text="Fit / fill box (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                            <TextBlock Text="W" />
+                            <TextBox Text="{Binding FitWidth, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="H" />
+                            <TextBox Text="{Binding FitHeight, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Longest side (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <TextBox Text="{Binding LongestSide, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+
+                    <TextBlock Text="Megapixels" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <TextBox Text="{Binding Megapixels, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
 
                     <UniformGrid Columns="2" Margin="0,0,0,12">
                         <Button Content="50%" Command="{Binding PresetHalfCommand}" Margin="0,0,4,4" />

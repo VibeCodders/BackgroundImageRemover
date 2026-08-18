@@ -130,7 +130,12 @@ public partial class BackgroundRemoverToolSessionViewModel
             MaskBlurPixels = MaskBlurPixels * scaleToFull,
             MinComponentAreaPixels = (int)Math.Round(MinComponentAreaPixels * scaleToFull * scaleToFull),
             MaskGamma = MaskGamma,
-            MaskHardness = MaskHardness
+            MaskHardness = MaskHardness,
+            MaskThreshold = MaskThreshold,
+            DespillStrength = DespillStrength,
+            MaskMedianKernel = (int)Math.Round(MaskMedianKernel * scaleToFull),
+            MaskBilateralKernel = (int)Math.Round(MaskBilateralKernel * scaleToFull),
+            MaskClahe = MaskClahe
         };
     }
 

@@ -48,5 +48,20 @@ public enum EditorTool
     Overlay,
 
     /// <summary>Levels adjustment (black point, white point, gamma).</summary>
-    Levels
+    Levels,
+
+    /// <summary>Inpaint brush and whole-image repair (dust, scratches, smoothing, detail).</summary>
+    Heal,
+
+    /// <summary>Local warps: pinch, bloat, twirl, push.</summary>
+    Liquify,
+
+    /// <summary>Four-point perspective correction (keystone/straighten).</summary>
+    Perspective,
+
+    /// <summary>Cinematic effects: bloom, glow, light leak, chromatic aberration, bokeh.</summary>
+    Fx,
+
+    /// <summary>Tilt-shift miniature effect.</summary>
+    TiltShift
 }

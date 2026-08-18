@@ -142,4 +142,149 @@ public static class TransformService
 
         return CropService.CropRect(img, bounds);
     }
+
+    /// <summary>Expands the canvas by the given per-side padding, filling the new area with <paramref name="fill"/>.</summary>
+    public static Mat Pad(Mat img, int left, int top, int right, int bottom, Scalar fill)
+    {
+        left = Math.Max(0, left);
+        top = Math.Max(0, top);
+        right = Math.Max(0, right);
+        bottom = Math.Max(0, bottom);
+
+        int newWidth = img.Width + left + right;
+        int newHeight = img.Height + top + bottom;
+        var result = new Mat(newHeight, newWidth, img.Type(), fill);
+        using var dst = new Mat(result, new Rect(left, top, img.Width, img.Height));
+        img.CopyTo(dst);
+        return result;
+    }
+
+    /// <summary>Resizes to fit inside the given box while preserving aspect ratio (never upscales above the box).</summary>
+    public static Mat ResizeToFit(Mat img, int maxWidth, int maxHeight)
+    {
+        maxWidth = Math.Max(1, maxWidth);
+        maxHeight = Math.Max(1, maxHeight);
+        double scale = Math.Min((double)maxWidth / img.Width, (double)maxHeight / img.Height);
+        scale = Math.Min(1.0, scale);
+        return Resize(img, scale);
+    }
+
+    /// <summary>Crops a centered rectangle of the exact requested size (padded with <paramref name="fill"/> if the image is smaller).</summary>
+    public static Mat CropCenter(Mat img, int width, int height, Scalar fill)
+    {
+        width = Math.Max(1, width);
+        height = Math.Max(1, height);
+
+        var result = new Mat(height, width, img.Type(), fill);
+        int x = (img.Width - width) / 2;
+        int y = (img.Height - height) / 2;
+        int srcX = Math.Max(0, x);
+        int srcY = Math.Max(0, y);
+        int copyW = Math.Min(width, img.Width);
+        int copyH = Math.Min(height, img.Height);
+        int dstX = Math.Max(0, -x);
+        int dstY = Math.Max(0, -y);
+
+        using var src = CropService.CropRect(img, new Rect(srcX, srcY, copyW, copyH));
+        using var dst = new Mat(result, new Rect(dstX, dstY, copyW, copyH));
+        src.CopyTo(dst);
+        return result;
+    }
+
+    /// <summary>Repeats (tiles) the image to fill a canvas of the exact requested size.</summary>
+    public static Mat Tile(Mat img, int width, int height)
+    {
+        width = Math.Max(1, width);
+        height = Math.Max(1, height);
+
+        var result = new Mat(height, width, img.Type());
+        for (int y = 0; y < height; y += img.Height)
+        {
+            for (int x = 0; x < width; x += img.Width)
+            {
+                int copyW = Math.Min(img.Width, width - x);
+                int copyH = Math.Min(img.Height, height - y);
+                if (copyW <= 0 || copyH <= 0) break;
+                using var src = CropService.CropRect(img, new Rect(0, 0, copyW, copyH));
+                using var dst = new Mat(result, new Rect(x, y, copyW, copyH));
+                src.CopyTo(dst);
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Estimates the dominant skew angle (degrees, positive = clockwise) using Hough line detection.
+    /// Returns 0 when no confident near-horizontal/vertical line is found.
+    /// </summary>
+    public static double EstimateSkewAngle(Mat img, int maxAngle = 30)
+    {
+        using var gray = ToGray(img);
+        using var edges = new Mat();
+        Cv2.Canny(gray, edges, 50, 150);
+
+        var lines = Cv2.HoughLinesP(edges, 1.0, Math.PI / 180.0, 80, 100, 10);
+
+        var angles = new List<double>();
+        foreach (var line in lines)
+        {
+            double dx = line.P2.X - line.P1.X;
+            double dy = line.P2.Y - line.P1.Y;
+            if (Math.Abs(dx) < 1e-6) continue;
+
+            double angle = Math.Atan2(dy, dx) * 180.0 / Math.PI;
+            if (Math.Abs(angle) <= maxAngle)
+            {
+                angles.Add(angle);
+            }
+            else if (Math.Abs(Math.Abs(angle) - 90.0) <= maxAngle)
+            {
+                angles.Add(angle - Math.Sign(angle) * 90.0);
+            }
+        }
+
+        if (angles.Count == 0)
+        {
+            return 0.0;
+        }
+
+        angles.Sort();
+        return angles[angles.Count / 2];
+    }
+
+    /// <summary>Detects the dominant near-horizontal/near-vertical line orientation and rotates the image to straighten it.</summary>
+    public static Mat AutoStraighten(Mat img, int maxAngle = 30)
+    {
+        double median = EstimateSkewAngle(img, maxAngle);
+        if (Math.Abs(median) < 1e-6)
+        {
+            return img.Clone();
+        }
+
+        return Rotate(img, -median);
+    }
+
+    private static Mat ToGray(Mat img)
+    {
+        if (img.Channels() == 4)
+        {
+            var channels = Cv2.Split(img);
+            try
+            {
+                using var bgr = new Mat();
+                Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, bgr);
+                var gray = new Mat();
+                Cv2.CvtColor(bgr, gray, ColorConversionCodes.BGR2GRAY);
+                return gray;
+            }
+            finally
+            {
+                foreach (var ch in channels) ch.Dispose();
+            }
+        }
+
+        var result = new Mat();
+        Cv2.CvtColor(img, result, ColorConversionCodes.BGR2GRAY);
+        return result;
+    }
 }

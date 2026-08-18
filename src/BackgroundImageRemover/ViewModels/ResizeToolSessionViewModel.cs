@@ -37,6 +37,21 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
     private ResampleMethod _method = ResampleMethod.Lanczos;
 
     [ObservableProperty]
+    private ResizeMode _mode = ResizeMode.ExactSize;
+
+    [ObservableProperty]
+    private int _fitWidth = 1024;
+
+    [ObservableProperty]
+    private int _fitHeight = 1024;
+
+    [ObservableProperty]
+    private int _longestSide = 1024;
+
+    [ObservableProperty]
+    private double _megapixels = 1.0;
+
+    [ObservableProperty]
     private string? _statusMessage;
 
     public ResizeToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
@@ -78,26 +93,41 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
 
     partial void OnPercentChanged(double value) => RefreshResult();
     partial void OnMethodChanged(ResampleMethod value) => RefreshResult();
+    partial void OnModeChanged(ResizeMode value) => RefreshResult();
+    partial void OnFitWidthChanged(int value) => RefreshResult();
+    partial void OnFitHeightChanged(int value) => RefreshResult();
+    partial void OnLongestSideChanged(int value) => RefreshResult();
+    partial void OnMegapixelsChanged(double value) => RefreshResult();
 
     [RelayCommand]
-    private void UsePercent() => RefreshResult();
+    private void UsePercent() => Mode = ResizeMode.Percent;
 
     [RelayCommand]
-    private void PresetHalf() => Percent = 50;
+    private void PresetHalf() { Percent = 50; Mode = ResizeMode.Percent; }
     [RelayCommand]
-    private void PresetDouble() => Percent = 200;
+    private void PresetDouble() { Percent = 200; Mode = ResizeMode.Percent; }
     [RelayCommand]
-    private void PresetWidth1024() => Width = 1024;
+    private void PresetWidth1024() { Width = 1024; Mode = ResizeMode.ExactSize; }
     [RelayCommand]
-    private void PresetWidth1920() => Width = 1920;
+    private void PresetWidth1920() { Width = 1920; Mode = ResizeMode.ExactSize; }
 
     private void RefreshResult()
     {
         if (_sourceImage is null || _workingAlpha is null) return;
-        using var resized = ResizeService.ResizePercent(_sourceImage.FullBgr, Percent / 100.0, Method);
+        using var resized = BuildResult(_sourceImage.FullBgr);
         ResultBitmap = resized.ToBitmapSource(_workingAlpha);
         IsDirty = true;
     }
+
+    private Mat BuildResult(Mat src) => Mode switch
+    {
+        ResizeMode.Percent => ResizeService.ResizePercent(src, Percent / 100.0, Method),
+        ResizeMode.FitWithin => ResizeService.FitWithin(src, FitWidth, FitHeight, Method),
+        ResizeMode.FillTo => ResizeService.FillTo(src, FitWidth, FitHeight, Method),
+        ResizeMode.LongestSide => ResizeService.ResizeToLongestSide(src, LongestSide, Method),
+        ResizeMode.Megapixels => ResizeService.ResizeToMegapixels(src, Megapixels, Method),
+        _ => ResizeService.ResizeTo(src, Math.Max(1, Width), Math.Max(1, Height), Method)
+    };
 
     public override Task ApplyAsync()
     {
@@ -107,7 +137,7 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
             return Task.CompletedTask;
         }
 
-        var bgr = ResizeService.ResizeTo(_sourceImage.FullBgr, Math.Max(1, Width), Math.Max(1, Height), Method);
+        var bgr = BuildResult(_sourceImage.FullBgr);
         using var alpha = new Mat(bgr.Size(), MatType.CV_8UC1, new Scalar(255));
         _parentDocument.ApplyToolResult(bgr, alpha, "Resize");
 

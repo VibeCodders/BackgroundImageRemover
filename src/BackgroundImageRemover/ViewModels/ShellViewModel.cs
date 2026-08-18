@@ -100,6 +100,11 @@ public partial class ShellViewModel : ObservableObject
             EditorTool.Mosaic => new MosaicToolSessionViewModel(this, doc),
             EditorTool.Overlay => new OverlayToolSessionViewModel(this, doc, _dialogs, _imageLoader),
             EditorTool.Levels => new LevelsToolSessionViewModel(this, doc),
+            EditorTool.Heal => new HealToolSessionViewModel(this, doc),
+            EditorTool.Liquify => new LiquifyToolSessionViewModel(this, doc),
+            EditorTool.Perspective => new PerspectiveToolSessionViewModel(this, doc),
+            EditorTool.Fx => new FxToolSessionViewModel(this, doc),
+            EditorTool.TiltShift => new TiltShiftToolSessionViewModel(this, doc),
             _ => null
         };
 

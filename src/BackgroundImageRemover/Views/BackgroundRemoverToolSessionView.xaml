@@ -200,6 +200,20 @@
                     <TextBlock Text="Edge hardness" Margin="0,8,0,0" />
                     <Slider Minimum="0" Maximum="1" Value="{Binding MaskHardness}" TickFrequency="0.05" />
 
+                    <TextBlock Text="Alpha cut (below = removed)" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="255" Value="{Binding MaskThreshold}" TickFrequency="1" />
+
+                    <TextBlock Text="Despill strength" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="1" Value="{Binding DespillStrength}" TickFrequency="0.05" />
+
+                    <TextBlock Text="Median cleanup" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="15" Value="{Binding MaskMedianKernel}" TickFrequency="2" IsSnapToTickEnabled="True" />
+
+                    <TextBlock Text="Bilateral cleanup" Margin="0,8,0,0" />
+                    <Slider Minimum="0" Maximum="15" Value="{Binding MaskBilateralKernel}" TickFrequency="2" IsSnapToTickEnabled="True" />
+
+                    <CheckBox Content="Alpha contrast (CLAHE)" IsChecked="{Binding MaskClahe}" Margin="0,8,0,0" />
+
                     <!-- Export background options (persisted to the parent document) -->
                     <Separator Margin="0,16,0,8" />
                     <TextBlock Text="Export background" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />

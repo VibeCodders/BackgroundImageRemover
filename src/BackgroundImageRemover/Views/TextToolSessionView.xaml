@@ -73,7 +73,21 @@
                         <TextBlock Text="Margin" FontWeight="SemiBold" DockPanel.Dock="Left" />
                         <TextBlock Text="{Binding Margin, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
                     </DockPanel>
-                    <Slider Minimum="0" Maximum="200" Value="{Binding Margin}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,16" />
+                    <Slider Minimum="0" Maximum="200" Value="{Binding Margin}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Letter spacing" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding LetterSpacing, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="30" Value="{Binding LetterSpacing}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Line spacing" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding LineSpacing, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="100" Value="{Binding LineSpacing}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
+
+                    <CheckBox Content="Auto-fit to image width" IsChecked="{Binding AutoFitWidth}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Rotation" FontWeight="SemiBold" DockPanel.Dock="Left" />
@@ -106,10 +120,24 @@
                     </DockPanel>
                     <Slider Minimum="0" Maximum="20" Value="{Binding ShadowOffset}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
                     <DockPanel>
+                        <TextBlock Text="Blur" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding ShadowBlur, StringFormat='{}{0:0}px'}" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="20" Value="{Binding ShadowBlur}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
+                    <DockPanel>
                         <TextBlock Text="Opacity" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" />
                         <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Right" />
                     </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" TickFrequency="0.05" Margin="0,0,0,12" />
+                    <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" TickFrequency="0.05" Margin="0,0,0,8" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <Rectangle Width="24" Height="24" Fill="{Binding ShadowColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                        <Button x:Name="ChooseShadowColorButton" Content="Shadow color..." Margin="8,0,0,0" Click="ChooseShadowColorButton_Click" />
+                        <Popup IsOpen="{Binding IsShadowColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseShadowColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
+                            <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                <controls:SimpleColorPickerControl SelectedColor="{Binding ShadowColor}" />
+                            </Border>
+                        </Popup>
+                    </StackPanel>
 
                     <CheckBox Content="Background plate" IsChecked="{Binding BackgroundPlate}" FontWeight="SemiBold" Margin="0,0,0,8" />
                     <StackPanel Visibility="{Binding BackgroundPlate, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,12">

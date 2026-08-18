@@ -61,6 +61,21 @@ public partial class TextToolSessionViewModel : ToolSessionViewModelBase
     private double _shadowOpacity = 0.5;
 
     [ObservableProperty]
+    private WpfColor _shadowColor = WpfColor.FromRgb(0, 0, 0);
+
+    [ObservableProperty]
+    private double _shadowBlur;
+
+    [ObservableProperty]
+    private double _letterSpacing;
+
+    [ObservableProperty]
+    private int _lineSpacing;
+
+    [ObservableProperty]
+    private bool _autoFitWidth;
+
+    [ObservableProperty]
     private bool _backgroundPlate;
 
     [ObservableProperty]
@@ -77,6 +92,9 @@ public partial class TextToolSessionViewModel : ToolSessionViewModelBase
 
     [ObservableProperty]
     private bool _isPlateColorPickerOpen;
+
+    [ObservableProperty]
+    private bool _isShadowColorPickerOpen;
 
     [ObservableProperty]
     private string? _statusMessage;
@@ -108,6 +126,11 @@ public partial class TextToolSessionViewModel : ToolSessionViewModelBase
     partial void OnBoldChanged(bool value) => RefreshPreview();
     partial void OnShadowOffsetChanged(int value) => RefreshPreview();
     partial void OnShadowOpacityChanged(double value) => RefreshPreview();
+    partial void OnShadowColorChanged(WpfColor value) => RefreshPreview();
+    partial void OnShadowBlurChanged(double value) => RefreshPreview();
+    partial void OnLetterSpacingChanged(double value) => RefreshPreview();
+    partial void OnLineSpacingChanged(int value) => RefreshPreview();
+    partial void OnAutoFitWidthChanged(bool value) => RefreshPreview();
     partial void OnBackgroundPlateChanged(bool value) => RefreshPreview();
     partial void OnPlateColorChanged(WpfColor value) => RefreshPreview();
     partial void OnPlateOpacityChanged(double value) => RefreshPreview();
@@ -127,6 +150,11 @@ public partial class TextToolSessionViewModel : ToolSessionViewModelBase
         Bold = Bold,
         ShadowOffset = ShadowOffset,
         ShadowOpacity = ShadowOpacity,
+        ShadowColor = new Vec3b(ShadowColor.B, ShadowColor.G, ShadowColor.R),
+        ShadowBlur = ShadowBlur,
+        LetterSpacing = LetterSpacing,
+        LineSpacing = LineSpacing,
+        AutoFitWidth = AutoFitWidth,
         BackgroundPlate = BackgroundPlate,
         PlateColor = new Vec3b(PlateColor.B, PlateColor.G, PlateColor.R),
         PlateOpacity = PlateOpacity,

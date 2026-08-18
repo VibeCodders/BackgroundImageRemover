@@ -63,6 +63,21 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     private double _colorBoost;
 
     [ObservableProperty]
+    private int _removeDustKernel;
+
+    [ObservableProperty]
+    private double _surfaceBlur;
+
+    [ObservableProperty]
+    private bool _autoContrast;
+
+    [ObservableProperty]
+    private bool _autoWhiteBalance;
+
+    [ObservableProperty]
+    private double _chromaticAberration;
+
+    [ObservableProperty]
     private bool _canUndo;
 
     [ObservableProperty]
@@ -160,6 +175,11 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     partial void OnBlurBackgroundRadiusChanged(int value) => RefreshResultBitmap();
     partial void OnSharpenStrengthChanged(double value) => RefreshResultBitmap();
     partial void OnColorBoostChanged(double value) => RefreshResultBitmap();
+    partial void OnRemoveDustKernelChanged(int value) => RefreshResultBitmap();
+    partial void OnSurfaceBlurChanged(double value) => RefreshResultBitmap();
+    partial void OnAutoContrastChanged(bool value) => RefreshResultBitmap();
+    partial void OnAutoWhiteBalanceChanged(bool value) => RefreshResultBitmap();
+    partial void OnChromaticAberrationChanged(double value) => RefreshResultBitmap();
 
     /// <summary>Applies the whole-image retouch effects on top of the brush/wand alpha edits.</summary>
     private Mat BuildResultBgr()
@@ -167,6 +187,36 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         var result = _workingBgr!.Clone();
         try
         {
+            if (RemoveDustKernel > 0)
+            {
+                var dusted = RetouchEffectsService.RemoveDust(result, RemoveDustKernel);
+                result.Dispose();
+                result = dusted;
+            }
+            if (SurfaceBlur > 1e-4)
+            {
+                var smoothed = RetouchEffectsService.SurfaceBlur(result, SurfaceBlur);
+                result.Dispose();
+                result = smoothed;
+            }
+            if (AutoContrast)
+            {
+                var contrasted = RetouchEffectsService.AutoContrast(result);
+                result.Dispose();
+                result = contrasted;
+            }
+            if (AutoWhiteBalance)
+            {
+                var balanced = RetouchEffectsService.AutoWhiteBalance(result);
+                result.Dispose();
+                result = balanced;
+            }
+            if (ChromaticAberration > 1e-4)
+            {
+                var aberrated = RetouchEffectsService.ChromaticAberration(result, ChromaticAberration);
+                result.Dispose();
+                result = aberrated;
+            }
             if (Dehaze > 1e-4)
             {
                 var dehazed = RetouchEffectsService.Dehaze(result, Dehaze);

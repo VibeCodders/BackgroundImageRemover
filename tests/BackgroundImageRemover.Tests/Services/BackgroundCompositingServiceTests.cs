@@ -261,4 +261,76 @@ public class BackgroundCompositingServiceTests
         Assert.Equal(255, shadow.Item2);
         Assert.Equal(255, shadow.Item3);
     }
+
+    [Fact]
+    public void ApplySubjectOpacity_ScalesAlphaChannelOnly()
+    {
+        using var bgra = new Mat(3, 3, MatType.CV_8UC4, new Scalar(10, 20, 30, 200));
+
+        using var result = BackgroundCompositingService.ApplySubjectOpacity(bgra, 0.5);
+
+        var px = result.At<Vec4b>(1, 1);
+        Assert.Equal(10, px.Item0);
+        Assert.Equal(20, px.Item1);
+        Assert.Equal(30, px.Item2);
+        Assert.Equal(100, px.Item3); // 200 * 0.5
+    }
+
+    [Fact]
+    public void CompositeOntoGradient_Angled_InterpolatesAlongX()
+    {
+        using var bgra = new Mat(20, 20, MatType.CV_8UC4, Scalar.All(0)); // transparent
+
+        using var result = BackgroundCompositingService.CompositeOntoGradient(
+            bgra, new Vec3b(0, 0, 0), new Vec3b(255, 255, 255), angleDeg: 0);
+
+        var left = result.At<Vec3b>(10, 0);
+        Assert.True(left.Item0 < 10 && left.Item1 < 10 && left.Item2 < 10);
+
+        var right = result.At<Vec3b>(10, 19);
+        Assert.True(right.Item0 > 245 && right.Item1 > 245 && right.Item2 > 245);
+    }
+
+    [Fact]
+    public void FitBackground_Cover_FillsCanvasAndPreservesAspect()
+    {
+        using var bg = new Mat(100, 200, MatType.CV_8UC3, new Scalar(50, 60, 70)); // 200x100
+
+        using var result = BackgroundCompositingService.FitBackground(bg, new Size(100, 100), Models.BackgroundFitMode.Cover, new Vec3b(0, 0, 0));
+
+        Assert.Equal(100, result.Width);
+        Assert.Equal(100, result.Height);
+        Assert.Equal(50, result.At<Vec3b>(50, 50).Item0);
+    }
+
+    [Fact]
+    public void FitBackground_Contain_LetterboxesWithMatte()
+    {
+        using var bg = new Mat(100, 200, MatType.CV_8UC3, new Scalar(50, 60, 70)); // 200x100
+
+        using var result = BackgroundCompositingService.FitBackground(bg, new Size(100, 100), Models.BackgroundFitMode.Contain, new Vec3b(9, 8, 7));
+
+        Assert.Equal(100, result.Width);
+        Assert.Equal(100, result.Height);
+        // Top margin is matte-colored.
+        var mattePx = result.At<Vec3b>(5, 50);
+        Assert.Equal(9, mattePx.Item0);
+        Assert.Equal(8, mattePx.Item1);
+        Assert.Equal(7, mattePx.Item2);
+        // Center shows the fitted background.
+        var bgPx = result.At<Vec3b>(50, 50);
+        Assert.Equal(50, bgPx.Item0);
+    }
+
+    [Fact]
+    public void FitBackground_Tile_RepeatsBackground()
+    {
+        using var bg = new Mat(2, 2, MatType.CV_8UC3, new Scalar(10, 20, 30));
+
+        using var result = BackgroundCompositingService.FitBackground(bg, new Size(5, 5), Models.BackgroundFitMode.Tile, new Vec3b(0, 0, 0));
+
+        Assert.Equal(5, result.Width);
+        Assert.Equal(5, result.Height);
+        Assert.Equal(10, result.At<Vec3b>(4, 4).Item0);
+    }
 }

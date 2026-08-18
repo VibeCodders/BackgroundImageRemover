@@ -145,4 +145,30 @@ public class UncropFinishingTests
 
         Assert.Equal(130, result.At<Vec4b>(2, 2).Item0);
     }
+
+    [Fact]
+    public void ApplyFinishing_Temperature_WarmsTheImage()
+    {
+        using var src = new Mat(5, 5, MatType.CV_8UC3, new Scalar(100, 100, 100));
+
+        var config = new UncropOperationHelper.UncropConfig { Temperature = 40 };
+
+        using var result = UncropOperationHelper.ApplyFinishing(src, config);
+        var px = result.At<Vec4b>(2, 2);
+
+        Assert.True(px.Item2 > 100); // red boosted
+        Assert.True(px.Item0 < 100); // blue reduced
+    }
+
+    [Fact]
+    public void ApplyFinishing_Denoise_PreservesSize()
+    {
+        using var src = new Mat(20, 20, MatType.CV_8UC3, new Scalar(100, 100, 100));
+
+        var config = new UncropOperationHelper.UncropConfig { Denoise = 0.5 };
+
+        using var result = UncropOperationHelper.ApplyFinishing(src, config);
+
+        Assert.Equal(src.Size(), new Size(result.Width, result.Height));
+    }
 }

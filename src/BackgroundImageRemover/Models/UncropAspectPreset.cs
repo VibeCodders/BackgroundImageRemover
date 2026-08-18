@@ -21,6 +21,8 @@ public static class UncropAspectPresets
         new UncropAspectPreset("4:5", 4.0 / 5.0),
         new UncropAspectPreset("5:4", 5.0 / 4.0),
         new UncropAspectPreset("3:2", 3.0 / 2.0),
-        new UncropAspectPreset("2:3", 2.0 / 3.0)
+        new UncropAspectPreset("2:3", 2.0 / 3.0),
+        new UncropAspectPreset("Golden 1.618:1", 1.6180339887),
+        new UncropAspectPreset("Golden 1:1.618", 1.0 / 1.6180339887)
     ];
 }

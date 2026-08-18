@@ -26,6 +26,11 @@ public static class FilterService
             FilterKind.Pencil => Pencil(inputBgr),
             FilterKind.Dreamy => Dreamy(inputBgr),
             FilterKind.Cartoon => Cartoon(inputBgr),
+            FilterKind.Vivid => Vivid(inputBgr),
+            FilterKind.Vintage => Vintage(inputBgr),
+            FilterKind.Cool => Cool(inputBgr),
+            FilterKind.Warm => Warm(inputBgr),
+            FilterKind.Noir => Noir(inputBgr),
             _ => inputBgr.Clone()
         };
 
@@ -172,6 +177,83 @@ public static class FilterService
     {
         var result = new Mat();
         Cv2.Stylization(input, result, 60f, 0.45f);
+        return result;
+    }
+
+    /// <summary>Vivid: boosted saturation.</summary>
+    private static Mat Vivid(Mat input)
+    {
+        using var hsv = new Mat();
+        Cv2.CvtColor(input, hsv, ColorConversionCodes.BGR2HSV);
+        var channels = Cv2.Split(hsv);
+        try
+        {
+            channels[1].ConvertTo(channels[1], MatType.CV_8UC1, 1.5);
+            Cv2.Merge(channels, hsv);
+            var result = new Mat();
+            Cv2.CvtColor(hsv, result, ColorConversionCodes.HSV2BGR);
+            return result;
+        }
+        finally
+        {
+            foreach (var ch in channels) ch.Dispose();
+        }
+    }
+
+    /// <summary>Vintage: sepia with reduced contrast.</summary>
+    private static Mat Vintage(Mat input)
+    {
+        using var sepia = ToSepia(input);
+        var result = new Mat();
+        Cv2.AddWeighted(sepia, 1.0, input, 0.0, -10, result);
+        return result;
+    }
+
+    /// <summary>Cool: blue-shifted color balance.</summary>
+    private static Mat Cool(Mat input)
+    {
+        var result = input.Clone();
+        var channels = Cv2.Split(result);
+        try
+        {
+            Cv2.Add(channels[0], Scalar.All(20), channels[0]);  // blue up
+            Cv2.Subtract(channels[2], Scalar.All(20), channels[2]); // red down
+            Cv2.Merge(channels, result);
+            return result;
+        }
+        finally
+        {
+            foreach (var ch in channels) ch.Dispose();
+        }
+    }
+
+    /// <summary>Warm: amber-shifted color balance.</summary>
+    private static Mat Warm(Mat input)
+    {
+        var result = input.Clone();
+        var channels = Cv2.Split(result);
+        try
+        {
+            Cv2.Add(channels[2], Scalar.All(20), channels[2]);  // red up
+            Cv2.Subtract(channels[0], Scalar.All(20), channels[0]); // blue down
+            Cv2.Merge(channels, result);
+            return result;
+        }
+        finally
+        {
+            foreach (var ch in channels) ch.Dispose();
+        }
+    }
+
+    /// <summary>Noir: high-contrast black and white.</summary>
+    private static Mat Noir(Mat input)
+    {
+        using var gray = new Mat();
+        Cv2.CvtColor(input, gray, ColorConversionCodes.BGR2GRAY);
+        using var grayBgr = new Mat();
+        Cv2.CvtColor(gray, grayBgr, ColorConversionCodes.GRAY2BGR);
+        var result = new Mat();
+        grayBgr.ConvertTo(result, MatType.CV_8UC3, 1.5, -30);
         return result;
     }
 

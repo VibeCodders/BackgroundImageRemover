@@ -52,9 +52,36 @@
                         <TextBlock Text="Straighten" FontWeight="SemiBold" DockPanel.Dock="Left" />
                         <TextBlock Text="{Binding Angle, StringFormat='{}{0:0}°'}" Foreground="#FF666666" DockPanel.Dock="Right" />
                     </DockPanel>
-                    <Slider Minimum="-45" Maximum="45" Value="{Binding Angle}" Margin="0,2,0,12" />
+                    <Slider Minimum="-45" Maximum="45" Value="{Binding Angle}" Margin="0,2,0,8" />
+                    <Button Content="Auto-straighten (deskew)" Command="{Binding AutoStraightenCommand}" Margin="0,0,0,12" />
 
-                    <Button Content="Auto-trim border" Command="{Binding AutoTrimCommand}" Margin="0,0,0,12" />
+                    <TextBlock Text="Trim to color" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <UniformGrid Columns="3" Margin="0,0,0,12">
+                        <Button Content="Border" Command="{Binding AutoTrimCommand}" Margin="0,0,4,0" />
+                        <Button Content="White" Command="{Binding TrimWhiteCommand}" Margin="4,0,4,0" />
+                        <Button Content="Black" Command="{Binding TrimBlackCommand}" Margin="4,0,0,0" />
+                    </UniformGrid>
+
+                    <TextBlock Text="Center crop to size (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                            <TextBlock Text="W" />
+                            <TextBox Text="{Binding TargetWidth, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="H" />
+                            <TextBox Text="{Binding TargetHeight, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </Grid>
+                    <Button Content="Apply size" Command="{Binding ApplySizeCommand}" Margin="0,0,0,12" />
+
+                    <TextBlock Text="Rotate" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <UniformGrid Columns="2" Margin="0,0,0,12">
+                        <Button Content="↺ 90°" Command="{Binding Rotate90CounterClockwiseCommand}" Margin="0,0,4,0" />
+                        <Button Content="↻ 90°" Command="{Binding Rotate90ClockwiseCommand}" Margin="4,0,0,0" />
+                    </UniformGrid>
+
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" />
                 </StackPanel>
             </ScrollViewer>

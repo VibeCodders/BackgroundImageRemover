@@ -256,6 +256,36 @@
                         <Slider Minimum="-100" Maximum="100" Value="{Binding Options.Brightness}" />
                     </DockPanel>
 
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Sharpen:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.SharpenStrength, StringFormat={}{0:F2}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="0" Maximum="3" Value="{Binding Options.SharpenStrength}" />
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Blur:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.FinishBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="0" Maximum="50" Value="{Binding Options.FinishBlurRadius}" />
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Temperature:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.Temperature, StringFormat={}{0:F0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="-100" Maximum="100" Value="{Binding Options.Temperature}" />
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Tint:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.Tint, StringFormat={}{0:F0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="-100" Maximum="100" Value="{Binding Options.Tint}" />
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Denoise:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                        <TextBlock Text="{Binding Options.Denoise, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                        <Slider Minimum="0" Maximum="1" Value="{Binding Options.Denoise}" />
+                    </DockPanel>
+
                     <Button Content="Preview fill" Command="{Binding ApplyFillCommand}" Margin="0,14,0,0" Padding="8" FontWeight="Bold" />
                 </StackPanel>
             </ScrollViewer>

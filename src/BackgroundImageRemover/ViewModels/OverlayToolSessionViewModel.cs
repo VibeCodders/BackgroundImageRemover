@@ -41,6 +41,39 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
     private int _margin = 20;
 
     [ObservableProperty]
+    private double _rotation;
+
+    [ObservableProperty]
+    private bool _flipHorizontal;
+
+    [ObservableProperty]
+    private bool _flipVertical;
+
+    [ObservableProperty]
+    private bool _tintEnabled;
+
+    [ObservableProperty]
+    private double _tintRed = 255;
+
+    [ObservableProperty]
+    private double _tintGreen = 255;
+
+    [ObservableProperty]
+    private double _tintBlue = 255;
+
+    [ObservableProperty]
+    private bool _dropShadow;
+
+    [ObservableProperty]
+    private int _shadowOffset = 6;
+
+    [ObservableProperty]
+    private double _shadowOpacity = 0.5;
+
+    [ObservableProperty]
+    private OverlayBlendMode _blend = OverlayBlendMode.Normal;
+
+    [ObservableProperty]
     private string? _statusMessage;
 
     public OverlayToolSessionViewModel(
@@ -68,6 +101,17 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
     partial void OnOpacityChanged(double value) => RefreshResult();
     partial void OnAnchorChanged(TextAnchor value) => RefreshResult();
     partial void OnMarginChanged(int value) => RefreshResult();
+    partial void OnRotationChanged(double value) => RefreshResult();
+    partial void OnFlipHorizontalChanged(bool value) => RefreshResult();
+    partial void OnFlipVerticalChanged(bool value) => RefreshResult();
+    partial void OnTintEnabledChanged(bool value) => RefreshResult();
+    partial void OnTintRedChanged(double value) => RefreshResult();
+    partial void OnTintGreenChanged(double value) => RefreshResult();
+    partial void OnTintBlueChanged(double value) => RefreshResult();
+    partial void OnDropShadowChanged(bool value) => RefreshResult();
+    partial void OnShadowOffsetChanged(int value) => RefreshResult();
+    partial void OnShadowOpacityChanged(double value) => RefreshResult();
+    partial void OnBlendChanged(OverlayBlendMode value) => RefreshResult();
 
     [RelayCommand]
     private void PickOverlay()
@@ -99,7 +143,7 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
             return;
         }
 
-        using var composited = OverlayService.Composite(_sourceImage.FullBgr, _overlayBgra, Anchor, Scale, Opacity, Margin);
+        using var composited = CompositeOverlay();
         ResultBitmap = composited.ToBitmapSource(_workingAlpha);
         IsDirty = true;
     }
@@ -112,11 +156,24 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
             return Task.CompletedTask;
         }
 
-        var bgr = OverlayService.Composite(_sourceImage.FullBgr, _overlayBgra, Anchor, Scale, Opacity, Margin);
+        var bgr = CompositeOverlay();
         _parentDocument.ApplyToolResult(bgr, _workingAlpha.Clone(), "Overlay");
 
         _shell.CloseTabDirect(this);
         return Task.CompletedTask;
+    }
+
+    private Mat CompositeOverlay()
+    {
+        Vec3b? tint = TintEnabled
+            ? new Vec3b(
+                (byte)Math.Clamp(TintBlue, 0, 255),
+                (byte)Math.Clamp(TintGreen, 0, 255),
+                (byte)Math.Clamp(TintRed, 0, 255))
+            : null;
+        return OverlayService.Composite(
+            _sourceImage!.FullBgr, _overlayBgra!, Anchor, Scale, Opacity, Margin,
+            Rotation, FlipHorizontal, FlipVertical, tint, DropShadow, ShadowOffset, ShadowOpacity, Blend);
     }
 
     public override void Dispose()

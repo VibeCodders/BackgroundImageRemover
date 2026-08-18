@@ -128,6 +128,21 @@ public partial class UncropOptionsViewModel : ObservableObject
     [ObservableProperty]
     private double _brightness;
 
+    [ObservableProperty]
+    private double _sharpenStrength;
+
+    [ObservableProperty]
+    private int _finishBlurRadius;
+
+    [ObservableProperty]
+    private double _temperature;
+
+    [ObservableProperty]
+    private double _tint;
+
+    [ObservableProperty]
+    private double _denoise;
+
     /// <summary>
     /// Supplies the current source-image size so an aspect-ratio preset can compute a centered
     /// padding. Set by the hosting ViewModel; null until an image is available.
@@ -238,6 +253,11 @@ public partial class UncropOptionsViewModel : ObservableObject
         Saturation = 1.0;
         Contrast = 1.0;
         Brightness = 0.0;
+        SharpenStrength = 0.0;
+        FinishBlurRadius = 0;
+        Temperature = 0.0;
+        Tint = 0.0;
+        Denoise = 0.0;
     }
 
     /// <summary>Builds the operation config consumed by <see cref="UncropOperationHelper"/>.</summary>
@@ -273,7 +293,12 @@ public partial class UncropOptionsViewModel : ObservableObject
         Vignette = Vignette,
         Saturation = Saturation,
         Contrast = Contrast,
-        Brightness = Brightness
+        Brightness = Brightness,
+        SharpenStrength = SharpenStrength,
+        FinishBlurRadius = FinishBlurRadius,
+        Temperature = Temperature,
+        Tint = Tint,
+        Denoise = Denoise
     };
 
     /// <summary>True when the current options describe a runnable uncrop operation.</summary>

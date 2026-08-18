@@ -161,4 +161,45 @@ public class StrategyCleanupTests
 
         Assert.True(alpha.Get<byte>(2, 2) < 64);
     }
+
+    [Fact]
+    public void MaskThreshold_CutsAlphaBelowTheCutoff()
+    {
+        using var mask = new Mat(5, 5, MatType.CV_8UC1, Scalar.All(128));
+
+        using var alpha = RunMask(mask, new StrategyContext { MaskThreshold = 200, DecontaminateEdges = false });
+
+        Assert.Equal(0, alpha.Get<byte>(2, 2)); // 128 < 200 -> removed
+    }
+
+    [Fact]
+    public void MaskMedianKernel_RemovesIsolatedNoise()
+    {
+        using var mask = new Mat(21, 21, MatType.CV_8UC1, Scalar.All(255));
+        mask.Set(10, 10, (byte)0); // single dark pixel in foreground
+
+        using var alpha = RunMask(mask, new StrategyContext { MaskMedianKernel = 3, DecontaminateEdges = false });
+
+        Assert.Equal(255, alpha.Get<byte>(10, 10)); // median filled the speck
+    }
+
+    [Fact]
+    public void MaskBilateralKernel_PreservesSolidForeground()
+    {
+        using var mask = new Mat(21, 21, MatType.CV_8UC1, Scalar.All(255));
+
+        using var alpha = RunMask(mask, new StrategyContext { MaskBilateralKernel = 3, DecontaminateEdges = false });
+
+        Assert.True(alpha.Get<byte>(10, 10) >= 250);
+    }
+
+    [Fact]
+    public void MaskClahe_KeepsOpaqueForegroundOpaque()
+    {
+        using var mask = new Mat(21, 21, MatType.CV_8UC1, Scalar.All(255));
+
+        using var alpha = RunMask(mask, new StrategyContext { MaskClahe = true, DecontaminateEdges = false });
+
+        Assert.Equal(255, alpha.Get<byte>(10, 10));
+    }
 }

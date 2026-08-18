@@ -84,4 +84,57 @@ public class RetouchEffectsServiceTests
 
         Assert.True(afterSpread > beforeSpread);
     }
+
+    [Fact]
+    public void RemoveDust_PreservesUniformColor()
+    {
+        using var bgr = new Mat(10, 10, MatType.CV_8UC3, new Scalar(100, 100, 100));
+
+        using var result = RetouchEffectsService.RemoveDust(bgr, 3);
+
+        Assert.Equal(100, result.At<Vec3b>(5, 5).Item0);
+    }
+
+    [Fact]
+    public void SurfaceBlur_ZeroStrength_ReturnsClone()
+    {
+        using var bgr = new Mat(10, 10, MatType.CV_8UC3, new Scalar(100, 120, 140));
+
+        using var result = RetouchEffectsService.SurfaceBlur(bgr, 0);
+
+        Assert.Equal(bgr.At<Vec3b>(0, 0), result.At<Vec3b>(0, 0));
+    }
+
+    [Fact]
+    public void AutoContrast_PreservesSizeAndType()
+    {
+        using var bgr = new Mat(30, 30, MatType.CV_8UC3, new Scalar(90, 90, 90));
+
+        using var result = RetouchEffectsService.AutoContrast(bgr);
+
+        Assert.Equal(bgr.Size(), result.Size());
+        Assert.Equal(bgr.Type(), result.Type());
+    }
+
+    [Fact]
+    public void AutoWhiteBalance_NeutralizesColorCast()
+    {
+        using var bgr = new Mat(10, 10, MatType.CV_8UC3, new Scalar(200, 100, 100)); // blue cast
+
+        using var result = RetouchEffectsService.AutoWhiteBalance(bgr);
+
+        var px = result.At<Vec3b>(5, 5);
+        Assert.True(px.Item0 < 200); // blue reduced
+        Assert.True(px.Item2 > 100); // red lifted
+    }
+
+    [Fact]
+    public void ChromaticAberration_ZeroStrength_ReturnsClone()
+    {
+        using var bgr = new Mat(20, 20, MatType.CV_8UC3, new Scalar(100, 100, 100));
+
+        using var result = RetouchEffectsService.ChromaticAberration(bgr, 0);
+
+        Assert.Equal(bgr.At<Vec3b>(10, 10), result.At<Vec3b>(10, 10));
+    }
 }

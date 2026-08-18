@@ -129,6 +129,30 @@
                     <Slider Minimum="0" Maximum="1" Value="{Binding ColorBoost}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <CheckBox Content="Defringe edges" IsChecked="{Binding Defringe}" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+                    <Separator Margin="0,8,0,12" />
+                    <TextBlock Text="Repair" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Dust removal" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding RemoveDustKernel}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="15" Value="{Binding RemoveDustKernel}" TickFrequency="2" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Surface blur" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding SurfaceBlur, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="1" Value="{Binding SurfaceBlur}" SmallChange="0.05" Margin="0,2,0,8" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Chromatic aberration" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding ChromaticAberration, StringFormat='{}{0:0.00}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="2" Value="{Binding ChromaticAberration}" SmallChange="0.05" Margin="0,2,0,8" />
+
+                    <CheckBox Content="Auto contrast" IsChecked="{Binding AutoContrast}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <CheckBox Content="Auto white balance" IsChecked="{Binding AutoWhiteBalance}" FontWeight="SemiBold" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

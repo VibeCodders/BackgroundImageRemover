@@ -86,6 +86,21 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     private double _adjMonochrome;
 
     [ObservableProperty]
+    private double _adjDehaze;
+
+    [ObservableProperty]
+    private double _adjSoften;
+
+    [ObservableProperty]
+    private double _adjSepiaTone;
+
+    [ObservableProperty]
+    private double _adjInvertAmount;
+
+    [ObservableProperty]
+    private int _adjPosterizeLevels;
+
+    [ObservableProperty]
     private bool _isCompareMode;
 
     [ObservableProperty]
@@ -138,6 +153,11 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     partial void OnAdjFadeChanged(double value) => UpdateLivePreview();
     partial void OnAdjGrainChanged(double value) => UpdateLivePreview();
     partial void OnAdjMonochromeChanged(double value) => UpdateLivePreview();
+    partial void OnAdjDehazeChanged(double value) => UpdateLivePreview();
+    partial void OnAdjSoftenChanged(double value) => UpdateLivePreview();
+    partial void OnAdjSepiaToneChanged(double value) => UpdateLivePreview();
+    partial void OnAdjInvertAmountChanged(double value) => UpdateLivePreview();
+    partial void OnAdjPosterizeLevelsChanged(int value) => UpdateLivePreview();
 
     private void UpdateLivePreview()
     {
@@ -163,7 +183,12 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
             Clarity = AdjClarity,
             Fade = AdjFade,
             Grain = AdjGrain,
-            Monochrome = AdjMonochrome
+            Monochrome = AdjMonochrome,
+            Dehaze = AdjDehaze,
+            Soften = AdjSoften,
+            SepiaTone = AdjSepiaTone,
+            InvertAmount = AdjInvertAmount,
+            PosterizeLevels = AdjPosterizeLevels
         };
 
         if (adjustments.IsIdentity)
@@ -207,6 +232,11 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
         AdjFade = 0.0;
         AdjGrain = 0.0;
         AdjMonochrome = 0.0;
+        AdjDehaze = 0.0;
+        AdjSoften = 0.0;
+        AdjSepiaTone = 0.0;
+        AdjInvertAmount = 0.0;
+        AdjPosterizeLevels = 0;
         UpdateLivePreview();
     }
 
@@ -238,7 +268,12 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
             Clarity = AdjClarity,
             Fade = AdjFade,
             Grain = AdjGrain,
-            Monochrome = AdjMonochrome
+            Monochrome = AdjMonochrome,
+            Dehaze = AdjDehaze,
+            Soften = AdjSoften,
+            SepiaTone = AdjSepiaTone,
+            InvertAmount = AdjInvertAmount,
+            PosterizeLevels = AdjPosterizeLevels
         };
 
         if (!adjustments.IsIdentity)

@@ -62,6 +62,21 @@ public record ImageAdjustments
     /// <summary>Monochrome in [0, 1]: blends toward a grayscale rendition (0 = full color, 1 = B&amp;W).</summary>
     public double Monochrome { get; init; }
 
+    /// <summary>Dehaze in [0, 1]: local contrast equalization plus a slight saturation lift.</summary>
+    public double Dehaze { get; init; }
+
+    /// <summary>Soften in [0, 1]: edge-preserving bilateral smoothing (skin smoothing).</summary>
+    public double Soften { get; init; }
+
+    /// <summary>Sepia tone in [0, 1]: blends toward a sepia rendition.</summary>
+    public double SepiaTone { get; init; }
+
+    /// <summary>Invert amount in [0, 1]: blends toward a color-inverted rendition.</summary>
+    public double InvertAmount { get; init; }
+
+    /// <summary>Posterize levels (0 = off, otherwise the number of color levels per channel).</summary>
+    public int PosterizeLevels { get; init; }
+
     /// <summary>Returns true if all parameters are at neutral/identity values.</summary>
     public bool IsIdentity =>
         Math.Abs(Brightness) < 1e-4 &&
@@ -82,6 +97,11 @@ public record ImageAdjustments
         Math.Abs(Fade) < 1e-4 &&
         Math.Abs(Grain) < 1e-4 &&
         Math.Abs(Monochrome) < 1e-4 &&
+        Math.Abs(Dehaze) < 1e-4 &&
+        Math.Abs(Soften) < 1e-4 &&
+        Math.Abs(SepiaTone) < 1e-4 &&
+        Math.Abs(InvertAmount) < 1e-4 &&
+        PosterizeLevels == 0 &&
         !AutoEnhance;
 
     public static ImageAdjustments Default { get; } = new();

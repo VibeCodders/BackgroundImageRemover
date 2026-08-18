@@ -27,4 +27,9 @@ public partial class TextToolSessionView : UserControl
     {
         if (ViewModel is { } vm) vm.IsPlateColorPickerOpen = !vm.IsPlateColorPickerOpen;
     }
+
+    private void ChooseShadowColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.IsShadowColorPickerOpen = !vm.IsShadowColorPickerOpen;
+    }
 }

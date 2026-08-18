@@ -53,7 +53,10 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     private bool _dropShadowEnabled;
 
     [ObservableProperty]
-    private double _shadowOffset = 12;
+    private double _shadowDistance = 12;
+
+    [ObservableProperty]
+    private double _shadowAngle = 45;
 
     [ObservableProperty]
     private double _shadowBlur = 6;
@@ -78,6 +81,21 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
 
     [ObservableProperty]
     private WpfColor _shadowColor = WpfColor.FromRgb(0, 0, 0);
+
+    [ObservableProperty]
+    private double _gradientAngle = 90;
+
+    [ObservableProperty]
+    private BackgroundFitMode _fitMode = BackgroundFitMode.Stretch;
+
+    [ObservableProperty]
+    private double _subjectOpacity = 100.0;
+
+    [ObservableProperty]
+    private bool _subjectFlipHorizontal;
+
+    [ObservableProperty]
+    private bool _subjectFlipVertical;
 
     [ObservableProperty]
     private bool _isShadowColorPickerOpen;
@@ -123,7 +141,8 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     partial void OnBlurRadiusChanged(double value) => RefreshPreview();
     partial void OnBackgroundImagePathChanged(string? value) => RefreshPreview();
     partial void OnDropShadowEnabledChanged(bool value) => RefreshPreview();
-    partial void OnShadowOffsetChanged(double value) => RefreshPreview();
+    partial void OnShadowDistanceChanged(double value) => RefreshPreview();
+    partial void OnShadowAngleChanged(double value) => RefreshPreview();
     partial void OnShadowBlurChanged(double value) => RefreshPreview();
     partial void OnShadowOpacityChanged(double value) => RefreshPreview();
     partial void OnSubjectScaleChanged(double value) => RefreshPreview();
@@ -132,6 +151,11 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     partial void OnSubjectOffsetYChanged(int value) => RefreshPreview();
     partial void OnBackgroundPaddingChanged(int value) => RefreshPreview();
     partial void OnShadowColorChanged(WpfColor value) => RefreshPreview();
+    partial void OnGradientAngleChanged(double value) => RefreshPreview();
+    partial void OnFitModeChanged(BackgroundFitMode value) => RefreshPreview();
+    partial void OnSubjectOpacityChanged(double value) => RefreshPreview();
+    partial void OnSubjectFlipHorizontalChanged(bool value) => RefreshPreview();
+    partial void OnSubjectFlipVerticalChanged(bool value) => RefreshPreview();
 
     [RelayCommand]
     private void PickBackgroundImage()
@@ -171,12 +195,29 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
         using var bgra = _workingBgr!.ToBgra(_workingAlpha!);
         BackgroundCompositingService.ZeroFullyTransparentPixels(bgra);
 
-        Mat current = Math.Abs(SubjectScale - 100.0) > 1e-4
-            ? TransformService.Resize(bgra, SubjectScale / 100.0)
-            : bgra.Clone();
-
+        Mat current = bgra.Clone();
         try
         {
+            if (SubjectFlipHorizontal)
+            {
+                using var flipped = TransformService.FlipHorizontal(current);
+                current.Dispose();
+                current = flipped.Clone();
+            }
+            if (SubjectFlipVertical)
+            {
+                using var flipped = TransformService.FlipVertical(current);
+                current.Dispose();
+                current = flipped.Clone();
+            }
+
+            if (Math.Abs(SubjectScale - 100.0) > 1e-4)
+            {
+                using var scaled = TransformService.Resize(current, SubjectScale / 100.0);
+                current.Dispose();
+                current = scaled.Clone();
+            }
+
             if (Math.Abs(SubjectRotation) > 1e-4)
             {
                 using var rotated = TransformService.Rotate(current, SubjectRotation);
@@ -184,10 +225,20 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
                 current = rotated.Clone();
             }
 
+            if (Math.Abs(SubjectOpacity - 100.0) > 1e-4)
+            {
+                using var faded = BackgroundCompositingService.ApplySubjectOpacity(current, SubjectOpacity / 100.0);
+                current.Dispose();
+                current = faded.Clone();
+            }
+
             if (DropShadowEnabled)
             {
+                double rad = ShadowAngle * Math.PI / 180.0;
+                double offsetX = ShadowDistance * Math.Cos(rad);
+                double offsetY = ShadowDistance * Math.Sin(rad);
                 using var shadowed = BackgroundCompositingService.ApplyDropShadow(
-                    current, ShadowOffset, ShadowOffset, ShadowBlur, ShadowOpacity,
+                    current, offsetX, offsetY, ShadowBlur, ShadowOpacity,
                     new Vec3b(ShadowColor.B, ShadowColor.G, ShadowColor.R));
                 current.Dispose();
                 current = shadowed.Clone();
@@ -214,7 +265,8 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
             ExportBackgroundMode.Gradient => BackgroundCompositingService.CompositeOntoGradient(
                 subject,
                 new Vec3b(GradientTopColor.B, GradientTopColor.G, GradientTopColor.R),
-                new Vec3b(GradientBottomColor.B, GradientBottomColor.G, GradientBottomColor.R)),
+                new Vec3b(GradientBottomColor.B, GradientBottomColor.G, GradientBottomColor.R),
+                GradientAngle),
             ExportBackgroundMode.Blur => BackgroundCompositingService.CompositeOntoBlurredImage(
                 subject, _sourceImage!.FullBgr, BlurRadius),
             ExportBackgroundMode.Image => CompositeOntoImage(subject),
@@ -229,7 +281,8 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
             return subject.ToBgr();
         }
         using var background = _imageLoader.LoadAsync(BackgroundImagePath).GetAwaiter().GetResult();
-        return BackgroundCompositingService.CompositeOntoImage(subject, background.FullBgr);
+        var matte = new Vec3b(SolidColor.B, SolidColor.G, SolidColor.R);
+        return BackgroundCompositingService.CompositeOntoImage(subject, background.FullBgr, FitMode, matte);
     }
 
     public override Task ApplyAsync()

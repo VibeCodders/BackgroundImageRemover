@@ -44,6 +44,36 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
     private double _cropAspectRatio = 1.0;
 
     [ObservableProperty]
+    private int _padLeft;
+
+    [ObservableProperty]
+    private int _padTop;
+
+    [ObservableProperty]
+    private int _padRight;
+
+    [ObservableProperty]
+    private int _padBottom;
+
+    [ObservableProperty]
+    private int _fitWidth = 1024;
+
+    [ObservableProperty]
+    private int _fitHeight = 1024;
+
+    [ObservableProperty]
+    private int _centerCropWidth;
+
+    [ObservableProperty]
+    private int _centerCropHeight;
+
+    [ObservableProperty]
+    private int _tileWidth;
+
+    [ObservableProperty]
+    private int _tileHeight;
+
+    [ObservableProperty]
     private string? _statusMessage;
 
     public TransformToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
@@ -60,8 +90,14 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
         _workingBgra = _sourceImage.FullBgr.ToBgra(alpha);
         ExactWidth = _workingBgra.Width;
         ExactHeight = _workingBgra.Height;
+        FitWidth = 1024;
+        FitHeight = 1024;
+        CenterCropWidth = _workingBgra.Width;
+        CenterCropHeight = _workingBgra.Height;
+        TileWidth = _workingBgra.Width;
+        TileHeight = _workingBgra.Height;
         RefreshPreview();
-        StatusMessage = "Apply flips, rotations, scaling, skew, crop and trim.";
+        StatusMessage = "Apply flips, rotations, scaling, skew, crop, trim, padding, fit, tile and auto-straighten.";
     }
 
     private void RefreshPreview()
@@ -105,6 +141,21 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
     private void TrimBorder() => ApplyTransform(m => TransformService.TrimBorder(m));
 
     [RelayCommand]
+    private void ApplyPadding() => ApplyTransform(m => TransformService.Pad(m, PadLeft, PadTop, PadRight, PadBottom, new Scalar(0, 0, 0, 0)));
+
+    [RelayCommand]
+    private void ApplyFit() => ApplyTransform(m => TransformService.ResizeToFit(m, FitWidth, FitHeight));
+
+    [RelayCommand]
+    private void ApplyCenterCrop() => ApplyTransform(m => TransformService.CropCenter(m, CenterCropWidth, CenterCropHeight, new Scalar(0, 0, 0, 0)));
+
+    [RelayCommand]
+    private void ApplyTile() => ApplyTransform(m => TransformService.Tile(m, TileWidth, TileHeight));
+
+    [RelayCommand]
+    private void AutoStraighten() => ApplyTransform(m => TransformService.AutoStraighten(m));
+
+    [RelayCommand]
     private void Reset()
     {
         if (_sourceImage is null) return;
@@ -119,6 +170,14 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
         ExactWidth = _workingBgra.Width;
         ExactHeight = _workingBgra.Height;
         CropAspectRatio = 1.0;
+        PadLeft = 0;
+        PadTop = 0;
+        PadRight = 0;
+        PadBottom = 0;
+        CenterCropWidth = _workingBgra.Width;
+        CenterCropHeight = _workingBgra.Height;
+        TileWidth = _workingBgra.Width;
+        TileHeight = _workingBgra.Height;
         RefreshPreview();
     }
 

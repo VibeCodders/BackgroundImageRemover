@@ -83,6 +83,66 @@ public partial class FrameToolSessionViewModel : ToolSessionViewModelBase
     private bool _isMatColorPickerOpen;
 
     [ObservableProperty]
+    private bool _gradientBorderEnabled;
+
+    [ObservableProperty]
+    private WpfColor _gradientBorderColorA = WpfColor.FromRgb(255, 0, 0);
+
+    [ObservableProperty]
+    private WpfColor _gradientBorderColorB = WpfColor.FromRgb(0, 0, 255);
+
+    [ObservableProperty]
+    private bool _borderTop = true;
+
+    [ObservableProperty]
+    private bool _borderRight = true;
+
+    [ObservableProperty]
+    private bool _borderBottom = true;
+
+    [ObservableProperty]
+    private bool _borderLeft = true;
+
+    [ObservableProperty]
+    private bool _bevelEnabled;
+
+    [ObservableProperty]
+    private int _bevelThickness;
+
+    [ObservableProperty]
+    private double _bevelOpacity = 1.0;
+
+    [ObservableProperty]
+    private bool _polaroidEnabled;
+
+    [ObservableProperty]
+    private int _polaroidHeight = 60;
+
+    [ObservableProperty]
+    private WpfColor _polaroidColor = WpfColor.FromRgb(255, 255, 255);
+
+    [ObservableProperty]
+    private bool _vignetteEnabled;
+
+    [ObservableProperty]
+    private double _vignetteStrength = 0.5;
+
+    [ObservableProperty]
+    private WpfColor _vignetteColor = WpfColor.FromRgb(0, 0, 0);
+
+    [ObservableProperty]
+    private bool _isGradientColorAPickerOpen;
+
+    [ObservableProperty]
+    private bool _isGradientColorBPickerOpen;
+
+    [ObservableProperty]
+    private bool _isPolaroidColorPickerOpen;
+
+    [ObservableProperty]
+    private bool _isVignetteColorPickerOpen;
+
+    [ObservableProperty]
     private string? _statusMessage;
 
     public FrameToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
@@ -115,6 +175,22 @@ public partial class FrameToolSessionViewModel : ToolSessionViewModelBase
     partial void OnOuterShadowOffsetChanged(double value) => RefreshPreview();
     partial void OnOuterShadowBlurChanged(double value) => RefreshPreview();
     partial void OnOuterShadowOpacityChanged(double value) => RefreshPreview();
+    partial void OnGradientBorderEnabledChanged(bool value) => RefreshPreview();
+    partial void OnGradientBorderColorAChanged(WpfColor value) => RefreshPreview();
+    partial void OnGradientBorderColorBChanged(WpfColor value) => RefreshPreview();
+    partial void OnBorderTopChanged(bool value) => RefreshPreview();
+    partial void OnBorderRightChanged(bool value) => RefreshPreview();
+    partial void OnBorderBottomChanged(bool value) => RefreshPreview();
+    partial void OnBorderLeftChanged(bool value) => RefreshPreview();
+    partial void OnBevelEnabledChanged(bool value) => RefreshPreview();
+    partial void OnBevelThicknessChanged(int value) => RefreshPreview();
+    partial void OnBevelOpacityChanged(double value) => RefreshPreview();
+    partial void OnPolaroidEnabledChanged(bool value) => RefreshPreview();
+    partial void OnPolaroidHeightChanged(int value) => RefreshPreview();
+    partial void OnPolaroidColorChanged(WpfColor value) => RefreshPreview();
+    partial void OnVignetteEnabledChanged(bool value) => RefreshPreview();
+    partial void OnVignetteStrengthChanged(double value) => RefreshPreview();
+    partial void OnVignetteColorChanged(WpfColor value) => RefreshPreview();
 
     private Mat BuildFramedBgra()
     {
@@ -130,11 +206,31 @@ public partial class FrameToolSessionViewModel : ToolSessionViewModelBase
 
         try
         {
-            using (var bordered = FrameService.AddBorder(
-                current, BorderThickness, new Vec3b(BorderColor.B, BorderColor.G, BorderColor.R), BorderOpacity))
+            if (BorderThickness > 0)
             {
+                using var bordered = GradientBorderEnabled
+                    ? FrameService.AddGradientBorder(
+                        current, BorderThickness,
+                        new Vec3b(GradientBorderColorA.B, GradientBorderColorA.G, GradientBorderColorA.R),
+                        new Vec3b(GradientBorderColorB.B, GradientBorderColorB.G, GradientBorderColorB.R),
+                        BorderOpacity)
+                    : BorderTop && BorderRight && BorderBottom && BorderLeft
+                        ? FrameService.AddBorder(
+                            current, BorderThickness, new Vec3b(BorderColor.B, BorderColor.G, BorderColor.R), BorderOpacity)
+                        : FrameService.AddPartialBorder(
+                            current, BorderThickness, new Vec3b(BorderColor.B, BorderColor.G, BorderColor.R), BorderOpacity,
+                            BorderTop, BorderRight, BorderBottom, BorderLeft);
                 current.Dispose();
                 current = bordered.Clone();
+            }
+
+            if (BevelEnabled && BevelThickness > 0)
+            {
+                using var beveled = FrameService.AddBevel(
+                    current, BevelThickness,
+                    new Vec3b(255, 255, 255), new Vec3b(0, 0, 0), BevelOpacity);
+                current.Dispose();
+                current = beveled.Clone();
             }
 
             if (InnerBorderThickness > 0)
@@ -150,6 +246,22 @@ public partial class FrameToolSessionViewModel : ToolSessionViewModelBase
                 using var rounded = FrameService.RoundCorners(current, CornerRadius);
                 current.Dispose();
                 current = rounded.Clone();
+            }
+
+            if (PolaroidEnabled)
+            {
+                using var polaroid = FrameService.AddPolaroidBar(
+                    current, PolaroidHeight, new Vec3b(PolaroidColor.B, PolaroidColor.G, PolaroidColor.R));
+                current.Dispose();
+                current = polaroid.Clone();
+            }
+
+            if (VignetteEnabled)
+            {
+                using var vignetted = FrameService.AddVignette(
+                    current, VignetteStrength, new Vec3b(VignetteColor.B, VignetteColor.G, VignetteColor.R));
+                current.Dispose();
+                current = vignetted.Clone();
             }
 
             if (OuterShadowEnabled)
@@ -177,7 +289,9 @@ public partial class FrameToolSessionViewModel : ToolSessionViewModelBase
             using var result = BuildFramedBgra();
             ResultBitmap = result.ToBitmapSource();
             IsDirty = BorderThickness > 0 || CornerRadius > 0 || PaddingLeft + PaddingTop + PaddingRight + PaddingBottom > 0
-                || InnerBorderThickness > 0 || OuterShadowEnabled || UseMatColor;
+                || InnerBorderThickness > 0 || OuterShadowEnabled || UseMatColor
+                || GradientBorderEnabled || BevelEnabled || PolaroidEnabled || VignetteEnabled
+                || !BorderTop || !BorderRight || !BorderBottom || !BorderLeft;
         }
         catch (Exception ex)
         {
@@ -196,6 +310,15 @@ public partial class FrameToolSessionViewModel : ToolSessionViewModelBase
         InnerBorderOpacity = 1.0;
         UseMatColor = false;
         OuterShadowEnabled = false;
+        GradientBorderEnabled = false;
+        BorderTop = BorderRight = BorderBottom = BorderLeft = true;
+        BevelEnabled = false;
+        BevelThickness = 0;
+        BevelOpacity = 1.0;
+        PolaroidEnabled = false;
+        PolaroidHeight = 60;
+        VignetteEnabled = false;
+        VignetteStrength = 0.5;
         RefreshPreview();
     }
 

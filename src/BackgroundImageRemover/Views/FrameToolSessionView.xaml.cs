@@ -27,4 +27,24 @@ public partial class FrameToolSessionView : UserControl
     {
         if (ViewModel is { } vm) vm.IsMatColorPickerOpen = !vm.IsMatColorPickerOpen;
     }
+
+    private void ChooseGradientColorAButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.IsGradientColorAPickerOpen = !vm.IsGradientColorAPickerOpen;
+    }
+
+    private void ChooseGradientColorBButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.IsGradientColorBPickerOpen = !vm.IsGradientColorBPickerOpen;
+    }
+
+    private void ChoosePolaroidColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.IsPolaroidColorPickerOpen = !vm.IsPolaroidColorPickerOpen;
+    }
+
+    private void ChooseVignetteColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is { } vm) vm.IsVignetteColorPickerOpen = !vm.IsVignetteColorPickerOpen;
+    }
 }

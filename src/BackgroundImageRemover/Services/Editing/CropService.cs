@@ -66,22 +66,78 @@ public static class CropService
         }
 
         var bg = src.At<Vec3b>(0, 0);
-        using var diff = new Mat();
-        Cv2.Absdiff(src, new Mat(src.Size(), src.Type(), new Scalar(bg.Item0, bg.Item1, bg.Item2)), diff);
+        return ComputeTrimBounds(src, bg, tolerance);
+    }
 
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        using var mask = new Mat();
-        Cv2.Threshold(gray, mask, tolerance, 255, ThresholdTypes.Binary); // non-border = 255
-
-        using var nonZero = new Mat();
-        Cv2.FindNonZero(mask, nonZero);
-        if (nonZero.Rows == 0)
+    /// <summary>Computes the content bounding box assuming the given flat border color.</summary>
+    public static Rect TrimContentBounds(Mat src, Vec3b borderColor, int tolerance)
+    {
+        if (src.Width <= 2 || src.Height <= 2)
         {
             return new Rect(0, 0, src.Width, src.Height);
         }
 
-        return Cv2.BoundingRect(nonZero);
+        return ComputeTrimBounds(src, borderColor, tolerance);
+    }
+
+    /// <summary>Returns the centered rectangle of the requested pixel size, clamped to the image bounds.</summary>
+    public static Rect CenteredRectForSize(Size size, int width, int height)
+    {
+        width = Math.Clamp(width, 1, size.Width);
+        height = Math.Clamp(height, 1, size.Height);
+        int x = (size.Width - width) / 2;
+        int y = (size.Height - height) / 2;
+        return new Rect(x, y, width, height);
+    }
+
+    private static Rect ComputeTrimBounds(Mat src, Vec3b bg, int tolerance)
+    {
+        Mat? converted = null;
+        Mat bgr = src;
+        try
+        {
+            if (src.Channels() == 4)
+            {
+                converted = ToBgr(src);
+                bgr = converted;
+            }
+
+            using var diff = new Mat();
+            Cv2.Absdiff(bgr, new Mat(bgr.Size(), bgr.Type(), new Scalar(bg.Item0, bg.Item1, bg.Item2)), diff);
+
+            using var gray = new Mat();
+            Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
+            using var mask = new Mat();
+            Cv2.Threshold(gray, mask, tolerance, 255, ThresholdTypes.Binary); // non-border = 255
+
+            using var nonZero = new Mat();
+            Cv2.FindNonZero(mask, nonZero);
+            if (nonZero.Rows == 0)
+            {
+                return new Rect(0, 0, src.Width, src.Height);
+            }
+
+            return Cv2.BoundingRect(nonZero);
+        }
+        finally
+        {
+            converted?.Dispose();
+        }
+    }
+
+    private static Mat ToBgr(Mat src)
+    {
+        var channels = Cv2.Split(src);
+        try
+        {
+            var bgr = new Mat();
+            Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, bgr);
+            return bgr;
+        }
+        finally
+        {
+            foreach (var ch in channels) ch.Dispose();
+        }
     }
 
     /// <summary>
@@ -90,6 +146,10 @@ public static class CropService
     /// </summary>
     public static Mat TrimContent(Mat src, int tolerance = 12)
         => CropRect(src, TrimContentBounds(src, tolerance));
+
+    /// <summary>Trims a border of the given color off the image.</summary>
+    public static Mat TrimContent(Mat src, Vec3b borderColor, int tolerance = 12)
+        => CropRect(src, TrimContentBounds(src, borderColor, tolerance));
 
     private static Rect Clamp(Size size, Rect rect)
     {

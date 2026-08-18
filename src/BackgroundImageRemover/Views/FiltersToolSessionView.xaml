@@ -15,37 +15,37 @@
         </ObjectDataProvider>
     </UserControl.Resources>
 
-    <DockPanel>
-        <Border DockPanel.Dock="Top" Background="#FF1E1E24" Padding="12,8" BorderBrush="#FF33333D" BorderThickness="0,0,0,1">
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
+        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
                     <Border Background="#FFD946EF" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
                         <TextBlock Text="🎨 FILTERS" Foreground="White" FontWeight="Bold" FontSize="11" />
                     </Border>
-                    <TextBlock Text="{Binding Title}" Foreground="#FFDDDDDD" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}" Padding="12,6" Margin="0,0,8,0" Background="#FF2D2D35" Foreground="#FFCCCCCC" BorderBrush="#FF444450" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
+                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}" Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
                     <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}" Padding="16,6" Background="#FFD946EF" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <StatusBar DockPanel.Dock="Bottom" Background="#FFF5F6F8">
+        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
         </StatusBar>
 
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
+        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="Artistic Filters" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Artistic Filters" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
                     <TextBlock Text="Filter" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource FilterKindValues}}" SelectedItem="{Binding SelectedFilter}" Margin="0,0,0,12" />
 
                     <StackPanel Visibility="{Binding HasEffect, Converter={StaticResource BoolToVisibilityConverter}}">
                         <DockPanel Margin="0,4,0,0">
                             <TextBlock Text="Intensity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding Intensity, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding Intensity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0" Maximum="1" Value="{Binding Intensity}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,12" />
                     </StackPanel>
@@ -53,12 +53,12 @@
                     <StackPanel Visibility="{Binding SelectedFilter, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Posterize}">
                         <DockPanel Margin="0,4,0,0">
                             <TextBlock Text="Levels" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding PosterizeLevels}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding PosterizeLevels}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="2" Maximum="16" Value="{Binding PosterizeLevels}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
                     </StackPanel>
 
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="#FFF0F0F0" Foreground="#FF333333" BorderBrush="#FFCCCCCC" BorderThickness="1" />
+                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

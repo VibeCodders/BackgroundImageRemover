@@ -15,30 +15,30 @@
         </ObjectDataProvider>
     </UserControl.Resources>
 
-    <DockPanel>
-        <Border DockPanel.Dock="Top" Background="#FF1E1E24" Padding="12,8" BorderBrush="#FF33333D" BorderThickness="0,0,0,1">
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
+        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
                     <Border Background="#FF0F766E" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
                         <TextBlock Text="🔲 PERSPECTIVE" Foreground="White" FontWeight="Bold" FontSize="11" />
                     </Border>
-                    <TextBlock Text="{Binding Title}" Foreground="#FFDDDDDD" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}" Padding="12,6" Margin="0,0,8,0" Background="#FF2D2D35" Foreground="#FFCCCCCC" BorderBrush="#FF444450" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
+                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}" Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
                     <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}" Padding="16,6" Background="#FF0F766E" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <StatusBar DockPanel.Dock="Bottom" Background="#FFF5F6F8">
+        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
         </StatusBar>
 
-        <Border DockPanel.Dock="Right" Width="320" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
+        <Border DockPanel.Dock="Right" Width="320" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="Perspective Correction" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Perspective Correction" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
                     <TextBlock Text="Top-left" FontWeight="SemiBold" />
                     <Grid Margin="0,0,0,8">
@@ -87,11 +87,11 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" Margin="0,0,4,0">
-                            <TextBlock Text="Width" FontSize="11" Foreground="#FF666666" />
+                            <TextBlock Text="Width" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
                             <TextBox Text="{Binding OutputWidth, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel Grid.Column="1">
-                            <TextBlock Text="Height" FontSize="11" Foreground="#FF666666" />
+                            <TextBlock Text="Height" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
                             <TextBox Text="{Binding OutputHeight, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                     </Grid>
@@ -99,7 +99,7 @@
                     <TextBlock Text="Interpolation" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource ResampleMethodValues}}" SelectedItem="{Binding Method}" Margin="0,0,0,16" />
 
-                    <Button Content="↺ Reset corners" Command="{Binding ResetCommand}" Height="30" Background="#FFF0F0F0" Foreground="#FF333333" BorderBrush="#FFCCCCCC" BorderThickness="1" />
+                    <Button Content="↺ Reset corners" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

@@ -7,23 +7,31 @@
              xmlns:models="clr-namespace:BackgroundImageRemover.Models"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
-    <DockPanel>
+    <UserControl.Resources>
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+        </Style>
+    </UserControl.Resources>
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <!-- Modal Tool Session Top Bar -->
-        <Border DockPanel.Dock="Top" Background="#FF1E1E24" Padding="12,8" BorderBrush="#FF33333D" BorderThickness="0,0,0,1">
+        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
                 <!-- Tool identity badge -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
                     <Border Background="#FF8E24AA" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
                         <TextBlock Text="🖌 RETOUCH &amp; BRUSH" Foreground="White" FontWeight="Bold" FontSize="11" />
                     </Border>
-                    <TextBlock Text="{Binding Title}" Foreground="#FFDDDDDD" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <!-- Actions: Apply (Enter) & Cancel (Esc) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
                     <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}"
-                            Padding="12,6" Margin="0,0,8,0" Background="#FF2D2D35" Foreground="#FFCCCCCC"
-                            BorderBrush="#FF444450" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
+                            Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}"
+                            BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
                     <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}"
                             Padding="16,6" Background="#FF8E24AA" Foreground="White"
                             BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
@@ -32,17 +40,17 @@
         </Border>
 
         <!-- Status bar -->
-        <StatusBar DockPanel.Dock="Bottom" Background="#FFF5F6F8">
+        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusMessage}" />
             </StatusBarItem>
         </StatusBar>
 
         <!-- Side Controls Panel -->
-        <Border DockPanel.Dock="Right" Width="280" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
+        <Border DockPanel.Dock="Right" Width="280" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="Retouch Tools" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Retouch Tools" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
                     <TextBlock Text="Tool Selection:" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <UniformGrid Columns="2" Margin="0,0,0,12">
@@ -63,19 +71,19 @@
                     <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Brush}">
                         <DockPanel Margin="0,4,0,0">
                             <TextBlock Text="Brush Size:" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BrushRadius, StringFormat='{}{0:0} px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding BrushRadius, StringFormat='{}{0:0} px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="2" Maximum="150" Value="{Binding BrushRadius}" Margin="0,2,0,8" />
 
                         <DockPanel Margin="0,4,0,0">
                             <TextBlock Text="Hardness:" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BrushHardness, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding BrushHardness, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0" Maximum="0.95" Value="{Binding BrushHardness}" Margin="0,2,0,8" />
 
                         <DockPanel Margin="0,4,0,0">
                             <TextBlock Text="Opacity:" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BrushOpacity, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding BrushOpacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0.05" Maximum="1" Value="{Binding BrushOpacity}" Margin="0,2,0,12" />
                     </StackPanel>
@@ -83,7 +91,7 @@
                     <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=MagicWand}">
                         <DockPanel Margin="0,4,0,0">
                             <TextBlock Text="Tolerance:" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding MagicWandTolerance, StringFormat='{}{0:0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding MagicWandTolerance, StringFormat='{}{0:0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="1" Maximum="100" Value="{Binding MagicWandTolerance}" Margin="0,2,0,12" />
                     </StackPanel>
@@ -106,25 +114,25 @@
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Dehaze" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Dehaze, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding Dehaze, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="1" Value="{Binding Dehaze}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Blur background" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BlurBackgroundRadius, StringFormat='{}{0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding BlurBackgroundRadius, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="50" Value="{Binding BlurBackgroundRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Sharpen subject" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SharpenStrength, StringFormat='{}{0:0.00}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding SharpenStrength, StringFormat='{}{0:0.00}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="2" Value="{Binding SharpenStrength}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Color boost" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ColorBoost, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding ColorBoost, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="1" Value="{Binding ColorBoost}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
@@ -135,19 +143,19 @@
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Dust removal" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding RemoveDustKernel}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding RemoveDustKernel}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="15" Value="{Binding RemoveDustKernel}" TickFrequency="2" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Surface blur" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SurfaceBlur, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding SurfaceBlur, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="1" Value="{Binding SurfaceBlur}" SmallChange="0.05" Margin="0,2,0,8" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Chromatic aberration" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ChromaticAberration, StringFormat='{}{0:0.00}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding ChromaticAberration, StringFormat='{}{0:0.00}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="2" Value="{Binding ChromaticAberration}" SmallChange="0.05" Margin="0,2,0,8" />
 

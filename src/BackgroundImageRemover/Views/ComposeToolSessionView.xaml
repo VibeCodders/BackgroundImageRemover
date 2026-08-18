@@ -6,30 +6,38 @@
              xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
-    <DockPanel>
-        <Border DockPanel.Dock="Top" Background="#FF1E1E24" Padding="12,8" BorderBrush="#FF33333D" BorderThickness="0,0,0,1">
+    <UserControl.Resources>
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+        </Style>
+    </UserControl.Resources>
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
+        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
                     <Border Background="#FF0E7490" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
                         <TextBlock Text="🖼 COMPOSE" Foreground="White" FontWeight="Bold" FontSize="11" />
                     </Border>
-                    <TextBlock Text="{Binding Title}" Foreground="#FFDDDDDD" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}" Padding="12,6" Margin="0,0,8,0" Background="#FF2D2D35" Foreground="#FFCCCCCC" BorderBrush="#FF444450" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
+                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}" Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
                     <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}" Padding="16,6" Background="#FF0E7490" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <StatusBar DockPanel.Dock="Bottom" Background="#FFF5F6F8">
+        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
         </StatusBar>
 
-        <Border DockPanel.Dock="Right" Width="320" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
+        <Border DockPanel.Dock="Right" Width="320" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="Background" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Background" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
                     <RadioButton Content="Transparent" GroupName="ComposeBg" Margin="0,0,0,4"
                                  IsChecked="{Binding BackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Transparent}" />
@@ -51,7 +59,7 @@
                     <StackPanel Margin="16,0,0,8"
                                 Visibility="{Binding BackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Image}">
                         <Button Content="Choose image..." Command="{Binding PickBackgroundImageAsyncCommand}" HorizontalAlignment="Left" Margin="0,0,0,6" />
-                        <TextBlock Text="Fit" FontSize="11" Foreground="#FF666666" Margin="0,0,0,2" />
+                        <TextBlock Text="Fit" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" Margin="0,0,0,2" />
                         <UniformGrid Columns="2">
                             <RadioButton Content="Stretch" GroupName="ComposeFit" Margin="0,0,4,0" FontSize="11"
                                          IsChecked="{Binding FitMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Stretch}" />
@@ -69,7 +77,7 @@
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding BackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Blur}">
                         <DockPanel>
                             <TextBlock Text="Blur radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0" Maximum="50" Value="{Binding BlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" />
                     </StackPanel>
@@ -98,8 +106,8 @@
                             </Popup>
                         </StackPanel>
                         <DockPanel Margin="0,6,0,0">
-                            <TextBlock Text="Angle" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding GradientAngle, StringFormat='{}{0:0}°'}" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="Angle" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
+                            <TextBlock Text="{Binding GradientAngle, StringFormat='{}{0:0}°'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0" Maximum="360" Value="{Binding GradientAngle}" TickFrequency="15" />
                     </StackPanel>
@@ -109,22 +117,22 @@
                     <StackPanel Visibility="{Binding DropShadowEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
                         <DockPanel>
                             <TextBlock Text="Distance" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowDistance, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding ShadowDistance, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0" Maximum="60" Value="{Binding ShadowDistance}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
                         <DockPanel>
                             <TextBlock Text="Direction" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowAngle, StringFormat='{}{0:0}°'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding ShadowAngle, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0" Maximum="360" Value="{Binding ShadowAngle}" TickFrequency="15" Margin="0,0,0,8" />
                         <DockPanel>
                             <TextBlock Text="Blur" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowBlur, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding ShadowBlur, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0" Maximum="40" Value="{Binding ShadowBlur}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
                         <DockPanel>
                             <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" TickFrequency="0.05" />
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -139,41 +147,41 @@
                     </StackPanel>
 
                     <Separator Margin="0,12,0,12" />
-                    <TextBlock Text="Subject placement" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Subject placement" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
                     <DockPanel>
                         <TextBlock Text="Scale" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SubjectScale, StringFormat='{}{0:0}%'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding SubjectScale, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="10" Maximum="400" Value="{Binding SubjectScale}" Margin="0,0,0,8" />
 
                     <DockPanel>
                         <TextBlock Text="Rotation" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SubjectRotation, StringFormat='{}{0:0}°'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding SubjectRotation, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-180" Maximum="180" Value="{Binding SubjectRotation}" Margin="0,0,0,8" />
 
                     <DockPanel>
                         <TextBlock Text="Offset X" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SubjectOffsetX, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding SubjectOffsetX, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-200" Maximum="200" Value="{Binding SubjectOffsetX}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
 
                     <DockPanel>
                         <TextBlock Text="Offset Y" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SubjectOffsetY, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding SubjectOffsetY, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-200" Maximum="200" Value="{Binding SubjectOffsetY}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
 
                     <DockPanel>
                         <TextBlock Text="Canvas padding" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BackgroundPadding, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding BackgroundPadding, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="300" Value="{Binding BackgroundPadding}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
 
                     <DockPanel>
                         <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SubjectOpacity, StringFormat='{}{0:0}%'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding SubjectOpacity, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="100" Value="{Binding SubjectOpacity}" TickFrequency="5" Margin="0,0,0,8" />
 

@@ -5,58 +5,66 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
-    <DockPanel>
-        <Border DockPanel.Dock="Top" Background="#FF1E1E24" Padding="12,8" BorderBrush="#FF33333D" BorderThickness="0,0,0,1">
+    <UserControl.Resources>
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+        </Style>
+    </UserControl.Resources>
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
+        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
                     <Border Background="#FF4F46E5" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
                         <TextBlock Text="📐 TILT-SHIFT" Foreground="White" FontWeight="Bold" FontSize="11" />
                     </Border>
-                    <TextBlock Text="{Binding Title}" Foreground="#FFDDDDDD" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}" Padding="12,6" Margin="0,0,8,0" Background="#FF2D2D35" Foreground="#FFCCCCCC" BorderBrush="#FF444450" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
+                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}" Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
                     <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}" Padding="16,6" Background="#FF4F46E5" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <StatusBar DockPanel.Dock="Bottom" Background="#FFF5F6F8">
+        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
         </StatusBar>
 
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
+        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="Miniature Effect" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Miniature Effect" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Focus center" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding FocusCenter, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding FocusCenter, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="1" Value="{Binding FocusCenter}" SmallChange="0.01" Margin="0,2,0,8" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Focus width" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding FocusWidth, StringFormat='{}{0:P0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding FocusWidth, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="1" Value="{Binding FocusWidth}" SmallChange="0.01" Margin="0,2,0,8" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Blur radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0:0}px'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="60" Value="{Binding BlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Saturation boost" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SaturationBoost, StringFormat='{}{0:0.00}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding SaturationBoost, StringFormat='{}{0:0.00}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-1" Maximum="2" Value="{Binding SaturationBoost}" SmallChange="0.05" Margin="0,2,0,8" />
 
                     <CheckBox Content="Vertical band" IsChecked="{Binding Vertical}" FontWeight="SemiBold" Margin="0,0,0,16" />
 
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="#FFF0F0F0" Foreground="#FF333333" BorderBrush="#FFCCCCCC" BorderThickness="1" />
+                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

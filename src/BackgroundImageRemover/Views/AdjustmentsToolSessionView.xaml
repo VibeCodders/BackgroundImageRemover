@@ -6,23 +6,31 @@
              xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
-    <DockPanel>
+    <UserControl.Resources>
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+        </Style>
+    </UserControl.Resources>
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <!-- Modal Tool Session Top Bar -->
-        <Border DockPanel.Dock="Top" Background="#FF1E1E24" Padding="12,8" BorderBrush="#FF33333D" BorderThickness="0,0,0,1">
+        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
                 <!-- Tool identity badge -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
                     <Border Background="#FFD97706" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
                         <TextBlock Text="✨ COLOR &amp; ADJUSTMENTS" Foreground="White" FontWeight="Bold" FontSize="11" />
                     </Border>
-                    <TextBlock Text="{Binding Title}" Foreground="#FFDDDDDD" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <!-- Actions: Apply (Enter) & Cancel (Esc) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
                     <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}"
-                            Padding="12,6" Margin="0,0,8,0" Background="#FF2D2D35" Foreground="#FFCCCCCC"
-                            BorderBrush="#FF444450" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
+                            Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}"
+                            BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
                     <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}"
                             Padding="16,6" Background="#FFD97706" Foreground="White"
                             BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
@@ -31,176 +39,176 @@
         </Border>
 
         <!-- Status bar -->
-        <StatusBar DockPanel.Dock="Bottom" Background="#FFF5F6F8">
+        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusMessage}" />
             </StatusBarItem>
         </StatusBar>
 
         <!-- Side Adjustments Panel -->
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
+        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="Color &amp; Visual Filters" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Color &amp; Visual Filters" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
                     <!-- Brightness -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Brightness" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjBrightness, StringFormat='{}{0:0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjBrightness, StringFormat='{}{0:0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-100" Maximum="100" Value="{Binding AdjBrightness}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
 
                     <!-- Contrast -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Contrast" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjContrast, StringFormat='{}{0:0.00}x'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjContrast, StringFormat='{}{0:0.00}x'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.1" Maximum="3.0" Value="{Binding AdjContrast}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
 
                     <!-- Saturation -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Saturation" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjSaturation, StringFormat='{}{0:0.00}x'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjSaturation, StringFormat='{}{0:0.00}x'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="3.0" Value="{Binding AdjSaturation}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
 
                     <!-- Hue Shift -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Hue Shift (°)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjHueShift, StringFormat='{}{0:0}°'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjHueShift, StringFormat='{}{0:0}°'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-180" Maximum="180" Value="{Binding AdjHueShift}" SmallChange="1" LargeChange="15" Margin="0,2,0,8" />
 
                     <!-- Color Temperature -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Temperature (Cool ↔ Warm)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjTemperature, StringFormat='{}{0:0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjTemperature, StringFormat='{}{0:0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-100" Maximum="100" Value="{Binding AdjTemperature}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
 
                     <!-- Tint -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Tint (Green ↔ Magenta)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjTint, StringFormat='{}{0:0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjTint, StringFormat='{}{0:0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-100" Maximum="100" Value="{Binding AdjTint}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
 
                     <!-- Vignette -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Vignette" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjVignette, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjVignette, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjVignette}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Blur -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Blur Radius" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjBlurRadius, StringFormat='{}{0}px'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjBlurRadius, StringFormat='{}{0}px'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="50" Value="{Binding AdjBlurRadius}" SmallChange="1" LargeChange="5" Margin="0,2,0,8" />
 
                     <!-- Sharpen -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Sharpen Strength" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjSharpenStrength, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjSharpenStrength, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="3.0" Value="{Binding AdjSharpenStrength}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
 
                     <!-- Exposure (gamma) -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Exposure (gamma)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjExposure, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjExposure, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.2" Maximum="3.0" Value="{Binding AdjExposure}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
 
                     <!-- Highlights -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Highlights" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjHighlights, StringFormat='{}{0:0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjHighlights, StringFormat='{}{0:0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-100" Maximum="100" Value="{Binding AdjHighlights}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
 
                     <!-- Shadows -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Shadows" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjShadows, StringFormat='{}{0:0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjShadows, StringFormat='{}{0:0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-100" Maximum="100" Value="{Binding AdjShadows}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
 
                     <!-- Denoise -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Denoise" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjDenoise, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjDenoise, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjDenoise}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Vibrance -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Vibrance" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjVibrance, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjVibrance, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="-1" Maximum="1" Value="{Binding AdjVibrance}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Clarity -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Clarity" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjClarity, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjClarity, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjClarity}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Fade -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Fade (matte film)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjFade, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjFade, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjFade}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Grain -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Grain" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjGrain, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjGrain, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjGrain}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Monochrome -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Monochrome" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjMonochrome, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjMonochrome, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjMonochrome}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Dehaze -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Dehaze" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjDehaze, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjDehaze, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjDehaze}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Soften -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Soften (skin)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjSoften, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjSoften, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjSoften}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Sepia tone -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Sepia tone" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjSepiaTone, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjSepiaTone, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjSepiaTone}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Invert -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Invert" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjInvertAmount, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjInvertAmount, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjInvertAmount}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
 
                     <!-- Posterize -->
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Posterize levels (0 = off)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjPosterizeLevels}" FontSize="12" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding AdjPosterizeLevels}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="16" Value="{Binding AdjPosterizeLevels}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
 
@@ -209,7 +217,7 @@
                     <CheckBox Content="Split Compare view" IsChecked="{Binding IsCompareMode}" Margin="0,0,0,12" FontWeight="SemiBold" />
 
                     <Button Content="↺ Reset to Default" Command="{Binding ResetAdjustmentsCommand}"
-                            Height="30" Background="#FFF0F0F0" Foreground="#FF333333" BorderBrush="#FFCCCCCC" BorderThickness="1" />
+                            Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

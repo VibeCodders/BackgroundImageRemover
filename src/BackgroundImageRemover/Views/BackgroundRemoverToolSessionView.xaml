@@ -14,25 +14,31 @@
                 <x:Type TypeName="models:StrategyKind" />
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+        </Style>
     </UserControl.Resources>
 
-    <DockPanel>
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <!-- Modal Tool Session Top Bar -->
-        <Border DockPanel.Dock="Top" Background="#FF1E1E24" Padding="12,8" BorderBrush="#FF33333D" BorderThickness="0,0,0,1">
+        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
                 <!-- Tool identity badge -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
                     <Border Background="#FF1E7A33" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
                         <TextBlock Text="✂ BACKGROUND REMOVER" Foreground="White" FontWeight="Bold" FontSize="11" />
                     </Border>
-                    <TextBlock Text="{Binding Title}" Foreground="#FFDDDDDD" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <!-- Actions: Apply (Enter) & Cancel (Esc) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
                     <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}"
-                            Padding="12,6" Margin="0,0,8,0" Background="#FF2D2D35" Foreground="#FFCCCCCC"
-                            BorderBrush="#FF444450" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
+                            Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}"
+                            BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
                     <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}"
                             Padding="16,6" Background="#FF1E7A33" Foreground="White"
                             BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
@@ -41,23 +47,23 @@
         </Border>
 
         <!-- Status bar -->
-        <StatusBar DockPanel.Dock="Bottom" Background="#FFF5F6F8">
+        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusMessage}" />
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Orientation="Horizontal" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
                     <ProgressBar IsIndeterminate="True" Width="100" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding BusyMessage}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" Foreground="#FF555555" />
+                    <TextBlock Text="{Binding BusyMessage}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>
 
         <!-- Side Controls Panel -->
-        <Border DockPanel.Dock="Right" Width="330" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
+        <Border DockPanel.Dock="Right" Width="330" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="Removal Strategy" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Removal Strategy" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource StrategyKindValues}}"
                               SelectedItem="{Binding SelectedStrategy}"
                               Margin="0,0,0,16" />
@@ -169,7 +175,7 @@
 
                     <!-- Global finishing controls, applied to every strategy -->
                     <Separator Margin="0,16,0,8" />
-                    <TextBlock Text="Refinement" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Refinement" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
                     <CheckBox Content="Invert mask (keep background)" IsChecked="{Binding InvertMask}" Margin="0,0,0,8" />
                     <TextBlock Text="Edge feather" />
                     <Slider Minimum="0" Maximum="30" Value="{Binding MaskFeatherPixels}" TickFrequency="1" IsSnapToTickEnabled="True" />
@@ -216,7 +222,7 @@
 
                     <!-- Export background options (persisted to the parent document) -->
                     <Separator Margin="0,16,0,8" />
-                    <TextBlock Text="Export background" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+                    <TextBlock Text="Export background" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
                     <RadioButton Content="Transparent" GroupName="ExportBgSession" Margin="0,0,0,4"
                                  IsChecked="{Binding ParentDocument.ExportBackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Transparent}" />
                     <RadioButton Content="Solid color" GroupName="ExportBgSession" Margin="0,0,0,4"
@@ -275,7 +281,7 @@
 
                     <DockPanel Margin="0,8,0,0">
                         <TextBlock Text="JPEG quality" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ParentDocument.ExportJpegQuality, StringFormat='{}{0:0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                        <TextBlock Text="{Binding ParentDocument.ExportJpegQuality, StringFormat='{}{0:0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="1" Maximum="100" Value="{Binding ParentDocument.ExportJpegQuality}" TickFrequency="1" IsSnapToTickEnabled="True"
                             ToolTip="Quality used when exporting JPEG (Export JPG...)" />

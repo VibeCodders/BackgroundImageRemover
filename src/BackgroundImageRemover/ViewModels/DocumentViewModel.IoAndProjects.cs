@@ -150,10 +150,6 @@ public partial class DocumentViewModel
         {
             AdoptLoadedCutout();
         }
-        else
-        {
-            RequestPreviewDebounced();
-        }
     }
 
     // --- Export ---

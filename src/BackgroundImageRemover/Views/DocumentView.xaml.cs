@@ -51,7 +51,7 @@ public partial class DocumentView : UserControl
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(DocumentViewModel.PreviewBitmap))
+        if (e.PropertyName is nameof(DocumentViewModel.PreviewBitmap) or nameof(DocumentViewModel.DisplayBitmap))
         {
             SinglePreview.ResetView();
             OriginalPreview.ResetView();

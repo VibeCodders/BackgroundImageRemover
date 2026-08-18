@@ -173,10 +173,18 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private StrategyKind _selectedStrategy = StrategyKind.ChromaKey;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayBitmap))]
     private BitmapSource? _previewBitmap;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayBitmap))]
     private BitmapSource? _resultBitmap;
+
+    /// <summary>
+    /// The active display bitmap: shows the processed ResultBitmap if available,
+    /// otherwise falls back to the clean loaded PreviewBitmap.
+    /// </summary>
+    public BitmapSource? DisplayBitmap => ResultBitmap ?? PreviewBitmap;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExportCommand))]

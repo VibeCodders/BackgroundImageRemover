@@ -189,7 +189,7 @@
                     <!-- Single View (Default: Split View OFF) -->
                     <DockPanel Margin="8" Visibility="{Binding IsSplitViewEnabled, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                         <controls:ImagePreviewControl x:Name="SinglePreview"
-                                                       ImageSource="{Binding ResultBitmap}"
+                                                       ImageSource="{Binding DisplayBitmap}"
                                                        Mode="{Binding ResultMode}"
                                                        BrushRadius="{Binding BrushRadius}"
                                                        StrokeStart="ResultEditPreview_StrokeStart"

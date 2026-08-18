@@ -39,8 +39,8 @@ public partial class DocumentViewModel
         or InteractionMode.EraseForeground
         or InteractionMode.EraseBackground;
 
-    private bool CanUndoExecute() => IsScribbling ? _scribbleManager.CanUndo : _editSession.CanUndo;
-    private bool CanRedoExecute() => IsScribbling ? _scribbleManager.CanRedo : _editSession.CanRedo;
+    private bool CanUndoExecute() => IsScribbling ? _scribbleManager.CanUndo : _history.CanUndo;
+    private bool CanRedoExecute() => IsScribbling ? _scribbleManager.CanRedo : _history.CanRedo;
 
     [RelayCommand(CanExecute = nameof(CanUndoExecute))]
     private void Undo()
@@ -51,14 +51,16 @@ public partial class DocumentViewModel
             return;
         }
 
-        if (!_editSession.Undo(ref _workingAlpha))
+        if (_loadedImage is null)
         {
             return;
         }
-        _workingResultHandEdited = true;
-        IsDirty = true;
-        RefreshUndoRedoState();
-        RefreshResultBitmapFromWorking();
+
+        if (!_history.Undo(ref _workingBgr, ref _workingAlpha))
+        {
+            return;
+        }
+        FinalizeHistoryRestore("Undone.");
     }
 
     [RelayCommand(CanExecute = nameof(CanRedoExecute))]
@@ -70,14 +72,16 @@ public partial class DocumentViewModel
             return;
         }
 
-        if (!_editSession.Redo(ref _workingAlpha))
+        if (_loadedImage is null)
         {
             return;
         }
-        _workingResultHandEdited = true;
-        IsDirty = true;
-        RefreshUndoRedoState();
-        RefreshResultBitmapFromWorking();
+
+        if (!_history.Redo(ref _workingBgr, ref _workingAlpha))
+        {
+            return;
+        }
+        FinalizeHistoryRestore("Redone.");
     }
 
     private void RefreshUndoRedoState()
@@ -95,11 +99,11 @@ public partial class DocumentViewModel
 
     public void OnResultStrokeStart(WpfPoint imagePoint, double pixelRadius)
     {
-        if (_workingAlpha is null)
+        if (_workingAlpha is null || _workingBgr is null)
         {
             return;
         }
-        _editSession.Record(_workingAlpha);
+        _history.Record(_workingBgr, _workingAlpha);
         _workingResultHandEdited = true;
         IsDirty = true;
         RefreshUndoRedoState();
@@ -165,7 +169,7 @@ public partial class DocumentViewModel
         {
             return;
         }
-        _editSession.Record(_workingAlpha);
+        _history.Record(_workingBgr, _workingAlpha);
         _workingResultHandEdited = true;
         IsDirty = true;
         RefreshUndoRedoState();

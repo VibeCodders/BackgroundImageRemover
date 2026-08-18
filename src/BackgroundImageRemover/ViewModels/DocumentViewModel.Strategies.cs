@@ -113,7 +113,7 @@ public partial class DocumentViewModel
         _workingResultIsLoadedCutout = true;
         _workingResultHandEdited = false;
 
-        _editSession.Clear();
+        _history.Clear();
         RefreshUndoRedoState();
         OnPropertyChanged(nameof(HasWorkingResult));
         UndoCommand.NotifyCanExecuteChanged();
@@ -256,7 +256,7 @@ public partial class DocumentViewModel
         (_workingBgr, _workingAlpha) = BackgroundCompositingService.SplitBgra(result.Bgra);
         result.Dispose();
 
-        _editSession.Clear();
+        _history.Clear();
         RefreshUndoRedoState();
         OnPropertyChanged(nameof(HasWorkingResult));
         UndoCommand.NotifyCanExecuteChanged();

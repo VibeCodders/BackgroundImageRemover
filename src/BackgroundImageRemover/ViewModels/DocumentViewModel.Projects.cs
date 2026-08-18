@@ -206,7 +206,7 @@ public partial class DocumentViewModel
             _loadedImage?.Dispose();
             _preview?.Dispose();
             DisposeWorkingResult();
-            _editSession.Clear();
+            _history.Clear();
             RefreshUndoRedoState();
             _samEmbedding = null;
             _samPromptPointPreview = null;

@@ -44,7 +44,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private readonly GrabCutStrategy _grabCutStrategy;
     private readonly SamStrategy _samStrategy;
     private readonly IUncropFillService _uncropFillService;
-    private readonly MatEditSession _editSession = new();
+    private readonly DocumentEditHistory _history = new();
 
     private readonly DispatcherTimer _debounceTimer;
     private CancellationTokenSource? _previewCts;
@@ -126,12 +126,37 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     {
         if (_loadedImage is null) return;
 
-        // Record previous alpha state to the undo stack before replacing
-        if (_workingAlpha is not null)
+        RecordCurrentStateForUndo();
+        ReplaceWorkingState(newBgr, newAlpha);
+        StatusMessage = $"Applied {operationName}.";
+    }
+
+    /// <summary>Snapshots the current working result (or the loaded image when no result exists yet).</summary>
+    private void RecordCurrentStateForUndo()
+    {
+        if (_workingBgr is not null && _workingAlpha is not null)
         {
-            _editSession.Record(_workingAlpha);
+            _history.Record(_workingBgr, _workingAlpha);
+            return;
         }
 
+        if (_loadedImage is not null)
+        {
+            if (_loadedImage.FullAlpha is { } alpha)
+            {
+                _history.Record(_loadedImage.FullBgr, alpha);
+            }
+            else
+            {
+                using var opaque = new Mat(_loadedImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+                _history.Record(_loadedImage.FullBgr, opaque);
+            }
+        }
+    }
+
+    /// <summary>Replaces the working BGR/alpha pair, rebuilding the loaded image and preview when the size changed.</summary>
+    private void ReplaceWorkingState(Mat newBgr, Mat newAlpha)
+    {
         _workingBgr?.Dispose();
         _workingAlpha?.Dispose();
         _workingBgr = newBgr;
@@ -139,28 +164,49 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _workingResultIsLoadedCutout = false;
         _workingResultHandEdited = true;
 
-        // If dimensions changed (e.g. from Uncrop), reinitialize loaded image size and preview.
-        // The original pane (PreviewBitmap) is only rebuilt here, so it keeps representing the
-        // "before" state for the compare/split views instead of being overwritten with the
-        // working alpha after every retouch or background-removal apply.
-        if (_loadedImage.FullBgr.Size() != newBgr.Size())
-        {
-            var newLoaded = new LoadedImage(_loadedImage.FilePath, newBgr.Clone(), newAlpha.Clone());
-            _loadedImage.Dispose();
-            _preview?.Dispose();
-            _loadedImage = newLoaded;
-
-            var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
-            _preview = preview;
-            PreviewBitmap = preview.Bgr.ToBitmapSource();
-        }
+        EnsureLoadedImageMatchesWorkingSize();
 
         IsDirty = true;
         IsCutout = BackgroundCompositingService.HasMeaningfulTransparency(_workingAlpha);
         RefreshUndoRedoState();
         RefreshResultBitmapFromWorking();
         OnPropertyChanged(nameof(DisplayBitmap));
-        StatusMessage = $"Applied {operationName}.";
+    }
+
+    /// <summary>Rebuilds the loaded image (and preview) from the working result when its size differs.</summary>
+    private void EnsureLoadedImageMatchesWorkingSize()
+    {
+        if (_loadedImage is null || _workingBgr is null || _workingAlpha is null)
+        {
+            return;
+        }
+        if (_loadedImage.FullBgr.Size() == _workingBgr.Size())
+        {
+            return;
+        }
+
+        var newLoaded = new LoadedImage(_loadedImage.FilePath, _workingBgr.Clone(), _workingAlpha.Clone());
+        _loadedImage.Dispose();
+        _preview?.Dispose();
+        _loadedImage = newLoaded;
+
+        var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
+        _preview = preview;
+        PreviewBitmap = preview.Bgr.ToBitmapSource();
+    }
+
+    /// <summary>Finalizes the UI state after an undo/redo restored a different working result.</summary>
+    private void FinalizeHistoryRestore(string status)
+    {
+        _workingResultIsLoadedCutout = false;
+        _workingResultHandEdited = true;
+        EnsureLoadedImageMatchesWorkingSize();
+        IsDirty = true;
+        IsCutout = BackgroundCompositingService.HasMeaningfulTransparency(_workingAlpha);
+        RefreshUndoRedoState();
+        RefreshResultBitmapFromWorking();
+        OnPropertyChanged(nameof(DisplayBitmap));
+        StatusMessage = status;
     }
 
     [ObservableProperty]
@@ -541,6 +587,6 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _lastPreviewResult?.Dispose();
         DisposeWorkingResult();
         ScribbleManager.Dispose();
-        _editSession.Dispose();
+        _history.Dispose();
     }
 }

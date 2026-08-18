@@ -9,10 +9,14 @@ namespace BackgroundImageRemover.Services.Editing;
 /// </summary>
 public sealed class EditHistory : IDisposable
 {
-    private const int MaxDepth = 20;
-
+    private readonly int _maxDepth;
     private readonly Stack<Mat> _undo = new();
     private readonly Stack<Mat> _redo = new();
+
+    public EditHistory(int maxDepth = 20)
+    {
+        _maxDepth = Math.Max(1, maxDepth);
+    }
 
     public bool CanUndo => _undo.Count > 0;
     public bool CanRedo => _redo.Count > 0;
@@ -21,7 +25,7 @@ public sealed class EditHistory : IDisposable
     public void Push(Mat state)
     {
         _undo.Push(state.Clone());
-        _undo.TrimStack(MaxDepth, s => s.Dispose());
+        _undo.TrimStack(_maxDepth, s => s.Dispose());
 
         foreach (var redoState in _redo)
         {

@@ -73,7 +73,7 @@ public partial class DocumentViewModel
             _workingResultIsLoadedCutout = false;
             _workingResultHandEdited = true;
 
-            _editSession.Clear();
+            _history.Clear();
             RefreshUndoRedoState();
             RefreshResultBitmapFromWorking();
 

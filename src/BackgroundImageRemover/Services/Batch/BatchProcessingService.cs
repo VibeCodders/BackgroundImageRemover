@@ -56,7 +56,8 @@ public sealed class BatchProcessingService : IBatchProcessingService
             ct.ThrowIfCancellationRequested();
             string file = inputFiles[i];
             string baseName = Path.GetFileNameWithoutExtension(file);
-            string outPath = Path.Combine(outputFolder, baseName + (exportOptions is { ExportJpeg: true } ? "_cutout.jpg" : "_cutout.png"));
+            string suffix = exportOptions is { ExportJpeg: true } ? "_cutout.jpg" : exportOptions is { ExportWebp: true } ? "_cutout.webp" : "_cutout.png";
+            string outPath = Path.Combine(outputFolder, baseName + suffix);
 
             // With SkipExisting, files whose cutout already exists are left untouched so a
             // batch can be re-run to fill in only the missing outputs (e.g. after adding
@@ -79,6 +80,11 @@ public sealed class BatchProcessingService : IBatchProcessingService
                 {
                     using var composited = CompositeForJpeg(result.Bgra, exportOptions, loaded.FullBgr);
                     await _exporter.ExportJpgAsync(composited, outPath, exportOptions.JpegQuality, ct);
+                }
+                else if (exportOptions is { ExportWebp: true })
+                {
+                    // WebP keeps the transparency like PNG but is typically much smaller.
+                    await _exporter.ExportWebpAsync(result.Bgra, outPath, exportOptions.JpegQuality, ct);
                 }
                 else
                 {

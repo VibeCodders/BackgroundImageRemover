@@ -19,6 +19,19 @@ public class BatchOptionsViewModelTests
     }
 
     [Fact]
+    public void BuildOptions_Webp_KeepsTransparencyAndSkipFlag()
+    {
+        var vm = new BatchOptionsViewModel { OutputKind = BatchOutputKind.Webp, JpegQuality = 85, SkipExisting = true };
+
+        var opts = vm.BuildOptions();
+
+        Assert.False(opts.ExportJpeg);
+        Assert.True(opts.ExportWebp);
+        Assert.Equal(85, opts.JpegQuality); // reused as the WebP quality
+        Assert.True(opts.SkipExisting);
+    }
+
+    [Fact]
     public void BuildOptions_JpegSolid_UsesPickedColor()
     {
         var vm = new BatchOptionsViewModel

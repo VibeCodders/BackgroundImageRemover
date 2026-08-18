@@ -155,6 +155,65 @@ public class DocumentViewModelAdjustmentsTests
     }
 
     [Fact]
+    public void Constructor_RestoresLastExportSettingsFromAppSettings()
+    {
+        var settings = new FakeSettingsService();
+        settings.Current.LastExportBackgroundMode = nameof(ExportBackgroundMode.Gradient);
+        settings.Current.LastExportGradientTopColor = "#FFFF0000";
+        settings.Current.LastExportGradientBottomColor = "#FF0000FF";
+        settings.Current.LastExportJpegQuality = 70;
+        settings.Current.LastExportDropShadowEnabled = true;
+        settings.Current.LastExportShadowOffset = 20;
+
+        var doc = CreateDocument(new AlphaImageLoader(), settings: settings);
+
+        Assert.Equal(ExportBackgroundMode.Gradient, doc.ExportBackgroundMode);
+        Assert.Equal(System.Windows.Media.Color.FromRgb(255, 0, 0), doc.ExportGradientTopColor);
+        Assert.Equal(System.Windows.Media.Color.FromRgb(0, 0, 255), doc.ExportGradientBottomColor);
+        Assert.Equal(70, doc.ExportJpegQuality);
+        Assert.True(doc.ExportDropShadowEnabled);
+        Assert.Equal(20, doc.ExportShadowOffset);
+    }
+
+    [Fact]
+    public void Constructor_IgnoresUnknownExportSettings()
+    {
+        var settings = new FakeSettingsService();
+        settings.Current.LastExportBackgroundMode = "NotAMode";
+        settings.Current.LastExportGradientTopColor = "garbage";
+        settings.Current.LastExportJpegQuality = 0;
+
+        var doc = CreateDocument(new AlphaImageLoader(), settings: settings);
+
+        Assert.Equal(ExportBackgroundMode.Transparent, doc.ExportBackgroundMode);
+        Assert.Equal(System.Windows.Media.Color.FromRgb(255, 255, 255), doc.ExportGradientTopColor);
+        Assert.Equal(95, doc.ExportJpegQuality);
+    }
+
+    [Fact]
+    public async Task Export_PersistsCurrentExportSettingsToAppSettings()
+    {
+        var settings = new FakeSettingsService();
+        var doc = CreateDocument(
+            new AlphaImageLoader(),
+            exporter: new RecordingImageExportService(),
+            dialogs: new FakeDialogServiceWithJpgPath("out.jpg"),
+            settings: settings);
+        await doc.LoadImageAsync("cutout.png");
+
+        doc.ExportBackgroundMode = ExportBackgroundMode.SolidColor;
+        doc.ExportSolidColor = System.Windows.Media.Color.FromRgb(10, 200, 30);
+        doc.ExportJpegQuality = 77;
+        doc.ExportDropShadowEnabled = true;
+        await doc.ExportJpgCommand.ExecuteAsync(null);
+
+        Assert.Equal(nameof(ExportBackgroundMode.SolidColor), settings.Current.LastExportBackgroundMode);
+        Assert.Equal("#FF0AC81E", settings.Current.LastExportSolidColor);
+        Assert.Equal(77, settings.Current.LastExportJpegQuality);
+        Assert.True(settings.Current.LastExportDropShadowEnabled);
+    }
+
+    [Fact]
     public async Task Batch_RemembersInputAndOutputFoldersInSettings()
     {
         var inputDir = Path.Combine(Path.GetTempPath(), $"batch_in_{Guid.NewGuid():N}");

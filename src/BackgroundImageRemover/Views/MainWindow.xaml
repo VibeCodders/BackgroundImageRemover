@@ -7,7 +7,7 @@
         xmlns:vm="clr-namespace:BackgroundImageRemover.ViewModels"
         xmlns:services="clr-namespace:BackgroundImageRemover.Services.Localization"
         mc:Ignorable="d"
-        Title="{Binding SelectedDocument.WindowTitle, FallbackValue='Image Editor'}"
+        Title="{Binding SelectedDocument.WindowTitle, FallbackValue='Background Image Remover'}"
         Background="{DynamicResource Theme.WindowBackground}"
         Closing="MainWindow_Closing"
         Height="800" Width="1360" WindowState="Maximized">

@@ -8,8 +8,12 @@ namespace BackgroundImageRemover.Models;
 /// </summary>
 public sealed class BatchExportOptions
 {
-    /// <summary>True to write JPEG files; false writes transparent PNG cutouts.</summary>
+    /// <summary>True to write JPEG files; false writes transparent PNG/WebP cutouts.</summary>
     public bool ExportJpeg { get; set; }
+
+    /// <summary>True to write WebP cutouts (transparency preserved, smaller than PNG). Only
+    /// used when <see cref="ExportJpeg"/> is false; PNG remains the default.</summary>
+    public bool ExportWebp { get; set; }
 
     /// <summary>When true, files whose output already exists are left untouched (no re-export).</summary>
     public bool SkipExisting { get; set; }

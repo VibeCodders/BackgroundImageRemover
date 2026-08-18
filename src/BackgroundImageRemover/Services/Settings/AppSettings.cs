@@ -59,4 +59,39 @@ public sealed class AppSettings
 
     /// <summary>Last "skip existing outputs" choice for the batch dialog.</summary>
     public bool LastBatchSkipExisting { get; set; }
+
+    // --- Last single-image export settings, restored when a new document opens ---
+
+    /// <summary>Last export background mode (an <c>ExportBackgroundMode</c> enum name).</summary>
+    public string? LastExportBackgroundMode { get; set; }
+
+    /// <summary>Last solid export background color (WPF color string).</summary>
+    public string? LastExportSolidColor { get; set; }
+
+    /// <summary>Last gradient export top color (WPF color string).</summary>
+    public string? LastExportGradientTopColor { get; set; }
+
+    /// <summary>Last gradient export bottom color (WPF color string).</summary>
+    public string? LastExportGradientBottomColor { get; set; }
+
+    /// <summary>Last blur-background export radius.</summary>
+    public double LastExportBlurRadius { get; set; } = 10;
+
+    /// <summary>Last background-image export path.</summary>
+    public string? LastExportBackgroundImagePath { get; set; }
+
+    /// <summary>Last JPEG/WebP export quality, 1..100.</summary>
+    public int LastExportJpegQuality { get; set; } = 95;
+
+    /// <summary>Last drop-shadow export toggle.</summary>
+    public bool LastExportDropShadowEnabled { get; set; }
+
+    /// <summary>Last drop-shadow offset (pixels).</summary>
+    public double LastExportShadowOffset { get; set; } = 12;
+
+    /// <summary>Last drop-shadow blur (pixels).</summary>
+    public double LastExportShadowBlur { get; set; } = 6;
+
+    /// <summary>Last drop-shadow opacity, 0..1.</summary>
+    public double LastExportShadowOpacity { get; set; } = 0.45;
 }

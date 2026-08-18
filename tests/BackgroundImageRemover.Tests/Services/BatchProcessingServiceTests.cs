@@ -138,6 +138,52 @@ public class BatchProcessingServiceTests
     }
 
     [Fact]
+    public async Task RunAsync_WithWebpOptions_ExportsWebpFiles()
+    {
+        var loader = new FakeImageLoaderService();
+        var exporter = new FakeImageExportService();
+        var service = new BatchProcessingService(loader, exporter);
+        var options = new BatchExportOptions { ExportWebp = true };
+
+        await service.RunAsync(
+            new[] { "a.png", "b.png" }, new FakeStrategy(), new StrategyContext(), "out",
+            progress: null, CancellationToken.None, options);
+
+        Assert.Equal(2, exporter.ExportedPaths.Count);
+        Assert.All(exporter.ExportedPaths, p => Assert.EndsWith("_cutout.webp", p, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task RunAsync_WithWebpAndSkipExisting_ChecksWebpExtension()
+    {
+        var loader = new FakeImageLoaderService();
+        var exporter = new FakeImageExportService();
+        var service = new BatchProcessingService(loader, exporter);
+        var outputDir = Path.Combine(Path.GetTempPath(), $"batch_webp_skip_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(outputDir);
+        try
+        {
+            // Only the WebP output counts as "existing" for a WebP batch: a stale PNG from a
+            // previous run must not suppress the WebP export.
+            File.WriteAllText(Path.Combine(outputDir, "a_cutout.png"), "old png");
+            File.WriteAllText(Path.Combine(outputDir, "b_cutout.webp"), "existing webp");
+            var reported = new List<BatchProgress>();
+
+            await service.RunAsync(
+                new[] { "a.png", "b.png" }, new FakeStrategy(), new StrategyContext(), outputDir,
+                new CollectingProgress(reported), CancellationToken.None, new BatchExportOptions { ExportWebp = true, SkipExisting = true });
+
+            Assert.Single(exporter.ExportedPaths); // a.webp written, b.webp skipped
+            Assert.EndsWith("_cutout.webp", exporter.ExportedPaths[0], StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(1, reported.Last().Skipped);
+        }
+        finally
+        {
+            Directory.Delete(outputDir, true);
+        }
+    }
+
+    [Fact]
     public async Task RunAsync_WithSkipExisting_SkipsFilesWhoseOutputAlreadyExists()
     {
         var loader = new FakeImageLoaderService();

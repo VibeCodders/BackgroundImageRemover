@@ -12,6 +12,9 @@
 
             <RadioButton Content="PNG — keep transparency" GroupName="BatchFormat" Margin="0,0,0,4"
                          IsChecked="{Binding OutputKind, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Png}" />
+            <RadioButton Content="WebP — keep transparency, smaller files" GroupName="BatchFormat" Margin="0,0,0,4"
+                         IsChecked="{Binding OutputKind, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Webp}" />
+
             <RadioButton Content="JPEG — white background" GroupName="BatchFormat" Margin="0,0,0,4"
                          IsChecked="{Binding OutputKind, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=JpegWhite}" />
 
@@ -58,7 +61,7 @@
                          IsChecked="{Binding OutputKind, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=JpegBlur}" />
 
             <DockPanel Margin="0,0,0,4">
-                <TextBlock Text="JPEG quality" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                <TextBlock Text="Image quality" FontWeight="SemiBold" DockPanel.Dock="Left" />
                 <TextBlock Text="{Binding JpegQuality, StringFormat='{}{0:0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
             </DockPanel>
             <Slider Minimum="50" Maximum="100" Value="{Binding JpegQuality}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,12" />

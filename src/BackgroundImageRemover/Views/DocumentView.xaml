@@ -274,7 +274,7 @@
                         <Border Width="64" Height="64" CornerRadius="32" Background="#FFE6F2FB" HorizontalAlignment="Center" Margin="0,0,0,16">
                             <TextBlock Text="🖼" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
-                        <TextBlock Text="Welcome to Image Editor" FontSize="20" FontWeight="Bold" Foreground="#FF222222" HorizontalAlignment="Center" Margin="0,0,0,8" />
+                        <TextBlock Text="Welcome to Background Image Remover" FontSize="20" FontWeight="Bold" Foreground="#FF222222" HorizontalAlignment="Center" Margin="0,0,0,8" />
                         <TextBlock Text="Open an image to start editing, removing backgrounds, outpainting, or retouching"
                                    FontSize="13" Foreground="#FF666666" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,24" />
                         

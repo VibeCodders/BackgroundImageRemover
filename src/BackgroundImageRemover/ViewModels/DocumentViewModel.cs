@@ -552,6 +552,10 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
                 ApplyUncropCommand.NotifyCanExecuteChanged();
             }
         };
+
+        // Carry the last session's export setup into this document so a configured brand
+        // background (color/gradient/shadow/quality) does not reset on every new tab.
+        RestoreExportSettings();
     }
 
     partial void OnActiveToolChanged(EditorTool value)

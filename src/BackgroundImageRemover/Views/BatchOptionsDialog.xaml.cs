@@ -10,6 +10,7 @@ namespace BackgroundImageRemover.Views;
 public enum BatchOutputKind
 {
     Png,
+    Webp,
     JpegWhite,
     JpegSolid,
     JpegGradient,
@@ -51,6 +52,7 @@ public sealed partial class BatchOptionsViewModel : ObservableObject
         var options = OutputKind switch
         {
             BatchOutputKind.Png => new BatchExportOptions { ExportJpeg = false },
+            BatchOutputKind.Webp => new BatchExportOptions { ExportJpeg = false, ExportWebp = true, JpegQuality = JpegQuality },
             BatchOutputKind.JpegWhite => new BatchExportOptions
             {
                 ExportJpeg = true,

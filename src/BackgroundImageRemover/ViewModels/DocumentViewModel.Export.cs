@@ -271,6 +271,7 @@ public partial class DocumentViewModel
             LastExportedFilePath = path;
             StatusMessage = $"Exported to {path}";
             _log.Info($"Exported to {path}");
+            PersistExportSettings();
         }
         catch (Exception ex)
         {
@@ -313,6 +314,90 @@ public partial class DocumentViewModel
         if (path is not null)
         {
             ExportBackgroundImagePath = path;
+        }
+    }
+
+    /// <summary>
+    /// Restores the last session's export settings (background mode, colors, shadow, quality)
+    /// onto this document, so a user who set up a branded background once does not have to
+    /// reconfigure it on every image. Called from the constructor; tolerant of missing values.
+    /// </summary>
+    internal void RestoreExportSettings()
+    {
+        var s = _settings.Current;
+
+        if (Enum.TryParse<ExportBackgroundMode>(s.LastExportBackgroundMode, out var mode))
+        {
+            ExportBackgroundMode = mode;
+        }
+        if (TryParseColor(s.LastExportSolidColor) is { } solid)
+        {
+            ExportSolidColor = solid;
+        }
+        if (TryParseColor(s.LastExportGradientTopColor) is { } top)
+        {
+            ExportGradientTopColor = top;
+        }
+        if (TryParseColor(s.LastExportGradientBottomColor) is { } bottom)
+        {
+            ExportGradientBottomColor = bottom;
+        }
+        if (s.LastExportBlurRadius > 0)
+        {
+            ExportBlurRadius = s.LastExportBlurRadius;
+        }
+        ExportBackgroundImagePath = s.LastExportBackgroundImagePath;
+        if (s.LastExportJpegQuality is >= 1 and <= 100)
+        {
+            ExportJpegQuality = s.LastExportJpegQuality;
+        }
+        ExportDropShadowEnabled = s.LastExportDropShadowEnabled;
+        if (s.LastExportShadowOffset > 0)
+        {
+            ExportShadowOffset = s.LastExportShadowOffset;
+        }
+        if (s.LastExportShadowBlur > 0)
+        {
+            ExportShadowBlur = s.LastExportShadowBlur;
+        }
+        if (s.LastExportShadowOpacity is > 0 and <= 1)
+        {
+            ExportShadowOpacity = s.LastExportShadowOpacity;
+        }
+    }
+
+    /// <summary>Persists the current export settings so the next document opens with them.</summary>
+    internal void PersistExportSettings()
+    {
+        var s = _settings.Current;
+        s.LastExportBackgroundMode = ExportBackgroundMode.ToString();
+        s.LastExportSolidColor = ExportSolidColor.ToString();
+        s.LastExportGradientTopColor = ExportGradientTopColor.ToString();
+        s.LastExportGradientBottomColor = ExportGradientBottomColor.ToString();
+        s.LastExportBlurRadius = ExportBlurRadius;
+        s.LastExportBackgroundImagePath = ExportBackgroundImagePath;
+        s.LastExportJpegQuality = ExportJpegQuality;
+        s.LastExportDropShadowEnabled = ExportDropShadowEnabled;
+        s.LastExportShadowOffset = ExportShadowOffset;
+        s.LastExportShadowBlur = ExportShadowBlur;
+        s.LastExportShadowOpacity = ExportShadowOpacity;
+        _settings.Save();
+    }
+
+    private static WpfColor? TryParseColor(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+        try
+        {
+            return System.Windows.Media.ColorConverter.ConvertFromString(text) is WpfColor color ? color : null;
+        }
+        catch
+        {
+            // A hand-edited or corrupted settings file must never break startup.
+            return null;
         }
     }
 }

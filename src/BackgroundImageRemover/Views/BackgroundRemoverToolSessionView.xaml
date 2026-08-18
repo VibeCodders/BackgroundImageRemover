@@ -76,7 +76,7 @@
                         <TextBlock Text="Mark the subject on the left image using a rectangle and foreground/background scribbles." TextWrapping="Wrap" Margin="0,0,0,8" />
                         <TextBlock Text="{Binding GrabCut.HasValidRect, StringFormat='Rectangle selected: {0}'}" Margin="0,0,0,8" />
 
-                        <TextBlock Text="Mode:" FontWeight="SemiBold" Margin="0,4,0,4" />
+                        <TextBlock Text="Draw:" FontWeight="SemiBold" Margin="0,4,0,4" />
                         <UniformGrid Columns="3" Margin="0,0,0,4">
                             <RadioButton Content="Rectangle" GroupName="ScribbleModeBg" Margin="0,0,4,4"
                                          IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=DrawRect, Mode=OneWay}"
@@ -87,6 +87,15 @@
                             <RadioButton Content="Background" GroupName="ScribbleModeBg" Margin="4,0,0,4"
                                          IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ScribbleBackground, Mode=OneWay}"
                                          Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.ScribbleBackground}" />
+                        </UniformGrid>
+                        <TextBlock Text="Erase:" FontWeight="SemiBold" Margin="0,4,0,4" />
+                        <UniformGrid Columns="2" Margin="0,0,0,4">
+                            <RadioButton Content="⌫ Erase FG" GroupName="ScribbleModeBg" Margin="0,0,4,4"
+                                         IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EraseForeground, Mode=OneWay}"
+                                         Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.EraseForeground}" />
+                            <RadioButton Content="⌫ Erase BG" GroupName="ScribbleModeBg" Margin="4,0,0,4"
+                                         IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EraseBackground, Mode=OneWay}"
+                                         Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.EraseBackground}" />
                         </UniformGrid>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                             <Button Content="↶ Undo" Command="{Binding UndoScribbleCommand}" Margin="0,0,4,0" Padding="8,3" />
@@ -163,6 +172,7 @@
                 <TextBlock DockPanel.Dock="Top" Text="Original (Select rect / scribbles / SAM point)" FontWeight="Bold" Margin="0,0,0,4" />
                 <controls:ImagePreviewControl x:Name="OriginalPreview"
                                                ImageSource="{Binding PreviewBitmap}"
+                                               ScribbleOverlay="{Binding ScribbleOverlay}"
                                                Mode="{Binding OriginalMode}"
                                                RectSelected="OriginalPreview_RectSelected"
                                                StrokeStart="OriginalPreview_StrokeStart"

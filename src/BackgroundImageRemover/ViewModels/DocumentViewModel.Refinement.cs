@@ -31,17 +31,13 @@ public partial class DocumentViewModel
     [ObservableProperty]
     private bool _canRedo;
 
-    /// <summary>Raised after a scribble stroke is undone/redone, so the View can keep its stroke visuals in sync.</summary>
-    public event EventHandler? ScribbleStrokeUndone;
-    public event EventHandler? ScribbleStrokeRedone;
+    // --- Undo / Redo: while scribbling (or erasing scribbles), undoes the last scribble
+    // stroke; otherwise undoes the last brush/magic-wand edit on the working alpha channel. ---
 
-    /// <summary>Raised when scribbles are reset (new image, new rect), so the View can clear stroke visuals.</summary>
-    public event EventHandler? ScribblesCleared;
-
-    // --- Undo / Redo: while scribbling, undoes the last scribble stroke; otherwise undoes
-    // the last brush/magic-wand edit on the working alpha channel. ---
-
-    private bool IsScribbling => OriginalMode is InteractionMode.ScribbleForeground or InteractionMode.ScribbleBackground;
+    private bool IsScribbling => OriginalMode is InteractionMode.ScribbleForeground
+        or InteractionMode.ScribbleBackground
+        or InteractionMode.EraseForeground
+        or InteractionMode.EraseBackground;
 
     private bool CanUndoExecute() => IsScribbling ? _scribbleManager.CanUndo : _editSession.CanUndo;
     private bool CanRedoExecute() => IsScribbling ? _scribbleManager.CanRedo : _editSession.CanRedo;
@@ -51,7 +47,6 @@ public partial class DocumentViewModel
     {
         if (IsScribbling && TryUndoScribble())
         {
-            ScribbleStrokeUndone?.Invoke(this, EventArgs.Empty);
             RefreshUndoRedoState();
             return;
         }
@@ -71,7 +66,6 @@ public partial class DocumentViewModel
     {
         if (IsScribbling && TryRedoScribble())
         {
-            ScribbleStrokeRedone?.Invoke(this, EventArgs.Empty);
             RefreshUndoRedoState();
             return;
         }
@@ -191,23 +185,45 @@ public partial class DocumentViewModel
         ScribbleManager.EnsureMats(_preview.Bgr.Size());
 
         var scribbleMode = ScribbleManager.FromInteractionMode(OriginalMode);
+        if (ScribbleManager.IsEraseMode(OriginalMode))
+        {
+            ScribbleManager.StartErase(imagePoint, scribbleMode);
+        }
+        else
+        {
+            ScribbleManager.StartStroke(imagePoint, scribbleMode);
+        }
 
-        ScribbleManager.StartStroke(imagePoint, scribbleMode);
         GrabCut.HasScribbles = ScribbleManager.HasScribbles;
+        RefreshScribbleOverlay();
     }
 
     public void OnOriginalStrokeMove(WpfPoint imagePoint)
     {
         var scribbleMode = ScribbleManager.FromInteractionMode(OriginalMode);
+        if (ScribbleManager.IsEraseMode(OriginalMode))
+        {
+            ScribbleManager.MoveErase(imagePoint, scribbleMode);
+        }
+        else
+        {
+            ScribbleManager.MoveStroke(imagePoint, scribbleMode);
+        }
 
-        ScribbleManager.MoveStroke(imagePoint, scribbleMode);
         GrabCut.HasScribbles = ScribbleManager.HasScribbles;
+        RefreshScribbleOverlay();
     }
 
     public void OnOriginalStrokeEnd()
     {
         ScribbleManager.EndStroke();
         GrabCut.HasScribbles = ScribbleManager.HasScribbles;
+        RefreshScribbleOverlay();
+    }
+
+    private void RefreshScribbleOverlay()
+    {
+        ScribbleOverlay = ScribbleManager.BuildOverlayBitmap();
     }
 
     private bool TryUndoScribble()

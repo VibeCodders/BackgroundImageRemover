@@ -17,23 +17,45 @@ public partial class BackgroundRemoverToolSessionViewModel
         ScribbleManager.EnsureMats(_preview.Bgr.Size());
 
         var scribbleMode = ScribbleManager.FromInteractionMode(OriginalMode);
+        if (ScribbleManager.IsEraseMode(OriginalMode))
+        {
+            ScribbleManager.StartErase(imagePoint, scribbleMode);
+        }
+        else
+        {
+            ScribbleManager.StartStroke(imagePoint, scribbleMode);
+        }
 
-        ScribbleManager.StartStroke(imagePoint, scribbleMode);
         GrabCut.HasScribbles = ScribbleManager.HasScribbles;
+        RefreshScribbleOverlay();
     }
 
     public void OnOriginalStrokeMove(WpfPoint imagePoint)
     {
         var scribbleMode = ScribbleManager.FromInteractionMode(OriginalMode);
+        if (ScribbleManager.IsEraseMode(OriginalMode))
+        {
+            ScribbleManager.MoveErase(imagePoint, scribbleMode);
+        }
+        else
+        {
+            ScribbleManager.MoveStroke(imagePoint, scribbleMode);
+        }
 
-        ScribbleManager.MoveStroke(imagePoint, scribbleMode);
         GrabCut.HasScribbles = ScribbleManager.HasScribbles;
+        RefreshScribbleOverlay();
     }
 
     public void OnOriginalStrokeEnd()
     {
         ScribbleManager.EndStroke();
         GrabCut.HasScribbles = ScribbleManager.HasScribbles;
+        RefreshScribbleOverlay();
+    }
+
+    private void RefreshScribbleOverlay()
+    {
+        ScribbleOverlay = ScribbleManager.BuildOverlayBitmap();
     }
 
     private bool CanUndoScribble => ScribbleManager.CanUndo;

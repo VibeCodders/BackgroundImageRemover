@@ -37,6 +37,12 @@
 
             <Image x:Name="ImageHost" Stretch="Uniform" Source="{Binding ImageSource, RelativeSource={RelativeSource AncestorType=UserControl}}" />
 
+            <!-- Scribbles are drawn here as a bitmap overlay (aligned with the image via the
+                 same Uniform stretch), so partial erasure, undo and redo all stay in sync with
+                 the ViewModel's scribble masks without manual stroke bookkeeping. -->
+            <Image x:Name="ScribbleOverlayImage" Stretch="Uniform" IsHitTestVisible="False"
+                   Source="{Binding ScribbleOverlay, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+
             <Canvas x:Name="OverlayCanvas" Background="Transparent">
                 <Rectangle x:Name="SelectionRectangle"
                            Stroke="DodgerBlue" StrokeThickness="2" StrokeDashArray="4 2"

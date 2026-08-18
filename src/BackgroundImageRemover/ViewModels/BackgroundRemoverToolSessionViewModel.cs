@@ -66,6 +66,9 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
+    private BitmapSource? _scribbleOverlay;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
     private bool _isBusy;
 
@@ -80,10 +83,6 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     [ObservableProperty]
     private bool _useGpuForOnnx;
-
-    public event EventHandler? ScribbleStrokeUndone;
-    public event EventHandler? ScribbleStrokeRedone;
-    public event EventHandler? ScribblesCleared;
 
     public BackgroundRemoverToolSessionViewModel(
         ShellViewModel shell,
@@ -112,10 +111,10 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
             await RunPreviewAsync();
         };
 
-        // Subscribe to scribble manager events
-        ScribbleManager.StrokeUndone += (_, _) => ScribbleStrokeUndone?.Invoke(this, EventArgs.Empty);
-        ScribbleManager.StrokeRedone += (_, _) => ScribbleStrokeRedone?.Invoke(this, EventArgs.Empty);
-        ScribbleManager.ScribblesCleared += (_, _) => ScribblesCleared?.Invoke(this, EventArgs.Empty);
+        // Subscribe to scribble manager events so the overlay stays in sync with the masks.
+        ScribbleManager.StrokeUndone += (_, _) => RefreshScribbleOverlay();
+        ScribbleManager.StrokeRedone += (_, _) => RefreshScribbleOverlay();
+        ScribbleManager.ScribblesCleared += (_, _) => RefreshScribbleOverlay();
 
         ChromaKey.PropertyChanged += (_, e) =>
         {

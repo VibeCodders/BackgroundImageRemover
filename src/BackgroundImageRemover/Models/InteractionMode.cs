@@ -7,6 +7,8 @@ public enum InteractionMode
     DrawRect,
     ScribbleForeground,
     ScribbleBackground,
+    EraseForeground,
+    EraseBackground,
     Brush,
     MagicWand,
     SamClick

@@ -1,3 +1,4 @@
+using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
@@ -26,15 +27,21 @@ public class ScribbleManager : IDisposable
     public bool CanUndo => _undo.Count > 0;
     public bool CanRedo => _redo.Count > 0;
 
+    /// <summary>Eraser stroke thickness, in image pixels (wider than the draw stroke so erasing is forgiving).</summary>
+    public const int EraseThickness = 16;
+
     /// <summary>
     /// Maps an <see cref="InteractionMode"/> to the corresponding <see cref="ScribbleMode"/>,
     /// defaulting to foreground for non-background modes.
     /// </summary>
     public static ScribbleMode FromInteractionMode(InteractionMode mode) => mode switch
     {
-        InteractionMode.ScribbleBackground => ScribbleMode.Background,
+        InteractionMode.ScribbleBackground or InteractionMode.EraseBackground => ScribbleMode.Background,
         _ => ScribbleMode.Foreground
     };
+
+    /// <summary>True when the given interaction mode clears scribbles instead of painting them.</summary>
+    public static bool IsEraseMode(InteractionMode mode) => mode is InteractionMode.EraseForeground or InteractionMode.EraseBackground;
 
     public ScribbleManager(int maxHistoryDepth = 20)
     {
@@ -82,6 +89,29 @@ public class ScribbleManager : IDisposable
     }
 
     /// <summary>
+    /// Starts a new eraser stroke at the given point, clearing only the target mask.
+    /// </summary>
+    public void StartErase(WpfPoint point, ScribbleMode mode)
+    {
+        PushUndoSnapshot();
+        _lastPoint = point;
+        EraseSegment(point, point, mode);
+    }
+
+    /// <summary>
+    /// Continues an eraser stroke to the given point.
+    /// </summary>
+    public void MoveErase(WpfPoint point, ScribbleMode mode)
+    {
+        if (_lastPoint is not { } last)
+        {
+            return;
+        }
+        EraseSegment(last, point, mode);
+        _lastPoint = point;
+    }
+
+    /// <summary>
     /// Draws a scribble segment between two points.
     /// </summary>
     private void DrawSegment(WpfPoint from, WpfPoint to, ScribbleMode mode)
@@ -105,6 +135,23 @@ public class ScribbleManager : IDisposable
             Cv2.Line(_bgScribble, p1, p2, Scalar.All(255), thickness, LineTypes.AntiAlias);
             Cv2.Line(_fgScribble, p1, p2, Scalar.All(0), thickness, LineTypes.AntiAlias);
         }
+    }
+
+    /// <summary>
+    /// Clears a scribble segment from the given mask only (the opposite mask is left untouched).
+    /// </summary>
+    private void EraseSegment(WpfPoint from, WpfPoint to, ScribbleMode mode)
+    {
+        if (_fgScribble is null || _bgScribble is null)
+        {
+            return;
+        }
+
+        var p1 = new Point((int)Math.Round(from.X), (int)Math.Round(from.Y));
+        var p2 = new Point((int)Math.Round(to.X), (int)Math.Round(to.Y));
+        var target = mode == ScribbleMode.Foreground ? _fgScribble : _bgScribble;
+
+        Cv2.Line(target, p1, p2, Scalar.All(0), EraseThickness, LineTypes.AntiAlias);
     }
 
     /// <summary>
@@ -174,6 +221,30 @@ public class ScribbleManager : IDisposable
     /// Gets the background scribble mat (read-only).
     /// </summary>
     public Mat? BackgroundScribble => _bgScribble;
+
+    /// <summary>
+    /// Renders the current scribbles as a semi-transparent overlay bitmap (green = foreground,
+    /// red = background), sized to the scribble mats so it can be drawn directly over the preview.
+    /// </summary>
+    public BitmapSource? BuildOverlayBitmap()
+    {
+        if (_fgScribble is null && _bgScribble is null)
+        {
+            return null;
+        }
+
+        var size = (_fgScribble ?? _bgScribble)!.Size();
+        using var overlay = new Mat(size, MatType.CV_8UC4, Scalar.All(0));
+        if (_fgScribble is not null)
+        {
+            overlay.SetTo(new Scalar(50, 205, 50, 190), _fgScribble);
+        }
+        if (_bgScribble is not null)
+        {
+            overlay.SetTo(new Scalar(0, 0, 255, 190), _bgScribble);
+        }
+        return overlay.ToBitmapSource();
+    }
 
     private void PushUndoSnapshot()
     {

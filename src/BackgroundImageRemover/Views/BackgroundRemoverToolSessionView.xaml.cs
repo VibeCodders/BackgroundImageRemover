@@ -12,29 +12,7 @@ public partial class BackgroundRemoverToolSessionView : UserControl
     public BackgroundRemoverToolSessionView()
     {
         InitializeComponent();
-        Loaded += BackgroundRemoverToolSessionView_Loaded;
-        Unloaded += BackgroundRemoverToolSessionView_Unloaded;
     }
-
-    private void BackgroundRemoverToolSessionView_Loaded(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel is null) return;
-        ViewModel.ScribbleStrokeUndone += ViewModel_ScribbleStrokeUndone;
-        ViewModel.ScribbleStrokeRedone += ViewModel_ScribbleStrokeRedone;
-        ViewModel.ScribblesCleared += ViewModel_ScribblesCleared;
-    }
-
-    private void BackgroundRemoverToolSessionView_Unloaded(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel is null) return;
-        ViewModel.ScribbleStrokeUndone -= ViewModel_ScribbleStrokeUndone;
-        ViewModel.ScribbleStrokeRedone -= ViewModel_ScribbleStrokeRedone;
-        ViewModel.ScribblesCleared -= ViewModel_ScribblesCleared;
-    }
-
-    private void ViewModel_ScribbleStrokeUndone(object? sender, EventArgs e) => OriginalPreview.UndoScribbleStroke();
-    private void ViewModel_ScribbleStrokeRedone(object? sender, EventArgs e) => OriginalPreview.RedoScribbleStroke();
-    private void ViewModel_ScribblesCleared(object? sender, EventArgs e) => OriginalPreview.ClearScribbleStrokes();
 
     private void OriginalPreview_RectSelected(object? sender, OpenCvSharp.Rect e)
     {

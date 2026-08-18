@@ -215,6 +215,7 @@
                             <TextBlock DockPanel.Dock="Top" Text="Original (draw rect / scribbles / SAM click)" FontWeight="Bold" Margin="0,0,0,4" />
                             <controls:ImagePreviewControl x:Name="OriginalPreview"
                                                            ImageSource="{Binding PreviewBitmap}"
+                                                           ScribbleOverlay="{Binding ScribbleOverlay}"
                                                            Mode="{Binding OriginalMode}"
                                                            RectSelected="OriginalPreview_RectSelected"
                                                            StrokeStart="OriginalPreview_StrokeStart"

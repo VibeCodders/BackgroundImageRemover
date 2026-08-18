@@ -57,6 +57,8 @@ public partial class ImagePreviewControl
                 break;
             case InteractionMode.ScribbleForeground:
             case InteractionMode.ScribbleBackground:
+            case InteractionMode.EraseForeground:
+            case InteractionMode.EraseBackground:
             case InteractionMode.Brush:
                 StartStroke(e);
                 break;
@@ -105,6 +107,8 @@ public partial class ImagePreviewControl
                 break;
             case InteractionMode.ScribbleForeground:
             case InteractionMode.ScribbleBackground:
+            case InteractionMode.EraseForeground:
+            case InteractionMode.EraseBackground:
             case InteractionMode.Brush:
                 if (_dragStart is not null)
                 {
@@ -121,14 +125,31 @@ public partial class ImagePreviewControl
     /// user can see exactly where and how large the next stroke will be before painting.</summary>
     private void UpdateBrushCursorHover(MouseEventArgs e)
     {
-        if (Mode != InteractionMode.Brush || ImageSource is null || _dragStart is not null || _panStart is not null)
+        bool isBrush = Mode == InteractionMode.Brush;
+        bool isErase = Mode is InteractionMode.EraseForeground or InteractionMode.EraseBackground;
+        if ((!isBrush && !isErase) || ImageSource is null || _dragStart is not null || _panStart is not null)
         {
             BrushCursorPreview.Visibility = Visibility.Collapsed;
             return;
         }
 
         var p = e.GetPosition(OverlayCanvas);
-        var diameter = Math.Max(4, BrushRadius * 2);
+        double diameter;
+        if (isBrush)
+        {
+            diameter = Math.Max(4, BrushRadius * 2);
+            BrushCursorPreview.Stroke = Brushes.DeepSkyBlue;
+            BrushCursorPreview.Fill = new SolidColorBrush(Color.FromArgb(0x33, 0x0E, 0xA5, 0xE9));
+            BrushCursorPreview.StrokeDashArray = null;
+        }
+        else
+        {
+            diameter = Math.Max(8, ScribbleManager.EraseThickness / ImagePixelScale);
+            BrushCursorPreview.Stroke = Brushes.White;
+            BrushCursorPreview.Fill = new SolidColorBrush(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF));
+            BrushCursorPreview.StrokeDashArray = new DoubleCollection { 3, 2 };
+        }
+
         BrushCursorPreview.Width = diameter;
         BrushCursorPreview.Height = diameter;
         Canvas.SetLeft(BrushCursorPreview, p.X - diameter / 2);
@@ -157,6 +178,8 @@ public partial class ImagePreviewControl
                 break;
             case InteractionMode.ScribbleForeground:
             case InteractionMode.ScribbleBackground:
+            case InteractionMode.EraseForeground:
+            case InteractionMode.EraseBackground:
             case InteractionMode.Brush:
                 FinishStroke();
                 break;
@@ -234,29 +257,22 @@ public partial class ImagePreviewControl
         _dragStart = e.GetPosition(OverlayCanvas);
         OverlayCanvas.CaptureMouse();
 
-        var strokeColor = Mode switch
+        // Scribble/eraser strokes are rendered from the ViewModel's scribble-mask overlay
+        // (ScribbleOverlay), not as canvas polylines, so erasing and undo/redo always match
+        // the actual masks. Only the transient Brush stroke keeps a temporary visual here.
+        if (Mode == InteractionMode.Brush)
         {
-            InteractionMode.ScribbleForeground => Brushes.LimeGreen,
-            InteractionMode.ScribbleBackground => Brushes.Red,
-            _ => Brushes.DeepSkyBlue
-        };
-        _activeStrokeVisual = new Polyline
-        {
-            Stroke = strokeColor,
-            StrokeThickness = Mode == InteractionMode.Brush ? BrushRadius * 2 : 4,
-            StrokeEndLineCap = PenLineCap.Round,
-            StrokeStartLineCap = PenLineCap.Round,
-            StrokeLineJoin = PenLineJoin.Round,
-            Opacity = Mode == InteractionMode.Brush ? 0.35 : 0.8
-        };
-        _activeStrokeVisual.Points.Add(_dragStart.Value);
-        OverlayCanvas.Children.Add(_activeStrokeVisual);
-
-        if (Mode is InteractionMode.ScribbleForeground or InteractionMode.ScribbleBackground)
-        {
-            _scribbleUndoVisuals.Push(_activeStrokeVisual);
-            _scribbleUndoVisuals.TrimStack(20, line => OverlayCanvas.Children.Remove(line));
-            _scribbleRedoVisuals.Clear();
+            _activeStrokeVisual = new Polyline
+            {
+                Stroke = Brushes.DeepSkyBlue,
+                StrokeThickness = BrushRadius * 2,
+                StrokeEndLineCap = PenLineCap.Round,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeLineJoin = PenLineJoin.Round,
+                Opacity = 0.35
+            };
+            _activeStrokeVisual.Points.Add(_dragStart.Value);
+            OverlayCanvas.Children.Add(_activeStrokeVisual);
         }
 
         StrokeStart?.Invoke(this, point);
@@ -279,7 +295,7 @@ public partial class ImagePreviewControl
         OverlayCanvas.ReleaseMouseCapture();
         _dragStart = null;
 
-        if (Mode == InteractionMode.Brush && _activeStrokeVisual is not null)
+        if (_activeStrokeVisual is not null)
         {
             OverlayCanvas.Children.Remove(_activeStrokeVisual);
         }

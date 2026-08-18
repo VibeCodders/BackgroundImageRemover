@@ -22,6 +22,10 @@ public partial class ImagePreviewControl : UserControl
         DependencyProperty.Register(nameof(BrushRadius), typeof(double), typeof(ImagePreviewControl),
             new PropertyMetadata(20.0));
 
+    public static readonly DependencyProperty ScribbleOverlayProperty =
+        DependencyProperty.Register(nameof(ScribbleOverlay), typeof(BitmapSource), typeof(ImagePreviewControl),
+            new PropertyMetadata(null));
+
     public BitmapSource? ImageSource
     {
         get => (BitmapSource?)GetValue(ImageSourceProperty);
@@ -39,6 +43,16 @@ public partial class ImagePreviewControl : UserControl
     {
         get => (double)GetValue(BrushRadiusProperty);
         set => SetValue(BrushRadiusProperty, value);
+    }
+
+    /// <summary>
+    /// Semi-transparent overlay (foreground/background scribbles) rendered above the image
+    /// and aligned with it via the same Uniform stretch.
+    /// </summary>
+    public BitmapSource? ScribbleOverlay
+    {
+        get => (BitmapSource?)GetValue(ScribbleOverlayProperty);
+        set => SetValue(ScribbleOverlayProperty, value);
     }
 
     /// <summary>
@@ -84,48 +98,9 @@ public partial class ImagePreviewControl : UserControl
     private Point _panStartTranslate;
     private Polyline? _activeStrokeVisual;
 
-    // Scribble strokes (unlike Brush strokes) stay visible on the canvas, so their visuals
-    // need their own undo/redo stack, kept in step with the ViewModel's scribble mask stack.
-    private readonly Stack<Polyline> _scribbleUndoVisuals = new();
-    private readonly Stack<Polyline> _scribbleRedoVisuals = new();
-
     public ImagePreviewControl()
     {
         InitializeComponent();
-    }
-
-    public bool UndoScribbleStroke()
-    {
-        if (_scribbleUndoVisuals.Count == 0)
-        {
-            return false;
-        }
-        var line = _scribbleUndoVisuals.Pop();
-        OverlayCanvas.Children.Remove(line);
-        _scribbleRedoVisuals.Push(line);
-        return true;
-    }
-
-    public bool RedoScribbleStroke()
-    {
-        if (_scribbleRedoVisuals.Count == 0)
-        {
-            return false;
-        }
-        var line = _scribbleRedoVisuals.Pop();
-        OverlayCanvas.Children.Add(line);
-        _scribbleUndoVisuals.Push(line);
-        return true;
-    }
-
-    public void ClearScribbleStrokes()
-    {
-        foreach (var line in _scribbleUndoVisuals)
-        {
-            OverlayCanvas.Children.Remove(line);
-        }
-        _scribbleUndoVisuals.Clear();
-        _scribbleRedoVisuals.Clear();
     }
 
     public void ResetView()
@@ -150,7 +125,6 @@ public partial class ImagePreviewControl : UserControl
         }
 
         control.ClearSelection();
-        control.ClearScribbleStrokes();
     }
 
     private static void OnModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

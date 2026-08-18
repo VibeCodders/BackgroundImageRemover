@@ -182,6 +182,9 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     [NotifyPropertyChangedFor(nameof(DisplayBitmap))]
     private BitmapSource? _resultBitmap;
 
+    [ObservableProperty]
+    private BitmapSource? _scribbleOverlay;
+
     /// <summary>
     /// The active display bitmap: shows the processed ResultBitmap if available,
     /// otherwise falls back to the clean loaded PreviewBitmap.
@@ -313,10 +316,10 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
             _ = RunPreviewAsync();
         };
 
-        // Subscribe to scribble manager events
-        _scribbleManager.StrokeUndone += (_, _) => ScribbleStrokeUndone?.Invoke(this, EventArgs.Empty);
-        _scribbleManager.StrokeRedone += (_, _) => ScribbleStrokeRedone?.Invoke(this, EventArgs.Empty);
-        _scribbleManager.ScribblesCleared += (_, _) => ScribblesCleared?.Invoke(this, EventArgs.Empty);
+        // Subscribe to scribble manager events so the overlay stays in sync with the masks.
+        _scribbleManager.StrokeUndone += (_, _) => RefreshScribbleOverlay();
+        _scribbleManager.StrokeRedone += (_, _) => RefreshScribbleOverlay();
+        _scribbleManager.ScribblesCleared += (_, _) => RefreshScribbleOverlay();
 
         ChromaKey.PropertyChanged += (_, e) =>
         {

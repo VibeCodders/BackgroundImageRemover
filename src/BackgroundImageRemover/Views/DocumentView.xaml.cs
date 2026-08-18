@@ -31,9 +31,6 @@ public partial class DocumentView : UserControl
             return;
         }
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
-        ViewModel.ScribbleStrokeUndone += ViewModel_ScribbleStrokeUndone;
-        ViewModel.ScribbleStrokeRedone += ViewModel_ScribbleStrokeRedone;
-        ViewModel.ScribblesCleared += ViewModel_ScribblesCleared;
     }
 
     private void DocumentView_Unloaded(object sender, RoutedEventArgs e)
@@ -43,14 +40,7 @@ public partial class DocumentView : UserControl
             return;
         }
         ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
-        ViewModel.ScribbleStrokeUndone -= ViewModel_ScribbleStrokeUndone;
-        ViewModel.ScribbleStrokeRedone -= ViewModel_ScribbleStrokeRedone;
-        ViewModel.ScribblesCleared -= ViewModel_ScribblesCleared;
     }
-
-    private void ViewModel_ScribbleStrokeUndone(object? sender, EventArgs e) => OriginalPreview.UndoScribbleStroke();
-    private void ViewModel_ScribbleStrokeRedone(object? sender, EventArgs e) => OriginalPreview.RedoScribbleStroke();
-    private void ViewModel_ScribblesCleared(object? sender, EventArgs e) => OriginalPreview.ClearScribbleStrokes();
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

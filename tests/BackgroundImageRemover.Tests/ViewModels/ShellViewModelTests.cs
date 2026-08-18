@@ -19,9 +19,9 @@ public class ShellViewModelTests
     private sealed class UnusedDialogService : IDialogService
     {
         public string? ShowOpenImageDialog() => throw new NotImplementedException();
-        public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => throw new NotImplementedException();
-        public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => throw new NotImplementedException();
-        public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => throw new NotImplementedException();
+        public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG", string? initialDirectory = null) => throw new NotImplementedException();
+        public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG", string? initialDirectory = null) => throw new NotImplementedException();
+        public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP", string? initialDirectory = null) => throw new NotImplementedException();
         public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => throw new NotImplementedException();
         public string? ShowOpenProjectDialog() => throw new NotImplementedException();
         public string? ShowSaveProjectDialog(string? suggestedFileName) => throw new NotImplementedException();
@@ -305,9 +305,9 @@ public class ShellViewModelTests
         public FakeImageDialogService(string? chosenPath) => _chosenPath = chosenPath;
 
         public string? ShowOpenImageDialog() => _chosenPath;
-        public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
-        public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
-        public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => null;
+        public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG", string? initialDirectory = null) => null;
+        public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG", string? initialDirectory = null) => null;
+        public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP", string? initialDirectory = null) => null;
         public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
         public string? ShowOpenProjectDialog() => null;
         public string? ShowSaveProjectDialog(string? suggestedFileName) => null;

@@ -49,9 +49,9 @@ public class UncropViewModelTests
         public virtual string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
         public virtual string? ShowOpenImageDialog() => null;
         public virtual string? ShowOpenProjectDialog() => null;
-        public virtual string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
-        public virtual string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
-        public virtual string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => null;
+        public virtual string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG", string? initialDirectory = null) => null;
+        public virtual string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG", string? initialDirectory = null) => null;
+        public virtual string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP", string? initialDirectory = null) => null;
         public virtual string? ShowSaveProjectDialog(string? suggestedFileName) => null;
         public virtual BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
         public virtual void ShowPreferencesDialog() { }
@@ -64,7 +64,7 @@ public class UncropViewModelTests
         private readonly string? _pngPath;
         public SaveDialogService(string? pngPath) => _pngPath = pngPath;
 
-        public override string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => _pngPath;
+        public override string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG", string? initialDirectory = null) => _pngPath;
     }
 
     private sealed class RecordingExportService : IImageExportService

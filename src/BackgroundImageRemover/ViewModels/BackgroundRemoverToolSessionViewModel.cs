@@ -253,13 +253,18 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     partial void OnSelectedStrategyChanged(StrategyKind value)
     {
-        OriginalMode = value switch
-        {
-            StrategyKind.GrabCut => InteractionMode.DrawRect,
-            StrategyKind.Sam => InteractionMode.SamClick,
-            StrategyKind.MagicWand => InteractionMode.MagicWand,
-            _ => InteractionMode.None
-        };
+        // When "sample color by clicking" is on, the click mode belongs to the color sampler:
+        // switching strategy must not silently drop it (the checkbox would stay checked while
+        // clicks stopped sampling).
+        OriginalMode = SampleColorMode
+            ? InteractionMode.MagicWand
+            : value switch
+            {
+                StrategyKind.GrabCut => InteractionMode.DrawRect,
+                StrategyKind.Sam => InteractionMode.SamClick,
+                StrategyKind.MagicWand => InteractionMode.MagicWand,
+                _ => InteractionMode.None
+            };
 
         if (value == StrategyKind.Onnx && !Onnx.IsModelReady)
         {

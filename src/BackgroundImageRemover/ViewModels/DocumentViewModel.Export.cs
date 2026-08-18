@@ -174,11 +174,16 @@ public partial class DocumentViewModel
         var suffix = crop ? "_cropped" : "_cutout";
         var suggested = baseName + suffix + extension;
 
+        // Start the save dialog in the folder of the last export (or the source file's folder
+        // on the first export), so consecutive exports land where the user expects.
+        string? initialDirectory = LastExportedFilePath is not null
+            ? Path.GetDirectoryName(LastExportedFilePath)
+            : _loadedImage?.FilePath is { } sourcePath ? Path.GetDirectoryName(sourcePath) : null;
         var path = format switch
         {
-            ExportFormat.Jpeg => _dialogs.ShowSaveJpgDialog(suggested),
-            ExportFormat.Webp => _dialogs.ShowSaveWebpDialog(suggested),
-            _ => _dialogs.ShowSavePngDialog(suggested)
+            ExportFormat.Jpeg => _dialogs.ShowSaveJpgDialog(suggested, initialDirectory: initialDirectory),
+            ExportFormat.Webp => _dialogs.ShowSaveWebpDialog(suggested, initialDirectory: initialDirectory),
+            _ => _dialogs.ShowSavePngDialog(suggested, initialDirectory: initialDirectory)
         };
         if (path is null)
         {

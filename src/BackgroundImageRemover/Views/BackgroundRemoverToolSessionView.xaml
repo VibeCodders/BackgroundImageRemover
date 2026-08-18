@@ -22,7 +22,8 @@
         </Style>
     </UserControl.Resources>
 
-    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}"
+               Focusable="True" KeyDown="Root_KeyDown">
         <!-- Modal Tool Session Top Bar -->
         <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel>
@@ -66,7 +67,9 @@
                     <TextBlock Text="Removal Strategy" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource StrategyKindValues}}"
                               SelectedItem="{Binding SelectedStrategy}"
-                              Margin="0,0,0,16" />
+                              Margin="0,0,0,4" />
+                    <TextBlock Text="Tip: press 1–8 to switch strategy (1 Chroma Key · 2 GrabCut · 3 ONNX · 4 SAM · 5 Flood Fill · 6 K-Means · 7 Otsu · 8 Magic Wand)"
+                               FontSize="10" Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" Margin="0,0,0,12" />
 
                     <!-- Chroma Key options -->
                     <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ChromaKey}">
@@ -280,11 +283,11 @@
                     </StackPanel>
 
                     <DockPanel Margin="0,8,0,0">
-                        <TextBlock Text="JPEG quality" DockPanel.Dock="Left" />
+                        <TextBlock Text="Output quality" DockPanel.Dock="Left" />
                         <TextBlock Text="{Binding ParentDocument.ExportJpegQuality, StringFormat='{}{0:0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="1" Maximum="100" Value="{Binding ParentDocument.ExportJpegQuality}" TickFrequency="1" IsSnapToTickEnabled="True"
-                            ToolTip="Quality used when exporting JPEG (Export JPG...)" />
+                            ToolTip="Quality used when exporting JPEG or WebP" />
 
                     <!-- Drop shadow (applies to every background mode) -->
                     <CheckBox Content="Drop shadow" IsChecked="{Binding ParentDocument.ExportDropShadowEnabled}" Margin="0,8,0,4" />

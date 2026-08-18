@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Settings;
@@ -15,9 +16,9 @@ public enum CloseDocumentResult
 public interface IDialogService
 {
     string? ShowOpenImageDialog();
-    string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG");
-    string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG");
-    string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP");
+    string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG", string? initialDirectory = null);
+    string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG", string? initialDirectory = null);
+    string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP", string? initialDirectory = null);
     string? ShowOpenFolderDialog(string title, string? initialDirectory = null);
     string? ShowOpenProjectDialog();
     string? ShowSaveProjectDialog(string? suggestedFileName);
@@ -48,7 +49,7 @@ public sealed class DialogService : IDialogService
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
-    public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG")
+    public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG", string? initialDirectory = null)
     {
         var dialog = new SaveFileDialog
         {
@@ -57,10 +58,11 @@ public sealed class DialogService : IDialogService
             FileName = suggestedFileName ?? "cutout.png",
             DefaultExt = ".png"
         };
+        SetInitialDirectory(dialog, initialDirectory);
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
-    public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG")
+    public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG", string? initialDirectory = null)
     {
         var dialog = new SaveFileDialog
         {
@@ -69,10 +71,11 @@ public sealed class DialogService : IDialogService
             FileName = suggestedFileName ?? "cutout.jpg",
             DefaultExt = ".jpg"
         };
+        SetInitialDirectory(dialog, initialDirectory);
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
-    public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP")
+    public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP", string? initialDirectory = null)
     {
         var dialog = new SaveFileDialog
         {
@@ -81,7 +84,18 @@ public sealed class DialogService : IDialogService
             FileName = suggestedFileName ?? "cutout.webp",
             DefaultExt = ".webp"
         };
+        SetInitialDirectory(dialog, initialDirectory);
         return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    private static void SetInitialDirectory(SaveFileDialog dialog, string? initialDirectory)
+    {
+        // A non-existent folder makes the common dialog fall back to its default location;
+        // only set the hint when it is actually usable.
+        if (!string.IsNullOrWhiteSpace(initialDirectory) && Directory.Exists(initialDirectory))
+        {
+            dialog.InitialDirectory = initialDirectory;
+        }
     }
 
     public string? ShowOpenFolderDialog(string title, string? initialDirectory = null)

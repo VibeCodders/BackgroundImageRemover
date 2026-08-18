@@ -1,6 +1,9 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.ViewModels;
 
 namespace BackgroundImageRemover.Views;
@@ -12,6 +15,30 @@ public partial class BackgroundRemoverToolSessionView : UserControl
     public BackgroundRemoverToolSessionView()
     {
         InitializeComponent();
+    }
+
+    /// <summary>
+    /// Number keys (1-8, no modifiers) switch the removal strategy while the session has
+    /// focus. Keys typed into text-entry controls are ignored so the shortcuts never fight
+    /// the user's input.
+    /// </summary>
+    private void Root_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (Keyboard.Modifiers != ModifierKeys.None)
+        {
+            return;
+        }
+
+        if (e.OriginalSource is TextBoxBase or ComboBox or ComboBoxItem)
+        {
+            return;
+        }
+
+        if (ViewModel is not null && StrategyShortcuts.StrategyForKey(e.Key) is { } strategy)
+        {
+            ViewModel.SelectedStrategy = strategy;
+            e.Handled = true;
+        }
     }
 
     private void OriginalPreview_RectSelected(object? sender, OpenCvSharp.Rect e)

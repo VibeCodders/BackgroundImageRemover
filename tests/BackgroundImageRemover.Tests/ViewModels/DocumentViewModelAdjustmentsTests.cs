@@ -470,7 +470,7 @@ public class DocumentViewModelAdjustmentsTests
         private readonly string? _jpgPath;
         public FakeDialogServiceWithJpgPath(string? jpgPath) => _jpgPath = jpgPath;
 
-        public override string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => _jpgPath;
+        public override string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG", string? initialDirectory = null) => _jpgPath;
     }
 
     private sealed class FakeDialogServiceWithWebpPath : FakeDialogService
@@ -478,7 +478,7 @@ public class DocumentViewModelAdjustmentsTests
         private readonly string? _webpPath;
         public FakeDialogServiceWithWebpPath(string? webpPath) => _webpPath = webpPath;
 
-        public override string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => _webpPath;
+        public override string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP", string? initialDirectory = null) => _webpPath;
     }
 
     private sealed class AlphaImageLoader : IImageLoaderService
@@ -530,9 +530,9 @@ public class DocumentViewModelAdjustmentsTests
     private class FakeDialogService : IDialogService
     {
         public virtual string? ShowOpenImageDialog() => null;
-        public virtual string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
-        public virtual string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
-        public virtual string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => null;
+        public virtual string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG", string? initialDirectory = null) => null;
+        public virtual string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG", string? initialDirectory = null) => null;
+        public virtual string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP", string? initialDirectory = null) => null;
         public virtual string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
         public virtual string? ShowOpenProjectDialog() => null;
         public virtual string? ShowSaveProjectDialog(string? suggestedFileName) => null;

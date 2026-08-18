@@ -12,5 +12,8 @@ public enum EditorTool
     Uncrop,
 
     /// <summary>Direct brush and magic wand pixel retouching.</summary>
-    Retouch
+    Retouch,
+
+    /// <summary>Color filters and visual adjustments (brightness, contrast, saturation, sharpness).</summary>
+    Adjustments
 }

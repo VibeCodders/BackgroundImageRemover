@@ -141,22 +141,14 @@ public partial class ImagePreviewControl : UserControl
         }
 
         var cursor = e.GetPosition(OverlayCanvas);
-        double oldScale = ZoomScale.ScaleX;
-        double factor = e.Delta > 0 ? 1.1 : 1.0 / 1.1;
-        double newScale = Math.Clamp(oldScale * factor, 1.0, 8.0);
-        if (Math.Abs(newScale - oldScale) < 1e-6)
+        if (ViewInteractionHelper.ComputeZoom(cursor, e.Delta, ZoomScale.ScaleX, new Point(PanTranslate.X, PanTranslate.Y), 1.0, 8.0, out var newScale, out var newTranslate))
         {
-            return;
+            ZoomScale.ScaleX = newScale;
+            ZoomScale.ScaleY = newScale;
+            PanTranslate.X = newTranslate.X;
+            PanTranslate.Y = newTranslate.Y;
+            e.Handled = true;
         }
-
-        double px = (cursor.X - PanTranslate.X) / oldScale;
-        double py = (cursor.Y - PanTranslate.Y) / oldScale;
-
-        ZoomScale.ScaleX = newScale;
-        ZoomScale.ScaleY = newScale;
-        PanTranslate.X = cursor.X - px * newScale;
-        PanTranslate.Y = cursor.Y - py * newScale;
-        e.Handled = true;
     }
 
     private void RootGrid_MouseDown(object sender, MouseButtonEventArgs e)
@@ -209,9 +201,9 @@ public partial class ImagePreviewControl : UserControl
     {
         if (_panStart is { } panStart && e.MiddleButton == MouseButtonState.Pressed)
         {
-            var current = e.GetPosition(this);
-            PanTranslate.X = _panStartTranslate.X + (current.X - panStart.X);
-            PanTranslate.Y = _panStartTranslate.Y + (current.Y - panStart.Y);
+            var p = ViewInteractionHelper.ComputePan(panStart, _panStartTranslate, e.GetPosition(this));
+            PanTranslate.X = p.X;
+            PanTranslate.Y = p.Y;
             return;
         }
 

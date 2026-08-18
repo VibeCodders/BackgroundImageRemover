@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.ViewModels;
 
 namespace BackgroundImageRemover.Views;
@@ -59,13 +60,12 @@ public partial class DocumentView : UserControl
 
     private void DocumentView_DragOver(object sender, DragEventArgs e)
     {
-        e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
-        e.Handled = true;
+        ViewInteractionHelper.HandleImageDragOver(e);
     }
 
     private async void DocumentView_Drop(object sender, DragEventArgs e)
     {
-        if (ViewModel is not null && e.Data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } files)
+        if (ViewModel is not null && e.Data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } files && ViewInteractionHelper.IsSupportedImage(files[0]))
         {
             await ViewModel.LoadAsync(files[0]);
         }

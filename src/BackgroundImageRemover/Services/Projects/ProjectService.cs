@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
+using BackgroundImageRemover.Services.ImageIo;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Projects;
@@ -140,24 +141,18 @@ public sealed class ProjectService : IProjectService
     {
         if (alpha is null)
         {
-            return EncodePngBase64(bgr);
+            return ImageCodecHelper.EncodePngBase64(bgr);
         }
 
         using var bgra = new Mat();
         Cv2.CvtColor(bgr, bgra, ColorConversionCodes.BGR2BGRA);
         BackgroundCompositingService.ReplaceAlphaChannel(bgra, alpha);
-        return EncodePngBase64(bgra);
-    }
-
-    private static string EncodePngBase64(Mat mat)
-    {
-        Cv2.ImEncode(".png", mat, out var buffer);
-        return Convert.ToBase64String(buffer);
+        return ImageCodecHelper.EncodePngBase64(bgra);
     }
 
     private static (Mat Bgr, Mat? Alpha) DecodeBgrWithAlphaBase64(string base64)
     {
-        using var mat = DecodePngBase64(base64);
+        using var mat = ImageCodecHelper.DecodePngBase64(base64);
         if (mat.Channels() != 4)
         {
             return (mat.Clone(), null);
@@ -165,18 +160,6 @@ public sealed class ProjectService : IProjectService
 
         var (bgr, alpha) = BackgroundCompositingService.SplitBgra(mat);
         return (bgr, alpha);
-    }
-
-    private static Mat DecodePngBase64(string base64)
-    {
-        var bytes = Convert.FromBase64String(base64);
-        var mat = Cv2.ImDecode(bytes, ImreadModes.Unchanged);
-        if (mat.Empty())
-        {
-            mat.Dispose();
-            throw new InvalidOperationException("Could not decode the embedded project image.");
-        }
-        return mat;
     }
 
     /// <summary>On-disk JSON envelope: settings plus the embedded image payloads.</summary>

@@ -11,8 +11,11 @@ public static class ViewInteractionHelper
 {
     private static readonly HashSet<string> SupportedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".png", ".jpg", ".jpeg", ".bmp", ".webp"
+        ".png", ".jpg", ".jpeg", ".jfif", ".bmp", ".webp", ".gif", ".tif", ".tiff", ".ico"
     };
+
+    /// <summary>Extension of the app's self-contained project files.</summary>
+    private const string ProjectExtension = ".ibrproj";
 
     /// <summary>
     /// Checks whether the specified file path has a supported image extension.
@@ -28,14 +31,31 @@ public static class ViewInteractionHelper
     }
 
     /// <summary>
-    /// Handles DragOver for image file drop targets.
+    /// Checks whether the specified file path is something the app can open in a tab:
+    /// a supported image or a <c>.ibrproj</c> project file.
+    /// </summary>
+    public static bool IsSupportedFile(string path)
+        => IsSupportedImage(path) || IsProjectFile(path);
+
+    /// <summary>Checks whether the specified file path is a <c>.ibrproj</c> project file.</summary>
+    public static bool IsProjectFile(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+        return string.Equals(Path.GetExtension(path), ProjectExtension, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Handles DragOver for image/project file drop targets.
     /// </summary>
     public static void HandleImageDragOver(DragEventArgs e)
     {
         if (e.Data.GetDataPresent(DataFormats.FileDrop))
         {
             var files = (string[]?)e.Data.GetData(DataFormats.FileDrop);
-            if (files is { Length: > 0 } && IsSupportedImage(files[0]))
+            if (files is { Length: > 0 } && IsSupportedFile(files[0]))
             {
                 e.Effects = DragDropEffects.Copy;
                 e.Handled = true;

@@ -50,6 +50,7 @@ public class UncropViewModelTests
         public string? ShowOpenImageDialog() => null;
         public string? ShowOpenProjectDialog() => null;
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
+        public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
         public string? ShowSaveProjectDialog(string? suggestedFileName) => null;
     }
 
@@ -62,6 +63,9 @@ public class UncropViewModelTests
     private sealed class DummyImageExportService : IImageExportService
     {
         public Task ExportPngAsync(Mat imageBgra, string destinationPath, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task ExportJpgAsync(Mat bgr, string destinationPath, int quality = 95, CancellationToken ct = default)
             => Task.CompletedTask;
     }
 

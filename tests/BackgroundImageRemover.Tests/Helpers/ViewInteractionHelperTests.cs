@@ -10,8 +10,13 @@ public class ViewInteractionHelperTests
     [InlineData("PHOTO.PNG", true)]
     [InlineData("image.jpg", true)]
     [InlineData("image.jpeg", true)]
+    [InlineData("image.jfif", true)]
     [InlineData("image.bmp", true)]
     [InlineData("image.webp", true)]
+    [InlineData("image.gif", true)]
+    [InlineData("image.tif", true)]
+    [InlineData("image.tiff", true)]
+    [InlineData("image.ico", true)]
     [InlineData("document.pdf", false)]
     [InlineData("script.cs", false)]
     [InlineData("", false)]
@@ -19,6 +24,32 @@ public class ViewInteractionHelperTests
     public void IsSupportedImage_ReturnsExpected(string? path, bool expected)
     {
         bool result = ViewInteractionHelper.IsSupportedImage(path!);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData("photo.png", true)]
+    [InlineData("project.ibrproj", true)]
+    [InlineData("PROJECT.IBRPROJ", true)]
+    [InlineData("image.tiff", true)]
+    [InlineData("document.pdf", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void IsSupportedFile_AcceptsImagesAndProjects(string? path, bool expected)
+    {
+        bool result = ViewInteractionHelper.IsSupportedFile(path!);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData("project.ibrproj", true)]
+    [InlineData("PROJECT.IBRPROJ", true)]
+    [InlineData("photo.png", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void IsProjectFile_DetectsIbrprojFiles(string? path, bool expected)
+    {
+        bool result = ViewInteractionHelper.IsProjectFile(path!);
         Assert.Equal(expected, result);
     }
 

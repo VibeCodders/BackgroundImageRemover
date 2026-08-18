@@ -18,6 +18,7 @@ public class ShellViewModelTests
     {
         public string? ShowOpenImageDialog() => throw new NotImplementedException();
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => throw new NotImplementedException();
+        public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => throw new NotImplementedException();
         public string? ShowOpenFolderDialog(string title) => throw new NotImplementedException();
         public string? ShowOpenProjectDialog() => throw new NotImplementedException();
         public string? ShowSaveProjectDialog(string? suggestedFileName) => throw new NotImplementedException();
@@ -158,6 +159,7 @@ public class ShellViewModelTests
 
         public string? ShowOpenImageDialog() => _chosenPath;
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
+        public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
         public string? ShowOpenFolderDialog(string title) => null;
         public string? ShowOpenProjectDialog() => null;
         public string? ShowSaveProjectDialog(string? suggestedFileName) => null;
@@ -198,6 +200,9 @@ public class ShellViewModelTests
     private sealed class FakeImageExportService : BackgroundImageRemover.Services.ImageIo.IImageExportService
     {
         public Task ExportPngAsync(OpenCvSharp.Mat imageBgra, string destinationPath, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task ExportJpgAsync(OpenCvSharp.Mat bgr, string destinationPath, int quality = 95, CancellationToken ct = default)
             => Task.CompletedTask;
     }
 

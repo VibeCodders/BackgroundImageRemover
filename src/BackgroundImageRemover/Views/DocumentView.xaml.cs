@@ -73,9 +73,22 @@ public partial class DocumentView : UserControl
 
     private async void DocumentView_Drop(object sender, DragEventArgs e)
     {
-        if (ViewModel is not null && e.Data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } files && ViewInteractionHelper.IsSupportedImage(files[0]))
+        if (ViewModel is null || e.Data.GetData(DataFormats.FileDrop) is not string[] { Length: > 0 } dropped)
         {
-            await ViewModel.LoadAsync(files[0]);
+            return;
+        }
+
+        var files = dropped.Where(ViewInteractionHelper.IsSupportedFile).ToArray();
+        if (files.Length == 0)
+        {
+            return;
+        }
+
+        // First file replaces this tab's content; the rest open in their own tabs.
+        await ViewModel.LoadAsync(files[0]);
+        for (int i = 1; i < files.Length; i++)
+        {
+            await ViewModel.OpenDroppedFileInNewTabAsync(files[i]);
         }
     }
 

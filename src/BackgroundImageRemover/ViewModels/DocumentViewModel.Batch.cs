@@ -32,7 +32,7 @@ public partial class DocumentViewModel
             return;
         }
 
-        var extensions = new[] { ".png", ".jpg", ".jpeg", ".bmp", ".webp" };
+        var extensions = new[] { ".png", ".jpg", ".jpeg", ".jfif", ".bmp", ".webp", ".gif", ".tif", ".tiff", ".ico" };
         var files = Directory.EnumerateFiles(inputFolder)
             .Where(f => extensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
             .ToList();

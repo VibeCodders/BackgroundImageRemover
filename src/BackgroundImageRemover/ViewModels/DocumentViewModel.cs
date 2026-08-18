@@ -599,6 +599,12 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
     public void Dispose()
     {
+        // Stop pending work so no background task keeps touching Mats after the tab closes.
+        _debounceTimer.Stop();
+        _previewCts?.Cancel();
+        _previewCts?.Dispose();
+        _processCts?.Cancel();
+        _processCts?.Dispose();
         _brushRefreshTimer?.Stop();
         _uncropCts?.Cancel();
         _uncropCts?.Dispose();

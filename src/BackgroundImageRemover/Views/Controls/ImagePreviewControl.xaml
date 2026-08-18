@@ -55,5 +55,23 @@
                          Fill="#330EA5E9" Visibility="Collapsed" IsHitTestVisible="False" />
             </Canvas>
         </Grid>
+
+        <!-- Zoom HUD: outside the zoom/pan transform so it stays fixed, showing the current
+             zoom relative to fit plus quick Fit (100%) and 1:1 (actual pixels) buttons. -->
+        <Border x:Name="ZoomHud"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,10,10" Padding="6,3"
+                Background="#DDFFFFFF" BorderBrush="#99BBBBBB" BorderThickness="1" CornerRadius="4"
+                Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="ZoomPercentLabel" Text="100%" VerticalAlignment="Center" FontSize="11"
+                           Foreground="#FF444444" Margin="0,0,8,0" MinWidth="42" TextAlignment="Right"
+                           ToolTip="Zoom relative to the fit-to-window size" />
+                <Button x:Name="ZoomFitButton" Content="Fit" Click="ZoomFit_Click" Padding="7,1" FontSize="11"
+                        Cursor="Hand" Margin="0,0,2,0" ToolTip="Fit the image to the window (middle double-click)" />
+                <Button x:Name="ZoomActualButton" Content="1:1" Click="ZoomActual_Click" Padding="7,1" FontSize="11"
+                        Cursor="Hand" ToolTip="Show the image at actual pixel size" />
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

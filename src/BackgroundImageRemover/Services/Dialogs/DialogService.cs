@@ -15,6 +15,7 @@ public interface IDialogService
 {
     string? ShowOpenImageDialog();
     string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG");
+    string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG");
     string? ShowOpenFolderDialog(string title);
     string? ShowOpenProjectDialog();
     string? ShowSaveProjectDialog(string? suggestedFileName);
@@ -28,7 +29,7 @@ public sealed class DialogService : IDialogService
         var dialog = new OpenFileDialog
         {
             Title = "Open Image",
-            Filter = "Image files|*.png;*.jpg;*.jpeg;*.bmp;*.webp|All files|*.*"
+            Filter = "Image files|*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.webp;*.gif;*.tif;*.tiff;*.ico|All files|*.*"
         };
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
@@ -41,6 +42,18 @@ public sealed class DialogService : IDialogService
             Filter = "PNG image|*.png",
             FileName = suggestedFileName ?? "cutout.png",
             DefaultExt = ".png"
+        };
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG")
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = title,
+            Filter = "JPEG image|*.jpg;*.jpeg",
+            FileName = suggestedFileName ?? "cutout.jpg",
+            DefaultExt = ".jpg"
         };
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }

@@ -101,6 +101,8 @@ public partial class ImagePreviewControl : UserControl
     public ImagePreviewControl()
     {
         InitializeComponent();
+        ZoomScale.Changed += (_, _) => UpdateZoomHud();
+        ZoomPanHost.SizeChanged += (_, _) => UpdateZoomHud();
     }
 
     public void ResetView()
@@ -109,6 +111,41 @@ public partial class ImagePreviewControl : UserControl
         ZoomScale.ScaleY = 1;
         PanTranslate.X = 0;
         PanTranslate.Y = 0;
+        UpdateZoomHud();
+    }
+
+    /// <summary>Keeps the zoom HUD in sync: hidden until an image is shown, then showing the zoom percent.</summary>
+    private void UpdateZoomHud()
+    {
+        if (ImageSource is null)
+        {
+            ZoomHud.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        ZoomHud.Visibility = Visibility.Visible;
+        ZoomPercentLabel.Text = $"{Math.Round(ZoomScale.ScaleX * 100)}%";
+    }
+
+    private void ZoomFit_Click(object sender, RoutedEventArgs e) => ResetView();
+
+    private void ZoomActual_Click(object sender, RoutedEventArgs e)
+    {
+        if (ImageSource is null)
+        {
+            return;
+        }
+
+        // 1:1 means one image pixel per DIP: at ZoomScale == 1 the image is fit to the
+        // control, so the required scale is the fit pixels-per-DIP ratio.
+        double oneToOne = ImagePixelScale;
+        if (oneToOne <= 0)
+        {
+            return;
+        }
+        ZoomScale.ScaleX = oneToOne;
+        ZoomScale.ScaleY = oneToOne;
+        UpdateZoomHud();
     }
 
     private static void OnImageSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -125,6 +162,7 @@ public partial class ImagePreviewControl : UserControl
         }
 
         control.ClearSelection();
+        control.UpdateZoomHud();
     }
 
     private static void OnModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

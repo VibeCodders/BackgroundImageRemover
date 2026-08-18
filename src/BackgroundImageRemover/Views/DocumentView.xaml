@@ -88,6 +88,8 @@
                             ToolTip="Open an image file into this tab" />
                     <Button Content="Paste" Command="{Binding PasteFromClipboardCommand}" Padding="8,4" Margin="0,0,4,0"
                             ToolTip="Ctrl+V — paste image from clipboard" />
+                    <Button Content="Copy" Command="{Binding CopyToClipboardCommand}" Padding="8,4" Margin="0,0,4,0"
+                            ToolTip="Ctrl+Shift+C — copy the cutout to the clipboard" />
                     <Button Content="Save" Command="{Binding SaveProjectCommand}" Padding="8,4" Margin="0,0,4,0"
                             ToolTip="Ctrl+S — save project (.ibrproj)" />
                     <Menu VerticalAlignment="Center" Margin="0,0,4,0">
@@ -96,6 +98,12 @@
                                       ToolTip="Trim transparent borders around the subject" />
                             <MenuItem Header="Without crop" Command="{Binding ExportCommand}"
                                       ToolTip="Export at the original image size" />
+                        </MenuItem>
+                        <MenuItem Header="Export JPG...">
+                            <MenuItem Header="With crop" Command="{Binding ExportJpgCroppedCommand}"
+                                      ToolTip="Trim transparent borders, then composite onto the chosen background" />
+                            <MenuItem Header="Without crop" Command="{Binding ExportJpgCommand}"
+                                      ToolTip="Composite the cutout onto the chosen background at the original image size" />
                         </MenuItem>
                     </Menu>
                     <Separator Margin="4,0" />

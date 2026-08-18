@@ -20,6 +20,16 @@ public partial class DocumentViewModel
         }
     }
 
+    /// <summary>Opens a dropped file in a brand-new tab via the shell (used for multi-file drops).</summary>
+    public async Task OpenDroppedFileInNewTabAsync(string path)
+    {
+        if (_shell is null)
+        {
+            return;
+        }
+        await _shell.OpenInNewTabAsync(path);
+    }
+
     /// <summary>Loads an image or a <c>.ibrproj</c> project, dispatching on the file extension.</summary>
     public async Task LoadAsync(string path)
     {

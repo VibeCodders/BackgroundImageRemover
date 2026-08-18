@@ -1,10 +1,12 @@
 using System.IO;
+using System.Windows;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
+using OpenCvSharp.WpfExtensions;
 using WpfColor = System.Windows.Media.Color;
 
 namespace BackgroundImageRemover.ViewModels;
@@ -64,18 +66,60 @@ public partial class DocumentViewModel
 
     /// <summary>Exports the full-size cutout without cropping (transparent margins kept).</summary>
     [RelayCommand(CanExecute = nameof(CanExport))]
-    private Task ExportAsync() => ExportCoreAsync(crop: false);
+    private Task ExportAsync() => ExportCoreAsync(crop: false, ExportFormat.Png);
 
     /// <summary>Exports the cutout trimmed to the subject (transparent borders removed).</summary>
     [RelayCommand(CanExecute = nameof(CanExport))]
-    private Task ExportCroppedAsync() => ExportCoreAsync(crop: true);
+    private Task ExportCroppedAsync() => ExportCoreAsync(crop: true, ExportFormat.Png);
+
+    /// <summary>Exports the full-size cutout as a JPEG (composited onto a background, since JPEG has no alpha).</summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private Task ExportJpgAsync() => ExportCoreAsync(crop: false, ExportFormat.Jpeg);
+
+    /// <summary>Exports the trimmed cutout as a JPEG (composited onto a background).</summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private Task ExportJpgCroppedAsync() => ExportCoreAsync(crop: true, ExportFormat.Jpeg);
+
+    /// <summary>Copies the full-resolution cutout to the clipboard as a PNG image.</summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task CopyToClipboardAsync()
+    {
+        if (!await EnsureWorkingResultAsync() || _workingBgr is null || _workingAlpha is null)
+        {
+            return;
+        }
+
+        try
+        {
+            using var bgra = _workingBgr.ToBgra(_workingAlpha);
+            BackgroundCompositingService.ZeroFullyTransparentPixels(bgra);
+
+            var bitmap = bgra.ToBitmapSource();
+            bitmap.Freeze();
+            Clipboard.SetImage(bitmap);
+            StatusMessage = "Cutout copied to clipboard.";
+            _log.Info("Cutout copied to clipboard");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not copy to clipboard: {ex.Message}";
+            _log.Error("Could not copy to clipboard", ex);
+        }
+    }
+
+    private enum ExportFormat
+    {
+        Png,
+        Jpeg
+    }
 
     /// <summary>
     /// The single "complete the job" action: computes the full-resolution cutout (faithful
     /// to the preview) when needed, then exports it, optionally trimming transparent borders.
-    /// Loaded cutouts / hand-edited results are exported as-is.
+    /// Loaded cutouts / hand-edited results are exported as-is. JPEG output composites the
+    /// cutout onto a background first (JPEG cannot store transparency).
     /// </summary>
-    private async Task ExportCoreAsync(bool crop)
+    private async Task ExportCoreAsync(bool crop, ExportFormat format)
     {
         if (!await EnsureWorkingResultAsync() || _workingBgr is null || _workingAlpha is null)
         {
@@ -85,9 +129,13 @@ public partial class DocumentViewModel
         var baseName = _loadedImage is not null
             ? Path.GetFileNameWithoutExtension(_loadedImage.FilePath)
             : "cutout";
-        var suggested = crop ? baseName + "_cropped.png" : baseName + "_cutout.png";
+        var extension = format == ExportFormat.Jpeg ? ".jpg" : ".png";
+        var suffix = crop ? "_cropped" : "_cutout";
+        var suggested = baseName + suffix + extension;
 
-        var path = _dialogs.ShowSavePngDialog(suggested);
+        var path = format == ExportFormat.Jpeg
+            ? _dialogs.ShowSaveJpgDialog(suggested)
+            : _dialogs.ShowSavePngDialog(suggested);
         if (path is null)
         {
             return;
@@ -116,14 +164,23 @@ public partial class DocumentViewModel
             switch (ExportBackgroundMode)
             {
                 case ExportBackgroundMode.Transparent:
-                    await _imageExporter.ExportPngAsync(subject, path);
+                    if (format == ExportFormat.Jpeg)
+                    {
+                        // JPEG cannot store alpha: composite the cutout onto white.
+                        using var onWhite = BackgroundCompositingService.CompositeOntoColor(subject, new Vec3b(255, 255, 255));
+                        await ExportBgrAsJpgAsync(onWhite, path);
+                    }
+                    else
+                    {
+                        await _imageExporter.ExportPngAsync(subject, path);
+                    }
                     break;
 
                 case ExportBackgroundMode.SolidColor:
                 {
                     var colorBgr = new Vec3b(ExportSolidColor.B, ExportSolidColor.G, ExportSolidColor.R);
                     using var composited = BackgroundCompositingService.CompositeOntoColor(subject, colorBgr);
-                    await ExportBgrAsPngAsync(composited, path);
+                    await ExportBgrAsAsync(composited, path, format);
                     break;
                 }
 
@@ -136,7 +193,7 @@ public partial class DocumentViewModel
                     }
                     using var background = await _imageLoader.LoadAsync(ExportBackgroundImagePath);
                     using var composited = BackgroundCompositingService.CompositeOntoImage(subject, background.FullBgr);
-                    await ExportBgrAsPngAsync(composited, path);
+                    await ExportBgrAsAsync(composited, path, format);
                     break;
                 }
 
@@ -148,7 +205,7 @@ public partial class DocumentViewModel
                         return;
                     }
                     using var composited = BackgroundCompositingService.CompositeOntoBlurredImage(subject, _loadedImage.FullBgr, ExportBlurRadius);
-                    await ExportBgrAsPngAsync(composited, path);
+                    await ExportBgrAsAsync(composited, path, format);
                     break;
                 }
 
@@ -157,7 +214,7 @@ public partial class DocumentViewModel
                     var top = new Vec3b(ExportGradientTopColor.B, ExportGradientTopColor.G, ExportGradientTopColor.R);
                     var bottom = new Vec3b(ExportGradientBottomColor.B, ExportGradientBottomColor.G, ExportGradientBottomColor.R);
                     using var composited = BackgroundCompositingService.CompositeOntoGradient(subject, top, bottom);
-                    await ExportBgrAsPngAsync(composited, path);
+                    await ExportBgrAsAsync(composited, path, format);
                     break;
                 }
             }
@@ -172,10 +229,22 @@ public partial class DocumentViewModel
         }
     }
 
-    private async Task ExportBgrAsPngAsync(Mat bgr, string path)
+    private async Task ExportBgrAsAsync(Mat bgr, string path, ExportFormat format)
     {
-        using var bgra = bgr.ToBgra();
-        await _imageExporter.ExportPngAsync(bgra, path);
+        if (format == ExportFormat.Jpeg)
+        {
+            await ExportBgrAsJpgAsync(bgr, path);
+        }
+        else
+        {
+            using var bgra = bgr.ToBgra();
+            await _imageExporter.ExportPngAsync(bgra, path);
+        }
+    }
+
+    private async Task ExportBgrAsJpgAsync(Mat bgr, string path)
+    {
+        await _imageExporter.ExportJpgAsync(bgr, path);
     }
 
     [RelayCommand]

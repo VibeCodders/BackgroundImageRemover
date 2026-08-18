@@ -31,6 +31,12 @@ public class BatchProcessingServiceTests
             ExportedPaths.Add(filePath);
             return Task.CompletedTask;
         }
+
+        public Task ExportJpgAsync(Mat bgr, string filePath, int quality = 95, CancellationToken ct = default)
+        {
+            ExportedPaths.Add(filePath);
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeStrategy : IBackgroundRemovalStrategy

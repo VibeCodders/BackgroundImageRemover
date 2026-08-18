@@ -5,6 +5,9 @@ namespace BackgroundImageRemover.Services.ImageIo;
 public interface IImageExportService
 {
     Task ExportPngAsync(Mat bgra, string filePath, CancellationToken ct = default);
+
+    /// <summary>Writes a JPEG (BGR input; the caller composites any transparency first).</summary>
+    Task ExportJpgAsync(Mat bgr, string filePath, int quality = 95, CancellationToken ct = default);
 }
 
 public sealed class ImageExportService : IImageExportService
@@ -19,6 +22,26 @@ public sealed class ImageExportService : IImageExportService
                 if (!Cv2.ImWrite(filePath, clone))
                 {
                     throw new InvalidOperationException($"Could not write PNG file: {filePath}");
+                }
+            }
+            finally
+            {
+                clone.Dispose();
+            }
+        }, ct);
+    }
+
+    public Task ExportJpgAsync(Mat bgr, string filePath, int quality = 95, CancellationToken ct = default)
+    {
+        var clone = bgr.Clone();
+        return Task.Run(() =>
+        {
+            try
+            {
+                if (!Cv2.ImWrite(filePath, clone,
+                        new[] { new ImageEncodingParam(ImwriteFlags.JpegQuality, Math.Clamp(quality, 1, 100)) }))
+                {
+                    throw new InvalidOperationException($"Could not write JPEG file: {filePath}");
                 }
             }
             finally

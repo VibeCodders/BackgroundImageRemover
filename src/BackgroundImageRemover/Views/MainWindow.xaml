@@ -13,6 +13,7 @@
         <KeyBinding Key="Z" Modifiers="Control" Command="{Binding SelectedDocument.UndoCommand}" />
         <KeyBinding Key="Y" Modifiers="Control" Command="{Binding SelectedDocument.RedoCommand}" />
         <KeyBinding Key="V" Modifiers="Control" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" />
+        <KeyBinding Key="C" Modifiers="Control+Shift" Command="{Binding SelectedDocument.CopyToClipboardCommand}" />
         <KeyBinding Key="N" Modifiers="Control" Command="{Binding NewProjectCommand}" />
         <KeyBinding Key="O" Modifiers="Control" Command="{Binding OpenProjectCommand}" />
         <KeyBinding Key="Return" Command="{Binding SelectedDocument.ApplyCommand}" />
@@ -119,6 +120,7 @@
                 <MenuItem Header="_Redo" Command="{Binding SelectedDocument.RedoCommand}" InputGestureText="Ctrl+Y" />
                 <Separator />
                 <MenuItem Header="_Paste image" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" InputGestureText="Ctrl+V" />
+                <MenuItem Header="_Copy cutout" Command="{Binding SelectedDocument.CopyToClipboardCommand}" InputGestureText="Ctrl+Shift+C" />
             </MenuItem>
         </Menu>
 

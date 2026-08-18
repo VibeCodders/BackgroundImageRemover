@@ -5,8 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:BackgroundImageRemover.Views"
         xmlns:vm="clr-namespace:BackgroundImageRemover.ViewModels"
+        xmlns:services="clr-namespace:BackgroundImageRemover.Services.Localization"
         mc:Ignorable="d"
         Title="{Binding SelectedDocument.WindowTitle, FallbackValue='Image Editor'}"
+        Background="{DynamicResource Theme.WindowBackground}"
         Closing="MainWindow_Closing"
         Height="800" Width="1360" WindowState="Maximized">
     <Window.InputBindings>
@@ -27,6 +29,7 @@
         <KeyBinding Key="Tab" Modifiers="Control+Shift" Command="{Binding PreviousTabCommand}" />
         <KeyBinding Key="D" Modifiers="Control+Shift" Command="{Binding DuplicateTabCommand}" CommandParameter="{Binding SelectedDocument}" />
         <KeyBinding Key="P" Modifiers="Control+Shift" Command="{Binding SelectedDocument.CopyFilePathCommand}" />
+        <KeyBinding Key="OemComma" Modifiers="Control" Command="{Binding ShowPreferencesCommand}" />
     </Window.InputBindings>
 
     <Window.Resources>
@@ -96,18 +99,18 @@
     </Window.Resources>
 
     <DockPanel>
-        <Menu DockPanel.Dock="Top" Background="#FFF5F6F8" BorderBrush="#FFDDDDDD" BorderThickness="0,0,0,1" Padding="4,2">
-            <MenuItem Header="_File">
-                <MenuItem Header="_Open image..." Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
-                <MenuItem Header="Open in _new tab..." Command="{Binding NewTabCommand}" />
-                <MenuItem Header="Open _project..." Command="{Binding OpenProjectCommand}" InputGestureText="Ctrl+O" />
-                <MenuItem Header="_Duplicate tab" Command="{Binding DuplicateTabCommand}" CommandParameter="{Binding SelectedDocument}" InputGestureText="Ctrl+Shift+D" />
-                <MenuItem Header="Show _in Explorer" Command="{Binding SelectedDocument.RevealSourceFileInExplorerCommand}" />
+        <Menu DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1" Padding="4,2">
+            <MenuItem Header="{Binding [File], Source={x:Static services:LocalizationService.Instance}}">
+                <MenuItem Header="{Binding [OpenImage], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
+                <MenuItem Header="{Binding [OpenNewTab], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding NewTabCommand}" />
+                <MenuItem Header="{Binding [OpenProject], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding OpenProjectCommand}" InputGestureText="Ctrl+O" />
+                <MenuItem Header="{Binding [DuplicateTab], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding DuplicateTabCommand}" CommandParameter="{Binding SelectedDocument}" InputGestureText="Ctrl+Shift+D" />
+                <MenuItem Header="{Binding [ShowInExplorer], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.RevealSourceFileInExplorerCommand}" />
                 <Separator />
-                <MenuItem Header="_Save project" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+S" />
-                <MenuItem Header="Save project _as..." Command="{Binding SelectedDocument.SaveProjectAsCommand}" InputGestureText="Ctrl+Shift+S" />
+                <MenuItem Header="{Binding [SaveProject], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+S" />
+                <MenuItem Header="{Binding [SaveProjectAs], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.SaveProjectAsCommand}" InputGestureText="Ctrl+Shift+S" />
                 <Separator />
-                <MenuItem Header="_Recent" ItemsSource="{Binding RecentFiles}" SubmenuOpened="RecentMenu_SubmenuOpened">
+                <MenuItem Header="{Binding [Recent], Source={x:Static services:LocalizationService.Instance}}" ItemsSource="{Binding RecentFiles}" SubmenuOpened="RecentMenu_SubmenuOpened">
                     <MenuItem.ItemContainerStyle>
                         <Style TargetType="MenuItem">
                             <Setter Property="Header" Value="{Binding}" />
@@ -116,7 +119,7 @@
                         </Style>
                     </MenuItem.ItemContainerStyle>
                 </MenuItem>
-                <MenuItem Header="Recent _projects" ItemsSource="{Binding RecentProjects}" SubmenuOpened="RecentProjectsMenu_SubmenuOpened">
+                <MenuItem Header="{Binding [RecentProjects], Source={x:Static services:LocalizationService.Instance}}" ItemsSource="{Binding RecentProjects}" SubmenuOpened="RecentProjectsMenu_SubmenuOpened">
                     <MenuItem.ItemContainerStyle>
                         <Style TargetType="MenuItem">
                             <Setter Property="Header" Value="{Binding}" />
@@ -126,22 +129,24 @@
                     </MenuItem.ItemContainerStyle>
                 </MenuItem>
                 <Separator />
-                <MenuItem Header="Clear recent files" Command="{Binding ClearRecentFilesCommand}" />
-                <MenuItem Header="Clear recent projects" Command="{Binding ClearRecentProjectsCommand}" />
-            </MenuItem>
-            <MenuItem Header="_Edit">
-                <MenuItem Header="_Undo" Command="{Binding SelectedDocument.UndoCommand}" InputGestureText="Ctrl+Z" />
-                <MenuItem Header="_Redo" Command="{Binding SelectedDocument.RedoCommand}" InputGestureText="Ctrl+Y" />
+                <MenuItem Header="{Binding [ClearRecentFiles], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding ClearRecentFilesCommand}" />
+                <MenuItem Header="{Binding [ClearRecentProjects], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding ClearRecentProjectsCommand}" />
                 <Separator />
-                <MenuItem Header="_Paste image" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" InputGestureText="Ctrl+V" />
-                <MenuItem Header="_Copy cutout" Command="{Binding SelectedDocument.CopyToClipboardCommand}" InputGestureText="Ctrl+Shift+C" />
-                <MenuItem Header="Copy _file path" Command="{Binding SelectedDocument.CopyFilePathCommand}" InputGestureText="Ctrl+Shift+P" />
-                <Separator />
-                <MenuItem Header="_Export PNG (no crop)" Command="{Binding SelectedDocument.ExportCommand}" InputGestureText="Ctrl+E" />
-                <MenuItem Header="Export _JPG (no crop)" Command="{Binding SelectedDocument.ExportJpgCommand}" InputGestureText="Ctrl+Shift+E" />
+                <MenuItem Header="{Binding [Preferences], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding ShowPreferencesCommand}" InputGestureText="Ctrl+," />
             </MenuItem>
-            <MenuItem Header="_Help">
-                <MenuItem Header="_About Background Image Remover" Click="About_Click" />
+            <MenuItem Header="{Binding [Edit], Source={x:Static services:LocalizationService.Instance}}">
+                <MenuItem Header="{Binding [Undo], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.UndoCommand}" InputGestureText="Ctrl+Z" />
+                <MenuItem Header="{Binding [Redo], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.RedoCommand}" InputGestureText="Ctrl+Y" />
+                <Separator />
+                <MenuItem Header="{Binding [PasteImage], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" InputGestureText="Ctrl+V" />
+                <MenuItem Header="{Binding [CopyCutout], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.CopyToClipboardCommand}" InputGestureText="Ctrl+Shift+C" />
+                <MenuItem Header="{Binding [CopyFilePath], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.CopyFilePathCommand}" InputGestureText="Ctrl+Shift+P" />
+                <Separator />
+                <MenuItem Header="{Binding [ExportPng], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.ExportCommand}" InputGestureText="Ctrl+E" />
+                <MenuItem Header="{Binding [ExportJpg], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.ExportJpgCommand}" InputGestureText="Ctrl+Shift+E" />
+            </MenuItem>
+            <MenuItem Header="{Binding [Help], Source={x:Static services:LocalizationService.Instance}}">
+                <MenuItem Header="{Binding [About], Source={x:Static services:LocalizationService.Instance}}" Click="About_Click" />
             </MenuItem>
         </Menu>
 

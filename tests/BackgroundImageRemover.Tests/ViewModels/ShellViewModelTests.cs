@@ -26,6 +26,7 @@ public class ShellViewModelTests
         public string? ShowSaveProjectDialog(string? suggestedFileName) => throw new NotImplementedException();
         public BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => throw new NotImplementedException();
+        public void ShowPreferencesDialog() { }
     }
 
     private static ShellViewModel CreateShell(FakeSettingsService settings, IDialogService? dialogs = null)
@@ -309,6 +310,7 @@ public class ShellViewModelTests
         public string? ShowSaveProjectDialog(string? suggestedFileName) => null;
         public BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
+        public void ShowPreferencesDialog() { }
     }
 
     private sealed class FakeUncropFillService : BackgroundImageRemover.Services.Outpaint.IUncropFillService

@@ -53,6 +53,7 @@ public class UncropViewModelTests
         public virtual string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
         public virtual string? ShowSaveProjectDialog(string? suggestedFileName) => null;
         public virtual BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
+        public virtual void ShowPreferencesDialog() { }
     }
 
     /// <summary>Returns a configurable path for the PNG save dialog.</summary>

@@ -3,6 +3,7 @@ using System.Windows;
 using BackgroundImageRemover.Services.Batch;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.ImageIo;
+using BackgroundImageRemover.Services.Localization;
 using BackgroundImageRemover.Services.Logging;
 using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Outpaint;
@@ -41,20 +42,33 @@ public partial class App : Application
 
         var window = _serviceProvider.GetRequiredService<MainWindow>();
         var shell = _serviceProvider.GetRequiredService<ShellViewModel>();
+        var settings = _serviceProvider.GetRequiredService<ISettingsService>();
+
+        // Apply the persisted theme and language before the window is shown.
+        ThemeManager.Apply(settings.Current.Theme);
+        LocalizationService.Instance.Language = settings.Current.Language;
 
         // Open files passed on the command line (e.g. double-clicking a .ibrproj or an image
-        // once the OS associates the extension with this app).
+        // once the OS associates the extension with this app). Without arguments, optionally
+        // reopen the last session's files/projects.
         var startupPaths = e.Args.Where(File.Exists).ToArray();
-        if (startupPaths.Length > 0)
+        window.Loaded += async (_, _) =>
         {
-            window.Loaded += async (_, _) =>
+            var paths = startupPaths.Length > 0
+                ? startupPaths
+                : settings.Current.ReopenLastSession
+                    ? settings.Current.RecentFiles
+                        .Concat(settings.Current.RecentProjects)
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Where(File.Exists)
+                        .Take(5)
+                    : Array.Empty<string>();
+
+            foreach (var path in paths)
             {
-                foreach (var path in startupPaths)
-                {
-                    await shell.OpenInNewTabAsync(path);
-                }
-            };
-        }
+                await shell.OpenInNewTabAsync(path);
+            }
+        };
 
         window.Show();
     }

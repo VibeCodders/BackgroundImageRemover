@@ -78,6 +78,10 @@ public partial class ShellViewModel
         await copy.LoadFromSnapshotAsync(snapshot, doc.Title + " (copy)");
     }
 
+    /// <summary>Opens the Preferences dialog (theme, language, startup behavior).</summary>
+    [RelayCommand]
+    private void ShowPreferences() => _dialogs.ShowPreferencesDialog();
+
     [RelayCommand]
     private void ClearRecentFiles()
     {

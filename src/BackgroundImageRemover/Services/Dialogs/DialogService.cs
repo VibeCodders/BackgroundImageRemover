@@ -1,5 +1,6 @@
 using System.Windows;
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Settings;
 using Microsoft.Win32;
 
 namespace BackgroundImageRemover.Services.Dialogs;
@@ -21,10 +22,18 @@ public interface IDialogService
     string? ShowSaveProjectDialog(string? suggestedFileName);
     BatchExportOptions? ShowBatchOptionsDialog();
     CloseDocumentResult ConfirmCloseDocument(string documentName);
+    void ShowPreferencesDialog();
 }
 
 public sealed class DialogService : IDialogService
 {
+    private readonly ISettingsService _settings;
+
+    public DialogService(ISettingsService settings)
+    {
+        _settings = settings;
+    }
+
     public string? ShowOpenImageDialog()
     {
         var dialog = new OpenFileDialog
@@ -112,5 +121,10 @@ public sealed class DialogService : IDialogService
             MessageBoxResult.No => CloseDocumentResult.Discard,
             _ => CloseDocumentResult.Cancel
         };
+    }
+
+    public void ShowPreferencesDialog()
+    {
+        new Views.PreferencesWindow(_settings).ShowDialog();
     }
 }

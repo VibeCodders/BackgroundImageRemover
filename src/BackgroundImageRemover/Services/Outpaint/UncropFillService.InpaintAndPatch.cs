@@ -15,36 +15,74 @@ public sealed partial class UncropFillService
         CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        using var expanded = ExpandCanvas(sourceBgr, padding, out var mask);
-        using (mask)
+
+        int totalW = sourceBgr.Width + padding.Left + padding.Right;
+        int totalH = sourceBgr.Height + padding.Top + padding.Bottom;
+
+        // Step 1: build the expanded canvas from a plausible prior. OpenCV inpainting alone
+        // smears when the unknown region is large, so the new area starts as a mirrored
+        // continuation of the image (or the sampled edge color when requested). Inpainting is
+        // then only used to reconcile the seam, keeping the outer texture crisp.
+        using var expanded = new Mat();
+        if (preFillEdgeAverage)
         {
-            ct.ThrowIfCancellationRequested();
-            if (preFillEdgeAverage)
-            {
-                var edgeColor = SampleEdgeAverageColor(sourceBgr);
-                FillBorderRegions(expanded, padding, sourceBgr.Size(), edgeColor);
-            }
-
-            var result = new Mat();
-            var cvMethod = method == UncropInpaintMethod.Telea ? InpaintMethod.Telea : InpaintMethod.NS;
-            double radius = Math.Max(1.0, Math.Min(100.0, inpaintRadius));
-            Cv2.Inpaint(expanded, mask, result, inpaintRadius: radius, cvMethod);
-
-            ct.ThrowIfCancellationRequested();
-
-            if (blendMargin <= 0)
-            {
-                using var interiorRoi = new Mat(result, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
-                sourceBgr.CopyTo(interiorRoi);
-            }
-            else
-            {
-                BlendInteriorWithFeather(result, sourceBgr, padding, blendMargin, ct);
-            }
-
-            ct.ThrowIfCancellationRequested();
-            return result;
+            Cv2.CopyMakeBorder(sourceBgr, expanded, padding.Top, padding.Bottom, padding.Left, padding.Right,
+                BorderTypes.Constant, Scalar.All(0));
+            FillBorderRegions(expanded, padding, sourceBgr.Size(), SampleEdgeAverageColor(sourceBgr));
         }
+        else
+        {
+            Cv2.CopyMakeBorder(sourceBgr, expanded, padding.Top, padding.Bottom, padding.Left, padding.Right,
+                BorderTypes.Reflect101);
+        }
+
+        using var newAreaMask = new Mat(totalH, totalW, MatType.CV_8UC1, Scalar.All(255));
+        using (var innerRoi = new Mat(newAreaMask, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height)))
+        {
+            innerRoi.SetTo(Scalar.All(0));
+        }
+
+        ct.ThrowIfCancellationRequested();
+
+        var cvMethod = method == UncropInpaintMethod.Telea ? InpaintMethod.Telea : InpaintMethod.NS;
+        double radius = Math.Max(1.0, Math.Min(100.0, inpaintRadius));
+
+        // Step 2: restrict inpainting to a band hugging the interior edge. The mirrored region
+        // beyond that band already looks like content, so it is preserved instead of smeared.
+        using var interior = new Mat(totalH, totalW, MatType.CV_8UC1, Scalar.All(0));
+        using (var innerRoi = new Mat(interior, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height)))
+        {
+            innerRoi.SetTo(Scalar.All(255));
+        }
+
+        using var nonInterior = new Mat();
+        Cv2.BitwiseNot(interior, nonInterior);
+
+        int bandWidth = Math.Max(1, (int)Math.Ceiling(radius) * 2);
+        using var distToInterior = new Mat();
+        Cv2.DistanceTransform(nonInterior, distToInterior, DistanceTypes.L2, DistanceTransformMasks.Mask3);
+        using var seamBand = new Mat();
+        Cv2.InRange(distToInterior, new Scalar(0.5), new Scalar(bandWidth), seamBand);
+        Cv2.BitwiseAnd(seamBand, newAreaMask, seamBand);
+
+        var result = new Mat();
+        Cv2.Inpaint(expanded, seamBand, result, inpaintRadius: radius, cvMethod);
+
+        ct.ThrowIfCancellationRequested();
+
+        // Step 3: restore the untouched original interior, feathering the seam when requested.
+        if (blendMargin <= 0)
+        {
+            using var interiorRoi = new Mat(result, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
+            sourceBgr.CopyTo(interiorRoi);
+        }
+        else
+        {
+            BlendInteriorWithFeather(result, sourceBgr, padding, blendMargin, ct);
+        }
+
+        ct.ThrowIfCancellationRequested();
+        return result;
     }
 
     public Mat FillPatchSynthesis(

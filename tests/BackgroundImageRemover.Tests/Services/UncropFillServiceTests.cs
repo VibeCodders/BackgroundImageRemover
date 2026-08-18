@@ -179,6 +179,31 @@ public class UncropFillServiceTests
     }
 
     [Fact]
+    public void FillInpaint_DefaultPath_SeedsFarRegionFromMirrorPrior_AndPreservesInterior()
+    {
+        var service = new UncropFillService();
+        using var source = new Mat(40, 60, MatType.CV_8UC3, new Scalar(120, 120, 120));
+        Cv2.Circle(source, new Point(30, 20), 10, new Scalar(200, 50, 50), thickness: -1);
+        var padding = new CanvasPadding(20, 20, 20, 20);
+
+        using var result = service.FillInpaint(source, padding, UncropInpaintMethod.Telea, inpaintRadius: 8, blendMargin: 0);
+
+        Assert.Equal(100, result.Width);
+        Assert.Equal(80, result.Height);
+
+        using var centerRoi = new Mat(result, new Rect(padding.Left, padding.Top, source.Width, source.Height));
+        Assert.True(MatsAreEqual(centerRoi, source));
+
+        // Far from the interior (outside the inpaint seam band) the mirrored prior should
+        // remain, so the corner is not the black placeholder the old implementation produced.
+        using var cornerRoi = new Mat(result, new Rect(0, 0, 10, 10));
+        var mean = Cv2.Mean(cornerRoi);
+        Assert.InRange(mean.Val0, 100, 140);
+        Assert.InRange(mean.Val1, 100, 140);
+        Assert.InRange(mean.Val2, 100, 140);
+    }
+
+    [Fact]
     public void FillInpaint_WithPreFill_ReturnsExpectedSize_AndPreservesInterior()
     {
         var service = new UncropFillService();

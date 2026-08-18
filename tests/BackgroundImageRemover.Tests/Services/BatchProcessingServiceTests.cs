@@ -1,3 +1,4 @@
+using System.IO;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Batch;
 using BackgroundImageRemover.Services.ImageIo;
@@ -20,6 +21,12 @@ public class BatchProcessingServiceTests
             }
             return Task.FromResult(new LoadedImage(filePath, new Mat(4, 4, MatType.CV_8UC3, Scalar.All(128))));
         }
+
+        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
+            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, Scalar.All(128))));
+
+        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
+            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, Scalar.All(128))));
     }
 
     private sealed class FakeImageExportService : IImageExportService
@@ -37,6 +44,12 @@ public class BatchProcessingServiceTests
         {
             ExportedPaths.Add(filePath);
             JpegQualities.Add(quality);
+            return Task.CompletedTask;
+        }
+
+        public Task ExportWebpAsync(Mat bgra, string filePath, int quality = 90, CancellationToken ct = default)
+        {
+            ExportedPaths.Add(filePath);
             return Task.CompletedTask;
         }
     }
@@ -122,6 +135,86 @@ public class BatchProcessingServiceTests
 
         Assert.Single(exporter.ExportedPaths);
         Assert.EndsWith("_cutout.png", exporter.ExportedPaths[0], StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RunAsync_WithSkipExisting_SkipsFilesWhoseOutputAlreadyExists()
+    {
+        var loader = new FakeImageLoaderService();
+        var exporter = new FakeImageExportService();
+        var service = new BatchProcessingService(loader, exporter);
+        var outputDir = Path.Combine(Path.GetTempPath(), $"batch_skip_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(outputDir);
+        try
+        {
+            // b.png already has a cutout in the output folder; a.png and c.png do not.
+            File.WriteAllText(Path.Combine(outputDir, "b_cutout.png"), "existing");
+            var options = new BatchExportOptions { ExportJpeg = false, SkipExisting = true };
+
+            await service.RunAsync(
+                new[] { "a.png", "b.png", "c.png" }, new FakeStrategy(), new StrategyContext(), outputDir,
+                progress: null, CancellationToken.None, options);
+
+            Assert.Equal(2, exporter.ExportedPaths.Count);
+            Assert.DoesNotContain(exporter.ExportedPaths, p => p.EndsWith("b_cutout.png", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            Directory.Delete(outputDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_WithSkipExisting_ReportsSkippedCountInFinalProgress()
+    {
+        var loader = new FakeImageLoaderService();
+        var exporter = new FakeImageExportService();
+        var service = new BatchProcessingService(loader, exporter);
+        var outputDir = Path.Combine(Path.GetTempPath(), $"batch_skip_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(outputDir);
+        try
+        {
+            File.WriteAllText(Path.Combine(outputDir, "a_cutout.png"), "existing");
+            File.WriteAllText(Path.Combine(outputDir, "b_cutout.png"), "existing");
+            var reported = new List<BatchProgress>();
+
+            await service.RunAsync(
+                new[] { "a.png", "b.png", "c.png" }, new FakeStrategy(), new StrategyContext(), outputDir,
+                new CollectingProgress(reported), CancellationToken.None, new BatchExportOptions { SkipExisting = true });
+
+            var final = reported.Last();
+            Assert.Equal(2, final.Skipped);
+            Assert.Equal(0, final.Failed);
+            Assert.Single(exporter.ExportedPaths); // only c.png was processed
+        }
+        finally
+        {
+            Directory.Delete(outputDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_WithoutSkipExisting_ReExportsFilesThatAlreadyHaveOutput()
+    {
+        var loader = new FakeImageLoaderService();
+        var exporter = new FakeImageExportService();
+        var service = new BatchProcessingService(loader, exporter);
+        var outputDir = Path.Combine(Path.GetTempPath(), $"batch_skip_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(outputDir);
+        try
+        {
+            File.WriteAllText(Path.Combine(outputDir, "a_cutout.png"), "existing");
+
+            await service.RunAsync(
+                new[] { "a.png" }, new FakeStrategy(), new StrategyContext(), outputDir,
+                progress: null, CancellationToken.None);
+
+            Assert.Single(exporter.ExportedPaths); // overwritten even though the output exists
+        }
+        finally
+        {
+            Directory.Delete(outputDir, true);
+        }
     }
 
     [Fact]

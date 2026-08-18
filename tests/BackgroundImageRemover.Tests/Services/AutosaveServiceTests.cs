@@ -266,6 +266,12 @@ public class AutosaveServiceTests
     {
         public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
             => Task.FromResult(new LoadedImage(path, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
+
+        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
+            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
+
+        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
+            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
     }
 
     private sealed class FakeImageExportService : IImageExportService
@@ -274,6 +280,8 @@ public class AutosaveServiceTests
             => Task.CompletedTask;
         public Task ExportJpgAsync(Mat bgr, string destinationPath, int quality = 95, CancellationToken ct = default)
             => Task.CompletedTask;
+        public Task ExportWebpAsync(Mat bgra, string destinationPath, int quality = 90, CancellationToken ct = default)
+            => Task.CompletedTask;
     }
 
     private sealed class FakeDialogService : IDialogService
@@ -281,6 +289,7 @@ public class AutosaveServiceTests
         public string? ShowOpenImageDialog() => null;
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
         public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
+        public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => null;
         public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
         public string? ShowOpenProjectDialog() => null;
         public string? ShowSaveProjectDialog(string? suggestedFileName) => null;

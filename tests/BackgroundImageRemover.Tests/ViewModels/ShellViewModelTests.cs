@@ -21,6 +21,7 @@ public class ShellViewModelTests
         public string? ShowOpenImageDialog() => throw new NotImplementedException();
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => throw new NotImplementedException();
         public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => throw new NotImplementedException();
+        public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => throw new NotImplementedException();
         public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => throw new NotImplementedException();
         public string? ShowOpenProjectDialog() => throw new NotImplementedException();
         public string? ShowSaveProjectDialog(string? suggestedFileName) => throw new NotImplementedException();
@@ -306,6 +307,7 @@ public class ShellViewModelTests
         public string? ShowOpenImageDialog() => _chosenPath;
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
         public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
+        public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => null;
         public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
         public string? ShowOpenProjectDialog() => null;
         public string? ShowSaveProjectDialog(string? suggestedFileName) => null;
@@ -344,6 +346,12 @@ public class ShellViewModelTests
     {
         public Task<Models.LoadedImage> LoadAsync(string path, CancellationToken ct = default)
             => Task.FromResult(new Models.LoadedImage(path, new OpenCvSharp.Mat(1, 1, OpenCvSharp.MatType.CV_8UC3)));
+
+        public Task<Models.LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
+            => Task.FromResult(new Models.LoadedImage(sourceName, new OpenCvSharp.Mat(1, 1, OpenCvSharp.MatType.CV_8UC3)));
+
+        public Task<Models.LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
+            => Task.FromResult(new Models.LoadedImage(sourceName, new OpenCvSharp.Mat(1, 1, OpenCvSharp.MatType.CV_8UC3)));
     }
 
     private sealed class FakeImageExportService : BackgroundImageRemover.Services.ImageIo.IImageExportService
@@ -352,6 +360,9 @@ public class ShellViewModelTests
             => Task.CompletedTask;
 
         public Task ExportJpgAsync(OpenCvSharp.Mat bgr, string destinationPath, int quality = 95, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task ExportWebpAsync(OpenCvSharp.Mat bgra, string destinationPath, int quality = 90, CancellationToken ct = default)
             => Task.CompletedTask;
     }
 

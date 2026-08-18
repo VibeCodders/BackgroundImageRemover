@@ -110,6 +110,51 @@ public class DocumentViewModelAdjustmentsTests
     }
 
     [Fact]
+    public async Task ExportWebp_Transparent_UsesConfiguredQualityAndWritesWebp()
+    {
+        var exporter = new RecordingImageExportService();
+        var doc = CreateDocument(new AlphaImageLoader(), exporter, new FakeDialogServiceWithWebpPath("out.webp"));
+        await doc.LoadImageAsync("cutout.png");
+        Assert.True(doc.HasWorkingResult); // the loaded cutout is adopted as the working result
+
+        doc.ExportBackgroundMode = ExportBackgroundMode.Transparent;
+        doc.ExportJpegQuality = 80;
+        await doc.ExportWebpCommand.ExecuteAsync(null);
+
+        Assert.NotNull(exporter.LastWebpPath);
+        Assert.Equal(80, exporter.LastWebpQuality);
+        Assert.Equal("out.webp", doc.LastExportedFilePath);
+    }
+
+    [Fact]
+    public async Task ExportWebp_WithSolidBackground_CompositesAndWritesWebp()
+    {
+        var exporter = new RecordingImageExportService();
+        var doc = CreateDocument(new AlphaImageLoader(), exporter, new FakeDialogServiceWithWebpPath("out.webp"));
+        await doc.LoadImageAsync("cutout.png");
+
+        doc.ExportBackgroundMode = ExportBackgroundMode.SolidColor;
+        doc.ExportSolidColor = System.Windows.Media.Colors.Green;
+        await doc.ExportWebpCommand.ExecuteAsync(null);
+
+        // The solid-color branch runs the cutout through the shared BGR->WebP path.
+        Assert.NotNull(exporter.LastWebpPath);
+    }
+
+    [Fact]
+    public async Task ExportWebp_Cropped_TrimsAndWritesWebp()
+    {
+        var exporter = new RecordingImageExportService();
+        var doc = CreateDocument(new AlphaImageLoader(), exporter, new FakeDialogServiceWithWebpPath("out.webp"));
+        await doc.LoadImageAsync("cutout.png");
+
+        await doc.ExportWebpCroppedCommand.ExecuteAsync(null);
+
+        Assert.NotNull(exporter.LastWebpPath);
+        Assert.Equal("out.webp", doc.LastExportedFilePath);
+    }
+
+    [Fact]
     public async Task Batch_RemembersInputAndOutputFoldersInSettings()
     {
         var inputDir = Path.Combine(Path.GetTempPath(), $"batch_in_{Guid.NewGuid():N}");
@@ -340,6 +385,8 @@ public class DocumentViewModelAdjustmentsTests
     {
         public string? LastJpgPath { get; private set; }
         public int LastJpgQuality { get; private set; }
+        public string? LastWebpPath { get; private set; }
+        public int LastWebpQuality { get; private set; }
 
         public Task ExportPngAsync(Mat imageBgra, string destinationPath, CancellationToken ct = default)
             => Task.CompletedTask;
@@ -348,6 +395,13 @@ public class DocumentViewModelAdjustmentsTests
         {
             LastJpgPath = destinationPath;
             LastJpgQuality = quality;
+            return Task.CompletedTask;
+        }
+
+        public Task ExportWebpAsync(Mat bgra, string destinationPath, int quality = 90, CancellationToken ct = default)
+        {
+            LastWebpPath = destinationPath;
+            LastWebpQuality = quality;
             return Task.CompletedTask;
         }
     }
@@ -360,6 +414,14 @@ public class DocumentViewModelAdjustmentsTests
         public override string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => _jpgPath;
     }
 
+    private sealed class FakeDialogServiceWithWebpPath : FakeDialogService
+    {
+        private readonly string? _webpPath;
+        public FakeDialogServiceWithWebpPath(string? webpPath) => _webpPath = webpPath;
+
+        public override string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => _webpPath;
+    }
+
     private sealed class AlphaImageLoader : IImageLoaderService
     {
         public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
@@ -368,12 +430,32 @@ public class DocumentViewModelAdjustmentsTests
             var alpha = new Mat(4, 4, MatType.CV_8UC1, new Scalar(0));
             return Task.FromResult(new LoadedImage(path, bgr, alpha));
         }
+
+        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
+        {
+            var bgr = new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30));
+            var alpha = new Mat(4, 4, MatType.CV_8UC1, new Scalar(0));
+            return Task.FromResult(new LoadedImage(sourceName, bgr, alpha));
+        }
+
+        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
+        {
+            var bgr = new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30));
+            var alpha = new Mat(4, 4, MatType.CV_8UC1, new Scalar(0));
+            return Task.FromResult(new LoadedImage(sourceName, bgr, alpha));
+        }
     }
 
     private sealed class PlainImageLoader : IImageLoaderService
     {
         public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
             => Task.FromResult(new LoadedImage(path, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
+
+        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
+            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
+
+        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
+            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
     }
 
     private sealed class FakeSettingsService : ISettingsService
@@ -391,6 +473,7 @@ public class DocumentViewModelAdjustmentsTests
         public virtual string? ShowOpenImageDialog() => null;
         public virtual string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
         public virtual string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
+        public virtual string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => null;
         public virtual string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
         public virtual string? ShowOpenProjectDialog() => null;
         public virtual string? ShowSaveProjectDialog(string? suggestedFileName) => null;
@@ -404,6 +487,7 @@ public class DocumentViewModelAdjustmentsTests
     {
         public Task ExportPngAsync(Mat imageBgra, string destinationPath, CancellationToken ct = default) => Task.CompletedTask;
         public Task ExportJpgAsync(Mat bgr, string destinationPath, int quality = 95, CancellationToken ct = default) => Task.CompletedTask;
+        public Task ExportWebpAsync(Mat bgra, string destinationPath, int quality = 90, CancellationToken ct = default) => Task.CompletedTask;
     }
 
     private sealed class FakeDownscaleService : IDownscaleService

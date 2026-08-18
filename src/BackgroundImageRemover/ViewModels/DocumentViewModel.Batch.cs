@@ -87,9 +87,12 @@ public partial class DocumentViewModel
             await _batchProcessor.RunAsync(files, strategy, context, outputFolder, progress, ct, exportOptions);
 
             int failed = lastReported?.Failed ?? 0;
+            int skipped = lastReported?.Skipped ?? 0;
             string format = exportOptions.ExportJpeg ? "JPEG" : "PNG";
-            var summary = $"Batch complete: {files.Count - failed}/{files.Count} {format} image(s) exported to {outputFolder}";
-            StatusMessage = failed > 0 ? summary + $" ({failed} failed)" : summary;
+            var summary = $"Batch complete: {files.Count - failed - skipped}/{files.Count} {format} image(s) exported to {outputFolder}";
+            if (skipped > 0) summary += $" ({skipped} skipped — already exported)";
+            if (failed > 0) summary += $" ({failed} failed)";
+            StatusMessage = summary;
             LastExportedFilePath = outputFolder;
         }
         catch (OperationCanceledException)

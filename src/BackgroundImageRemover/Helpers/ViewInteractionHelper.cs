@@ -107,8 +107,8 @@ public static class ViewInteractionHelper
     }
 
     /// <summary>
-    /// Opens Explorer at the given file (selecting it) or at its containing folder, without
-    /// throwing: a failed launch is reported by returning false.
+    /// Opens Explorer at the given file (selecting it) or at its folder, without throwing: a
+    /// failed launch is reported by returning false.
     /// </summary>
     public static bool RevealInExplorer(string path)
     {
@@ -119,10 +119,21 @@ public static class ViewInteractionHelper
                 return false;
             }
 
-            string argument = File.Exists(path)
-                ? $"/select,\"{path}\""
-                : $"\"{Path.GetDirectoryName(path)}\"";
-            Process.Start(new ProcessStartInfo("explorer.exe", argument) { UseShellExecute = true });
+            if (File.Exists(path))
+            {
+                // Select the file inside its folder.
+                Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true });
+            }
+            else if (Directory.Exists(path))
+            {
+                // Open the folder itself (e.g. the last batch output folder).
+                Process.Start(new ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true });
+            }
+            else
+            {
+                // Path no longer exists: open the containing folder instead.
+                Process.Start(new ProcessStartInfo("explorer.exe", $"\"{Path.GetDirectoryName(path)}\"") { UseShellExecute = true });
+            }
             return true;
         }
         catch

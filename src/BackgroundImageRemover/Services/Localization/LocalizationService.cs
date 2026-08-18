@@ -38,6 +38,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
         ["CopyFilePath"] = "Copy _file path",
         ["ExportPng"] = "_Export PNG (no crop)",
         ["ExportJpg"] = "Export _JPG (no crop)",
+        ["ExportWebp"] = "Export _WebP (no crop)",
         ["Preferences"] = "_Preferences...",
         ["About"] = "_About Background Image Remover",
         ["PreferencesTitle"] = "Preferences"
@@ -66,6 +67,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
         ["CopyFilePath"] = "Copia _percorso file",
         ["ExportPng"] = "_Esporta PNG (senza crop)",
         ["ExportJpg"] = "Esporta _JPG (senza crop)",
+        ["ExportWebp"] = "Esporta _WebP (senza crop)",
         ["Preferences"] = "_Preferenze...",
         ["About"] = "_Informazioni su Background Image Remover",
         ["PreferencesTitle"] = "Preferenze"

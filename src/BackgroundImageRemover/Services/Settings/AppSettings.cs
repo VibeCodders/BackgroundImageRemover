@@ -50,4 +50,13 @@ public sealed class AppSettings
 
     /// <summary>Last folder chosen for batch output, offered as the default next time.</summary>
     public string? LastBatchOutputFolder { get; set; }
+
+    /// <summary>Last batch output format chosen (a <c>BatchOutputKind</c> enum name), restored next time.</summary>
+    public string? LastBatchOutputKind { get; set; }
+
+    /// <summary>Last batch JPEG quality, restored next time.</summary>
+    public int LastBatchJpegQuality { get; set; } = 95;
+
+    /// <summary>Last "skip existing outputs" choice for the batch dialog.</summary>
+    public bool LastBatchSkipExisting { get; set; }
 }

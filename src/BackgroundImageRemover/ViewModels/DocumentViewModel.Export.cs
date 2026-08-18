@@ -107,6 +107,14 @@ public partial class DocumentViewModel
     [RelayCommand(CanExecute = nameof(CanExport))]
     private Task ExportJpgCroppedAsync() => ExportCoreAsync(crop: true, ExportFormat.Jpeg);
 
+    /// <summary>Exports the full-size cutout as a WebP (transparency preserved, smaller than PNG).</summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private Task ExportWebpAsync() => ExportCoreAsync(crop: false, ExportFormat.Webp);
+
+    /// <summary>Exports the trimmed cutout as a WebP (transparent borders removed).</summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private Task ExportWebpCroppedAsync() => ExportCoreAsync(crop: true, ExportFormat.Webp);
+
     /// <summary>Copies the full-resolution cutout to the clipboard as a PNG image.</summary>
     [RelayCommand(CanExecute = nameof(CanExport))]
     private async Task CopyToClipboardAsync()
@@ -137,7 +145,8 @@ public partial class DocumentViewModel
     private enum ExportFormat
     {
         Png,
-        Jpeg
+        Jpeg,
+        Webp
     }
 
     /// <summary>
@@ -156,13 +165,21 @@ public partial class DocumentViewModel
         var baseName = _loadedImage is not null
             ? Path.GetFileNameWithoutExtension(_loadedImage.FilePath)
             : "cutout";
-        var extension = format == ExportFormat.Jpeg ? ".jpg" : ".png";
+        var extension = format switch
+        {
+            ExportFormat.Jpeg => ".jpg",
+            ExportFormat.Webp => ".webp",
+            _ => ".png"
+        };
         var suffix = crop ? "_cropped" : "_cutout";
         var suggested = baseName + suffix + extension;
 
-        var path = format == ExportFormat.Jpeg
-            ? _dialogs.ShowSaveJpgDialog(suggested)
-            : _dialogs.ShowSavePngDialog(suggested);
+        var path = format switch
+        {
+            ExportFormat.Jpeg => _dialogs.ShowSaveJpgDialog(suggested),
+            ExportFormat.Webp => _dialogs.ShowSaveWebpDialog(suggested),
+            _ => _dialogs.ShowSavePngDialog(suggested)
+        };
         if (path is null)
         {
             return;
@@ -196,6 +213,11 @@ public partial class DocumentViewModel
                         // JPEG cannot store alpha: composite the cutout onto white.
                         using var onWhite = BackgroundCompositingService.CompositeOntoColor(subject, new Vec3b(255, 255, 255));
                         await ExportBgrAsJpgAsync(onWhite, path);
+                    }
+                    else if (format == ExportFormat.Webp)
+                    {
+                        // WebP stores alpha like PNG but is typically much smaller.
+                        await _imageExporter.ExportWebpAsync(subject, path, Math.Clamp(ExportJpegQuality, 1, 100));
                     }
                     else
                     {
@@ -259,14 +281,23 @@ public partial class DocumentViewModel
 
     private async Task ExportBgrAsAsync(Mat bgr, string path, ExportFormat format)
     {
-        if (format == ExportFormat.Jpeg)
+        switch (format)
         {
-            await ExportBgrAsJpgAsync(bgr, path);
-        }
-        else
-        {
-            using var bgra = bgr.ToBgra();
-            await _imageExporter.ExportPngAsync(bgra, path);
+            case ExportFormat.Jpeg:
+                await ExportBgrAsJpgAsync(bgr, path);
+                break;
+            case ExportFormat.Webp:
+                using (var webpBgra = bgr.ToBgra())
+                {
+                    await _imageExporter.ExportWebpAsync(webpBgra, path, Math.Clamp(ExportJpegQuality, 1, 100));
+                }
+                break;
+            default:
+                using (var bgra = bgr.ToBgra())
+                {
+                    await _imageExporter.ExportPngAsync(bgra, path);
+                }
+                break;
         }
     }
 

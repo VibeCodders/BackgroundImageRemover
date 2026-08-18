@@ -11,6 +11,9 @@ public sealed class BatchExportOptions
     /// <summary>True to write JPEG files; false writes transparent PNG cutouts.</summary>
     public bool ExportJpeg { get; set; }
 
+    /// <summary>When true, files whose output already exists are left untouched (no re-export).</summary>
+    public bool SkipExisting { get; set; }
+
     /// <summary>JPEG quality, 1..100.</summary>
     public int JpegQuality { get; set; } = 95;
 

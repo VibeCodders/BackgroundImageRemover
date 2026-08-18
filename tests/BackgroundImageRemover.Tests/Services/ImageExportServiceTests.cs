@@ -29,6 +29,30 @@ public class ImageExportServiceTests
     }
 
     [Fact]
+    public async Task ExportWebpAsync_WritesDecodableFileWithAlpha()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"export_{Guid.NewGuid():N}.webp");
+        try
+        {
+            using var bgra = new Mat(16, 24, MatType.CV_8UC4, new Scalar(10, 20, 30, 200));
+
+            await new ImageExportService().ExportWebpAsync(bgra, path);
+
+            using var decoded = Cv2.ImRead(path, ImreadModes.Unchanged);
+            Assert.False(decoded.Empty());
+            Assert.Equal(24, decoded.Width);
+            Assert.Equal(16, decoded.Height);
+            // WebP round-trips the alpha channel (unlike JPEG), which is why it can replace
+            // PNG as a smaller transparent export format.
+            Assert.Equal(4, decoded.Channels());
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public async Task ExportJpgAsync_WritesDecodableBgrFile()
     {
         var path = Path.Combine(Path.GetTempPath(), $"export_{Guid.NewGuid():N}.jpg");

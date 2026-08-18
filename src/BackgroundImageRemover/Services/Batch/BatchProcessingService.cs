@@ -7,7 +7,7 @@ using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Batch;
 
-public readonly record struct BatchProgress(int Completed, int Total, string CurrentFile, int Failed = 0);
+public readonly record struct BatchProgress(int Completed, int Total, string CurrentFile, int Failed = 0, int Skipped = 0);
 
 public interface IBatchProcessingService
 {
@@ -50,27 +50,38 @@ public sealed class BatchProcessingService : IBatchProcessingService
         Directory.CreateDirectory(outputFolder);
 
         int failed = 0;
+        int skipped = 0;
         for (int i = 0; i < inputFiles.Count; i++)
         {
             ct.ThrowIfCancellationRequested();
             string file = inputFiles[i];
-            progress?.Report(new BatchProgress(i, inputFiles.Count, file, failed));
+            string baseName = Path.GetFileNameWithoutExtension(file);
+            string outPath = Path.Combine(outputFolder, baseName + (exportOptions is { ExportJpeg: true } ? "_cutout.jpg" : "_cutout.png"));
+
+            // With SkipExisting, files whose cutout already exists are left untouched so a
+            // batch can be re-run to fill in only the missing outputs (e.g. after adding
+            // new files to the input folder).
+            if (exportOptions is { SkipExisting: true } && File.Exists(outPath))
+            {
+                skipped++;
+                progress?.Report(new BatchProgress(i + 1, inputFiles.Count, file, failed, skipped));
+                continue;
+            }
+
+            progress?.Report(new BatchProgress(i, inputFiles.Count, file, failed, skipped));
 
             try
             {
                 using var loaded = await _loader.LoadAsync(file, ct);
                 using var result = await strategy.RunFullAsync(loaded.FullBgr, context, ct);
-                string baseName = Path.GetFileNameWithoutExtension(file);
 
                 if (exportOptions is { ExportJpeg: true })
                 {
                     using var composited = CompositeForJpeg(result.Bgra, exportOptions, loaded.FullBgr);
-                    string outPath = Path.Combine(outputFolder, baseName + "_cutout.jpg");
                     await _exporter.ExportJpgAsync(composited, outPath, exportOptions.JpegQuality, ct);
                 }
                 else
                 {
-                    string outPath = Path.Combine(outputFolder, baseName + "_cutout.png");
                     await _exporter.ExportPngAsync(result.Bgra, outPath, ct);
                 }
             }
@@ -85,7 +96,7 @@ public sealed class BatchProcessingService : IBatchProcessingService
             }
         }
 
-        progress?.Report(new BatchProgress(inputFiles.Count, inputFiles.Count, string.Empty, failed));
+        progress?.Report(new BatchProgress(inputFiles.Count, inputFiles.Count, string.Empty, failed, skipped));
     }
 
     /// <summary>Composites a transparent cutout onto the requested background for JPEG output.</summary>

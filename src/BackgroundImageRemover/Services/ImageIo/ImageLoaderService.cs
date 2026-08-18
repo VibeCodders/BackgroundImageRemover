@@ -9,10 +9,8 @@ namespace BackgroundImageRemover.Services.ImageIo;
 public interface IImageLoaderService
 {
     Task<LoadedImage> LoadAsync(string filePath, CancellationToken ct = default);
-    Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-        => throw new NotImplementedException();
-    Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-        => throw new NotImplementedException();
+    Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default);
+    Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png");
 }
 
 /// <summary>

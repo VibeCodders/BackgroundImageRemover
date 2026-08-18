@@ -17,6 +17,7 @@ public interface IDialogService
     string? ShowOpenImageDialog();
     string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG");
     string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG");
+    string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP");
     string? ShowOpenFolderDialog(string title, string? initialDirectory = null);
     string? ShowOpenProjectDialog();
     string? ShowSaveProjectDialog(string? suggestedFileName);
@@ -71,6 +72,18 @@ public sealed class DialogService : IDialogService
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
+    public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP")
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = title,
+            Filter = "WebP image|*.webp",
+            FileName = suggestedFileName ?? "cutout.webp",
+            DefaultExt = ".webp"
+        };
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
     public string? ShowOpenFolderDialog(string title, string? initialDirectory = null)
     {
         var dialog = new OpenFolderDialog { Title = title };
@@ -105,7 +118,7 @@ public sealed class DialogService : IDialogService
 
     public BatchExportOptions? ShowBatchOptionsDialog()
     {
-        var dialog = new Views.BatchOptionsDialog();
+        var dialog = new Views.BatchOptionsDialog(_settings.Current);
         return dialog.ShowDialog() == true ? dialog.BuildOptions() : null;
     }
 

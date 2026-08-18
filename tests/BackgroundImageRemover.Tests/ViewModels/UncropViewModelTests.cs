@@ -51,6 +51,7 @@ public class UncropViewModelTests
         public virtual string? ShowOpenProjectDialog() => null;
         public virtual string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
         public virtual string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
+        public virtual string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP") => null;
         public virtual string? ShowSaveProjectDialog(string? suggestedFileName) => null;
         public virtual BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
         public virtual void ShowPreferencesDialog() { }
@@ -78,12 +79,21 @@ public class UncropViewModelTests
 
         public Task ExportJpgAsync(Mat bgr, string destinationPath, int quality = 95, CancellationToken ct = default)
             => Task.CompletedTask;
+
+        public Task ExportWebpAsync(Mat bgra, string destinationPath, int quality = 90, CancellationToken ct = default)
+            => Task.CompletedTask;
     }
 
     private sealed class DummyImageLoaderService : IImageLoaderService
     {
         public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
             => Task.FromResult(new LoadedImage(path, new Mat(100, 100, MatType.CV_8UC3, Scalar.All(128))));
+
+        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
+            => Task.FromResult(new LoadedImage(sourceName, new Mat(100, 100, MatType.CV_8UC3, Scalar.All(128))));
+
+        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
+            => Task.FromResult(new LoadedImage(sourceName, new Mat(100, 100, MatType.CV_8UC3, Scalar.All(128))));
     }
 
     private sealed class DummyImageExportService : IImageExportService
@@ -92,6 +102,9 @@ public class UncropViewModelTests
             => Task.CompletedTask;
 
         public Task ExportJpgAsync(Mat bgr, string destinationPath, int quality = 95, CancellationToken ct = default)
+            => Task.CompletedTask;
+
+        public Task ExportWebpAsync(Mat bgra, string destinationPath, int quality = 90, CancellationToken ct = default)
             => Task.CompletedTask;
     }
 

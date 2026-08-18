@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BackgroundImageRemover.Views;
@@ -34,6 +35,9 @@ public sealed partial class BatchOptionsViewModel : ObservableObject
     private int _jpegQuality = 95;
 
     [ObservableProperty]
+    private bool _skipExisting;
+
+    [ObservableProperty]
     private bool _isSolidPickerOpen;
 
     [ObservableProperty]
@@ -42,39 +46,66 @@ public sealed partial class BatchOptionsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBottomPickerOpen;
 
-    public BatchExportOptions BuildOptions() => OutputKind switch
+    public BatchExportOptions BuildOptions()
     {
-        BatchOutputKind.Png => new BatchExportOptions { ExportJpeg = false },
-        BatchOutputKind.JpegWhite => new BatchExportOptions
+        var options = OutputKind switch
         {
-            ExportJpeg = true,
-            JpegQuality = JpegQuality,
-            BackgroundMode = ExportBackgroundMode.SolidColor,
-            SolidColor = Colors.White
-        },
-        BatchOutputKind.JpegSolid => new BatchExportOptions
+            BatchOutputKind.Png => new BatchExportOptions { ExportJpeg = false },
+            BatchOutputKind.JpegWhite => new BatchExportOptions
+            {
+                ExportJpeg = true,
+                JpegQuality = JpegQuality,
+                BackgroundMode = ExportBackgroundMode.SolidColor,
+                SolidColor = Colors.White
+            },
+            BatchOutputKind.JpegSolid => new BatchExportOptions
+            {
+                ExportJpeg = true,
+                JpegQuality = JpegQuality,
+                BackgroundMode = ExportBackgroundMode.SolidColor,
+                SolidColor = SolidColor
+            },
+            BatchOutputKind.JpegGradient => new BatchExportOptions
+            {
+                ExportJpeg = true,
+                JpegQuality = JpegQuality,
+                BackgroundMode = ExportBackgroundMode.Gradient,
+                GradientTop = GradientTop,
+                GradientBottom = GradientBottom
+            },
+            _ => new BatchExportOptions
+            {
+                ExportJpeg = true,
+                JpegQuality = JpegQuality,
+                BackgroundMode = ExportBackgroundMode.Blur,
+                BlurRadius = 10
+            }
+        };
+        options.SkipExisting = SkipExisting;
+        return options;
+    }
+
+    /// <summary>Restores the last session's output format and quality from persisted settings.</summary>
+    public void Restore(AppSettings settings)
+    {
+        if (Enum.TryParse<BatchOutputKind>(settings.LastBatchOutputKind, out var kind))
         {
-            ExportJpeg = true,
-            JpegQuality = JpegQuality,
-            BackgroundMode = ExportBackgroundMode.SolidColor,
-            SolidColor = SolidColor
-        },
-        BatchOutputKind.JpegGradient => new BatchExportOptions
-        {
-            ExportJpeg = true,
-            JpegQuality = JpegQuality,
-            BackgroundMode = ExportBackgroundMode.Gradient,
-            GradientTop = GradientTop,
-            GradientBottom = GradientBottom
-        },
-        _ => new BatchExportOptions
-        {
-            ExportJpeg = true,
-            JpegQuality = JpegQuality,
-            BackgroundMode = ExportBackgroundMode.Blur,
-            BlurRadius = 10
+            OutputKind = kind;
         }
-    };
+        if (settings.LastBatchJpegQuality is >= 50 and <= 100)
+        {
+            JpegQuality = settings.LastBatchJpegQuality;
+        }
+        SkipExisting = settings.LastBatchSkipExisting;
+    }
+
+    /// <summary>Persists the chosen format and quality so the next batch starts where this one left off.</summary>
+    public void Persist(AppSettings settings)
+    {
+        settings.LastBatchOutputKind = OutputKind.ToString();
+        settings.LastBatchJpegQuality = JpegQuality;
+        settings.LastBatchSkipExisting = SkipExisting;
+    }
 }
 
 /// <summary>Compact dialog for choosing the batch output format and its JPEG background.</summary>
@@ -82,15 +113,23 @@ public sealed partial class BatchOptionsDialog : Window
 {
     public BatchOptionsViewModel ViewModel { get; } = new();
 
-    public BatchOptionsDialog()
+    private readonly AppSettings? _settings;
+
+    public BatchOptionsDialog(AppSettings? settings = null)
     {
+        _settings = settings;
         InitializeComponent();
         DataContext = ViewModel;
+        ViewModel.Restore(settings ?? new AppSettings());
     }
 
     public BatchExportOptions BuildOptions() => ViewModel.BuildOptions();
 
-    private void Ok_Click(object sender, RoutedEventArgs e) => DialogResult = true;
+    private void Ok_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.Persist(_settings ?? new AppSettings());
+        DialogResult = true;
+    }
 
     private void ChooseSolid_Click(object sender, RoutedEventArgs e) => ViewModel.IsSolidPickerOpen = true;
     private void ChooseTop_Click(object sender, RoutedEventArgs e) => ViewModel.IsTopPickerOpen = true;

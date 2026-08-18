@@ -142,6 +142,7 @@ public partial class ImagePreviewControl : UserControl
         _dragStart = null;
         SelectionRectangle.Visibility = Visibility.Collapsed;
         SamPointMarker.Visibility = Visibility.Collapsed;
+        WandPointMarker.Visibility = Visibility.Collapsed;
         BrushCursorPreview.Visibility = Visibility.Collapsed;
     }
 }

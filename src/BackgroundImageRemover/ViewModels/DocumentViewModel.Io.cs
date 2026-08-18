@@ -94,6 +94,8 @@ public partial class DocumentViewModel
         _samEmbedding = null;
         _samPromptPointPreview = null;
         Sam.HasClickedPoint = false;
+        _magicWandSeedPreview = null;
+        MagicWand.HasClickedPoint = false;
 
         _loadedImage = loaded;
         var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);

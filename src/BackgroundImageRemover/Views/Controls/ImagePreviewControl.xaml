@@ -49,6 +49,8 @@
                            Fill="#220096FF" Visibility="Collapsed" />
                 <Ellipse x:Name="SamPointMarker" Width="14" Height="14" Fill="Yellow" Stroke="Black" StrokeThickness="1.5"
                          Visibility="Collapsed" IsHitTestVisible="False" />
+                <Ellipse x:Name="WandPointMarker" Width="12" Height="12" Fill="#33FF7F50" Stroke="Orange" StrokeThickness="1.5"
+                         Visibility="Collapsed" IsHitTestVisible="False" />
                 <Ellipse x:Name="BrushCursorPreview" Width="40" Height="40" Stroke="#FF0EA5E9" StrokeThickness="1.5"
                          Fill="#330EA5E9" Visibility="Collapsed" IsHitTestVisible="False" />
             </Canvas>

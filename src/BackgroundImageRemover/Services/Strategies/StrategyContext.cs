@@ -60,4 +60,16 @@ public sealed record StrategyContext
 
     /// <summary>KMeans: a cluster is treated as background when at least this fraction of its pixels sit on the image border.</summary>
     public double KMeansBorderFraction { get; init; } = 0.25;
+
+    /// <summary>MagicWand: the clicked seed point, in the coordinate space of the Mat being processed.</summary>
+    public Point? MagicWandSeed { get; init; }
+
+    /// <summary>MagicWand: max Lab color distance from the seed for a pixel to be flooded as background.</summary>
+    public double MagicWandTolerance { get; init; } = 20;
+
+    /// <summary>Inverts the computed mask (keeps the background, removes the subject) before compositing.</summary>
+    public bool InvertMask { get; init; }
+
+    /// <summary>Feathers the final mask by this many pixels (0 disables it). Scaled with resolution like the other feather fields.</summary>
+    public int MaskFeatherPixels { get; init; }
 }

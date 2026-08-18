@@ -188,6 +188,8 @@ public partial class DocumentViewModel
             _samEmbedding = null;
             _samPromptPointPreview = null;
             Sam.HasClickedPoint = false;
+            _magicWandSeedPreview = null;
+            MagicWand.HasClickedPoint = false;
             ProjectPath = null;
             GrabCut.SelectedRect = null;
 

@@ -40,6 +40,21 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
 
             using var mask = context.EnableAlphaMatting ? AlphaMattingRefiner.Refine(bgr, rawMask) : rawMask.Clone();
 
+            // Global post-processing shared by every strategy: invert foreground/background and
+            // optionally soften the mask edges, before the mask is composited into BGRA.
+            if (context.InvertMask)
+            {
+                Cv2.BitwiseNot(mask, mask);
+            }
+
+            if (context.MaskFeatherPixels > 0)
+            {
+                int kernelSize = context.MaskFeatherPixels * 2 + 1;
+                using var feathered = new Mat();
+                Cv2.GaussianBlur(mask, feathered, new Size(kernelSize, kernelSize), 0);
+                feathered.CopyTo(mask);
+            }
+
             var bgra = bgr.ToBgra(mask);
 
             PostProcessBgra(bgra, context);

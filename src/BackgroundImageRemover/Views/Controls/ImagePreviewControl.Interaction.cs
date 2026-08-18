@@ -63,9 +63,13 @@ public partial class ImagePreviewControl
                 StartStroke(e);
                 break;
             case InteractionMode.MagicWand:
+                var wandClickPoint = e.GetPosition(OverlayCanvas);
                 var wandPoint = ImagePixelAt(e);
                 if (wandPoint is { } wp)
                 {
+                    WandPointMarker.Visibility = Visibility.Visible;
+                    Canvas.SetLeft(WandPointMarker, wandClickPoint.X - WandPointMarker.Width / 2);
+                    Canvas.SetTop(WandPointMarker, wandClickPoint.Y - WandPointMarker.Height / 2);
                     WandClicked?.Invoke(this, new OpenCvSharp.Point((int)Math.Round(wp.X), (int)Math.Round(wp.Y)));
                 }
                 break;

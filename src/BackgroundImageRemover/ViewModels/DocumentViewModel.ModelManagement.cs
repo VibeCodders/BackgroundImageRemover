@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Helpers;
+using BackgroundImageRemover.Models;
 using CommunityToolkit.Mvvm.Input;
 using WpfPoint = System.Windows.Point;
 
@@ -83,6 +84,17 @@ public partial class DocumentViewModel
         }
         _samPromptPointPreview = new WpfPoint(previewPoint.X, previewPoint.Y);
         Sam.HasClickedPoint = true;
+        RequestPreviewDebounced();
+    }
+
+    public void OnOriginalWandClicked(OpenCvSharp.Point previewPoint)
+    {
+        if (SelectedStrategy != StrategyKind.MagicWand)
+        {
+            return;
+        }
+        _magicWandSeedPreview = new WpfPoint(previewPoint.X, previewPoint.Y);
+        MagicWand.HasClickedPoint = true;
         RequestPreviewDebounced();
     }
 }

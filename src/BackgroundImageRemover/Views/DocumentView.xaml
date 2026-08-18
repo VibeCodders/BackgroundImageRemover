@@ -221,7 +221,8 @@
                                                            StrokeStart="OriginalPreview_StrokeStart"
                                                            StrokeMove="OriginalPreview_StrokeMove"
                                                            StrokeEnd="OriginalPreview_StrokeEnd"
-                                                           SamPointClicked="OriginalPreview_SamPointClicked" />
+                                                           SamPointClicked="OriginalPreview_SamPointClicked"
+                                                           WandClicked="OriginalPreview_WandClicked" />
                         </DockPanel>
 
                         <DockPanel Grid.Column="1" Margin="8">

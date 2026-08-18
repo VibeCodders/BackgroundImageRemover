@@ -71,6 +71,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
     private SamEmbedding? _samEmbedding;
     private WpfPoint? _samPromptPointPreview;
+    private WpfPoint? _magicWandSeedPreview;
 
     public ChromaKeyStrategyViewModel ChromaKey { get; } = new();
     public GrabCutStrategyViewModel GrabCut { get; } = new();
@@ -78,6 +79,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     public SamStrategyViewModel Sam { get; } = new();
     public FloodFillStrategyViewModel FloodFill { get; } = new();
     public KMeansStrategyViewModel KMeans { get; } = new();
+    public MagicWandStrategyViewModel MagicWand { get; } = new();
 
     private ShellViewModel? _shell;
 
@@ -184,6 +186,12 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
     [ObservableProperty]
     private BitmapSource? _scribbleOverlay;
+
+    [ObservableProperty]
+    private bool _invertMask;
+
+    [ObservableProperty]
+    private double _maskFeatherPixels;
 
     /// <summary>
     /// The active display bitmap: shows the processed ResultBitmap if available,
@@ -384,6 +392,14 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
             }
         };
 
+        MagicWand.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MagicWand.Tolerance))
+            {
+                RequestPreviewDebounced();
+            }
+        };
+
         UncropOptions.ImageSizeProvider = () => _loadedImage?.FullBgr.Size();
         UncropOptions.PropertyChanged += (_, e) =>
         {
@@ -425,6 +441,10 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
     partial void OnOriginalModeChanged(InteractionMode value) => RefreshUndoRedoState();
 
+    partial void OnInvertMaskChanged(bool value) => RequestPreviewDebounced();
+
+    partial void OnMaskFeatherPixelsChanged(double value) => RequestPreviewDebounced();
+
     partial void OnUseGpuForOnnxChanged(bool value)
     {
         _onnxStrategy.SetUseGpu(value);
@@ -443,6 +463,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         {
             StrategyKind.GrabCut => InteractionMode.DrawRect,
             StrategyKind.Sam => InteractionMode.SamClick,
+            StrategyKind.MagicWand => InteractionMode.MagicWand,
             _ => InteractionMode.None
         };
 

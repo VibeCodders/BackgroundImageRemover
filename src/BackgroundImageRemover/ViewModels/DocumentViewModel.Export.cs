@@ -31,6 +31,7 @@ public partial class DocumentViewModel
         StrategyKind.GrabCut => GrabCut.HasValidRect || ScribbleManager.HasScribbles,
         StrategyKind.Onnx => Onnx.IsModelReady,
         StrategyKind.Sam => Sam.IsModelReady && Sam.HasClickedPoint,
+        StrategyKind.MagicWand => MagicWand.HasClickedPoint,
         _ => true
     };
 

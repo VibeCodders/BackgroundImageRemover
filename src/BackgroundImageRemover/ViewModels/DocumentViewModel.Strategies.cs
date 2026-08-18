@@ -21,7 +21,7 @@ public partial class DocumentViewModel
 
     private StrategyContext BuildContext(double scaleToFull = 1.0)
     {
-        return SelectedStrategy switch
+        var strategyContext = SelectedStrategy switch
         {
             StrategyKind.ChromaKey => new StrategyContext
             {
@@ -72,8 +72,21 @@ public partial class DocumentViewModel
             {
                 KMeansClusters = KMeans.ClusterCount
             },
+            StrategyKind.MagicWand => new StrategyContext
+            {
+                MagicWandSeed = _magicWandSeedPreview is { } p
+                    ? new Point((int)Math.Round(p.X * scaleToFull), (int)Math.Round(p.Y * scaleToFull))
+                    : (Point?)null,
+                MagicWandTolerance = MagicWand.Tolerance
+            },
             StrategyKind.Otsu => new StrategyContext(),
             _ => new StrategyContext()
+        };
+
+        return strategyContext with
+        {
+            InvertMask = InvertMask,
+            MaskFeatherPixels = (int)Math.Round(MaskFeatherPixels * scaleToFull)
         };
     }
 
@@ -114,6 +127,10 @@ public partial class DocumentViewModel
             return;
         }
         if (SelectedStrategy == StrategyKind.Sam && (!Sam.IsModelReady || _samEmbedding is null || _samPromptPointPreview is null))
+        {
+            return;
+        }
+        if (SelectedStrategy == StrategyKind.MagicWand && _magicWandSeedPreview is null)
         {
             return;
         }

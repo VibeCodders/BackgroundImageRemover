@@ -30,6 +30,10 @@ public partial class BackgroundRemoverToolSessionViewModel
         {
             return;
         }
+        if (SelectedStrategy == StrategyKind.MagicWand && _magicWandSeedPreview is null)
+        {
+            return;
+        }
 
         _previewCts?.Cancel();
         var cts = new CancellationTokenSource();
@@ -60,7 +64,7 @@ public partial class BackgroundRemoverToolSessionViewModel
 
     private StrategyContext BuildContext(double scaleToFull = 1.0)
     {
-        return SelectedStrategy switch
+        var strategyContext = SelectedStrategy switch
         {
             StrategyKind.ChromaKey => new StrategyContext
             {
@@ -103,9 +107,33 @@ public partial class BackgroundRemoverToolSessionViewModel
             {
                 KMeansClusters = KMeans.ClusterCount
             },
+            StrategyKind.MagicWand => new StrategyContext
+            {
+                MagicWandSeed = _magicWandSeedPreview is { } p
+                    ? new Point((int)Math.Round(p.X * scaleToFull), (int)Math.Round(p.Y * scaleToFull))
+                    : (Point?)null,
+                MagicWandTolerance = MagicWand.Tolerance
+            },
             StrategyKind.Otsu => new StrategyContext(),
             _ => new StrategyContext()
         };
+
+        return strategyContext with
+        {
+            InvertMask = InvertMask,
+            MaskFeatherPixels = (int)Math.Round(MaskFeatherPixels * scaleToFull)
+        };
+    }
+
+    public void OnOriginalWandClicked(Point imagePoint)
+    {
+        if (SelectedStrategy != StrategyKind.MagicWand)
+        {
+            return;
+        }
+        _magicWandSeedPreview = new WpfPoint(imagePoint.X, imagePoint.Y);
+        MagicWand.HasClickedPoint = true;
+        RequestPreviewDebounced();
     }
 
     public void OnOriginalSamPointClicked(Point imagePoint)

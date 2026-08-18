@@ -8,5 +8,6 @@ public enum StrategyKind
     Sam,
     FloodFill,
     KMeans,
-    Otsu
+    Otsu,
+    MagicWand
 }

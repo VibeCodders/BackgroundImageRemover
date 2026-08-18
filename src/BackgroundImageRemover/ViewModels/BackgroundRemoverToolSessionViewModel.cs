@@ -45,6 +45,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     private SamEmbedding? _samEmbedding;
     private WpfPoint? _samPromptPointPreview;
+    private WpfPoint? _magicWandSeedPreview;
 
     public override string ToolBadge => "✂ Background Remover";
     public override string AccentColor => "#1E7A33";
@@ -55,6 +56,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     public SamStrategyViewModel Sam { get; } = new();
     public FloodFillStrategyViewModel FloodFill { get; } = new();
     public KMeansStrategyViewModel KMeans { get; } = new();
+    public MagicWandStrategyViewModel MagicWand { get; } = new();
 
     [ObservableProperty]
     private StrategyKind _selectedStrategy = StrategyKind.ChromaKey;
@@ -67,6 +69,12 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     [ObservableProperty]
     private BitmapSource? _scribbleOverlay;
+
+    [ObservableProperty]
+    private bool _invertMask;
+
+    [ObservableProperty]
+    private double _maskFeatherPixels;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
@@ -169,6 +177,14 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
             }
         };
 
+        MagicWand.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MagicWand.Tolerance))
+            {
+                RequestPreviewDebounced();
+            }
+        };
+
         InitFromParent();
     }
 
@@ -196,6 +212,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         {
             StrategyKind.GrabCut => InteractionMode.DrawRect,
             StrategyKind.Sam => InteractionMode.SamClick,
+            StrategyKind.MagicWand => InteractionMode.MagicWand,
             _ => InteractionMode.None
         };
 
@@ -217,6 +234,10 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
         RequestPreviewDebounced();
     }
+
+    partial void OnInvertMaskChanged(bool value) => RequestPreviewDebounced();
+
+    partial void OnMaskFeatherPixelsChanged(double value) => RequestPreviewDebounced();
 
     public override void Dispose()
     {

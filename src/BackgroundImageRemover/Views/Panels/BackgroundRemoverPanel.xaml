@@ -113,6 +113,21 @@
             <TextBlock Text="Automatic Otsu threshold for high-contrast subjects on a flat background." TextWrapping="Wrap" />
         </StackPanel>
 
+        <!-- Magic Wand options -->
+        <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=MagicWand}">
+            <TextBlock Text="Click on the background in the Original image to remove the connected region." TextWrapping="Wrap" Margin="0,0,0,8" />
+            <TextBlock Text="{Binding MagicWand.HasClickedPoint, StringFormat='Point selected: {0}'}" Margin="0,0,0,8" />
+            <TextBlock Text="Tolerance" />
+            <Slider Minimum="1" Maximum="100" Value="{Binding MagicWand.Tolerance}" />
+        </StackPanel>
+
+        <!-- Global finishing controls, applied to every strategy -->
+        <Separator Margin="0,16,0,8" />
+        <TextBlock Text="Refinement" FontWeight="Bold" Margin="0,0,0,8" />
+        <CheckBox Content="Invert mask (keep background)" IsChecked="{Binding InvertMask}" Margin="0,0,0,8" />
+        <TextBlock Text="Edge feather" />
+        <Slider Minimum="0" Maximum="30" Value="{Binding MaskFeatherPixels}" TickFrequency="1" IsSnapToTickEnabled="True" />
+
         <Separator Margin="0,16"/>
 
         <!-- Export background options -->

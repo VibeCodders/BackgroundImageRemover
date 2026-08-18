@@ -87,6 +87,8 @@ public partial class App : Application
         services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<KMeansStrategy>());
         services.AddSingleton<OtsuStrategy>();
         services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<OtsuStrategy>());
+        services.AddSingleton<MagicWandRemovalStrategy>();
+        services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<MagicWandRemovalStrategy>());
 
         services.AddTransient<DocumentViewModel>();
         services.AddSingleton<Func<DocumentViewModel>>(sp => sp.GetRequiredService<DocumentViewModel>);

@@ -441,6 +441,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
     public void Dispose()
     {
+        _brushRefreshTimer?.Stop();
         _uncropCts?.Cancel();
         _uncropCts?.Dispose();
         _loadedImage?.Dispose();

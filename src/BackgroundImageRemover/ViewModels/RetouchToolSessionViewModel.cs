@@ -1,4 +1,5 @@
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Refinement;
@@ -15,6 +16,7 @@ namespace BackgroundImageRemover.ViewModels;
 public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
 {
     private readonly MatEditSession _editSession = new();
+    private readonly DispatcherTimer _brushRefreshTimer;
     private LoadedImage? _sourceImage;
 
     private Mat? _workingBgr;
@@ -56,6 +58,13 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
+        _brushRefreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(40) };
+        _brushRefreshTimer.Tick += (_, _) =>
+        {
+            _brushRefreshTimer.Stop();
+            RefreshResultBitmap();
+        };
+
         InitFromParent();
     }
 
@@ -88,7 +97,12 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         _brushLastPoint = imagePoint;
     }
 
-    public void OnResultStrokeEnd() => _brushLastPoint = null;
+    public void OnResultStrokeEnd()
+    {
+        _brushRefreshTimer.Stop();
+        RefreshResultBitmap();
+        _brushLastPoint = null;
+    }
 
     private void StampBrush(WpfPoint from, WpfPoint to, double pixelRadius)
     {
@@ -96,7 +110,21 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         BrushEditor.StampSegment(_workingAlpha,
             new Point2f((float)from.X, (float)from.Y), new Point2f((float)to.X, (float)to.Y),
             pixelRadius, BrushHardness, BrushMode);
+        RequestBrushRefresh();
+    }
+
+    /// <summary>Recomposites the result bitmap at most every <c>_brushRefreshTimer</c> interval
+    /// while painting, so long brush strokes stay responsive instead of rebuilding a full-size
+    /// bitmap on every mouse-move event.</summary>
+    private void RequestBrushRefresh()
+    {
+        if (_brushRefreshTimer.IsEnabled)
+        {
+            return;
+        }
+
         RefreshResultBitmap();
+        _brushRefreshTimer.Start();
     }
 
     public void OnResultWandClicked(Point imagePoint)
@@ -156,6 +184,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
+        _brushRefreshTimer.Stop();
         _sourceImage?.Dispose();
         _workingBgr?.Dispose();
         _workingAlpha?.Dispose();

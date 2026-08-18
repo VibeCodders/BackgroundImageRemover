@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using BackgroundImageRemover.Helpers;
@@ -153,12 +154,20 @@ public partial class ImagePreviewControl : UserControl
     }
 
     private static void OnModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        => ((ImagePreviewControl)d).ClearSelection();
+    {
+        var control = (ImagePreviewControl)d;
+        control.ClearSelection();
+
+        // Give interactive tools a crosshair cursor so the image area reads as editable,
+        // while the plain arrow is kept for the default (non-tool) state.
+        control.RootGrid.Cursor = control.Mode == InteractionMode.None ? Cursors.Arrow : Cursors.Cross;
+    }
 
     private void ClearSelection()
     {
         _dragStart = null;
         SelectionRectangle.Visibility = Visibility.Collapsed;
         SamPointMarker.Visibility = Visibility.Collapsed;
+        BrushCursorPreview.Visibility = Visibility.Collapsed;
     }
 }

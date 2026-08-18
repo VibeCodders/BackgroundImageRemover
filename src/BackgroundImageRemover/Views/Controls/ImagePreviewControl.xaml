@@ -10,7 +10,8 @@
           MouseWheel="RootGrid_MouseWheel"
           MouseDown="RootGrid_MouseDown"
           MouseMove="RootGrid_MouseMove"
-          MouseUp="RootGrid_MouseUp">
+          MouseUp="RootGrid_MouseUp"
+          MouseLeave="RootGrid_MouseLeave">
         <Grid.Background>
             <!-- Fully opaque transparency checkerboard: white + light-gray tiles, so it renders
                  the same regardless of the window theme. -->
@@ -42,6 +43,8 @@
                            Fill="#220096FF" Visibility="Collapsed" />
                 <Ellipse x:Name="SamPointMarker" Width="14" Height="14" Fill="Yellow" Stroke="Black" StrokeThickness="1.5"
                          Visibility="Collapsed" IsHitTestVisible="False" />
+                <Ellipse x:Name="BrushCursorPreview" Width="40" Height="40" Stroke="#FF0EA5E9" StrokeThickness="1.5"
+                         Fill="#330EA5E9" Visibility="Collapsed" IsHitTestVisible="False" />
             </Canvas>
         </Grid>
     </Grid>

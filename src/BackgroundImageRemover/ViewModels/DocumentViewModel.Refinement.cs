@@ -1,3 +1,4 @@
+using System.Windows.Threading;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Refinement;
@@ -15,6 +16,8 @@ public partial class DocumentViewModel
 
     [ObservableProperty]
     private double _brushHardness = 0.5;
+
+    private DispatcherTimer? _brushRefreshTimer;
 
     [ObservableProperty]
     private BrushMode _brushMode = BrushMode.Restore;
@@ -120,7 +123,12 @@ public partial class DocumentViewModel
         _brushLastPoint = imagePoint;
     }
 
-    public void OnResultStrokeEnd() => _brushLastPoint = null;
+    public void OnResultStrokeEnd()
+    {
+        _brushRefreshTimer?.Stop();
+        RefreshResultBitmapFromWorking();
+        _brushLastPoint = null;
+    }
 
     private void StampBrush(WpfPoint from, WpfPoint to, double pixelRadius)
     {
@@ -131,7 +139,30 @@ public partial class DocumentViewModel
         BrushEditor.StampSegment(_workingAlpha,
             new Point2f((float)from.X, (float)from.Y), new Point2f((float)to.X, (float)to.Y),
             pixelRadius, BrushHardness, BrushMode);
+        RequestBrushRefresh();
+    }
+
+    /// <summary>Recomposites the result bitmap at most every 40ms while painting, so long brush
+    /// strokes stay responsive instead of rebuilding a full-size bitmap on every mouse-move.</summary>
+    private void RequestBrushRefresh()
+    {
+        if (_brushRefreshTimer is null)
+        {
+            _brushRefreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(40) };
+            _brushRefreshTimer.Tick += (_, _) =>
+            {
+                _brushRefreshTimer!.Stop();
+                RefreshResultBitmapFromWorking();
+            };
+        }
+
+        if (_brushRefreshTimer.IsEnabled)
+        {
+            return;
+        }
+
         RefreshResultBitmapFromWorking();
+        _brushRefreshTimer.Start();
     }
 
     public void OnResultWandClicked(Point imagePoint)

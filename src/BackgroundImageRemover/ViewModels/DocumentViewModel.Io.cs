@@ -126,5 +126,11 @@ public partial class DocumentViewModel
         {
             AdoptLoadedCutout();
         }
+        else
+        {
+            // Auto-run the selected strategy so the result pane and split compare view are
+            // immediately useful without requiring the user to tweak a setting first.
+            RequestPreviewDebounced();
+        }
     }
 }

@@ -83,6 +83,8 @@ public partial class ImagePreviewControl
 
     private void RootGrid_MouseMove(object sender, MouseEventArgs e)
     {
+        UpdateBrushCursorHover(e);
+
         if (_panStart is { } panStart && e.MiddleButton == MouseButtonState.Pressed)
         {
             var p = ViewInteractionHelper.ComputePan(panStart, _panStartTranslate, e.GetPosition(this));
@@ -110,6 +112,28 @@ public partial class ImagePreviewControl
                 }
                 break;
         }
+    }
+
+    private void RootGrid_MouseLeave(object sender, MouseEventArgs e)
+        => BrushCursorPreview.Visibility = Visibility.Collapsed;
+
+    /// <summary>Shows a brush-size circle under the cursor while hovering in Brush mode, so the
+    /// user can see exactly where and how large the next stroke will be before painting.</summary>
+    private void UpdateBrushCursorHover(MouseEventArgs e)
+    {
+        if (Mode != InteractionMode.Brush || ImageSource is null || _dragStart is not null || _panStart is not null)
+        {
+            BrushCursorPreview.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var p = e.GetPosition(OverlayCanvas);
+        var diameter = Math.Max(4, BrushRadius * 2);
+        BrushCursorPreview.Width = diameter;
+        BrushCursorPreview.Height = diameter;
+        Canvas.SetLeft(BrushCursorPreview, p.X - diameter / 2);
+        Canvas.SetTop(BrushCursorPreview, p.Y - diameter / 2);
+        BrushCursorPreview.Visibility = Visibility.Visible;
     }
 
     private void RootGrid_MouseUp(object sender, MouseButtonEventArgs e)

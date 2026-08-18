@@ -24,9 +24,11 @@ public sealed class EditHistory : IDisposable
         {
             // Drop the oldest entry; Stack doesn't support removing from the bottom directly,
             // so rebuild via a temporary array (small, bounded, infrequent).
+            // Stack.ToArray() returns elements from top (newest) to bottom (oldest),
+            // so items[0] is newest and items[^1] is oldest.
             var items = _undo.ToArray();
             _undo.Clear();
-            for (int i = items.Length - 2; i >= 0; i--)
+            for (int i = MaxDepth - 1; i >= 0; i--)
             {
                 _undo.Push(items[i]);
             }

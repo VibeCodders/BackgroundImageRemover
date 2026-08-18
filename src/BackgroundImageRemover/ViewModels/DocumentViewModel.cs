@@ -984,7 +984,7 @@ public partial class DocumentViewModel : ObservableObject, IDisposable
         {
             var items = _scribbleUndo.ToArray();
             _scribbleUndo.Clear();
-            for (int i = items.Length - 2; i >= 0; i--) _scribbleUndo.Push(items[i]);
+            for (int i = MaxScribbleHistoryDepth - 1; i >= 0; i--) _scribbleUndo.Push(items[i]);
             items[^1].Fg.Dispose();
             items[^1].Bg.Dispose();
         }

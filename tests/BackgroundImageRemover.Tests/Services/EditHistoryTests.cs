@@ -115,4 +115,32 @@ public class EditHistoryTests
         Assert.False(history.CanUndo);
         Assert.False(history.CanRedo);
     }
+
+    [Fact]
+    public void Push_ExceedingMaxDepth_DropsOldestAndPreservesOrder()
+    {
+        using var history = new EditHistory();
+
+        // Push 25 states (MaxDepth is 20)
+        for (int i = 1; i <= 25; i++)
+        {
+            using var mat = new Mat(1, 1, MatType.CV_8UC1, Scalar.All(i));
+            history.Push(mat);
+        }
+
+        Assert.True(history.CanUndo);
+
+        // Current state is 26; undo should return 25, 24, ..., down to 6 (20 entries)
+        using var live = new Mat(1, 1, MatType.CV_8UC1, Scalar.All(26));
+        for (int expected = 25; expected >= 6; expected--)
+        {
+            using var restored = history.Undo(live);
+            Assert.NotNull(restored);
+            Assert.Equal(expected, restored!.At<byte>(0, 0));
+        }
+
+        // After 20 undos, history should be exhausted
+        Assert.False(history.CanUndo);
+        Assert.Null(history.Undo(live));
+    }
 }

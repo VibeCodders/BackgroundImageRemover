@@ -14,4 +14,10 @@ public sealed class AppSettings
     public double? WindowWidth { get; set; }
     public double? WindowHeight { get; set; }
     public bool WindowMaximized { get; set; }
+
+    /// <summary>Last folder chosen for batch input, used as the starting point next time.</summary>
+    public string? LastBatchInputFolder { get; set; }
+
+    /// <summary>Last folder chosen for batch output, offered as the default next time.</summary>
+    public string? LastBatchOutputFolder { get; set; }
 }

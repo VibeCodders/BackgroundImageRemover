@@ -26,7 +26,9 @@ public partial class DocumentViewModel
             return;
         }
 
-        var inputFolder = _dialogs.ShowOpenFolderDialog("Select folder with images to process");
+        // Start the pickers at the folders used last time, when available.
+        var rememberedInput = _settings.Current.LastBatchInputFolder ?? _settings.Current.LastBatchOutputFolder;
+        var inputFolder = _dialogs.ShowOpenFolderDialog("Select folder with images to process", rememberedInput);
         if (inputFolder is null)
         {
             return;
@@ -50,8 +52,9 @@ public partial class DocumentViewModel
             return;
         }
 
-        // Let the user pick where the cutouts go; default to the input folder's "cutouts" subfolder.
-        var defaultOutput = Path.Combine(inputFolder, "cutouts");
+        // Let the user pick where the cutouts go; default to the last used output folder or
+        // the input folder's "cutouts" subfolder.
+        var defaultOutput = _settings.Current.LastBatchOutputFolder ?? Path.Combine(inputFolder, "cutouts");
         var outputFolder = _dialogs.ShowOpenFolderDialog("Select output folder for cutouts", defaultOutput) ?? defaultOutput;
         var context = BuildContext();
 
@@ -82,5 +85,10 @@ public partial class DocumentViewModel
         {
             IsBatchRunning = false;
         }
+
+        // Remember the folders for the next batch run.
+        _settings.Current.LastBatchInputFolder = inputFolder;
+        _settings.Current.LastBatchOutputFolder = outputFolder;
+        _settings.Save();
     }
 }

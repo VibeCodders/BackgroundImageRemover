@@ -19,6 +19,7 @@
         <KeyBinding Key="Return" Command="{Binding SelectedDocument.ApplyCommand}" />
         <KeyBinding Key="Escape" Command="{Binding SelectedDocument.CancelCommand}" />
         <KeyBinding Key="E" Modifiers="Control" Command="{Binding SelectedDocument.ExportCommand}" />
+        <KeyBinding Key="E" Modifiers="Control+Shift" Command="{Binding SelectedDocument.ExportJpgCommand}" />
         <KeyBinding Key="S" Modifiers="Control" Command="{Binding SelectedDocument.SaveProjectCommand}" />
         <KeyBinding Key="S" Modifiers="Control+Shift" Command="{Binding SelectedDocument.SaveProjectAsCommand}" />
         <KeyBinding Key="W" Modifiers="Control" Command="{Binding CloseTabCommand}" CommandParameter="{Binding SelectedDocument}" />
@@ -134,6 +135,7 @@
                 <MenuItem Header="_Copy cutout" Command="{Binding SelectedDocument.CopyToClipboardCommand}" InputGestureText="Ctrl+Shift+C" />
                 <Separator />
                 <MenuItem Header="_Export PNG (no crop)" Command="{Binding SelectedDocument.ExportCommand}" InputGestureText="Ctrl+E" />
+                <MenuItem Header="Export _JPG (no crop)" Command="{Binding SelectedDocument.ExportJpgCommand}" InputGestureText="Ctrl+Shift+E" />
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_About Background Image Remover" Click="About_Click" />

@@ -1,3 +1,4 @@
+using System.IO;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Batch;
 using BackgroundImageRemover.Services.Dialogs;
@@ -107,12 +108,50 @@ public class DocumentViewModelAdjustmentsTests
         Assert.Equal(95, exporter.LastJpgQuality);
     }
 
+    [Fact]
+    public async Task Batch_RemembersInputAndOutputFoldersInSettings()
+    {
+        var inputDir = Path.Combine(Path.GetTempPath(), $"batch_in_{Guid.NewGuid():N}");
+        var outputDir = Path.Combine(Path.GetTempPath(), $"batch_out_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(inputDir);
+        try
+        {
+            // A real 1x1 PNG so the folder is recognized as containing supported images.
+            using var img = new Mat(1, 1, MatType.CV_8UC3, new Scalar(1, 2, 3));
+            Cv2.ImWrite(Path.Combine(inputDir, "a.png"), img);
+
+            var settings = new FakeSettingsService();
+            var dialogs = new BatchFolderDialogService(inputDir, outputDir);
+            var doc = CreateDocument(
+                new AlphaImageLoader(),
+                settings: settings,
+                dialogs: dialogs,
+                strategies: new IBackgroundRemovalStrategy[] { new ChromaKeyStrategy() });
+            await doc.LoadImageAsync("cutout.png");
+
+            await doc.BatchCommand.ExecuteAsync(null);
+
+            Assert.Equal(inputDir, settings.Current.LastBatchInputFolder);
+            Assert.Equal(outputDir, settings.Current.LastBatchOutputFolder);
+        }
+        finally
+        {
+            Directory.Delete(inputDir, true);
+            if (Directory.Exists(outputDir))
+            {
+                Directory.Delete(outputDir, true);
+            }
+        }
+    }
+
     private static DocumentViewModel CreateDocument(
         IImageLoaderService loader,
         IImageExportService? exporter = null,
-        IDialogService? dialogs = null)
+        IDialogService? dialogs = null,
+        FakeSettingsService? settings = null,
+        IEnumerable<IBackgroundRemovalStrategy>? strategies = null)
     {
-        var settings = new FakeSettingsService();
+        settings ??= new FakeSettingsService();
         return new DocumentViewModel(
             loader,
             exporter ?? new FakeImageExportService(),
@@ -122,11 +161,33 @@ public class DocumentViewModelAdjustmentsTests
             settings,
             new FakeProjectService(),
             new FakeFileLogService(),
-            Array.Empty<IBackgroundRemovalStrategy>(),
+            strategies ?? Array.Empty<IBackgroundRemovalStrategy>(),
             new OnnxStrategy(new OnnxInferenceEngine(new FakeModelCacheService(), new FakeFileLogService())),
             new GrabCutStrategy(),
             new SamStrategy(new SamInferenceEngine(new FakeModelCacheService())),
             new FakeUncropFillService());
+    }
+
+    /// <summary>Returns the input folder for the first folder prompt and the output folder for the second.</summary>
+    private sealed class BatchFolderDialogService : FakeDialogService
+    {
+        private readonly string _inputDir;
+        private readonly string _outputDir;
+        private int _folderCalls;
+
+        public BatchFolderDialogService(string inputDir, string outputDir)
+        {
+            _inputDir = inputDir;
+            _outputDir = outputDir;
+        }
+
+        public override string? ShowOpenFolderDialog(string title, string? initialDirectory = null)
+        {
+            _folderCalls++;
+            return _folderCalls == 1 ? _inputDir : _outputDir;
+        }
+
+        public override BatchExportOptions? ShowBatchOptionsDialog() => new() { ExportJpeg = false };
     }
 
     private sealed class RecordingImageExportService : IImageExportService

@@ -95,6 +95,11 @@ public class UncropViewModelTests
         Assert.True(vm.IsDirty);
         Assert.EndsWith("*", vm.TabTitle);
         Assert.NotNull(vm.PreviewResult);
+        Assert.False(vm.CanUndo); // first fill has no prior result to undo to
+
+        // Applying a second fill pushes the first result to edit history
+        vm.Padding = new CanvasPadding(20, 20, 20, 20);
+        await vm.ApplyFillCommand.ExecuteAsync(null);
         Assert.True(vm.CanUndo);
     }
 }

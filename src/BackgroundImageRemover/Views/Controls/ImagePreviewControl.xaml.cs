@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 
 namespace BackgroundImageRemover.Views.Controls;
@@ -37,6 +38,27 @@ public partial class ImagePreviewControl : UserControl
     {
         get => (double)GetValue(BrushRadiusProperty);
         set => SetValue(BrushRadiusProperty, value);
+    }
+
+    /// <summary>
+    /// Number of image pixels per control DIP for the currently displayed bitmap. The brush
+    /// radius is specified in DIPs (it matches the on-screen cursor circle), so the actual
+    /// alpha stamp must multiply it by this factor to land on the right image pixels.
+    /// </summary>
+    public double ImagePixelScale
+    {
+        get
+        {
+            if (ImageSource is null)
+            {
+                return 1.0;
+            }
+
+            var content = CoordinateMapper.ImageControlContentRect(
+                OverlayCanvas.ActualWidth, OverlayCanvas.ActualHeight,
+                ImageSource.PixelWidth, ImageSource.PixelHeight);
+            return content.Width > 0 ? ImageSource.PixelWidth / content.Width : 1.0;
+        }
     }
 
     /// <summary>Raised with the finalized selection rectangle, in source-image pixel coordinates.</summary>
@@ -116,6 +138,16 @@ public partial class ImagePreviewControl : UserControl
     private static void OnImageSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var control = (ImagePreviewControl)d;
+
+        // The brush recomposites the result bitmap on every stamp, which swaps this control's
+        // ImageSource mid-stroke. Do not tear down the in-progress drag state here: clearing
+        // _dragStart would abort the stroke and leave the mouse captured forever, blocking
+        // every other click in the window.
+        if (control._dragStart is not null)
+        {
+            return;
+        }
+
         control.ClearSelection();
         control.ClearScribbleStrokes();
     }

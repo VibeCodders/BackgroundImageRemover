@@ -71,31 +71,31 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     [RelayCommand]
     private void SetResultMode(InteractionMode mode) => ResultMode = ResultMode == mode ? InteractionMode.None : mode;
 
-    public void OnResultStrokeStart(WpfPoint imagePoint)
+    public void OnResultStrokeStart(WpfPoint imagePoint, double pixelRadius)
     {
         if (_workingAlpha is null) return;
         _editSession.Record(_workingAlpha);
         IsDirty = true;
         RefreshUndoRedoState();
         _brushLastPoint = imagePoint;
-        StampBrush(imagePoint, imagePoint);
+        StampBrush(imagePoint, imagePoint, pixelRadius);
     }
 
-    public void OnResultStrokeMove(WpfPoint imagePoint)
+    public void OnResultStrokeMove(WpfPoint imagePoint, double pixelRadius)
     {
         if (_workingAlpha is null || _brushLastPoint is not { } last) return;
-        StampBrush(last, imagePoint);
+        StampBrush(last, imagePoint, pixelRadius);
         _brushLastPoint = imagePoint;
     }
 
     public void OnResultStrokeEnd() => _brushLastPoint = null;
 
-    private void StampBrush(WpfPoint from, WpfPoint to)
+    private void StampBrush(WpfPoint from, WpfPoint to, double pixelRadius)
     {
         if (_workingAlpha is null) return;
         BrushEditor.StampSegment(_workingAlpha,
             new Point2f((float)from.X, (float)from.Y), new Point2f((float)to.X, (float)to.Y),
-            BrushRadius, BrushHardness, BrushMode);
+            pixelRadius, BrushHardness, BrushMode);
         RefreshResultBitmap();
     }
 

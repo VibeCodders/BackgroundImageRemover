@@ -187,7 +187,7 @@
                 <!-- When ActiveTool is not Uncrop: -->
                 <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=None|RemoveBackground|Retouch|Adjustments}">
                     <!-- Single View (Default: Split View OFF) -->
-                    <DockPanel Margin="8" Visibility="{Binding IsSplitViewEnabled, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                    <Grid Margin="8" Visibility="{Binding IsSplitViewEnabled, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                         <controls:ImagePreviewControl x:Name="SinglePreview"
                                                        ImageSource="{Binding DisplayBitmap}"
                                                        Mode="{Binding ResultMode}"
@@ -195,8 +195,14 @@
                                                        StrokeStart="ResultEditPreview_StrokeStart"
                                                        StrokeMove="ResultEditPreview_StrokeMove"
                                                        StrokeEnd="ResultEditPreview_StrokeEnd"
-                                                       WandClicked="ResultEditPreview_WandClicked" />
-                    </DockPanel>
+                                                       WandClicked="ResultEditPreview_WandClicked"
+                                                       Visibility="{Binding IsCompareMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+
+                        <controls:CompareImageControl BeforeSource="{Binding PreviewBitmap}"
+                                                       AfterSource="{Binding ResultBitmap}"
+                                                       DividerPosition="{Binding CompareDividerPosition}"
+                                                       Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    </Grid>
 
                     <!-- Split View (When IsSplitViewEnabled is true) -->
                     <Grid Visibility="{Binding IsSplitViewEnabled, Converter={StaticResource BoolToVisibilityConverter}}">

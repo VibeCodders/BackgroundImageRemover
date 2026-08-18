@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.ViewModels;
+using BackgroundImageRemover.Views.Controls;
 
 namespace BackgroundImageRemover.Views;
 
@@ -13,6 +14,8 @@ namespace BackgroundImageRemover.Views;
 public partial class DocumentView : UserControl
 {
     private DocumentViewModel? ViewModel => DataContext as DocumentViewModel;
+
+    private (int Width, int Height)? _lastDisplaySize;
 
     public DocumentView()
     {
@@ -53,6 +56,19 @@ public partial class DocumentView : UserControl
     {
         if (e.PropertyName is nameof(DocumentViewModel.PreviewBitmap) or nameof(DocumentViewModel.DisplayBitmap))
         {
+            // Only reset the zoom/pan when the displayed image actually changes size (new
+            // image loaded, or preview -> full-resolution result). Brush strokes recomposite
+            // the result bitmap on every stamp without changing its dimensions, so blindly
+            // resetting here would yank the view back to fit while the user is painting.
+            var size = ViewModel?.DisplayBitmap is { } bitmap
+                ? (bitmap.PixelWidth, bitmap.PixelHeight)
+                : (0, 0);
+            if (_lastDisplaySize == size)
+            {
+                return;
+            }
+
+            _lastDisplaySize = size;
             SinglePreview.ResetView();
             OriginalPreview.ResetView();
             ResultEditPreview.ResetView();
@@ -82,8 +98,21 @@ public partial class DocumentView : UserControl
     private void OriginalPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel?.OnOriginalStrokeEnd();
     private void OriginalPreview_SamPointClicked(object? sender, OpenCvSharp.Point e) => ViewModel?.OnOriginalSamPointClicked(e);
 
-    private void ResultEditPreview_StrokeStart(object? sender, Point e) => ViewModel?.OnResultStrokeStart(e);
-    private void ResultEditPreview_StrokeMove(object? sender, Point e) => ViewModel?.OnResultStrokeMove(e);
+    private void ResultEditPreview_StrokeStart(object? sender, Point e)
+    {
+        if (ViewModel is null) return;
+        ViewModel.OnResultStrokeStart(e, BrushPixelRadius(sender, ViewModel.BrushRadius));
+    }
+
+    private void ResultEditPreview_StrokeMove(object? sender, Point e)
+    {
+        if (ViewModel is null) return;
+        ViewModel.OnResultStrokeMove(e, BrushPixelRadius(sender, ViewModel.BrushRadius));
+    }
+
     private void ResultEditPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel?.OnResultStrokeEnd();
     private void ResultEditPreview_WandClicked(object? sender, OpenCvSharp.Point e) => ViewModel?.OnResultWandClicked(e);
+
+    private static double BrushPixelRadius(object? sender, double fallback)
+        => sender is ImagePreviewControl preview ? preview.BrushRadius * preview.ImagePixelScale : fallback;
 }

@@ -36,6 +36,6 @@
             <Slider Minimum="1" Maximum="100" Value="{Binding MagicWandTolerance}" />
         </StackPanel>
 
-        <CheckBox Content="Compare before/after (Split View)" IsChecked="{Binding IsCompareMode}" Margin="0,16,0,16" />
+        <CheckBox Content="Compare before/after" IsChecked="{Binding IsCompareMode}" Margin="0,16,0,16" />
     </StackPanel>
 </UserControl>

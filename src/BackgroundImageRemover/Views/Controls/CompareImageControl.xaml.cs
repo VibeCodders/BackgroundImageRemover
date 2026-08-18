@@ -18,7 +18,9 @@ public partial class CompareImageControl : UserControl
 
     public static readonly DependencyProperty DividerPositionProperty =
         DependencyProperty.Register(nameof(DividerPosition), typeof(double), typeof(CompareImageControl),
-            new PropertyMetadata(0.5, OnDividerPositionChanged));
+            new FrameworkPropertyMetadata(0.5,
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                OnDividerPositionChanged));
 
     public BitmapSource? BeforeSource
     {

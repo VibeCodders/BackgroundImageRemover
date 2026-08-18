@@ -135,7 +135,10 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _workingResultIsLoadedCutout = false;
         _workingResultHandEdited = true;
 
-        // If dimensions changed (e.g. from Uncrop), reinitialize loaded image size and preview
+        // If dimensions changed (e.g. from Uncrop), reinitialize loaded image size and preview.
+        // The original pane (PreviewBitmap) is only rebuilt here, so it keeps representing the
+        // "before" state for the compare/split views instead of being overwritten with the
+        // working alpha after every retouch or background-removal apply.
         if (_loadedImage.FullBgr.Size() != newBgr.Size())
         {
             var newLoaded = new LoadedImage(_loadedImage.FilePath, newBgr.Clone(), newAlpha.Clone());
@@ -145,12 +148,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
             var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
             _preview = preview;
-        }
-
-        // Update preview bitmap with the new alpha mask so both single and split views reflect changes
-        if (_preview is not null)
-        {
-            PreviewBitmap = _preview.Bgr.BuildPreviewWithAlpha(_workingAlpha);
+            PreviewBitmap = preview.Bgr.ToBitmapSource();
         }
 
         IsDirty = true;

@@ -75,6 +75,7 @@ public partial class DocumentViewModel
             string format = exportOptions.ExportJpeg ? "JPEG" : "PNG";
             var summary = $"Batch complete: {files.Count - failed}/{files.Count} {format} image(s) exported to {outputFolder}";
             StatusMessage = failed > 0 ? summary + $" ({failed} failed)" : summary;
+            LastExportedFilePath = outputFolder;
         }
         catch (Exception ex)
         {

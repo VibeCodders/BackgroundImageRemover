@@ -84,7 +84,12 @@ public partial class DocumentView : UserControl
             return;
         }
 
-        // First file replaces this tab's content; the rest open in their own tabs.
+        // First file replaces this tab's content; the rest open in their own tabs. Ask first
+        // when the tab has unsaved edits (opening would otherwise discard them silently).
+        if (!await ViewModel.ConfirmReplaceCurrentAsync())
+        {
+            return;
+        }
         await ViewModel.LoadAsync(files[0]);
         for (int i = 1; i < files.Length; i++)
         {

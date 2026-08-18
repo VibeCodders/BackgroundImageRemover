@@ -93,6 +93,7 @@ public class DocumentViewModelAdjustmentsTests
 
         Assert.NotNull(exporter.LastJpgPath);
         Assert.Equal(60, exporter.LastJpgQuality);
+        Assert.Equal("out.jpg", doc.LastExportedFilePath);
     }
 
     [Fact]
@@ -166,6 +167,81 @@ public class DocumentViewModelAdjustmentsTests
             new GrabCutStrategy(),
             new SamStrategy(new SamInferenceEngine(new FakeModelCacheService())),
             new FakeUncropFillService());
+    }
+
+    [Fact]
+    public async Task OpenFile_OnDirtyDocument_WithCancel_KeepsCurrentImage()
+    {
+        var dialogs = new OpenDialogService("other.png", CloseDocumentResult.Cancel);
+        var doc = CreateDocument(new AlphaImageLoader(), dialogs: dialogs);
+        await doc.LoadImageAsync("cutout.png");
+        MakeDirty(doc);
+        Assert.True(doc.IsDirty);
+        var before = doc.LoadedImageForUncrop!.FullBgr;
+
+        await doc.OpenFileCommand.ExecuteAsync(null);
+
+        Assert.Same(before, doc.LoadedImageForUncrop!.FullBgr);
+        Assert.Equal(1, dialogs.ConfirmCalls);
+        Assert.True(doc.IsDirty);
+    }
+
+    [Fact]
+    public async Task OpenFile_OnDirtyDocument_WithDiscard_ReplacesImage()
+    {
+        var dialogs = new OpenDialogService("other.png", CloseDocumentResult.Discard);
+        var doc = CreateDocument(new AlphaImageLoader(), dialogs: dialogs);
+        await doc.LoadImageAsync("cutout.png");
+        MakeDirty(doc);
+
+        await doc.OpenFileCommand.ExecuteAsync(null);
+
+        Assert.Equal("other.png", doc.LoadedImageForUncrop!.FilePath);
+        Assert.Equal(1, dialogs.ConfirmCalls);
+        Assert.False(doc.IsDirty);
+    }
+
+    [Fact]
+    public async Task OpenFile_OnCleanDocument_ReplacesWithoutPrompt()
+    {
+        var dialogs = new OpenDialogService("other.png", CloseDocumentResult.Cancel);
+        var doc = CreateDocument(new AlphaImageLoader(), dialogs: dialogs);
+        await doc.LoadImageAsync("cutout.png");
+
+        await doc.OpenFileCommand.ExecuteAsync(null);
+
+        Assert.Equal("other.png", doc.LoadedImageForUncrop!.FilePath);
+        Assert.Equal(0, dialogs.ConfirmCalls);
+    }
+
+    private static void MakeDirty(DocumentViewModel doc)
+    {
+        using var bgr = new Mat(4, 4, MatType.CV_8UC3, new Scalar(255, 0, 0));
+        using var alpha = new Mat(4, 4, MatType.CV_8UC1, new Scalar(255));
+        doc.ApplyToolResult(bgr.Clone(), alpha.Clone(), "Test");
+    }
+
+    /// <summary>Returns a path for the open dialog and a configurable result for the close confirmation.</summary>
+    private sealed class OpenDialogService : FakeDialogService
+    {
+        private readonly string? _path;
+        private readonly CloseDocumentResult _closeResult;
+
+        public OpenDialogService(string? path, CloseDocumentResult closeResult)
+        {
+            _path = path;
+            _closeResult = closeResult;
+        }
+
+        public int ConfirmCalls { get; private set; }
+
+        public override string? ShowOpenImageDialog() => _path;
+
+        public override CloseDocumentResult ConfirmCloseDocument(string documentName)
+        {
+            ConfirmCalls++;
+            return _closeResult;
+        }
     }
 
     /// <summary>Returns the input folder for the first folder prompt and the output folder for the second.</summary>

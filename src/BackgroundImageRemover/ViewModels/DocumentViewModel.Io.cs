@@ -2,6 +2,7 @@ using System.IO;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
+using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.Strategies;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
@@ -11,12 +12,43 @@ namespace BackgroundImageRemover.ViewModels;
 
 public partial class DocumentViewModel
 {
+    /// <summary>
+    /// Asks the user whether to discard the current (possibly dirty) document before it is
+    /// replaced by opening or pasting another image. Returns false when the user cancels.
+    /// </summary>
+    public async Task<bool> ConfirmReplaceCurrentAsync()
+    {
+        if (!IsDirty)
+        {
+            return true;
+        }
+
+        if (_shell is not null)
+        {
+            return await _shell.ConfirmCloseAsync(this);
+        }
+
+        // No shell attached (unit tests, standalone hosts): prompt directly with the same
+        // Save / Discard / Cancel semantics.
+        var choice = _dialogs.ConfirmCloseDocument(Title);
+        return choice switch
+        {
+            CloseDocumentResult.Cancel => false,
+            CloseDocumentResult.Save => await TrySaveProjectAsync(),
+            _ => true
+        };
+    }
+
     [RelayCommand]
     private async Task OpenFileAsync()
     {
         var path = _dialogs.ShowOpenImageDialog();
         if (path is not null)
         {
+            if (!await ConfirmReplaceCurrentAsync())
+            {
+                return;
+            }
             await LoadAsync(path);
         }
     }
@@ -51,6 +83,11 @@ public partial class DocumentViewModel
         if (clipboardBitmap is null)
         {
             StatusMessage = "No image found in clipboard.";
+            return;
+        }
+
+        if (!await ConfirmReplaceCurrentAsync())
+        {
             return;
         }
 

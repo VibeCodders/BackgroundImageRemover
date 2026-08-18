@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using BackgroundImageRemover.Helpers;
@@ -33,6 +34,36 @@ public partial class DocumentViewModel
 
     [ObservableProperty]
     private int _exportJpegQuality = 95;
+
+    /// <summary>Path of the most recently exported file (or folder, for a batch), used by the
+    /// "Open folder" status-bar action.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLastExport))]
+    private string? _lastExportedFilePath;
+
+    public bool HasLastExport => !string.IsNullOrWhiteSpace(LastExportedFilePath);
+
+    [RelayCommand]
+    private void RevealLastExportInExplorer()
+    {
+        if (LastExportedFilePath is null)
+        {
+            return;
+        }
+
+        try
+        {
+            string argument = File.Exists(LastExportedFilePath)
+                ? $"/select,\"{LastExportedFilePath}\""
+                : $"\"{Path.GetDirectoryName(LastExportedFilePath)}\"";
+            Process.Start(new ProcessStartInfo("explorer.exe", argument) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not open the folder: {ex.Message}";
+            _log.Error("Could not reveal last export in Explorer", ex);
+        }
+    }
 
     [ObservableProperty]
     private bool _exportDropShadowEnabled;
@@ -222,6 +253,7 @@ public partial class DocumentViewModel
                 }
             }
 
+            LastExportedFilePath = path;
             StatusMessage = $"Exported to {path}";
             _log.Info($"Exported to {path}");
         }

@@ -211,6 +211,10 @@
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding ImageDimensions}" VerticalAlignment="Center" Margin="0,0,12,0"
                                Foreground="#FF555555" FontSize="11" ToolTip="Current image dimensions in pixels" />
+                    <Button Content="📂 Open folder" Command="{Binding RevealLastExportInExplorerCommand}"
+                            Padding="8,2" Margin="0,0,12,0" FontSize="11" Cursor="Hand"
+                            ToolTip="Open the folder of the last exported file in Explorer"
+                            Visibility="{Binding HasLastExport, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <StackPanel Orientation="Horizontal" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
                         <ProgressBar IsIndeterminate="True" Width="100" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
                         <TextBlock Text="{Binding BusyMessage}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" Foreground="#FF555555" />

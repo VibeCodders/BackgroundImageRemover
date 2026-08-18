@@ -162,7 +162,11 @@ public partial class ShellViewModel
         }
     }
 
-    private async Task<bool> ConfirmCloseAsync(IDocumentTab document)
+    /// <summary>
+    /// Prompts the user for a dirty document (Save / Discard / Cancel) and returns true when
+    /// it is safe to proceed (discarded or successfully saved).
+    /// </summary>
+    public async Task<bool> ConfirmCloseAsync(IDocumentTab document)
     {
         if (!document.IsDirty)
         {

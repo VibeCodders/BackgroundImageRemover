@@ -114,6 +114,10 @@
                 <MenuItem Header="{Binding [SaveProject], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+S" />
                 <MenuItem Header="{Binding [SaveProjectAs], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.SaveProjectAsCommand}" InputGestureText="Ctrl+Shift+S" />
                 <Separator />
+                <MenuItem Header="{Binding [ExportPng], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.ExportCommand}" InputGestureText="Ctrl+E" />
+                <MenuItem Header="{Binding [ExportJpg], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.ExportJpgCommand}" InputGestureText="Ctrl+Shift+E" />
+                <MenuItem Header="{Binding [ExportWebp], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.ExportWebpCommand}" InputGestureText="Ctrl+Shift+W" />
+                <Separator />
                 <MenuItem Header="{Binding [Recent], Source={x:Static services:LocalizationService.Instance}}" ItemsSource="{Binding RecentFiles}" SubmenuOpened="RecentMenu_SubmenuOpened">
                     <MenuItem.ItemContainerStyle>
                         <Style TargetType="MenuItem">
@@ -145,10 +149,6 @@
                 <MenuItem Header="{Binding [PasteImage], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" InputGestureText="Ctrl+V" />
                 <MenuItem Header="{Binding [CopyCutout], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.CopyToClipboardCommand}" InputGestureText="Ctrl+Shift+C" />
                 <MenuItem Header="{Binding [CopyFilePath], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.CopyFilePathCommand}" InputGestureText="Ctrl+Shift+P" />
-                <Separator />
-                <MenuItem Header="{Binding [ExportPng], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.ExportCommand}" InputGestureText="Ctrl+E" />
-                <MenuItem Header="{Binding [ExportJpg], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.ExportJpgCommand}" InputGestureText="Ctrl+Shift+E" />
-                <MenuItem Header="{Binding [ExportWebp], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding SelectedDocument.ExportWebpCommand}" InputGestureText="Ctrl+Shift+W" />
             </MenuItem>
             <MenuItem Header="{Binding [Help], Source={x:Static services:LocalizationService.Instance}}">
                 <MenuItem Header="{Binding [About], Source={x:Static services:LocalizationService.Instance}}" Click="About_Click" />

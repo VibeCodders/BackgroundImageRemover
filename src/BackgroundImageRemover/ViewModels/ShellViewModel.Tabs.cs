@@ -127,6 +127,20 @@ public partial class ShellViewModel
     /// </summary>
     public async Task OpenInNewTabAsync(string path, string? displayTitle = null)
     {
+        // Reopening a file that is already open just focuses its tab instead of stacking a
+        // duplicate. Crash-recovery restores bypass this because they rebind old titles.
+        if (displayTitle is null)
+        {
+            var existing = Documents.OfType<DocumentViewModel>()
+                .FirstOrDefault(d => d.IsImageLoaded
+                    && string.Equals(d.FilePath, path, StringComparison.OrdinalIgnoreCase));
+            if (existing is not null)
+            {
+                SelectedDocument = existing;
+                return;
+            }
+        }
+
         var document = _documentFactory();
         document.SetShell(this);
         Documents.Add(document);
@@ -138,6 +152,16 @@ public partial class ShellViewModel
             document.ProjectPath = null;
             document.IsDirty = true;
         }
+
+        if (!document.IsImageLoaded)
+        {
+            // A failed open (corrupt or unsupported file) must not leave a dead tab behind.
+            Documents.Remove(document);
+            document.Dispose();
+            SelectedDocument = Documents.Count == 0 ? null : Documents[^1];
+            return;
+        }
+
         RefreshRecentFiles();
         RefreshRecentProjects();
     }

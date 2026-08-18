@@ -300,6 +300,94 @@ public class ShellViewModelTests
     }
 
     [Fact]
+    public async Task OpenInNewTabAsync_AlreadyOpenFile_FocusesExistingTabInsteadOfDuplicating()
+    {
+        var settings = new FakeSettingsService();
+        var fakeDialogs = new FakeImageDialogService("photo.png");
+
+        Func<DocumentViewModel> docFactory = () => new DocumentViewModel(
+            new FakeImageLoaderService(),
+            new FakeImageExportService(),
+            new FakeDownscaleService(),
+            fakeDialogs,
+            new FakeBatchProcessingService(),
+            settings,
+            new FakeProjectService(),
+            new FakeFileLogService(),
+            Array.Empty<BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy>(),
+            new BackgroundImageRemover.Services.Strategies.OnnxStrategy(new BackgroundImageRemover.Services.Onnx.OnnxInferenceEngine(new FakeModelCacheService(), new FakeFileLogService())),
+            new BackgroundImageRemover.Services.Strategies.GrabCutStrategy(),
+            new BackgroundImageRemover.Services.Strategies.SamStrategy(new BackgroundImageRemover.Services.Sam.SamInferenceEngine(new FakeModelCacheService())),
+            new FakeUncropFillService());
+
+        var shell = new ShellViewModel(
+            docFactory,
+            () => throw new InvalidOperationException("Should not create uncrop tab directly"),
+            fakeDialogs,
+            settings,
+            new FakeDownscaleService(),
+            new FakeFileLogService(),
+            Array.Empty<BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy>(),
+            new BackgroundImageRemover.Services.Strategies.OnnxStrategy(new BackgroundImageRemover.Services.Onnx.OnnxInferenceEngine(new FakeModelCacheService(), new FakeFileLogService())),
+            new BackgroundImageRemover.Services.Strategies.GrabCutStrategy(),
+            new BackgroundImageRemover.Services.Strategies.SamStrategy(new BackgroundImageRemover.Services.Sam.SamInferenceEngine(new FakeModelCacheService())),
+            new FakeUncropFillService(),
+            new FakeImageLoaderService(),
+            new FakeImageExportService());
+
+        await shell.OpenInNewTabAsync("photo.png");
+        var first = Assert.Single(shell.Documents);
+
+        await shell.OpenInNewTabAsync("PHOTO.PNG"); // different case must still match
+
+        Assert.Single(shell.Documents);
+        Assert.Same(first, shell.Documents[0]);
+        Assert.Same(first, shell.SelectedDocument);
+    }
+
+    [Fact]
+    public async Task OpenInNewTabAsync_FailedLoad_DoesNotLeaveDeadTabBehind()
+    {
+        var settings = new FakeSettingsService();
+        var fakeDialogs = new FakeImageDialogService("bad.png");
+
+        Func<DocumentViewModel> docFactory = () => new DocumentViewModel(
+            new FailingImageLoaderService(),
+            new FakeImageExportService(),
+            new FakeDownscaleService(),
+            fakeDialogs,
+            new FakeBatchProcessingService(),
+            settings,
+            new FakeProjectService(),
+            new FakeFileLogService(),
+            Array.Empty<BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy>(),
+            new BackgroundImageRemover.Services.Strategies.OnnxStrategy(new BackgroundImageRemover.Services.Onnx.OnnxInferenceEngine(new FakeModelCacheService(), new FakeFileLogService())),
+            new BackgroundImageRemover.Services.Strategies.GrabCutStrategy(),
+            new BackgroundImageRemover.Services.Strategies.SamStrategy(new BackgroundImageRemover.Services.Sam.SamInferenceEngine(new FakeModelCacheService())),
+            new FakeUncropFillService());
+
+        var shell = new ShellViewModel(
+            docFactory,
+            () => throw new InvalidOperationException("Should not create uncrop tab directly"),
+            fakeDialogs,
+            settings,
+            new FakeDownscaleService(),
+            new FakeFileLogService(),
+            Array.Empty<BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy>(),
+            new BackgroundImageRemover.Services.Strategies.OnnxStrategy(new BackgroundImageRemover.Services.Onnx.OnnxInferenceEngine(new FakeModelCacheService(), new FakeFileLogService())),
+            new BackgroundImageRemover.Services.Strategies.GrabCutStrategy(),
+            new BackgroundImageRemover.Services.Strategies.SamStrategy(new BackgroundImageRemover.Services.Sam.SamInferenceEngine(new FakeModelCacheService())),
+            new FakeUncropFillService(),
+            new FakeImageLoaderService(),
+            new FakeImageExportService());
+
+        await shell.OpenInNewTabAsync("bad.png");
+
+        Assert.Empty(shell.Documents);
+        Assert.Null(shell.SelectedDocument);
+    }
+
+    [Fact]
     public async Task CloseOtherTabs_ClosesEveryTabExceptTheKeptOne()
     {
         var shell = CreateShell(new FakeSettingsService());
@@ -376,6 +464,18 @@ public class ShellViewModelTests
 
         Assert.Equal(2, shell.Documents.Count);
         Assert.Same(dirty, shell.SelectedDocument);
+    }
+
+    private sealed class FailingImageLoaderService : BackgroundImageRemover.Services.ImageIo.IImageLoaderService
+    {
+        public Task<Models.LoadedImage> LoadAsync(string path, CancellationToken ct = default)
+            => throw new InvalidOperationException("simulated decode failure");
+
+        public Task<Models.LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
+            => throw new InvalidOperationException("simulated decode failure");
+
+        public Task<Models.LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
+            => throw new InvalidOperationException("simulated decode failure");
     }
 
     private sealed class CancelCloseDialogService : IDialogService

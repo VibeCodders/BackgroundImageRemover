@@ -1,4 +1,5 @@
 using System.IO;
+using System.Windows;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
@@ -12,6 +13,29 @@ namespace BackgroundImageRemover.ViewModels;
 
 public partial class DocumentViewModel
 {
+    /// <summary>Full path of the loaded source file (or project), null before any file is open.</summary>
+    public string? FilePath => _loadedImage?.FilePath;
+
+    /// <summary>Copies the loaded file's full path to the clipboard (Ctrl+Shift+P).</summary>
+    [RelayCommand]
+    private void CopyFilePath()
+    {
+        if (FilePath is null)
+        {
+            return;
+        }
+
+        try
+        {
+            Clipboard.SetText(FilePath);
+            StatusMessage = $"Copied path: {FilePath}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not copy path: {ex.Message}";
+        }
+    }
+
     /// <summary>
     /// Asks the user whether to discard the current (possibly dirty) document before it is
     /// replaced by opening or pasting another image. Returns false when the user cancels.

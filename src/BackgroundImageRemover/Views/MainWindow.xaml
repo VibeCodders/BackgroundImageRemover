@@ -26,6 +26,7 @@
         <KeyBinding Key="Tab" Modifiers="Control" Command="{Binding NextTabCommand}" />
         <KeyBinding Key="Tab" Modifiers="Control+Shift" Command="{Binding PreviousTabCommand}" />
         <KeyBinding Key="D" Modifiers="Control+Shift" Command="{Binding DuplicateTabCommand}" CommandParameter="{Binding SelectedDocument}" />
+        <KeyBinding Key="P" Modifiers="Control+Shift" Command="{Binding SelectedDocument.CopyFilePathCommand}" />
     </Window.InputBindings>
 
     <Window.Resources>
@@ -133,6 +134,7 @@
                 <Separator />
                 <MenuItem Header="_Paste image" Command="{Binding SelectedDocument.PasteFromClipboardCommand}" InputGestureText="Ctrl+V" />
                 <MenuItem Header="_Copy cutout" Command="{Binding SelectedDocument.CopyToClipboardCommand}" InputGestureText="Ctrl+Shift+C" />
+                <MenuItem Header="Copy _file path" Command="{Binding SelectedDocument.CopyFilePathCommand}" InputGestureText="Ctrl+Shift+P" />
                 <Separator />
                 <MenuItem Header="_Export PNG (no crop)" Command="{Binding SelectedDocument.ExportCommand}" InputGestureText="Ctrl+E" />
                 <MenuItem Header="Export _JPG (no crop)" Command="{Binding SelectedDocument.ExportJpgCommand}" InputGestureText="Ctrl+Shift+E" />
@@ -154,7 +156,8 @@
                                  Margin="0,0,6,0" VerticalAlignment="Center"
                                  ToolTip="{Binding DirtyHint}"
                                  Visibility="{Binding IsDirty, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        <TextBlock Text="{Binding TabTitle}" VerticalAlignment="Center" MaxWidth="180" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding TabTitle}" VerticalAlignment="Center" MaxWidth="180" TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding FilePath}" />
                         <Button Content="&#x2715;" Margin="8,0,0,0" Padding="2,0" FontSize="10"
                                 Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                 CommandParameter="{Binding}" />

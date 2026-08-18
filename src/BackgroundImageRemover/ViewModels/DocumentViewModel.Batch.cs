@@ -9,13 +9,25 @@ namespace BackgroundImageRemover.ViewModels;
 
 public partial class DocumentViewModel
 {
+    private CancellationTokenSource? _batchCts;
+
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CancelBatchCommand))]
     private bool _isBatchRunning;
 
     [ObservableProperty]
     private string? _batchStatus;
 
-    private bool CanBatch() => IsImageLoaded && !IsBusy && SelectedStrategy is not (StrategyKind.GrabCut or StrategyKind.Sam)
+    private bool CanCancelBatch() => IsBatchRunning;
+
+    [RelayCommand(CanExecute = nameof(CanCancelBatch))]
+    private void CancelBatch()
+    {
+        _batchCts?.Cancel();
+        BatchStatus = "Cancelling...";
+    }
+    private bool CanBatch() => IsImageLoaded && !IsBusy && !IsBatchRunning
+        && SelectedStrategy is not (StrategyKind.GrabCut or StrategyKind.Sam)
         && (SelectedStrategy != StrategyKind.Onnx || Onnx.IsModelReady);
 
     [RelayCommand(CanExecute = nameof(CanBatch))]
@@ -59,6 +71,9 @@ public partial class DocumentViewModel
         var context = BuildContext();
 
         BatchProgress? lastReported = null;
+        _batchCts?.Dispose();
+        _batchCts = new CancellationTokenSource();
+        var ct = _batchCts.Token;
         try
         {
             IsBatchRunning = true;
@@ -69,13 +84,18 @@ public partial class DocumentViewModel
                     ? "Batch complete."
                     : $"Processing {p.Completed + 1}/{p.Total}: {Path.GetFileName(p.CurrentFile)}";
             });
-            await _batchProcessor.RunAsync(files, strategy, context, outputFolder, progress, CancellationToken.None, exportOptions);
+            await _batchProcessor.RunAsync(files, strategy, context, outputFolder, progress, ct, exportOptions);
 
             int failed = lastReported?.Failed ?? 0;
             string format = exportOptions.ExportJpeg ? "JPEG" : "PNG";
             var summary = $"Batch complete: {files.Count - failed}/{files.Count} {format} image(s) exported to {outputFolder}";
             StatusMessage = failed > 0 ? summary + $" ({failed} failed)" : summary;
             LastExportedFilePath = outputFolder;
+        }
+        catch (OperationCanceledException)
+        {
+            BatchStatus = "Batch cancelled.";
+            StatusMessage = "Batch cancelled.";
         }
         catch (Exception ex)
         {
@@ -84,6 +104,8 @@ public partial class DocumentViewModel
         }
         finally
         {
+            _batchCts?.Dispose();
+            _batchCts = null;
             IsBatchRunning = false;
         }
 

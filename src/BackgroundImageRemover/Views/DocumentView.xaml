@@ -116,6 +116,10 @@
                                   ToolTip="Toggle the before/after slider comparison (drag the divider to scrub)" />
                     <Separator Margin="4,0" />
                     <Button Content="Batch..." Command="{Binding BatchCommand}" Padding="8,4" />
+                    <Button Content="✕ Cancel batch" Command="{Binding CancelBatchCommand}" Padding="8,4"
+                            Foreground="#FFB91C1C" FontWeight="SemiBold"
+                            Visibility="{Binding IsBatchRunning, Converter={StaticResource BoolToVisibilityConverter}}"
+                            ToolTip="Stop the running batch after the current file" />
                 </StackPanel>
 
                 <!-- Tool Openers (Right) -->

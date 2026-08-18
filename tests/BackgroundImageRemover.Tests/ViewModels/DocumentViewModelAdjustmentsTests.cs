@@ -145,12 +145,66 @@ public class DocumentViewModelAdjustmentsTests
         }
     }
 
+    [Fact]
+    public async Task FilePath_IsExposedAfterLoad()
+    {
+        var doc = CreateDocument(new AlphaImageLoader());
+        Assert.Null(doc.FilePath);
+
+        await doc.LoadImageAsync("cutout.png");
+
+        Assert.Equal("cutout.png", doc.FilePath);
+    }
+
+    [Fact]
+    public async Task Batch_Cancel_StopsProcessingAndReportsCancelled()
+    {
+        var inputDir = Path.Combine(Path.GetTempPath(), $"batch_cancel_in_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(inputDir);
+        try
+        {
+            using var img = new Mat(1, 1, MatType.CV_8UC3, new Scalar(1, 2, 3));
+            Cv2.ImWrite(Path.Combine(inputDir, "a.png"), img);
+
+            var settings = new FakeSettingsService();
+            var dialogs = new BatchFolderDialogService(inputDir, inputDir);
+            var doc = CreateDocument(
+                new AlphaImageLoader(),
+                settings: settings,
+                dialogs: dialogs,
+                strategies: new IBackgroundRemovalStrategy[] { new ChromaKeyStrategy() },
+                batch: new CancellableBatchProcessingService());
+            await doc.LoadImageAsync("cutout.png");
+
+            var batchTask = doc.BatchCommand.ExecuteAsync(null);
+
+            // Give the async flow a chance to reach the RunAsync await point.
+            for (int i = 0; i < 100 && !doc.IsBatchRunning; i++)
+            {
+                await Task.Delay(10);
+            }
+            Assert.True(doc.IsBatchRunning);
+            Assert.True(doc.CancelBatchCommand.CanExecute(null));
+
+            doc.CancelBatchCommand.Execute(null);
+            await batchTask;
+
+            Assert.False(doc.IsBatchRunning);
+            Assert.Equal("Batch cancelled.", doc.StatusMessage);
+        }
+        finally
+        {
+            Directory.Delete(inputDir, true);
+        }
+    }
+
     private static DocumentViewModel CreateDocument(
         IImageLoaderService loader,
         IImageExportService? exporter = null,
         IDialogService? dialogs = null,
         FakeSettingsService? settings = null,
-        IEnumerable<IBackgroundRemovalStrategy>? strategies = null)
+        IEnumerable<IBackgroundRemovalStrategy>? strategies = null,
+        IBatchProcessingService? batch = null)
     {
         settings ??= new FakeSettingsService();
         return new DocumentViewModel(
@@ -158,7 +212,7 @@ public class DocumentViewModelAdjustmentsTests
             exporter ?? new FakeImageExportService(),
             new FakeDownscaleService(),
             dialogs ?? new FakeDialogService(),
-            new FakeBatchProcessingService(),
+            batch ?? new FakeBatchProcessingService(),
             settings,
             new FakeProjectService(),
             new FakeFileLogService(),
@@ -241,6 +295,22 @@ public class DocumentViewModelAdjustmentsTests
         {
             ConfirmCalls++;
             return _closeResult;
+        }
+    }
+
+    /// <summary>A batch processor that runs until the cancellation token is triggered.</summary>
+    private sealed class CancellableBatchProcessingService : IBatchProcessingService
+    {
+        public async Task RunAsync(
+            IReadOnlyList<string> inputFiles,
+            IBackgroundRemovalStrategy strategy,
+            StrategyContext context,
+            string outputFolder,
+            IProgress<BatchProgress>? progress,
+            CancellationToken ct,
+            BatchExportOptions? exportOptions = null)
+        {
+            await Task.Delay(Timeout.InfiniteTimeSpan, ct); // throws OperationCanceledException when cancelled
         }
     }
 

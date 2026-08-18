@@ -12,6 +12,8 @@ public class ShellViewModelTests
         public void Save() { }
         public void AddRecentFile(string path) => Current.RecentFiles.Insert(0, path);
         public void AddRecentProject(string path) => Current.RecentProjects.Insert(0, path);
+        public void ClearRecentFiles() => Current.RecentFiles.Clear();
+        public void ClearRecentProjects() => Current.RecentProjects.Clear();
     }
 
     private sealed class UnusedDialogService : IDialogService
@@ -107,6 +109,79 @@ public class ShellViewModelTests
         shell.RefreshRecentFiles();
 
         Assert.Equal(new[] { "only.png" }, shell.RecentFiles);
+    }
+
+    [Fact]
+    public void ClearRecentFiles_EmptiesBothListAndSettings()
+    {
+        var settings = new FakeSettingsService();
+        settings.AddRecentFile("a.png");
+        settings.AddRecentFile("b.png");
+        settings.AddRecentProject("p.ibrproj");
+        var shell = CreateShell(settings);
+        shell.RefreshRecentFiles();
+        shell.RefreshRecentProjects();
+        Assert.NotEmpty(shell.RecentFiles);
+        Assert.NotEmpty(shell.RecentProjects);
+
+        shell.ClearRecentFilesCommand.Execute(null);
+        shell.ClearRecentProjectsCommand.Execute(null);
+
+        Assert.Empty(shell.RecentFiles);
+        Assert.Empty(shell.RecentProjects);
+        Assert.Empty(settings.Current.RecentFiles);
+        Assert.Empty(settings.Current.RecentProjects);
+    }
+
+    [Fact]
+    public async Task DuplicateTab_OpensCopyOfCurrentDocument()
+    {
+        var settings = new FakeSettingsService();
+        var fakeDialogs = new FakeImageDialogService("photo.png");
+
+        Func<DocumentViewModel> docFactory = () => new DocumentViewModel(
+            new FakeImageLoaderService(),
+            new FakeImageExportService(),
+            new FakeDownscaleService(),
+            fakeDialogs,
+            new FakeBatchProcessingService(),
+            settings,
+            new FakeProjectService(),
+            new FakeFileLogService(),
+            Array.Empty<BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy>(),
+            new BackgroundImageRemover.Services.Strategies.OnnxStrategy(new BackgroundImageRemover.Services.Onnx.OnnxInferenceEngine(new FakeModelCacheService(), new FakeFileLogService())),
+            new BackgroundImageRemover.Services.Strategies.GrabCutStrategy(),
+            new BackgroundImageRemover.Services.Strategies.SamStrategy(new BackgroundImageRemover.Services.Sam.SamInferenceEngine(new FakeModelCacheService())),
+            new FakeUncropFillService());
+
+        var shell = new ShellViewModel(
+            docFactory,
+            () => throw new InvalidOperationException("Should not create uncrop tab directly"),
+            fakeDialogs,
+            settings,
+            new FakeDownscaleService(),
+            new FakeFileLogService(),
+            Array.Empty<BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy>(),
+            new BackgroundImageRemover.Services.Strategies.OnnxStrategy(new BackgroundImageRemover.Services.Onnx.OnnxInferenceEngine(new FakeModelCacheService(), new FakeFileLogService())),
+            new BackgroundImageRemover.Services.Strategies.GrabCutStrategy(),
+            new BackgroundImageRemover.Services.Strategies.SamStrategy(new BackgroundImageRemover.Services.Sam.SamInferenceEngine(new FakeModelCacheService())),
+            new FakeUncropFillService(),
+            new FakeImageLoaderService(),
+            new FakeImageExportService());
+
+        await shell.NewProjectCommand.ExecuteAsync(null);
+        Assert.Single(shell.Documents);
+        var docVm = Assert.IsType<DocumentViewModel>(shell.Documents[0]);
+        Assert.True(docVm.IsImageLoaded);
+
+        shell.DuplicateTabCommand.Execute(docVm);
+
+        Assert.Equal(2, shell.Documents.Count);
+        var copy = Assert.IsType<DocumentViewModel>(shell.Documents[1]);
+        Assert.NotSame(docVm, copy);
+        Assert.Same(copy, shell.SelectedDocument);
+        Assert.True(copy.IsImageLoaded);
+        Assert.Equal(docVm.Title + " (copy)", copy.Title);
     }
 
     [Fact]

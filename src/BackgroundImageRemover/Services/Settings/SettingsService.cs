@@ -9,6 +9,8 @@ public interface ISettingsService
     void Save();
     void AddRecentFile(string path);
     void AddRecentProject(string path);
+    void ClearRecentFiles();
+    void ClearRecentProjects();
 }
 
 /// <summary>Loads/saves a small JSON settings file in %LOCALAPPDATA%\BackgroundImageRemover\settings.json.</summary>
@@ -76,6 +78,18 @@ public sealed class SettingsService : ISettingsService
         {
             Current.RecentProjects.RemoveAt(Current.RecentProjects.Count - 1);
         }
+        Save();
+    }
+
+    public void ClearRecentFiles()
+    {
+        Current.RecentFiles.Clear();
+        Save();
+    }
+
+    public void ClearRecentProjects()
+    {
+        Current.RecentProjects.Clear();
         Save();
     }
 }

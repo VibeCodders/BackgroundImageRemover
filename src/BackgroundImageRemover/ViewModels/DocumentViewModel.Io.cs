@@ -4,6 +4,7 @@ using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Strategies;
 using CommunityToolkit.Mvvm.Input;
+using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
 
 namespace BackgroundImageRemover.ViewModels;
@@ -85,6 +86,72 @@ public partial class DocumentViewModel
         {
             StatusMessage = $"Could not load image: {ex.Message}";
             _log.Error($"Could not load image: {path}", ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Initializes a fresh document from an already-decoded state (used by Duplicate Tab), so
+    /// the copy shows exactly the current view of the source tab with a clean edit history.
+    /// </summary>
+    public async Task LoadFromSnapshotAsync(LoadedImage snapshot, string sourceName)
+    {
+        IsBusy = true;
+        BusyMessage = "Duplicating tab...";
+        try
+        {
+            _previewCts?.Cancel();
+
+            _loadedImage?.Dispose();
+            _preview?.Dispose();
+            DisposeWorkingResult();
+            _history.Clear();
+            RefreshUndoRedoState();
+            _samEmbedding = null;
+            _samPromptPointPreview = null;
+            Sam.HasClickedPoint = false;
+            _magicWandSeedPreview = null;
+            MagicWand.HasClickedPoint = false;
+            ProjectPath = null;
+            GrabCut.SelectedRect = null;
+            ScribbleManager.Clear();
+            GrabCut.HasScribbles = false;
+
+            _loadedImage = snapshot;
+            var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
+            _preview = preview;
+            PreviewBitmap = preview.Bgr.ToBitmapSource();
+            ResultBitmap = null;
+
+            // The snapshot is the current state of the source tab: restore it verbatim as the
+            // working result so the duplicate is pixel-identical, even when the source has no
+            // meaningful transparency.
+            _workingBgr = _loadedImage.FullBgr.Clone();
+            _workingAlpha = _loadedImage.FullAlpha?.Clone()
+                ?? new Mat(_loadedImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+            _workingResultIsLoadedCutout = false;
+            _workingResultHandEdited = true;
+
+            IsImageLoaded = true;
+            IsCutout = BackgroundCompositingService.HasMeaningfulTransparency(_workingAlpha);
+            ImageWidth = _loadedImage.FullBgr.Width;
+            ImageHeight = _loadedImage.FullBgr.Height;
+            Title = sourceName;
+            StatusMessage = $"Duplicated {sourceName} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})";
+            _log.Info($"Duplicated tab from {sourceName}");
+
+            OnPropertyChanged(nameof(HasWorkingResult));
+            RefreshUndoRedoState();
+            ExportCommand.NotifyCanExecuteChanged();
+            RefreshResultBitmapFromWorking();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not duplicate tab: {ex.Message}";
+            _log.Error("Could not duplicate tab", ex);
         }
         finally
         {

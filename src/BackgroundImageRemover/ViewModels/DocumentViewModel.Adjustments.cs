@@ -2,6 +2,7 @@ using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
 
 namespace BackgroundImageRemover.ViewModels;
@@ -83,28 +84,19 @@ public partial class DocumentViewModel
             IsBusy = true;
             BusyMessage = "Applying visual adjustments...";
 
-            var adjustedFullBgr = await Task.Run(() => ImageProcessingHelper.ApplyAdjustments(_loadedImage.FullBgr, adjustments));
+            // Apply the adjustments to the current visible state (the working result when
+            // edits exist, otherwise the loaded image) and route them through the standard
+            // history-aware pipeline used by every edit tool. This makes the operation
+            // undoable and never rewrites the source image or drops its alpha channel.
+            using var fallbackAlpha = (_workingBgr is null || _workingAlpha is null) && _loadedImage.FullAlpha is null
+                ? new Mat(_loadedImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255))
+                : null;
+            Mat targetBgr = _workingBgr ?? _loadedImage.FullBgr;
+            Mat targetAlpha = _workingAlpha ?? _loadedImage.FullAlpha ?? fallbackAlpha!;
 
-            var newLoadedImage = new LoadedImage(_loadedImage.FilePath, adjustedFullBgr);
-            _loadedImage.Dispose();
-            _preview?.Dispose();
-            _loadedImage = newLoadedImage;
+            var adjustedBgr = await Task.Run(() => ImageProcessingHelper.ApplyAdjustments(targetBgr, adjustments));
 
-            var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
-            _preview = preview;
-            PreviewBitmap = preview.Bgr.ToBitmapSource();
-
-            // Also apply to working BGR if present
-            if (_workingBgr is not null)
-            {
-                var adjustedWorking = ImageProcessingHelper.ApplyAdjustments(_workingBgr, adjustments);
-                _workingBgr.Dispose();
-                _workingBgr = adjustedWorking;
-            }
-
-            _workingResultHandEdited = true;
-            IsDirty = true;
-            RefreshResultBitmapFromWorking();
+            ApplyToolResult(adjustedBgr, targetAlpha.Clone(), "Adjustments");
 
             ResetAdjustments();
             StatusMessage = "Image adjustments applied successfully.";

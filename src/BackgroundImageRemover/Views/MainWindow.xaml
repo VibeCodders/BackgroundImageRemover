@@ -24,6 +24,7 @@
         <KeyBinding Key="W" Modifiers="Control" Command="{Binding CloseTabCommand}" CommandParameter="{Binding SelectedDocument}" />
         <KeyBinding Key="Tab" Modifiers="Control" Command="{Binding NextTabCommand}" />
         <KeyBinding Key="Tab" Modifiers="Control+Shift" Command="{Binding PreviousTabCommand}" />
+        <KeyBinding Key="D" Modifiers="Control+Shift" Command="{Binding DuplicateTabCommand}" CommandParameter="{Binding SelectedDocument}" />
     </Window.InputBindings>
 
     <Window.Resources>
@@ -98,6 +99,7 @@
                 <MenuItem Header="_Open image..." Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
                 <MenuItem Header="Open in _new tab..." Command="{Binding NewTabCommand}" />
                 <MenuItem Header="Open _project..." Command="{Binding OpenProjectCommand}" InputGestureText="Ctrl+O" />
+                <MenuItem Header="_Duplicate tab" Command="{Binding DuplicateTabCommand}" CommandParameter="{Binding SelectedDocument}" InputGestureText="Ctrl+Shift+D" />
                 <Separator />
                 <MenuItem Header="_Save project" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+S" />
                 <MenuItem Header="Save project _as..." Command="{Binding SelectedDocument.SaveProjectAsCommand}" InputGestureText="Ctrl+Shift+S" />
@@ -120,6 +122,9 @@
                         </Style>
                     </MenuItem.ItemContainerStyle>
                 </MenuItem>
+                <Separator />
+                <MenuItem Header="Clear recent files" Command="{Binding ClearRecentFilesCommand}" />
+                <MenuItem Header="Clear recent projects" Command="{Binding ClearRecentProjectsCommand}" />
             </MenuItem>
             <MenuItem Header="_Edit">
                 <MenuItem Header="_Undo" Command="{Binding SelectedDocument.UndoCommand}" InputGestureText="Ctrl+Z" />

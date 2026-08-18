@@ -60,6 +60,38 @@ public partial class ShellViewModel
         await OpenInNewTabAsync(path);
     }
 
+    /// <summary>Opens a copy of the current tab showing the same state, with a clean history.</summary>
+    [RelayCommand]
+    private async Task DuplicateTabAsync(IDocumentTab? document)
+    {
+        if (document is not DocumentViewModel doc || !doc.IsImageLoaded)
+        {
+            return;
+        }
+
+        var copy = _documentFactory();
+        copy.SetShell(this);
+        Documents.Add(copy);
+        SelectedDocument = copy;
+
+        var snapshot = doc.CreateCurrentStateSnapshot();
+        await copy.LoadFromSnapshotAsync(snapshot, doc.Title + " (copy)");
+    }
+
+    [RelayCommand]
+    private void ClearRecentFiles()
+    {
+        _settings.ClearRecentFiles();
+        RefreshRecentFiles();
+    }
+
+    [RelayCommand]
+    private void ClearRecentProjects()
+    {
+        _settings.ClearRecentProjects();
+        RefreshRecentProjects();
+    }
+
     /// <summary>Selects the tab after the current one (Ctrl+Tab), wrapping around.</summary>
     [RelayCommand]
     private void NextTab()

@@ -46,6 +46,36 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="PopupToolButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="Margin" Value="0,1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FFE0E7FF" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FFC7D2FE" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <DockPanel>
@@ -80,48 +110,37 @@
 
                 <!-- Tool Openers (Right) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Border Background="#FFEAEAEA" CornerRadius="6" Padding="2">
-                        <StackPanel Orientation="Horizontal">
-                            <Button Content="✂  Background Remover" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.RemoveBackground}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="⤢  Uncrop / Expand" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Uncrop}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="🖌  Retouch &amp; Brush" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Retouch}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="✨  Adjustments" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Adjustments}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="🎨  Filters" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Filters}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="↻  Transform" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Transform}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="🖼  Compose" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Compose}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="▣  Frame" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Frame}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="✎  Text" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Text}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="✂  Crop" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Crop}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="⤡  Resize" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Resize}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="▦  Mosaic" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Mosaic}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="🔲  Overlay" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Overlay}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="📊  Levels" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Levels}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="🩹  Heal" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Heal}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="✋  Liquify" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Liquify}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="🔲  Perspective" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Perspective}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="✨  FX" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Fx}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                            <Button Content="📐  Tilt-Shift" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.TiltShift}"
-                                    IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource ToolTabActionButton}" />
-                        </StackPanel>
-                    </Border>
+                    <Button x:Name="ToolsMenuButton" Content="🛠 Tools ▾" Padding="12,6" Margin="0,0,4,0"
+                            Click="ToolsMenuButton_Click" Cursor="Hand" FontWeight="SemiBold" />
+                    <Popup x:Name="ToolsPopup" PlacementTarget="{Binding ElementName=ToolsMenuButton}" Placement="Bottom"
+                           StaysOpen="False" AllowsTransparency="True">
+                        <Border Background="White" BorderBrush="#FFCCCCCC" BorderThickness="1" CornerRadius="6"
+                                Padding="6" MinWidth="240" MaxHeight="520" Margin="0,4,0,0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <Button Content="✂  Background Remover" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.RemoveBackground}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="⤢  Uncrop / Expand" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Uncrop}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="🖌  Retouch &amp; Brush" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Retouch}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="✨  Adjustments" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Adjustments}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="🎨  Filters" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Filters}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="↻  Transform" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Transform}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="🖼  Compose" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Compose}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="▣  Frame" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Frame}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="✎  Text" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Text}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="✂  Crop" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Crop}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="⤡  Resize" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Resize}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="▦  Mosaic" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Mosaic}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="🔲  Overlay" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Overlay}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="📊  Levels" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Levels}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="🩹  Heal" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Heal}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="✋  Liquify" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Liquify}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="🔲  Perspective" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Perspective}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="✨  FX" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.Fx}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                    <Button Content="📐  Tilt-Shift" Command="{Binding OpenToolTabCommand}" CommandParameter="{x:Static models:EditorTool.TiltShift}" IsEnabled="{Binding IsImageLoaded}" Style="{StaticResource PopupToolButton}" Click="ToolButton_Click" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Popup>
                 </StackPanel>
             </DockPanel>
         </Border>

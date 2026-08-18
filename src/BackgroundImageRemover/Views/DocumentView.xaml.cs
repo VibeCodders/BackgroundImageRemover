@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.ViewModels;
 using BackgroundImageRemover.Views.Controls;
@@ -106,4 +107,14 @@ public partial class DocumentView : UserControl
 
     private static double BrushPixelRadius(object? sender, double fallback)
         => sender is ImagePreviewControl preview ? preview.BrushRadius * preview.ImagePixelScale : fallback;
+
+    private void ToolsMenuButton_Click(object sender, RoutedEventArgs e)
+    {
+        ToolsPopup.IsOpen = !ToolsPopup.IsOpen;
+    }
+
+    private void ToolButton_Click(object sender, RoutedEventArgs e)
+    {
+        ToolsPopup.IsOpen = false;
+    }
 }

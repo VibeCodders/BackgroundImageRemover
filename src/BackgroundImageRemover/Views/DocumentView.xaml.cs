@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using BackgroundImageRemover.Helpers;
+using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Strategies;
 using BackgroundImageRemover.ViewModels;
 using BackgroundImageRemover.Views.Controls;
 
@@ -24,8 +26,27 @@ public partial class DocumentView : UserControl
         SinglePreview.CursorImagePositionChanged += OnCursorImagePositionChanged;
         OriginalPreview.CursorImagePositionChanged += OnCursorImagePositionChanged;
         ResultEditPreview.CursorImagePositionChanged += OnCursorImagePositionChanged;
+
+        // Single-letter tool shortcuts apply to whichever preview currently has focus.
+        SinglePreview.ToolShortcutInvoked += OnToolShortcut;
+        OriginalPreview.ToolShortcutInvoked += OnToolShortcut;
+        ResultEditPreview.ToolShortcutInvoked += OnToolShortcut;
+        SinglePreview.MagicWandShortcutInvoked += OnMagicWandShortcut;
+        OriginalPreview.MagicWandShortcutInvoked += OnMagicWandShortcut;
+        ResultEditPreview.MagicWandShortcutInvoked += OnMagicWandShortcut;
+
         Loaded += DocumentView_Loaded;
         Unloaded += DocumentView_Unloaded;
+    }
+
+    private void OnToolShortcut(object? sender, EditorTool tool) => ViewModel?.OpenToolTab(tool);
+
+    private void OnMagicWandShortcut(object? sender, EventArgs e)
+    {
+        if (ViewModel is not null)
+        {
+            ViewModel.SelectedStrategy = StrategyKind.MagicWand;
+        }
     }
 
     private void OnCursorImagePositionChanged(object? sender, Point? position)

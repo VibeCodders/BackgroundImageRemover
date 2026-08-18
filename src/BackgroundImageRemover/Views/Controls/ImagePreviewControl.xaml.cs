@@ -99,6 +99,12 @@ public partial class ImagePreviewControl : UserControl
     /// </summary>
     public event EventHandler<Point?>? CursorImagePositionChanged;
 
+    /// <summary>Raised when a single-letter shortcut activates a tool while this control has focus.</summary>
+    public event EventHandler<EditorTool>? ToolShortcutInvoked;
+
+    /// <summary>Raised when the W shortcut selects the Magic Wand strategy while this control has focus.</summary>
+    public event EventHandler? MagicWandShortcutInvoked;
+
     private Point? _dragStart;
     private Point? _panStart;
     private Point _panStartTranslate;
@@ -169,7 +175,32 @@ public partial class ImagePreviewControl : UserControl
     }
 
     private void RootGrid_KeyDown(object sender, KeyEventArgs e)
-        => HandleZoomShortcut(e.Key, Keyboard.Modifiers == ModifierKeys.Control);
+    {
+        // Ctrl+... = zoom shortcuts; single letters (no modifiers) = tool shortcuts.
+        if (Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            HandleZoomShortcut(e.Key, controlPressed: true);
+            return;
+        }
+
+        if (Keyboard.Modifiers != ModifierKeys.None)
+        {
+            return;
+        }
+
+        if (PreviewToolShortcuts.ToolForKey(e.Key) is { } tool)
+        {
+            ToolShortcutInvoked?.Invoke(this, tool);
+            e.Handled = true;
+            return;
+        }
+
+        if (PreviewToolShortcuts.IsMagicWandKey(e.Key))
+        {
+            MagicWandShortcutInvoked?.Invoke(this, EventArgs.Empty);
+            e.Handled = true;
+        }
+    }
 
     /// <summary>Zooms the view around the center of the viewport by the given factor.</summary>
     private void ZoomBy(double factor)

@@ -112,6 +112,8 @@
                     <Separator Margin="4,0" />
                     <ToggleButton Content="◫ Split View" IsChecked="{Binding IsSplitViewEnabled}" Padding="8,4" Margin="0,0,4,0"
                                   ToolTip="Toggle side-by-side comparison view (Original on left, Result on right)" />
+                    <ToggleButton Content="◑ Compare" IsChecked="{Binding IsCompareMode}" Padding="8,4" Margin="0,0,4,0"
+                                  ToolTip="Toggle the before/after slider comparison (drag the divider to scrub)" />
                     <Separator Margin="4,0" />
                     <Button Content="Batch..." Command="{Binding BatchCommand}" Padding="8,4" />
                 </StackPanel>

@@ -115,8 +115,25 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
     {
         if (_sourceImage is null || _workingAlpha is null) return;
         using var resized = BuildResult(_sourceImage.FullBgr);
-        ResultBitmap = resized.ToBitmapSource(_workingAlpha);
+        using var alpha = BuildAlphaFor(resized.Size());
+        ResultBitmap = resized.ToBitmapSource(alpha);
         IsDirty = true;
+    }
+
+    /// <summary>Returns the source alpha scaled to the new image size (or an opaque mask when
+    /// the source had no transparency), so resizing a cutout keeps its transparency intact.</summary>
+    private Mat BuildAlphaFor(Size size)
+    {
+        // Callers guard _workingAlpha; keep a safe opaque fallback for the compiler.
+        if (_workingAlpha is null)
+        {
+            return new Mat(size, MatType.CV_8UC1, new Scalar(255));
+        }
+        if (_workingAlpha.Size() == size)
+        {
+            return _workingAlpha.Clone();
+        }
+        return ResizeService.ResizeTo(_workingAlpha, size.Width, size.Height, Method);
     }
 
     private Mat BuildResult(Mat src) => Mode switch
@@ -138,7 +155,7 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
         }
 
         var bgr = BuildResult(_sourceImage.FullBgr);
-        using var alpha = new Mat(bgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        var alpha = BuildAlphaFor(bgr.Size());
         _parentDocument.ApplyToolResult(bgr, alpha, "Resize");
 
         _shell.CloseTabDirect(this);

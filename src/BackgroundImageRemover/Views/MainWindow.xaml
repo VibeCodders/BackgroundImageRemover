@@ -30,12 +30,12 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top" Background="#FFF5F6F8" BorderBrush="#FFDDDDDD" BorderThickness="0,0,0,1" Padding="4,2">
             <MenuItem Header="_File">
-                <MenuItem Header="_New / Open image..." Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
-                <MenuItem Header="_Open image..." Command="{Binding NewTabCommand}" />
+                <MenuItem Header="_Open image..." Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />
+                <MenuItem Header="Open in _new tab..." Command="{Binding NewTabCommand}" />
                 <MenuItem Header="Open _project..." Command="{Binding OpenProjectCommand}" InputGestureText="Ctrl+O" />
                 <Separator />
-                <MenuItem Header="_Save" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+S" />
-                <MenuItem Header="Save _as..." Command="{Binding SelectedDocument.SaveProjectAsCommand}" InputGestureText="Ctrl+Shift+S" />
+                <MenuItem Header="_Save project" Command="{Binding SelectedDocument.SaveProjectCommand}" InputGestureText="Ctrl+S" />
+                <MenuItem Header="Save project _as..." Command="{Binding SelectedDocument.SaveProjectAsCommand}" InputGestureText="Ctrl+Shift+S" />
                 <Separator />
                 <MenuItem Header="_Recent" ItemsSource="{Binding RecentFiles}" SubmenuOpened="RecentMenu_SubmenuOpened">
                     <MenuItem.ItemContainerStyle>

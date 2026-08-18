@@ -78,13 +78,16 @@
 
                 <!-- Tool Category Selector (Center/Right) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock Text="Tool:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#FF555555" />
-                    <RadioButton Content="✂ Background Remover" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=RemoveBackground}" />
-                    <RadioButton Content="⤢ Uncrop / Expand" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Uncrop}" />
-                    <RadioButton Content="🖌 Retouch &amp; Brush" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Retouch}" />
+                    <Border Background="#FFEAEAEA" CornerRadius="6" Padding="2">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton Content="✂  Background Remover" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
+                                         IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=RemoveBackground}" />
+                            <RadioButton Content="⤢  Uncrop / Expand" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
+                                         IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Uncrop}" />
+                            <RadioButton Content="🖌  Retouch &amp; Brush" GroupName="ActiveEditorTool" Style="{StaticResource ToolTabRadioButton}"
+                                         IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Retouch}" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -369,48 +372,72 @@
 
         <!-- Central Work Area -->
         <Grid>
-            <!-- View when UNPAINT/UNCROP tool is active -->
-            <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Uncrop}" Margin="8">
-                <controls:UncropCanvasControl ImageSource="{Binding PreviewBitmap}"
-                                              ImagePadding="{Binding UncropPadding, Mode=TwoWay}" />
+            <!-- Empty State / Open Image Drop Prompt -->
+            <Grid Visibility="{Binding IsImageLoaded, Converter={StaticResource InverseBoolToVisibilityConverter}}" Background="#FFF8F9FA">
+                <Border BorderBrush="#FFCCCCCC" BorderThickness="2" CornerRadius="12" Margin="40" Padding="30"
+                        Background="White" MaxWidth="600" MaxHeight="380" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border Width="64" Height="64" CornerRadius="32" Background="#FFE6F2FB" HorizontalAlignment="Center" Margin="0,0,0,16">
+                            <TextBlock Text="🖼" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="Welcome to Image Editor" FontSize="20" FontWeight="Bold" Foreground="#FF222222" HorizontalAlignment="Center" Margin="0,0,0,8" />
+                        <TextBlock Text="Open an image to start editing, removing backgrounds, outpainting, or retouching"
+                                   FontSize="13" Foreground="#FF666666" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,24" />
+                        
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="📁 Open Image..." Command="{Binding OpenFileCommand}"
+                                    Padding="16,8" Height="36" FontWeight="SemiBold" Background="#FF0078D7" Foreground="White" BorderThickness="0" Cursor="Hand" Margin="0,0,12,0" />
+                        </StackPanel>
+                        <TextBlock Text="Or drag &amp; drop an image anywhere into this window" FontSize="11" Foreground="#FF888888" HorizontalAlignment="Center" Margin="0,16,0,0" />
+                    </StackPanel>
+                </Border>
             </Grid>
 
-            <!-- Dual-pane image view when Background Remover or Retouch is active -->
-            <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground|Retouch}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+            <!-- Editor Work Area (when image is loaded) -->
+            <Grid Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
+                <!-- View when UNPAINT/UNCROP tool is active -->
+                <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Uncrop}" Margin="8">
+                    <controls:UncropCanvasControl ImageSource="{Binding PreviewBitmap}"
+                                                  ImagePadding="{Binding UncropPadding, Mode=TwoWay}" />
+                </Grid>
 
-                <DockPanel Grid.Column="0" Margin="8">
-                    <TextBlock DockPanel.Dock="Top" Text="Original (draw rect / scribbles / SAM click)" FontWeight="Bold" Margin="0,0,0,4" />
-                    <controls:ImagePreviewControl x:Name="OriginalPreview"
-                                                   ImageSource="{Binding PreviewBitmap}"
-                                                   Mode="{Binding OriginalMode}"
-                                                   RectSelected="OriginalPreview_RectSelected"
-                                                   StrokeStart="OriginalPreview_StrokeStart"
-                                                   StrokeMove="OriginalPreview_StrokeMove"
-                                                   StrokeEnd="OriginalPreview_StrokeEnd"
-                                                   SamPointClicked="OriginalPreview_SamPointClicked" />
-                </DockPanel>
+                <!-- Dual-pane image view when Background Remover or Retouch is active -->
+                <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground|Retouch}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                <DockPanel Grid.Column="1" Margin="8">
-                    <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
+                    <DockPanel Grid.Column="0" Margin="8">
+                        <TextBlock DockPanel.Dock="Top" Text="Original (draw rect / scribbles / SAM click)" FontWeight="Bold" Margin="0,0,0,4" />
+                        <controls:ImagePreviewControl x:Name="OriginalPreview"
+                                                       ImageSource="{Binding PreviewBitmap}"
+                                                       Mode="{Binding OriginalMode}"
+                                                       RectSelected="OriginalPreview_RectSelected"
+                                                       StrokeStart="OriginalPreview_StrokeStart"
+                                                       StrokeMove="OriginalPreview_StrokeMove"
+                                                       StrokeEnd="OriginalPreview_StrokeEnd"
+                                                       SamPointClicked="OriginalPreview_SamPointClicked" />
+                    </DockPanel>
 
-                    <controls:CompareImageControl BeforeSource="{Binding PreviewBitmap}" AfterSource="{Binding ResultBitmap}"
-                                                   DividerPosition="{Binding CompareDividerPosition}"
-                                                   Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <DockPanel Grid.Column="1" Margin="8">
+                        <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
 
-                    <controls:ImagePreviewControl x:Name="ResultEditPreview"
-                                                   ImageSource="{Binding ResultBitmap}"
-                                                   Mode="{Binding ResultMode}"
-                                                   BrushRadius="{Binding BrushRadius}"
-                                                   StrokeStart="ResultEditPreview_StrokeStart"
-                                                   StrokeMove="ResultEditPreview_StrokeMove"
-                                                   StrokeEnd="ResultEditPreview_StrokeEnd"
-                                                   WandClicked="ResultEditPreview_WandClicked"
-                                                   Visibility="{Binding IsCompareMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
-                </DockPanel>
+                        <controls:CompareImageControl BeforeSource="{Binding PreviewBitmap}" AfterSource="{Binding ResultBitmap}"
+                                                       DividerPosition="{Binding CompareDividerPosition}"
+                                                       Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                        <controls:ImagePreviewControl x:Name="ResultEditPreview"
+                                                       ImageSource="{Binding ResultBitmap}"
+                                                       Mode="{Binding ResultMode}"
+                                                       BrushRadius="{Binding BrushRadius}"
+                                                       StrokeStart="ResultEditPreview_StrokeStart"
+                                                       StrokeMove="ResultEditPreview_StrokeMove"
+                                                       StrokeEnd="ResultEditPreview_StrokeEnd"
+                                                       WandClicked="ResultEditPreview_WandClicked"
+                                                       Visibility="{Binding IsCompareMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                    </DockPanel>
+                </Grid>
             </Grid>
         </Grid>
     </DockPanel>

@@ -25,6 +25,11 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     private Mat? _workingBgr;
     private Mat? _workingAlpha;
 
+    // Decoded background image, cached so dragging a slider re-composites without re-reading
+    // the whole file from disk on every preview tick.
+    private Mat? _backgroundBgr;
+    private string? _backgroundCachePath;
+
     public override string ToolBadge => "🖼 Compose";
     public override string AccentColor => "#0E7490";
 
@@ -158,12 +163,25 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     partial void OnSubjectFlipVerticalChanged(bool value) => RefreshPreview();
 
     [RelayCommand]
-    private void PickBackgroundImage()
+    private async Task PickBackgroundImageAsync()
     {
         var path = _dialogs.ShowOpenImageDialog();
-        if (path is not null)
+        if (path is null)
         {
+            return;
+        }
+
+        try
+        {
+            using var background = await _imageLoader.LoadAsync(path);
+            _backgroundBgr?.Dispose();
+            _backgroundBgr = background.FullBgr.Clone();
+            _backgroundCachePath = path;
             BackgroundImagePath = path;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not load background image: {ex.Message}";
         }
     }
 
@@ -280,9 +298,27 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
         {
             return subject.ToBgr();
         }
-        using var background = _imageLoader.LoadAsync(BackgroundImagePath).GetAwaiter().GetResult();
+
+        // Use the cached decode when available; only fall back to a blocking load when the
+        // path was set without going through PickBackgroundImage (e.g. a restored session).
+        if (_backgroundBgr is null || !string.Equals(_backgroundCachePath, BackgroundImagePath, StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                using var background = _imageLoader.LoadAsync(BackgroundImagePath).GetAwaiter().GetResult();
+                _backgroundBgr?.Dispose();
+                _backgroundBgr = background.FullBgr.Clone();
+                _backgroundCachePath = BackgroundImagePath;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Could not load background image: {ex.Message}";
+                return subject.ToBgr();
+            }
+        }
+
         var matte = new Vec3b(SolidColor.B, SolidColor.G, SolidColor.R);
-        return BackgroundCompositingService.CompositeOntoImage(subject, background.FullBgr, FitMode, matte);
+        return BackgroundCompositingService.CompositeOntoImage(subject, _backgroundBgr, FitMode, matte);
     }
 
     public override Task ApplyAsync()
@@ -330,5 +366,6 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
         _sourceImage?.Dispose();
         _workingBgr?.Dispose();
         _workingAlpha?.Dispose();
+        _backgroundBgr?.Dispose();
     }
 }

@@ -50,7 +50,7 @@
                                  IsChecked="{Binding BackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}" />
                     <StackPanel Margin="16,0,0,8"
                                 Visibility="{Binding BackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Image}">
-                        <Button Content="Choose image..." Command="{Binding PickBackgroundImageCommand}" HorizontalAlignment="Left" Margin="0,0,0,6" />
+                        <Button Content="Choose image..." Command="{Binding PickBackgroundImageAsyncCommand}" HorizontalAlignment="Left" Margin="0,0,0,6" />
                         <TextBlock Text="Fit" FontSize="11" Foreground="#FF666666" Margin="0,0,0,2" />
                         <UniformGrid Columns="2">
                             <RadioButton Content="Stretch" GroupName="ComposeFit" Margin="0,0,4,0" FontSize="11"

@@ -118,6 +118,46 @@ public sealed class DocumentEditHistory : IDisposable
         return steps;
     }
 
+    /// <summary>
+    /// Jumps directly to the timeline step at <paramref name="chronologicalIndex"/> (the index
+    /// used by <see cref="BuildSteps"/>: 0 = oldest). Steps before it are undone, steps after
+    /// it are redone, so the working state matches that point in the edit session.
+    /// Returns false when the index is out of range or no state is loaded.
+    /// </summary>
+    public bool RestoreTo(int chronologicalIndex, ref Mat? bgr, ref Mat? alpha, out string name)
+    {
+        name = string.Empty;
+        if (bgr is null || alpha is null || chronologicalIndex < 0 || chronologicalIndex >= _undo.Count + _redo.Count)
+        {
+            return false;
+        }
+
+        int undos = _undo.Count - chronologicalIndex;
+        if (undos < 0)
+        {
+            // The target is among the undone steps: redo it back into place.
+            int redos = chronologicalIndex - _undo.Count + 1;
+            for (int i = 0; i < redos; i++)
+            {
+                if (!Redo(ref bgr, ref alpha, out name))
+                {
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < undos; i++)
+            {
+                if (!Undo(ref bgr, ref alpha, out name))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public void Clear()
     {
         ClearEntries();

@@ -378,6 +378,41 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
     public bool HasEditSteps => EditSteps.Count > 0;
 
+    /// <summary>Step clicked in the history panel; restored immediately then reset to null.</summary>
+    [ObservableProperty]
+    private EditHistoryStep? _selectedEditStep;
+
+    partial void OnSelectedEditStepChanged(EditHistoryStep? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+        RestoreToEditStep(value);
+        SelectedEditStep = null;
+    }
+
+    /// <summary>Jumps the working state to the clicked timeline step (undo/redo as needed).</summary>
+    private void RestoreToEditStep(EditHistoryStep step)
+    {
+        if (_loadedImage is null)
+        {
+            return;
+        }
+
+        int index = EditSteps.IndexOf(step);
+        if (index < 0)
+        {
+            return;
+        }
+
+        if (!_history.RestoreTo(index, ref _workingBgr, ref _workingAlpha, out var name))
+        {
+            return;
+        }
+        FinalizeHistoryRestore(string.IsNullOrEmpty(name) ? "Restored history state." : $"Restored: {name}");
+    }
+
     public DocumentViewModel(
         IImageLoaderService imageLoader,
         IImageExportService imageExporter,

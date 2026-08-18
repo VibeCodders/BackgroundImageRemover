@@ -26,7 +26,19 @@
 
             <TextBlock Text="Startup" FontSize="15" FontWeight="Bold" Foreground="#FF222222" Margin="0,0,0,8" />
 
-            <CheckBox Content="Reopen the last opened files on startup" IsChecked="{Binding ReopenLastSession}" Margin="0,0,0,20" />
+            <CheckBox Content="Reopen the last opened files on startup" IsChecked="{Binding ReopenLastSession}" Margin="0,0,0,12" />
+
+            <TextBlock Text="Autosave" FontSize="15" FontWeight="Bold" Foreground="#FF222222" Margin="0,0,0,8" />
+
+            <CheckBox Content="Save a recovery snapshot of dirty documents periodically" IsChecked="{Binding EnableAutosave}" Margin="0,0,0,8" />
+
+            <StackPanel Orientation="Horizontal" Margin="24,0,0,20">
+                <TextBlock Text="Every" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <ComboBox Width="64" Padding="2"
+                          ItemsSource="{Binding AutosaveIntervals}"
+                          SelectedItem="{Binding AutosaveIntervalMinutes}" />
+                <TextBlock Text="minutes" VerticalAlignment="Center" Margin="8,0,0,0" />
+            </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Cancel" IsCancel="True" Padding="16,6" Margin="0,0,8,0" Cursor="Hand" />

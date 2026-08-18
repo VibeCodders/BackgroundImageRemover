@@ -55,6 +55,28 @@ public partial class DocumentViewModel
         await SaveProjectToPathAsync(path);
     }
 
+    /// <summary>
+    /// Persists the current document state to a recovery file (used by the periodic autosave)
+    /// without touching the project path, dirty flag, recents, or status message — the
+    /// autosave must never look like a real save or overwrite the user's own project file.
+    /// </summary>
+    public async Task SaveRecoverySnapshotAsync(string path)
+    {
+        if (_loadedImage is null)
+        {
+            return;
+        }
+        var settings = BuildProjectDocument();
+        settings.Title = Title;
+        await _projectService.SaveAsync(
+            path,
+            _loadedImage.FullBgr,
+            _loadedImage.FullAlpha,
+            _workingBgr,
+            _workingAlpha,
+            settings);
+    }
+
     private async Task SaveProjectToPathAsync(string path)
     {
         if (_loadedImage is null)

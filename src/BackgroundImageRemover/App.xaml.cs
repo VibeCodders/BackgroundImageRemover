@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using BackgroundImageRemover.Services.Autosave;
 using BackgroundImageRemover.Services.Batch;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.ImageIo;
@@ -43,6 +44,8 @@ public partial class App : Application
         var window = _serviceProvider.GetRequiredService<MainWindow>();
         var shell = _serviceProvider.GetRequiredService<ShellViewModel>();
         var settings = _serviceProvider.GetRequiredService<ISettingsService>();
+        var autosave = _serviceProvider.GetRequiredService<IAutosaveService>();
+        autosave.Start(shell);
 
         // Apply the persisted theme and language before the window is shown.
         ThemeManager.Apply(settings.Current.Theme);
@@ -50,10 +53,29 @@ public partial class App : Application
 
         // Open files passed on the command line (e.g. double-clicking a .ibrproj or an image
         // once the OS associates the extension with this app). Without arguments, optionally
-        // reopen the last session's files/projects.
+        // reopen the last session's files/projects. Any autosave snapshots left by a crashed
+        // session are offered for restore first (before other tabs open, so nothing interferes).
         var startupPaths = e.Args.Where(File.Exists).ToArray();
         window.Loaded += async (_, _) =>
         {
+            var dialogs = _serviceProvider.GetRequiredService<IDialogService>();
+            if (autosave.HasPendingRecovery)
+            {
+                var entries = autosave.PendingRecovery;
+                if (dialogs.ConfirmRestoreRecovery(entries.Count))
+                {
+                    foreach (var entry in entries)
+                    {
+                        await shell.OpenInNewTabAsync(entry.FilePath, entry.Title);
+                        autosave.RemoveRecoveryEntry(entry.Id);
+                    }
+                }
+                else
+                {
+                    autosave.DiscardAllRecovery();
+                }
+            }
+
             var paths = startupPaths.Length > 0
                 ? startupPaths
                 : settings.Current.ReopenLastSession
@@ -84,6 +106,7 @@ public partial class App : Application
         services.AddSingleton<IBatchProcessingService, BatchProcessingService>();
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IProjectService, ProjectService>();
+        services.AddSingleton<IAutosaveService, AutosaveService>();
         services.AddSingleton<IFileLogService, FileLogService>();
 
         services.AddSingleton<OnnxInferenceEngine>();
@@ -119,6 +142,9 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // The user has confirmed closing all tabs, so no recovery data must survive: leftover
+        // snapshots would be misread as a crash on the next launch.
+        _serviceProvider?.GetService<IAutosaveService>()?.CleanupOnExit();
         _serviceProvider?.Dispose();
         base.OnExit(e);
     }

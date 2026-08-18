@@ -54,6 +54,7 @@ public class UncropViewModelTests
         public virtual string? ShowSaveProjectDialog(string? suggestedFileName) => null;
         public virtual BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
         public virtual void ShowPreferencesDialog() { }
+        public virtual bool ConfirmRestoreRecovery(int documentCount) => false;
     }
 
     /// <summary>Returns a configurable path for the PNG save dialog.</summary>

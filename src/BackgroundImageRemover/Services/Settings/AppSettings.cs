@@ -27,6 +27,12 @@ public sealed class AppSettings
     /// <summary>When true, the last opened files/projects are reopened on the next launch.</summary>
     public bool ReopenLastSession { get; set; }
 
+    /// <summary>Periodically saves dirty documents to a recovery folder so work survives a crash.</summary>
+    public bool EnableAutosave { get; set; } = true;
+
+    /// <summary>Minutes between autosave passes (clamped to at least 1).</summary>
+    public int AutosaveIntervalMinutes { get; set; } = 2;
+
     public List<string> RecentFiles { get; set; } = new();
 
     /// <summary>Projects saved with "Save", listed so a half-finished job can be reopened and continued.</summary>

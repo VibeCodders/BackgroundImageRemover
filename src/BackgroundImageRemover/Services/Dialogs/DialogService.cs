@@ -23,6 +23,9 @@ public interface IDialogService
     BatchExportOptions? ShowBatchOptionsDialog();
     CloseDocumentResult ConfirmCloseDocument(string documentName);
     void ShowPreferencesDialog();
+
+    /// <summary>Asks whether unsaved work from a previous (crashed) session should be restored.</summary>
+    bool ConfirmRestoreRecovery(int documentCount);
 }
 
 public sealed class DialogService : IDialogService
@@ -126,5 +129,17 @@ public sealed class DialogService : IDialogService
     public void ShowPreferencesDialog()
     {
         new Views.PreferencesWindow(_settings).ShowDialog();
+    }
+
+    public bool ConfirmRestoreRecovery(int documentCount)
+    {
+        var noun = documentCount == 1 ? "document" : "documents";
+        var result = MessageBox.Show(
+            $"Unsaved changes from the previous session were found for {documentCount} {noun}.\n\nRestore them now?",
+            "Recover unsaved work",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question,
+            MessageBoxResult.Yes);
+        return result == MessageBoxResult.Yes;
     }
 }

@@ -17,6 +17,15 @@ public sealed partial class PreferencesViewModel : ObservableObject
     [ObservableProperty]
     private bool _reopenLastSession;
 
+    [ObservableProperty]
+    private bool _enableAutosave;
+
+    [ObservableProperty]
+    private int _autosaveIntervalMinutes = 2;
+
+    /// <summary>Choices offered by the interval ComboBox.</summary>
+    public IReadOnlyList<int> AutosaveIntervals { get; } = new[] { 1, 2, 5, 10, 15, 30 };
+
     /// <summary>0 = System, 1 = English, 2 = Italiano (kept in sync with the ComboBox items).</summary>
     public int LanguageIndex
     {
@@ -39,6 +48,10 @@ public sealed partial class PreferencesViewModel : ObservableObject
         Theme = settings.Theme;
         Language = settings.Language;
         ReopenLastSession = settings.ReopenLastSession;
+        EnableAutosave = settings.EnableAutosave;
+        AutosaveIntervalMinutes = AutosaveIntervals.Contains(settings.AutosaveIntervalMinutes)
+            ? settings.AutosaveIntervalMinutes
+            : 2;
         OnPropertyChanged(nameof(LanguageIndex));
     }
 
@@ -47,6 +60,8 @@ public sealed partial class PreferencesViewModel : ObservableObject
         settings.Theme = Theme;
         settings.Language = Language;
         settings.ReopenLastSession = ReopenLastSession;
+        settings.EnableAutosave = EnableAutosave;
+        settings.AutosaveIntervalMinutes = Math.Clamp(AutosaveIntervalMinutes, 1, 60);
     }
 }
 

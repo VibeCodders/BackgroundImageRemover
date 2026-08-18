@@ -120,13 +120,24 @@ public partial class ShellViewModel
         SelectedDocument = Documents[(index - 1 + Documents.Count) % Documents.Count];
     }
 
-    public async Task OpenInNewTabAsync(string path)
+    /// <summary>
+    /// Opens a file or project in a new tab. When <paramref name="displayTitle"/> is provided
+    /// (crash-recovery restore), the tab keeps its original name, is marked dirty, and is not
+    /// bound to the recovery file — the next Ctrl+S prompts for a real save location.
+    /// </summary>
+    public async Task OpenInNewTabAsync(string path, string? displayTitle = null)
     {
         var document = _documentFactory();
         document.SetShell(this);
         Documents.Add(document);
         SelectedDocument = document;
         await document.LoadAsync(path);
+        if (displayTitle is not null)
+        {
+            document.Title = displayTitle;
+            document.ProjectPath = null;
+            document.IsDirty = true;
+        }
         RefreshRecentFiles();
         RefreshRecentProjects();
     }

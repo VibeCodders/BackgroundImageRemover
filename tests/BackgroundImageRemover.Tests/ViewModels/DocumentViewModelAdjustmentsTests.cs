@@ -397,6 +397,7 @@ public class DocumentViewModelAdjustmentsTests
         public virtual BatchExportOptions? ShowBatchOptionsDialog() => null;
         public virtual CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
         public virtual void ShowPreferencesDialog() { }
+        public virtual bool ConfirmRestoreRecovery(int documentCount) => false;
     }
 
     private sealed class FakeImageExportService : IImageExportService

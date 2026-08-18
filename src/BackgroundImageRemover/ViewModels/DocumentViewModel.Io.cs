@@ -118,6 +118,8 @@ public partial class DocumentViewModel
         ResultBitmap = null;
         IsImageLoaded = true;
         IsCutout = isActualCutout;
+        ImageWidth = _loadedImage.FullBgr.Width;
+        ImageHeight = _loadedImage.FullBgr.Height;
         var displayTitle = Path.GetFileName(sourceName);
         if (string.IsNullOrWhiteSpace(displayTitle)) displayTitle = sourceName;
         Title = IsCutout ? displayTitle + " (cutout)" : displayTitle;

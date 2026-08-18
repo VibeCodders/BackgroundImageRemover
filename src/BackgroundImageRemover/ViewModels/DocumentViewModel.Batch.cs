@@ -43,6 +43,13 @@ public partial class DocumentViewModel
             return;
         }
 
+        // Ask for the output format (PNG cutouts vs JPEG composited onto a background).
+        var exportOptions = _dialogs.ShowBatchOptionsDialog();
+        if (exportOptions is null)
+        {
+            return;
+        }
+
         // Let the user pick where the cutouts go; default to the input folder's "cutouts" subfolder.
         var defaultOutput = Path.Combine(inputFolder, "cutouts");
         var outputFolder = _dialogs.ShowOpenFolderDialog("Select output folder for cutouts", defaultOutput) ?? defaultOutput;
@@ -59,10 +66,11 @@ public partial class DocumentViewModel
                     ? "Batch complete."
                     : $"Processing {p.Completed + 1}/{p.Total}: {Path.GetFileName(p.CurrentFile)}";
             });
-            await _batchProcessor.RunAsync(files, strategy, context, outputFolder, progress, CancellationToken.None);
+            await _batchProcessor.RunAsync(files, strategy, context, outputFolder, progress, CancellationToken.None, exportOptions);
 
             int failed = lastReported?.Failed ?? 0;
-            var summary = $"Batch complete: {files.Count - failed}/{files.Count} image(s) exported to {outputFolder}";
+            string format = exportOptions.ExportJpeg ? "JPEG" : "PNG";
+            var summary = $"Batch complete: {files.Count - failed}/{files.Count} {format} image(s) exported to {outputFolder}";
             StatusMessage = failed > 0 ? summary + $" ({failed} failed)" : summary;
         }
         catch (Exception ex)

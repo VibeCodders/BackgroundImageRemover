@@ -1,6 +1,9 @@
 using System.IO;
+using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.ImageIo;
 using BackgroundImageRemover.Services.Strategies;
+using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Batch;
 
@@ -14,13 +17,15 @@ public interface IBatchProcessingService
         StrategyContext context,
         string outputFolder,
         IProgress<BatchProgress>? progress,
-        CancellationToken ct);
+        CancellationToken ct,
+        BatchExportOptions? exportOptions = null);
 }
 
 /// <summary>
 /// Applies one strategy/context to every file in a list, full resolution, exporting each as
-/// "<name>_cutout.png" into the output folder. Files that fail to load/process are skipped
-/// (reported via progress's CurrentFile) rather than aborting the whole batch.
+/// "<name>_cutout.png" (or "_cutout.jpg" when JPEG output is requested) into the output
+/// folder. Files that fail to load/process are skipped (reported via progress's CurrentFile)
+/// rather than aborting the whole batch.
 /// </summary>
 public sealed class BatchProcessingService : IBatchProcessingService
 {
@@ -39,7 +44,8 @@ public sealed class BatchProcessingService : IBatchProcessingService
         StrategyContext context,
         string outputFolder,
         IProgress<BatchProgress>? progress,
-        CancellationToken ct)
+        CancellationToken ct,
+        BatchExportOptions? exportOptions = null)
     {
         Directory.CreateDirectory(outputFolder);
 
@@ -54,8 +60,19 @@ public sealed class BatchProcessingService : IBatchProcessingService
             {
                 using var loaded = await _loader.LoadAsync(file, ct);
                 using var result = await strategy.RunFullAsync(loaded.FullBgr, context, ct);
-                string outPath = Path.Combine(outputFolder, Path.GetFileNameWithoutExtension(file) + "_cutout.png");
-                await _exporter.ExportPngAsync(result.Bgra, outPath, ct);
+                string baseName = Path.GetFileNameWithoutExtension(file);
+
+                if (exportOptions is { ExportJpeg: true })
+                {
+                    using var composited = CompositeForJpeg(result.Bgra, exportOptions, loaded.FullBgr);
+                    string outPath = Path.Combine(outputFolder, baseName + "_cutout.jpg");
+                    await _exporter.ExportJpgAsync(composited, outPath, exportOptions.JpegQuality, ct);
+                }
+                else
+                {
+                    string outPath = Path.Combine(outputFolder, baseName + "_cutout.png");
+                    await _exporter.ExportPngAsync(result.Bgra, outPath, ct);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -69,5 +86,24 @@ public sealed class BatchProcessingService : IBatchProcessingService
         }
 
         progress?.Report(new BatchProgress(inputFiles.Count, inputFiles.Count, string.Empty, failed));
+    }
+
+    /// <summary>Composites a transparent cutout onto the requested background for JPEG output.</summary>
+    private static Mat CompositeForJpeg(Mat bgra, BatchExportOptions options, Mat sourceBgr)
+    {
+        switch (options.BackgroundMode)
+        {
+            case ExportBackgroundMode.Gradient:
+                return BackgroundCompositingService.CompositeOntoGradient(
+                    bgra,
+                    new Vec3b(options.GradientTop.B, options.GradientTop.G, options.GradientTop.R),
+                    new Vec3b(options.GradientBottom.B, options.GradientBottom.G, options.GradientBottom.R));
+            case ExportBackgroundMode.Blur:
+                return BackgroundCompositingService.CompositeOntoBlurredImage(bgra, sourceBgr, options.BlurRadius);
+            default:
+                return BackgroundCompositingService.CompositeOntoColor(
+                    bgra,
+                    new Vec3b(options.SolidColor.B, options.SolidColor.G, options.SolidColor.R));
+        }
     }
 }

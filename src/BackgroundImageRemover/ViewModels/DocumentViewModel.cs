@@ -301,6 +301,19 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private bool _isBusy;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ImageDimensions))]
+    private int _imageWidth;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ImageDimensions))]
+    private int _imageHeight;
+
+    /// <summary>Current image dimensions for the status bar, e.g. "1920 × 1080".</summary>
+    public string ImageDimensions => IsImageLoaded && ImageWidth > 0 && ImageHeight > 0
+        ? $"{ImageWidth} × {ImageHeight}"
+        : string.Empty;
+
+    [ObservableProperty]
     private string? _busyMessage;
 
     [ObservableProperty]

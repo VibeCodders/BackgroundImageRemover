@@ -25,6 +25,7 @@ public class BatchProcessingServiceTests
     private sealed class FakeImageExportService : IImageExportService
     {
         public readonly List<string> ExportedPaths = new();
+        public readonly List<int> JpegQualities = new();
 
         public Task ExportPngAsync(Mat bgra, string filePath, CancellationToken ct = default)
         {
@@ -35,6 +36,7 @@ public class BatchProcessingServiceTests
         public Task ExportJpgAsync(Mat bgr, string filePath, int quality = 95, CancellationToken ct = default)
         {
             ExportedPaths.Add(filePath);
+            JpegQualities.Add(quality);
             return Task.CompletedTask;
         }
     }
@@ -81,6 +83,45 @@ public class BatchProcessingServiceTests
         await service.RunAsync(files, new FakeStrategy(), new StrategyContext(), "out", progress: null, CancellationToken.None);
 
         Assert.Equal(2, exporter.ExportedPaths.Count);
+    }
+
+    [Fact]
+    public async Task RunAsync_WithJpegOptions_ExportsJpgFilesWithQuality()
+    {
+        var loader = new FakeImageLoaderService();
+        var exporter = new FakeImageExportService();
+        var service = new BatchProcessingService(loader, exporter);
+
+        var options = new BatchExportOptions
+        {
+            ExportJpeg = true,
+            JpegQuality = 80,
+            BackgroundMode = ExportBackgroundMode.SolidColor,
+            SolidColor = System.Windows.Media.Colors.White
+        };
+
+        await service.RunAsync(
+            new[] { "a.png", "b.png" }, new FakeStrategy(), new StrategyContext(), "out",
+            progress: null, CancellationToken.None, options);
+
+        Assert.Equal(2, exporter.ExportedPaths.Count);
+        Assert.All(exporter.ExportedPaths, p => Assert.EndsWith("_cutout.jpg", p, StringComparison.OrdinalIgnoreCase));
+        Assert.All(exporter.JpegQualities, q => Assert.Equal(80, q));
+    }
+
+    [Fact]
+    public async Task RunAsync_DefaultOptions_ExportsPngFiles()
+    {
+        var loader = new FakeImageLoaderService();
+        var exporter = new FakeImageExportService();
+        var service = new BatchProcessingService(loader, exporter);
+
+        await service.RunAsync(
+            new[] { "a.png" }, new FakeStrategy(), new StrategyContext(), "out",
+            progress: null, CancellationToken.None);
+
+        Assert.Single(exporter.ExportedPaths);
+        Assert.EndsWith("_cutout.png", exporter.ExportedPaths[0], StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

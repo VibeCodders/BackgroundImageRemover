@@ -208,9 +208,13 @@
                 </StackPanel>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
-                <StackPanel Orientation="Horizontal" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <ProgressBar IsIndeterminate="True" Width="100" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding BusyMessage}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" Foreground="#FF555555" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding ImageDimensions}" VerticalAlignment="Center" Margin="0,0,12,0"
+                               Foreground="#FF555555" FontSize="11" ToolTip="Current image dimensions in pixels" />
+                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <ProgressBar IsIndeterminate="True" Width="100" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding BusyMessage}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" Foreground="#FF555555" />
+                    </StackPanel>
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>

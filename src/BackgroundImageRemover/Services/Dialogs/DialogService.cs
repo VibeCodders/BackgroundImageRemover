@@ -19,6 +19,7 @@ public interface IDialogService
     string? ShowOpenFolderDialog(string title, string? initialDirectory = null);
     string? ShowOpenProjectDialog();
     string? ShowSaveProjectDialog(string? suggestedFileName);
+    BatchExportOptions? ShowBatchOptionsDialog();
     CloseDocumentResult ConfirmCloseDocument(string documentName);
 }
 
@@ -88,6 +89,12 @@ public sealed class DialogService : IDialogService
             DefaultExt = ".ibrproj"
         };
         return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
+    public BatchExportOptions? ShowBatchOptionsDialog()
+    {
+        var dialog = new Views.BatchOptionsDialog();
+        return dialog.ShowDialog() == true ? dialog.BuildOptions() : null;
     }
 
     public CloseDocumentResult ConfirmCloseDocument(string documentName)

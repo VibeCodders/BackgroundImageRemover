@@ -52,6 +52,7 @@ public class UncropViewModelTests
         public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG") => null;
         public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG") => null;
         public string? ShowSaveProjectDialog(string? suggestedFileName) => null;
+        public BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
     }
 
     private sealed class DummyImageLoaderService : IImageLoaderService

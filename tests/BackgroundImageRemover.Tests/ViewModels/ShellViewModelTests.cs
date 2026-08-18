@@ -22,6 +22,7 @@ public class ShellViewModelTests
         public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => throw new NotImplementedException();
         public string? ShowOpenProjectDialog() => throw new NotImplementedException();
         public string? ShowSaveProjectDialog(string? suggestedFileName) => throw new NotImplementedException();
+        public BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => throw new NotImplementedException();
     }
 
@@ -163,6 +164,7 @@ public class ShellViewModelTests
         public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => null;
         public string? ShowOpenProjectDialog() => null;
         public string? ShowSaveProjectDialog(string? suggestedFileName) => null;
+        public BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
         public CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Discard;
     }
 
@@ -222,7 +224,7 @@ public class ShellViewModelTests
 
     private sealed class FakeBatchProcessingService : BackgroundImageRemover.Services.Batch.IBatchProcessingService
     {
-        public Task RunAsync(IReadOnlyList<string> filePaths, BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy strategy, BackgroundImageRemover.Services.Strategies.StrategyContext context, string outputFolder, IProgress<BackgroundImageRemover.Services.Batch.BatchProgress>? progress = null, CancellationToken ct = default)
+        public Task RunAsync(IReadOnlyList<string> filePaths, BackgroundImageRemover.Services.Strategies.IBackgroundRemovalStrategy strategy, BackgroundImageRemover.Services.Strategies.StrategyContext context, string outputFolder, IProgress<BackgroundImageRemover.Services.Batch.BatchProgress>? progress = null, CancellationToken ct = default, BackgroundImageRemover.Models.BatchExportOptions? exportOptions = null)
             => Task.CompletedTask;
     }
 

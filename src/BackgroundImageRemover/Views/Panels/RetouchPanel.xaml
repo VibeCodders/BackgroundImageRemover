@@ -1,0 +1,41 @@
+<UserControl x:Class="BackgroundImageRemover.Views.Panels.RetouchPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:models="clr-namespace:BackgroundImageRemover.Models"
+             mc:Ignorable="d"
+             d:DesignHeight="400" d:DesignWidth="300">
+    <StackPanel>
+        <TextBlock Text="Retouch &amp; Refinement" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+
+        <TextBlock Text="Active Tool:" FontWeight="SemiBold" Margin="0,0,0,4" />
+        <UniformGrid Columns="3" Margin="0,0,0,8">
+            <Button Content="None" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.None}" Margin="0,0,2,0" />
+            <Button Content="Brush" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.Brush}" Margin="2,0" />
+            <Button Content="Wand" Command="{Binding SetResultModeCommand}" CommandParameter="{x:Static models:InteractionMode.MagicWand}" Margin="2,0,0,0" />
+        </UniformGrid>
+
+        <TextBlock Text="Brush Action:" FontWeight="SemiBold" Margin="0,4,0,4" />
+        <UniformGrid Columns="2" Margin="0,0,0,8">
+            <RadioButton Content="Restore" GroupName="BrushModeDoc" Margin="0,0,4,0"
+                         IsChecked="{Binding BrushMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Restore}" />
+            <RadioButton Content="Erase" GroupName="BrushModeDoc" Margin="4,0,0,0"
+                         IsChecked="{Binding BrushMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Erase}" />
+        </UniformGrid>
+
+        <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Brush}">
+            <TextBlock Text="Brush size" Margin="0,4,0,0" />
+            <Slider Minimum="2" Maximum="120" Value="{Binding BrushRadius}" />
+            <TextBlock Text="Brush hardness" Margin="0,4,0,0" />
+            <Slider Minimum="0" Maximum="0.95" Value="{Binding BrushHardness}" />
+        </StackPanel>
+
+        <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=MagicWand}">
+            <TextBlock Text="Wand tolerance" Margin="0,4,0,0" />
+            <Slider Minimum="1" Maximum="100" Value="{Binding MagicWandTolerance}" />
+        </StackPanel>
+
+        <CheckBox Content="Compare before/after (Split View)" IsChecked="{Binding IsCompareMode}" Margin="0,16,0,16" />
+    </StackPanel>
+</UserControl>

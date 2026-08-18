@@ -10,7 +10,7 @@ namespace BackgroundImageRemover.Services.Strategies;
 /// once per image by the caller and passed in via <see cref="StrategyContext.SamEmbedding"/>;
 /// this strategy only runs the cheap decoder per click, so preview and full-res runs are both fast.
 /// </summary>
-public sealed class SamStrategy : StrategyBase
+public sealed class SamStrategy : StrategyBase, ISamModelStrategy
 {
     public override StrategyKind Kind => StrategyKind.Sam;
 

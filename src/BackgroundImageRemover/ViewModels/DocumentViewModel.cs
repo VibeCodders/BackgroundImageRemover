@@ -66,12 +66,9 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private bool _workingResultIsLoadedCutout;
     private bool _workingResultHandEdited;
 
-    private Mat? _grabCutFgScribble;
-    private Mat? _grabCutBgScribble;
-    private WpfPoint? _scribbleLastPoint;
+    private readonly ScribbleManager _scribbleManager = new();
+    internal ScribbleManager ScribbleManager => _scribbleManager; // Expose for partial classes
     private WpfPoint? _brushLastPoint;
-    private readonly Stack<(Mat Fg, Mat Bg)> _scribbleUndo = new();
-    private readonly Stack<(Mat Fg, Mat Bg)> _scribbleRedo = new();
 
     private SamEmbedding? _samEmbedding;
     private WpfPoint? _samPromptPointPreview;
@@ -317,6 +314,11 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
             _ = RunPreviewAsync();
         };
 
+        // Subscribe to scribble manager events
+        _scribbleManager.StrokeUndone += (_, _) => ScribbleStrokeUndone?.Invoke(this, EventArgs.Empty);
+        _scribbleManager.StrokeRedone += (_, _) => ScribbleStrokeRedone?.Invoke(this, EventArgs.Empty);
+        _scribbleManager.ScribblesCleared += (_, _) => ScribblesCleared?.Invoke(this, EventArgs.Empty);
+
         ChromaKey.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(ChromaKey.Tolerance) or nameof(ChromaKey.SpillSuppression))
@@ -330,7 +332,8 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
             if (e.PropertyName == nameof(GrabCut.SelectedRect))
             {
                 ExportCommand.NotifyCanExecuteChanged();
-                ClearScribbles();
+                ScribbleManager.Clear();
+                GrabCut.HasScribbles = false;
                 if (GrabCut.HasValidRect)
                 {
                     RequestPreviewDebounced();
@@ -438,7 +441,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _preview?.Dispose();
         _lastPreviewResult?.Dispose();
         DisposeWorkingResult();
-        ClearScribbles();
+        ScribbleManager.Dispose();
         _editHistory.Dispose();
     }
 }

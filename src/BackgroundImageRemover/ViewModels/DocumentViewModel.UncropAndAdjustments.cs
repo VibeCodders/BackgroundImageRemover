@@ -172,8 +172,11 @@ public partial class DocumentViewModel
 
     // --- Uncrop Commands ---
     private bool CanApplyUncrop() => IsImageLoaded && !IsBusy
-        && SelectedUncropFillMode != UncropFillMode.AiOutpaint
-        && !UncropPadding.IsZero;
+        && UncropOperationHelper.CanExecute(new UncropOperationHelper.UncropConfig
+        {
+            FillMode = SelectedUncropFillMode,
+            Padding = UncropPadding
+        });
 
     private bool CanCancelUncrop() => IsBusy && _uncropCts is not null && !_uncropCts.IsCancellationRequested;
 
@@ -195,29 +198,29 @@ public partial class DocumentViewModel
             return;
         }
 
-        var sourceBgr = _loadedImage.FullBgr;
-        var padding = UncropPadding;
-        var mode = SelectedUncropFillMode;
-        var mirrorType = SelectedUncropMirrorType;
-        var mirrorBlur = UncropMirrorBlurRadius;
-        var mirrorFade = UncropMirrorFadeOpacity;
-        var inpaintMethod = SelectedUncropInpaintMethod;
-        var inpaintRadius = UncropInpaintRadius;
-        var blendMargin = UncropBlendMargin;
-        var inpaintPreFill = UncropInpaintPreFillEdgeAverage;
-        var blurred = UncropBlurredColorFill;
-        var blurRadius = UncropBlurRadius;
-        var replicateSmooth = UncropReplicateSmoothRadius;
-        var zoomBlurRadius = UncropZoomBlurRadius;
-        var zoomScale = UncropZoomScale;
-        var gradientMode = SelectedUncropGradientMode;
-        var gradientNoise = UncropGradientNoiseAmount;
-        var patchSize = UncropPatchSize;
-        var patchOverlap = UncropPatchBlendOverlap;
-        var colorSource = SelectedUncropColorSource;
-        var customColor = colorSource == UncropColorSource.CustomColor
-            ? new Scalar(UncropCustomSolidColor.B, UncropCustomSolidColor.G, UncropCustomSolidColor.R)
-            : (Scalar?)null;
+        var config = new UncropOperationHelper.UncropConfig
+        {
+            Padding = UncropPadding,
+            FillMode = SelectedUncropFillMode,
+            MirrorType = SelectedUncropMirrorType,
+            MirrorBlurRadius = UncropMirrorBlurRadius,
+            MirrorFadeOpacity = UncropMirrorFadeOpacity,
+            InpaintMethod = SelectedUncropInpaintMethod,
+            InpaintRadius = UncropInpaintRadius,
+            BlendMargin = UncropBlendMargin,
+            InpaintPreFillEdgeAverage = UncropInpaintPreFillEdgeAverage,
+            BlurredColorFill = UncropBlurredColorFill,
+            BlurRadius = UncropBlurRadius,
+            ReplicateSmoothRadius = UncropReplicateSmoothRadius,
+            ZoomBlurRadius = UncropZoomBlurRadius,
+            ZoomScale = UncropZoomScale,
+            GradientMode = SelectedUncropGradientMode,
+            GradientNoiseAmount = UncropGradientNoiseAmount,
+            PatchSize = UncropPatchSize,
+            PatchBlendOverlap = UncropPatchBlendOverlap,
+            ColorSource = SelectedUncropColorSource,
+            CustomSolidColor = UncropCustomSolidColor
+        };
 
         _uncropCts?.Dispose();
         _uncropCts = new CancellationTokenSource();
@@ -229,18 +232,8 @@ public partial class DocumentViewModel
             CancelUncropCommand.NotifyCanExecuteChanged();
             StatusMessage = "Applying uncrop expansion...";
 
-            using var filledBgr = await Task.Run(() => mode switch
-            {
-                UncropFillMode.Mirror => _uncropFillService.FillMirror(sourceBgr, padding, mirrorType, mirrorBlur, mirrorFade, ct),
-                UncropFillMode.Inpaint => _uncropFillService.FillInpaint(sourceBgr, padding, inpaintMethod, inpaintRadius, blendMargin, inpaintPreFill, ct),
-                UncropFillMode.SolidColor => _uncropFillService.FillSolidColor(sourceBgr, padding, blurred, customColor, blurRadius, ct),
-                UncropFillMode.Replicate => _uncropFillService.FillReplicate(sourceBgr, padding, replicateSmooth, ct),
-                UncropFillMode.Wrap => _uncropFillService.FillWrap(sourceBgr, padding, ct),
-                UncropFillMode.ZoomBlur => _uncropFillService.FillZoomBlur(sourceBgr, padding, zoomBlurRadius, zoomScale, blendMargin, ct),
-                UncropFillMode.EdgeGradient => _uncropFillService.FillEdgeGradient(sourceBgr, padding, gradientMode, customColor, gradientNoise, ct),
-                UncropFillMode.PatchSynthesis => _uncropFillService.FillPatchSynthesis(sourceBgr, padding, patchSize, patchOverlap, blendMargin, ct),
-                _ => throw new InvalidOperationException($"Fill mode {mode} is not available.")
-            }, ct);
+            using var filledBgr = await UncropOperationHelper.ExecuteUncropAsync(
+                _loadedImage.FullBgr, config, _uncropFillService, ct);
 
             // Create new LoadedImage from the filled result
             var newLoadedImage = new LoadedImage(_loadedImage.FilePath, filledBgr.Clone());
@@ -266,7 +259,7 @@ public partial class DocumentViewModel
             UncropPadding = CanvasPadding.Zero;
             SelectedUncropPreset = UncropAspectPresets.Free;
             IsDirty = true;
-            StatusMessage = $"Applied {mode} uncrop ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height}).";
+            StatusMessage = $"Applied {config.FillMode} uncrop ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height}).";
         }
         catch (OperationCanceledException)
         {

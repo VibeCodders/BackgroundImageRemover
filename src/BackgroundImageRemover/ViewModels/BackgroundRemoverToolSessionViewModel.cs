@@ -40,11 +40,8 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     private PreviewImage? _preview;
     private RemovalResult? _lastPreviewResult;
 
-    private Mat? _grabCutFgScribble;
-    private Mat? _grabCutBgScribble;
-    private WpfPoint? _scribbleLastPoint;
-    private readonly Stack<(Mat Fg, Mat Bg)> _scribbleUndo = new();
-    private readonly Stack<(Mat Fg, Mat Bg)> _scribbleRedo = new();
+    private readonly ScribbleManager _scribbleManager = new();
+    internal ScribbleManager ScribbleManager => _scribbleManager; // Expose for partial classes
 
     private SamEmbedding? _samEmbedding;
     private WpfPoint? _samPromptPointPreview;
@@ -113,6 +110,11 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
             await RunPreviewAsync();
         };
 
+        // Subscribe to scribble manager events
+        ScribbleManager.StrokeUndone += (_, _) => ScribbleStrokeUndone?.Invoke(this, EventArgs.Empty);
+        ScribbleManager.StrokeRedone += (_, _) => ScribbleStrokeRedone?.Invoke(this, EventArgs.Empty);
+        ScribbleManager.ScribblesCleared += (_, _) => ScribblesCleared?.Invoke(this, EventArgs.Empty);
+
         ChromaKey.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(ChromaKey.Tolerance) or nameof(ChromaKey.SpillSuppression))
@@ -125,7 +127,8 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         {
             if (e.PropertyName == nameof(GrabCut.SelectedRect))
             {
-                ClearScribbles();
+                ScribbleManager.Clear();
+                GrabCut.HasScribbles = false;
                 if (GrabCut.HasValidRect)
                 {
                     RequestPreviewDebounced();
@@ -201,27 +204,26 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     private async Task EnsureOnnxReadyAsync()
     {
         var model = Onnx.SelectedModel;
-        try
-        {
-            Onnx.ErrorMessage = null;
-            Onnx.IsDownloading = true;
-            var progress = new Progress<ModelDownloadProgress>(p => Onnx.DownloadFraction = p.FractionComplete);
-            await _onnxStrategy.EnsureReadyAsync(model, progress, CancellationToken.None);
-            if (model == Onnx.SelectedModel)
+        Onnx.ErrorMessage = null;
+        Onnx.IsDownloading = true;
+
+        var success = await ModelDownloadHelper.EnsureOnnxModelReadyAsync(
+            _onnxStrategy,
+            model,
+            progress => Onnx.DownloadFraction = progress,
+            error => Onnx.ErrorMessage = error,
+            () =>
             {
-                Onnx.IsModelReady = true;
-                RequestPreviewDebounced();
-            }
-        }
-        catch (Exception ex)
-        {
-            Onnx.ErrorMessage = $"Could not download model: {ex.Message}";
-            _log.Error("ONNX model download failed", ex);
-        }
-        finally
-        {
-            Onnx.IsDownloading = false;
-        }
+                if (model == Onnx.SelectedModel)
+                {
+                    Onnx.IsModelReady = true;
+                    RequestPreviewDebounced();
+                }
+            },
+            _log,
+            CancellationToken.None);
+
+        Onnx.IsDownloading = false;
     }
 
     [RelayCommand]
@@ -229,24 +231,22 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     private async Task EnsureSamReadyAsync()
     {
-        try
-        {
-            Sam.ErrorMessage = null;
-            Sam.IsDownloading = true;
-            var progress = new Progress<ModelDownloadProgress>(p => Sam.DownloadFraction = p.FractionComplete);
-            await _samStrategy.EnsureReadyAsync(progress, CancellationToken.None);
-            Sam.IsModelReady = true;
-            ComputeSamEmbedding();
-        }
-        catch (Exception ex)
-        {
-            Sam.ErrorMessage = $"Could not download SAM model: {ex.Message}";
-            _log.Error("SAM model download failed", ex);
-        }
-        finally
-        {
-            Sam.IsDownloading = false;
-        }
+        Sam.ErrorMessage = null;
+        Sam.IsDownloading = true;
+
+        var success = await ModelDownloadHelper.EnsureSamModelReadyAsync(
+            _samStrategy,
+            progress => Sam.DownloadFraction = progress,
+            error => Sam.ErrorMessage = error,
+            () =>
+            {
+                Sam.IsModelReady = true;
+                ComputeSamEmbedding();
+            },
+            _log,
+            CancellationToken.None);
+
+        Sam.IsDownloading = false;
     }
 
     [RelayCommand]
@@ -258,15 +258,11 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         {
             return;
         }
-        try
-        {
-            _samEmbedding = _samStrategy.ComputeEmbedding(_sourceImage.FullBgr);
-        }
-        catch (Exception ex)
-        {
-            Sam.ErrorMessage = $"Embedding failed: {ex.Message}";
-            _log.Error("SAM embedding computation failed", ex);
-        }
+        _samEmbedding = ModelDownloadHelper.ComputeSamEmbeddingSafe(
+            _samStrategy,
+            _sourceImage.FullBgr,
+            error => Sam.ErrorMessage = error,
+            _log);
     }
 
     private void RequestPreviewDebounced()
@@ -337,8 +333,8 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
                         (int)Math.Round(r.Width * scaleToFull),
                         (int)Math.Round(r.Height * scaleToFull))
                     : (Rect?)null,
-                GrabCutForegroundScribble = scaleToFull == 1.0 ? _grabCutFgScribble : null,
-                GrabCutBackgroundScribble = scaleToFull == 1.0 ? _grabCutBgScribble : null,
+                GrabCutForegroundScribble = scaleToFull == 1.0 ? ScribbleManager.ForegroundScribble : null,
+                GrabCutBackgroundScribble = scaleToFull == 1.0 ? ScribbleManager.BackgroundScribble : null,
                 GrabCutIterations = 3,
                 GrabCutFeatherPixels = Math.Max(1, (int)Math.Round(2 * scaleToFull))
             },
@@ -378,82 +374,41 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     public void OnOriginalStrokeStart(WpfPoint imagePoint)
     {
-        EnsureScribbleMats();
-        PushScribbleUndoSnapshot();
-        _scribbleLastPoint = imagePoint;
-        DrawScribbleSegment(imagePoint, imagePoint);
+        if (_preview is null) return;
+        ScribbleManager.EnsureMats(_preview.Bgr.Size());
+
+        var scribbleMode = OriginalMode == InteractionMode.ScribbleForeground
+            ? ScribbleMode.Foreground
+            : OriginalMode == InteractionMode.ScribbleBackground
+                ? ScribbleMode.Background
+                : ScribbleMode.Foreground; // fallback
+
+        ScribbleManager.StartStroke(imagePoint, scribbleMode);
+        GrabCut.HasScribbles = ScribbleManager.HasScribbles;
     }
 
     public void OnOriginalStrokeMove(WpfPoint imagePoint)
     {
-        if (_scribbleLastPoint is not { } last)
-        {
-            return;
-        }
-        DrawScribbleSegment(last, imagePoint);
-        _scribbleLastPoint = imagePoint;
+        var scribbleMode = OriginalMode == InteractionMode.ScribbleForeground
+            ? ScribbleMode.Foreground
+            : OriginalMode == InteractionMode.ScribbleBackground
+                ? ScribbleMode.Background
+                : ScribbleMode.Foreground; // fallback
+
+        ScribbleManager.MoveStroke(imagePoint, scribbleMode);
+        GrabCut.HasScribbles = ScribbleManager.HasScribbles;
     }
 
     public void OnOriginalStrokeEnd()
     {
-        _scribbleLastPoint = null;
-        GrabCut.HasScribbles = HasNonEmptyScribbles();
-    }
-
-    private void EnsureScribbleMats()
-    {
-        if (_preview is null) return;
-        var size = _preview.Bgr.Size();
-        _grabCutFgScribble ??= new Mat(size, MatType.CV_8UC1, Scalar.All(0));
-        _grabCutBgScribble ??= new Mat(size, MatType.CV_8UC1, Scalar.All(0));
-    }
-
-    private const int MaxScribbleHistoryDepth = 20;
-
-    private void PushScribbleUndoSnapshot()
-    {
-        if (_grabCutFgScribble is null || _grabCutBgScribble is null) return;
-        _scribbleUndo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
-        _scribbleUndo.TrimStack(MaxScribbleHistoryDepth, drop =>
-        {
-            drop.Fg.Dispose();
-            drop.Bg.Dispose();
-        });
-        foreach (var (f, b) in _scribbleRedo) { f.Dispose(); b.Dispose(); }
-        _scribbleRedo.Clear();
-        UndoScribbleCommand.NotifyCanExecuteChanged();
-        RedoScribbleCommand.NotifyCanExecuteChanged();
-    }
-
-
-    private void DrawScribbleSegment(WpfPoint from, WpfPoint to)
-    {
-        if (_grabCutFgScribble is null || _grabCutBgScribble is null) return;
-        var p1 = new Point((int)Math.Round(from.X), (int)Math.Round(from.Y));
-        var p2 = new Point((int)Math.Round(to.X), (int)Math.Round(to.Y));
-        const int thickness = 6;
-        if (OriginalMode == InteractionMode.ScribbleForeground)
-        {
-            Cv2.Line(_grabCutFgScribble, p1, p2, Scalar.All(255), thickness, LineTypes.AntiAlias);
-            Cv2.Line(_grabCutBgScribble, p1, p2, Scalar.All(0), thickness, LineTypes.AntiAlias);
-        }
-        else if (OriginalMode == InteractionMode.ScribbleBackground)
-        {
-            Cv2.Line(_grabCutBgScribble, p1, p2, Scalar.All(255), thickness, LineTypes.AntiAlias);
-            Cv2.Line(_grabCutFgScribble, p1, p2, Scalar.All(0), thickness, LineTypes.AntiAlias);
-        }
-    }
-
-    private bool HasNonEmptyScribbles()
-    {
-        return (_grabCutFgScribble is not null && Cv2.CountNonZero(_grabCutFgScribble) > 0)
-            || (_grabCutBgScribble is not null && Cv2.CountNonZero(_grabCutBgScribble) > 0);
+        ScribbleManager.EndStroke();
+        GrabCut.HasScribbles = ScribbleManager.HasScribbles;
     }
 
     [RelayCommand]
     private async Task RefineGrabCutPreviewAsync()
     {
-        if (_preview is null || !HasNonEmptyScribbles())
+        if (_preview is null || !ScribbleManager.HasScribbles)
         {
             StatusMessage = "Add scribbles first.";
             return;
@@ -475,55 +430,25 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         }
     }
 
-    private bool CanUndoScribble => _scribbleUndo.Count > 0;
-    private bool CanRedoScribble => _scribbleRedo.Count > 0;
+    private bool CanUndoScribble => ScribbleManager.CanUndo;
+    private bool CanRedoScribble => ScribbleManager.CanRedo;
 
     [RelayCommand(CanExecute = nameof(CanUndoScribble))]
     public void UndoScribble()
     {
-        if (_scribbleUndo.Count == 0 || _grabCutFgScribble is null || _grabCutBgScribble is null) return;
-        _scribbleRedo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
-        var (fg, bg) = _scribbleUndo.Pop();
-        _grabCutFgScribble.Dispose();
-        _grabCutBgScribble.Dispose();
-        _grabCutFgScribble = fg;
-        _grabCutBgScribble = bg;
-        GrabCut.HasScribbles = HasNonEmptyScribbles();
+        ScribbleManager.Undo();
+        GrabCut.HasScribbles = ScribbleManager.HasScribbles;
         UndoScribbleCommand.NotifyCanExecuteChanged();
         RedoScribbleCommand.NotifyCanExecuteChanged();
-        ScribbleStrokeUndone?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand(CanExecute = nameof(CanRedoScribble))]
     public void RedoScribble()
     {
-        if (_scribbleRedo.Count == 0 || _grabCutFgScribble is null || _grabCutBgScribble is null) return;
-        _scribbleUndo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
-        var (fg, bg) = _scribbleRedo.Pop();
-        _grabCutFgScribble.Dispose();
-        _grabCutBgScribble.Dispose();
-        _grabCutFgScribble = fg;
-        _grabCutBgScribble = bg;
-        GrabCut.HasScribbles = HasNonEmptyScribbles();
+        ScribbleManager.Redo();
+        GrabCut.HasScribbles = ScribbleManager.HasScribbles;
         UndoScribbleCommand.NotifyCanExecuteChanged();
         RedoScribbleCommand.NotifyCanExecuteChanged();
-        ScribbleStrokeRedone?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void ClearScribbles()
-    {
-        _grabCutFgScribble?.Dispose();
-        _grabCutBgScribble?.Dispose();
-        _grabCutFgScribble = null;
-        _grabCutBgScribble = null;
-        foreach (var (f, b) in _scribbleUndo) { f.Dispose(); b.Dispose(); }
-        foreach (var (f, b) in _scribbleRedo) { f.Dispose(); b.Dispose(); }
-        _scribbleUndo.Clear();
-        _scribbleRedo.Clear();
-        GrabCut.HasScribbles = false;
-        UndoScribbleCommand.NotifyCanExecuteChanged();
-        RedoScribbleCommand.NotifyCanExecuteChanged();
-        ScribblesCleared?.Invoke(this, EventArgs.Empty);
     }
 
 
@@ -546,10 +471,10 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
             BusyMessage = "Computing full-resolution background removal...";
 
             var context = BuildContext(_preview.ScaleFactor);
-            if (SelectedStrategy == StrategyKind.GrabCut && HasNonEmptyScribbles())
+            if (SelectedStrategy == StrategyKind.GrabCut && ScribbleManager.HasScribbles)
             {
-                using var fgFull = _grabCutFgScribble.ResizeScribble(_sourceImage.FullBgr.Size());
-                using var bgFull = _grabCutBgScribble.ResizeScribble(_sourceImage.FullBgr.Size());
+                using var fgFull = ScribbleManager.ForegroundScribble?.ResizeScribble(_sourceImage.FullBgr.Size());
+                using var bgFull = ScribbleManager.BackgroundScribble?.ResizeScribble(_sourceImage.FullBgr.Size());
                 context = context with { GrabCutForegroundScribble = fgFull, GrabCutBackgroundScribble = bgFull };
             }
 
@@ -586,6 +511,6 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         _preview?.Dispose();
         _lastPreviewResult?.Dispose();
         _samEmbedding = null;
-        ClearScribbles();
+        ScribbleManager.Dispose();
     }
 }

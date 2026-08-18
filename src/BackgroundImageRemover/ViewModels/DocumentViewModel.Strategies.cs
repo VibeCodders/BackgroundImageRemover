@@ -18,27 +18,26 @@ public partial class DocumentViewModel
     private async Task EnsureOnnxReadyAsync()
     {
         var model = Onnx.SelectedModel;
-        try
-        {
-            Onnx.ErrorMessage = null;
-            Onnx.IsDownloading = true;
-            var progress = new Progress<ModelDownloadProgress>(p => Onnx.DownloadFraction = p.FractionComplete);
-            await _onnxStrategy.EnsureReadyAsync(model, progress, CancellationToken.None);
-            if (model == Onnx.SelectedModel)
+        Onnx.ErrorMessage = null;
+        Onnx.IsDownloading = true;
+
+        var success = await ModelDownloadHelper.EnsureOnnxModelReadyAsync(
+            _onnxStrategy,
+            model,
+            progress => Onnx.DownloadFraction = progress,
+            error => Onnx.ErrorMessage = error,
+            () =>
             {
-                Onnx.IsModelReady = true;
-                RequestPreviewDebounced();
-            }
-        }
-        catch (Exception ex)
-        {
-            Onnx.ErrorMessage = $"Could not download model: {ex.Message}";
-            _log.Error("ONNX model download failed", ex);
-        }
-        finally
-        {
-            Onnx.IsDownloading = false;
-        }
+                if (model == Onnx.SelectedModel)
+                {
+                    Onnx.IsModelReady = true;
+                    RequestPreviewDebounced();
+                }
+            },
+            _log,
+            CancellationToken.None);
+
+        Onnx.IsDownloading = false;
     }
 
     [RelayCommand]
@@ -46,28 +45,26 @@ public partial class DocumentViewModel
 
     private async Task EnsureSamReadyAsync()
     {
-        try
-        {
-            Sam.ErrorMessage = null;
-            Sam.IsDownloading = true;
-            var progress = new Progress<ModelDownloadProgress>(p => Sam.DownloadFraction = p.FractionComplete);
-            await _samStrategy.EnsureReadyAsync(progress, CancellationToken.None);
-            Sam.IsModelReady = true;
-            ExportCommand.NotifyCanExecuteChanged();
-            if (_loadedImage is not null)
+        Sam.ErrorMessage = null;
+        Sam.IsDownloading = true;
+
+        var success = await ModelDownloadHelper.EnsureSamModelReadyAsync(
+            _samStrategy,
+            progress => Sam.DownloadFraction = progress,
+            error => Sam.ErrorMessage = error,
+            () =>
             {
-                ComputeSamEmbedding();
-            }
-        }
-        catch (Exception ex)
-        {
-            Sam.ErrorMessage = $"Could not download SAM model: {ex.Message}";
-            _log.Error("SAM model download failed", ex);
-        }
-        finally
-        {
-            Sam.IsDownloading = false;
-        }
+                Sam.IsModelReady = true;
+                ExportCommand.NotifyCanExecuteChanged();
+                if (_loadedImage is not null)
+                {
+                    ComputeSamEmbedding();
+                }
+            },
+            _log,
+            CancellationToken.None);
+
+        Sam.IsDownloading = false;
     }
 
     [RelayCommand]
@@ -79,15 +76,11 @@ public partial class DocumentViewModel
         {
             return;
         }
-        try
-        {
-            _samEmbedding = _samStrategy.ComputeEmbedding(_loadedImage.FullBgr);
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"SAM embedding failed: {ex.Message}";
-            _log.Error("SAM embedding computation failed", ex);
-        }
+        _samEmbedding = ModelDownloadHelper.ComputeSamEmbeddingSafe(
+            _samStrategy,
+            _loadedImage.FullBgr,
+            error => StatusMessage = $"SAM embedding failed: {error}",
+            _log);
     }
 
     public void OnOriginalSamPointClicked(OpenCvSharp.Point previewPoint)
@@ -134,8 +127,8 @@ public partial class DocumentViewModel
                 // At preview scale (1.0), the scribbles are already in the right coordinate
                 // space -- use them directly. A scaled-up (export) call overrides these with
                 // resized copies; see RunStrategyFullAsync.
-                GrabCutForegroundScribble = scaleToFull == 1.0 ? _grabCutFgScribble : null,
-                GrabCutBackgroundScribble = scaleToFull == 1.0 ? _grabCutBgScribble : null,
+                GrabCutForegroundScribble = scaleToFull == 1.0 ? ScribbleManager.ForegroundScribble : null,
+                GrabCutBackgroundScribble = scaleToFull == 1.0 ? ScribbleManager.BackgroundScribble : null,
                 // Same iteration count as the preview, so the full-res result matches what the user saw.
                 GrabCutIterations = 3,
                 // Scale the feather with the resolution so the export keeps the same relative
@@ -246,10 +239,10 @@ public partial class DocumentViewModel
 
         var context = BuildContext(_preview.ScaleFactor);
 
-        if (SelectedStrategy == StrategyKind.GrabCut && HasNonEmptyScribbles())
+        if (SelectedStrategy == StrategyKind.GrabCut && ScribbleManager.HasScribbles)
         {
-            using var fgFull = _grabCutFgScribble.ResizeScribble(_loadedImage.FullBgr.Size());
-            using var bgFull = _grabCutBgScribble.ResizeScribble(_loadedImage.FullBgr.Size());
+            using var fgFull = ScribbleManager.ForegroundScribble?.ResizeScribble(_loadedImage.FullBgr.Size());
+            using var bgFull = ScribbleManager.BackgroundScribble?.ResizeScribble(_loadedImage.FullBgr.Size());
             context = context with { GrabCutForegroundScribble = fgFull, GrabCutBackgroundScribble = bgFull };
             return await strategy.RunFullAsync(_loadedImage.FullBgr, context, ct);
         }

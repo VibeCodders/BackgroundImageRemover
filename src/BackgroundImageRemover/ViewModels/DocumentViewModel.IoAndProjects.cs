@@ -138,7 +138,8 @@ public partial class DocumentViewModel
         _log.Info($"Loaded image {sourceName} ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})");
 
         GrabCut.SelectedRect = null;
-        ClearScribbles();
+        ScribbleManager.Clear();
+        GrabCut.HasScribbles = false;
         ChromaKey.DetectedColorBgr = ChromaKeyStrategy.DetectDominantBorderColor(_preview.Bgr);
 
         if (SelectedStrategy == StrategyKind.Sam && Sam.IsModelReady)
@@ -159,7 +160,7 @@ public partial class DocumentViewModel
 
     private bool IsSelectedStrategyReady() => SelectedStrategy switch
     {
-        StrategyKind.GrabCut => GrabCut.HasValidRect || GrabCut.HasScribbles,
+        StrategyKind.GrabCut => GrabCut.HasValidRect || ScribbleManager.HasScribbles,
         StrategyKind.Onnx => Onnx.IsModelReady,
         StrategyKind.Sam => Sam.IsModelReady && Sam.HasClickedPoint,
         _ => true
@@ -488,7 +489,8 @@ public partial class DocumentViewModel
             _log.Info($"Loaded project {path}");
             _settings.AddRecentProject(path);
 
-            ClearScribbles();
+            ScribbleManager.Clear();
+            GrabCut.HasScribbles = false;
             if (ChromaKey.DetectedColorBgr is null)
             {
                 ChromaKey.DetectedColorBgr = ChromaKeyStrategy.DetectDominantBorderColor(_preview.Bgr);

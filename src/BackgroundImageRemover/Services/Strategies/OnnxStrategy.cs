@@ -9,7 +9,7 @@ namespace BackgroundImageRemover.Services.Strategies;
 /// model's fixed input size, so preview and full-res runs cost about the same; only the mask's
 /// feather post-processing differs by output resolution.
 /// </summary>
-public sealed class OnnxStrategy : StrategyBase
+public sealed class OnnxStrategy : StrategyBase, IOnnxModelStrategy
 {
     public override StrategyKind Kind => StrategyKind.Onnx;
 

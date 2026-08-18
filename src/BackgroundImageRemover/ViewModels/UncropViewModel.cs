@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows.Media.Imaging;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.Editing;
@@ -294,8 +295,11 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
     }
 
     private bool CanApplyFill() => IsImageLoaded && !IsBusy
-        && SelectedFillMode != UncropFillMode.AiOutpaint
-        && !Padding.IsZero;
+        && UncropOperationHelper.CanExecute(new UncropOperationHelper.UncropConfig
+        {
+            FillMode = SelectedFillMode,
+            Padding = Padding
+        });
 
     private bool CanCancelFill() => IsBusy && _fillCts is not null && !_fillCts.IsCancellationRequested;
 
@@ -317,29 +321,29 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
             return;
         }
 
-        var sourceBgr = _sourceImage.FullBgr;
-        var padding = Padding;
-        var mode = SelectedFillMode;
-        var mirrorType = SelectedMirrorType;
-        var mirrorBlur = MirrorBlurRadius;
-        var mirrorFade = MirrorFadeOpacity;
-        var inpaintMethod = SelectedInpaintMethod;
-        var inpaintRadius = InpaintRadius;
-        var blendMargin = BlendMargin;
-        var inpaintPreFill = InpaintPreFillEdgeAverage;
-        var blurred = BlurredColorFill;
-        var blurRadius = BlurRadius;
-        var replicateSmooth = ReplicateSmoothRadius;
-        var zoomBlurRadius = ZoomBlurRadius;
-        var zoomScale = ZoomScale;
-        var gradientMode = SelectedGradientMode;
-        var gradientNoise = GradientNoiseAmount;
-        var patchSize = PatchSize;
-        var patchOverlap = PatchBlendOverlap;
-        var colorSource = SelectedColorSource;
-        var customColor = colorSource == UncropColorSource.CustomColor
-            ? new Scalar(CustomSolidColor.B, CustomSolidColor.G, CustomSolidColor.R)
-            : (Scalar?)null;
+        var config = new UncropOperationHelper.UncropConfig
+        {
+            Padding = Padding,
+            FillMode = SelectedFillMode,
+            MirrorType = SelectedMirrorType,
+            MirrorBlurRadius = MirrorBlurRadius,
+            MirrorFadeOpacity = MirrorFadeOpacity,
+            InpaintMethod = SelectedInpaintMethod,
+            InpaintRadius = InpaintRadius,
+            BlendMargin = BlendMargin,
+            InpaintPreFillEdgeAverage = InpaintPreFillEdgeAverage,
+            BlurredColorFill = BlurredColorFill,
+            BlurRadius = BlurRadius,
+            ReplicateSmoothRadius = ReplicateSmoothRadius,
+            ZoomBlurRadius = ZoomBlurRadius,
+            ZoomScale = ZoomScale,
+            GradientMode = SelectedGradientMode,
+            GradientNoiseAmount = GradientNoiseAmount,
+            PatchSize = PatchSize,
+            PatchBlendOverlap = PatchBlendOverlap,
+            ColorSource = SelectedColorSource,
+            CustomSolidColor = CustomSolidColor
+        };
 
         _fillCts?.Dispose();
         _fillCts = new CancellationTokenSource();
@@ -351,18 +355,8 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
             CancelFillCommand.NotifyCanExecuteChanged();
             StatusMessage = "Filling...";
 
-            using var filledBgr = await Task.Run(() => mode switch
-            {
-                UncropFillMode.Mirror => _fillService.FillMirror(sourceBgr, padding, mirrorType, mirrorBlur, mirrorFade, ct),
-                UncropFillMode.Inpaint => _fillService.FillInpaint(sourceBgr, padding, inpaintMethod, inpaintRadius, blendMargin, inpaintPreFill, ct),
-                UncropFillMode.SolidColor => _fillService.FillSolidColor(sourceBgr, padding, blurred, customColor, blurRadius, ct),
-                UncropFillMode.Replicate => _fillService.FillReplicate(sourceBgr, padding, replicateSmooth, ct),
-                UncropFillMode.Wrap => _fillService.FillWrap(sourceBgr, padding, ct),
-                UncropFillMode.ZoomBlur => _fillService.FillZoomBlur(sourceBgr, padding, zoomBlurRadius, zoomScale, blendMargin, ct),
-                UncropFillMode.EdgeGradient => _fillService.FillEdgeGradient(sourceBgr, padding, gradientMode, customColor, gradientNoise, ct),
-                UncropFillMode.PatchSynthesis => _fillService.FillPatchSynthesis(sourceBgr, padding, patchSize, patchOverlap, blendMargin, ct),
-                _ => throw new InvalidOperationException($"Fill mode {mode} is not available yet.")
-            }, ct);
+            using var filledBgr = await UncropOperationHelper.ExecuteUncropAsync(
+                _sourceImage.FullBgr, config, _fillService, ct);
 
             var bgra = new Mat();
             Cv2.CvtColor(filledBgr, bgra, ColorConversionCodes.BGR2BGRA);
@@ -378,7 +372,7 @@ public partial class UncropViewModel : ObservableObject, IDocumentTab
             SaveAsCommand.NotifyCanExecuteChanged();
             PreviewResult = _resultBgra.ToBitmapSource();
             IsDirty = true;
-            StatusMessage = $"Applied {mode} fill.";
+            StatusMessage = $"Applied {config.FillMode} fill.";
         }
         catch (OperationCanceledException)
         {

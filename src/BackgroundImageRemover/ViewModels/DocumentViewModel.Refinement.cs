@@ -41,8 +41,8 @@ public partial class DocumentViewModel
 
     private bool IsScribbling => OriginalMode is InteractionMode.ScribbleForeground or InteractionMode.ScribbleBackground;
 
-    private bool CanUndoExecute() => IsScribbling ? _scribbleUndo.Count > 0 : _editHistory.CanUndo;
-    private bool CanRedoExecute() => IsScribbling ? _scribbleRedo.Count > 0 : _editHistory.CanRedo;
+    private bool CanUndoExecute() => IsScribbling ? _scribbleManager.CanUndo : _editHistory.CanUndo;
+    private bool CanRedoExecute() => IsScribbling ? _scribbleManager.CanRedo : _editHistory.CanRedo;
 
     [RelayCommand(CanExecute = nameof(CanUndoExecute))]
     private void Undo()
@@ -171,124 +171,55 @@ public partial class DocumentViewModel
 
     public void OnOriginalStrokeStart(WpfPoint imagePoint)
     {
-        EnsureScribbleMats();
-        PushScribbleUndoSnapshot();
-        _scribbleLastPoint = imagePoint;
-        DrawScribbleSegment(imagePoint, imagePoint);
+        if (_preview is null) return;
+        ScribbleManager.EnsureMats(_preview.Bgr.Size());
+
+        var scribbleMode = OriginalMode == InteractionMode.ScribbleForeground
+            ? ScribbleMode.Foreground
+            : OriginalMode == InteractionMode.ScribbleBackground
+                ? ScribbleMode.Background
+                : ScribbleMode.Foreground; // fallback
+
+        ScribbleManager.StartStroke(imagePoint, scribbleMode);
+        GrabCut.HasScribbles = ScribbleManager.HasScribbles;
     }
 
     public void OnOriginalStrokeMove(WpfPoint imagePoint)
     {
-        if (_scribbleLastPoint is not { } last)
-        {
-            return;
-        }
-        DrawScribbleSegment(last, imagePoint);
-        _scribbleLastPoint = imagePoint;
+        var scribbleMode = OriginalMode == InteractionMode.ScribbleForeground
+            ? ScribbleMode.Foreground
+            : OriginalMode == InteractionMode.ScribbleBackground
+                ? ScribbleMode.Background
+                : ScribbleMode.Foreground; // fallback
+
+        ScribbleManager.MoveStroke(imagePoint, scribbleMode);
+        GrabCut.HasScribbles = ScribbleManager.HasScribbles;
     }
 
-    public void OnOriginalStrokeEnd() => _scribbleLastPoint = null;
-
-    private void DrawScribbleSegment(WpfPoint from, WpfPoint to)
+    public void OnOriginalStrokeEnd()
     {
-        var target = OriginalMode == InteractionMode.ScribbleForeground ? _grabCutFgScribble
-            : OriginalMode == InteractionMode.ScribbleBackground ? _grabCutBgScribble
-            : null;
-        if (target is null)
-        {
-            return;
-        }
-        Cv2.Line(target, new Point((int)from.X, (int)from.Y), new Point((int)to.X, (int)to.Y), Scalar.All(255), thickness: 6);
-        GrabCut.HasScribbles = HasNonEmptyScribbles();
-    }
-
-    private void EnsureScribbleMats()
-    {
-        if (_preview is null)
-        {
-            return;
-        }
-        _grabCutFgScribble ??= new Mat(_preview.Bgr.Size(), MatType.CV_8UC1, Scalar.All(0));
-        _grabCutBgScribble ??= new Mat(_preview.Bgr.Size(), MatType.CV_8UC1, Scalar.All(0));
-    }
-
-    private bool HasNonEmptyScribbles()
-        => (_grabCutFgScribble is not null && Cv2.CountNonZero(_grabCutFgScribble) > 0)
-        || (_grabCutBgScribble is not null && Cv2.CountNonZero(_grabCutBgScribble) > 0);
-
-    private void ClearScribbles()
-    {
-        _grabCutFgScribble?.Dispose();
-        _grabCutBgScribble?.Dispose();
-        _grabCutFgScribble = null;
-        _grabCutBgScribble = null;
-        GrabCut.HasScribbles = false;
-
-        foreach (var (fg, bg) in _scribbleUndo) { fg.Dispose(); bg.Dispose(); }
-        foreach (var (fg, bg) in _scribbleRedo) { fg.Dispose(); bg.Dispose(); }
-        _scribbleUndo.Clear();
-        _scribbleRedo.Clear();
-        RefreshUndoRedoState();
-        ScribblesCleared?.Invoke(this, EventArgs.Empty);
-    }
-
-    private const int MaxScribbleHistoryDepth = 20;
-
-    private void PushScribbleUndoSnapshot()
-    {
-        if (_grabCutFgScribble is null || _grabCutBgScribble is null)
-        {
-            return;
-        }
-
-        _scribbleUndo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
-        _scribbleUndo.TrimStack(MaxScribbleHistoryDepth, drop =>
-        {
-            drop.Fg.Dispose();
-            drop.Bg.Dispose();
-        });
-
-        foreach (var (fg, bg) in _scribbleRedo) { fg.Dispose(); bg.Dispose(); }
-        _scribbleRedo.Clear();
-        RefreshUndoRedoState();
+        ScribbleManager.EndStroke();
+        GrabCut.HasScribbles = ScribbleManager.HasScribbles;
     }
 
     private bool TryUndoScribble()
     {
-        if (_scribbleUndo.Count == 0 || _grabCutFgScribble is null || _grabCutBgScribble is null)
-        {
-            return false;
-        }
-        _scribbleRedo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
-        var (fg, bg) = _scribbleUndo.Pop();
-        _grabCutFgScribble.Dispose();
-        _grabCutBgScribble.Dispose();
-        _grabCutFgScribble = fg;
-        _grabCutBgScribble = bg;
-        GrabCut.HasScribbles = HasNonEmptyScribbles();
-        return true;
+        var success = ScribbleManager.Undo();
+        GrabCut.HasScribbles = ScribbleManager.HasScribbles;
+        return success;
     }
 
     private bool TryRedoScribble()
     {
-        if (_scribbleRedo.Count == 0 || _grabCutFgScribble is null || _grabCutBgScribble is null)
-        {
-            return false;
-        }
-        _scribbleUndo.Push((_grabCutFgScribble.Clone(), _grabCutBgScribble.Clone()));
-        var (fg, bg) = _scribbleRedo.Pop();
-        _grabCutFgScribble.Dispose();
-        _grabCutBgScribble.Dispose();
-        _grabCutFgScribble = fg;
-        _grabCutBgScribble = bg;
-        GrabCut.HasScribbles = HasNonEmptyScribbles();
-        return true;
+        var success = ScribbleManager.Redo();
+        GrabCut.HasScribbles = ScribbleManager.HasScribbles;
+        return success;
     }
 
     [RelayCommand]
     private async Task RefineGrabCutPreviewAsync()
     {
-        if (_preview is null || !HasNonEmptyScribbles())
+        if (_preview is null || !_scribbleManager.HasScribbles)
         {
             StatusMessage = "Add scribbles first.";
             return;

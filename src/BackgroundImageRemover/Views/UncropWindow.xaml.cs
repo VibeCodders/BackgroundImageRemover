@@ -18,7 +18,7 @@ public partial class UncropWindow : Window
     {
         if (ViewModel is not null)
         {
-            ViewModel.IsColorPickerOpen = !ViewModel.IsColorPickerOpen;
+            ViewModel.Options.IsColorPickerOpen = !ViewModel.Options.IsColorPickerOpen;
         }
     }
 }

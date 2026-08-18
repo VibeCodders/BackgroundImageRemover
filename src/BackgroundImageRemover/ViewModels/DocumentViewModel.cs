@@ -6,7 +6,6 @@ using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Batch;
 using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Dialogs;
-using BackgroundImageRemover.Services.Editing;
 using BackgroundImageRemover.Services.ImageIo;
 using BackgroundImageRemover.Services.Logging;
 using BackgroundImageRemover.Services.Onnx;
@@ -45,7 +44,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private readonly GrabCutStrategy _grabCutStrategy;
     private readonly SamStrategy _samStrategy;
     private readonly IUncropFillService _uncropFillService;
-    private readonly EditHistory _editHistory = new();
+    private readonly MatEditSession _editSession = new();
 
     private readonly DispatcherTimer _debounceTimer;
     private CancellationTokenSource? _previewCts;
@@ -123,10 +122,10 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     {
         if (_loadedImage is null) return;
 
-        // Push previous alpha state to undo stack before replacing
+        // Record previous alpha state to the undo stack before replacing
         if (_workingAlpha is not null)
         {
-            _editHistory.Push(_workingAlpha);
+            _editSession.Record(_workingAlpha);
         }
 
         _workingBgr?.Dispose();
@@ -365,6 +364,15 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
                 RequestPreviewDebounced();
             }
         };
+
+        UncropOptions.ImageSizeProvider = () => _loadedImage?.FullBgr.Size();
+        UncropOptions.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(UncropOptionsViewModel.Padding) or nameof(UncropOptionsViewModel.SelectedFillMode))
+            {
+                ApplyUncropCommand.NotifyCanExecuteChanged();
+            }
+        };
     }
 
     partial void OnActiveToolChanged(EditorTool value)
@@ -442,6 +450,6 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _lastPreviewResult?.Dispose();
         DisposeWorkingResult();
         ScribbleManager.Dispose();
-        _editHistory.Dispose();
+        _editSession.Dispose();
     }
 }

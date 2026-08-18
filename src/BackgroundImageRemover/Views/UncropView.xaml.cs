@@ -31,7 +31,7 @@ public partial class UncropView : UserControl
     {
         if (ViewModel is not null)
         {
-            ViewModel.IsColorPickerOpen = !ViewModel.IsColorPickerOpen;
+            ViewModel.Options.IsColorPickerOpen = !ViewModel.Options.IsColorPickerOpen;
         }
     }
 }

@@ -10,8 +10,8 @@
         <TextBlock Text="Uncrop / Outpaint" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
 
         <TextBlock Text="Aspect ratio" FontWeight="SemiBold" Margin="0,0,0,4" />
-        <ComboBox ItemsSource="{Binding AspectPresets}" DisplayMemberPath="Label"
-                  SelectedItem="{Binding SelectedUncropPreset}" Margin="0,0,0,12" />
+        <ComboBox ItemsSource="{Binding UncropOptions.AspectPresets}" DisplayMemberPath="Label"
+                  SelectedItem="{Binding UncropOptions.SelectedPreset}" Margin="0,0,0,12" />
 
         <TextBlock Text="Padding (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
         <Grid Margin="0,0,0,12">
@@ -26,94 +26,94 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Left" VerticalAlignment="Center" Margin="0,0,4,4" />
-            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,8,4" Text="{Binding UncropPaddingLeftPx, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,8,4" Text="{Binding UncropOptions.PaddingLeftPx, UpdateSourceTrigger=PropertyChanged}" />
             <TextBlock Grid.Row="0" Grid.Column="2" Text="Top" VerticalAlignment="Center" Margin="0,0,4,4" />
-            <TextBox Grid.Row="0" Grid.Column="3" Margin="0,0,0,4" Text="{Binding UncropPaddingTopPx, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Grid.Row="0" Grid.Column="3" Margin="0,0,0,4" Text="{Binding UncropOptions.PaddingTopPx, UpdateSourceTrigger=PropertyChanged}" />
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Right" VerticalAlignment="Center" Margin="0,0,4,0" />
-            <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,0" Text="{Binding UncropPaddingRightPx, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,0" Text="{Binding UncropOptions.PaddingRightPx, UpdateSourceTrigger=PropertyChanged}" />
             <TextBlock Grid.Row="1" Grid.Column="2" Text="Bottom" VerticalAlignment="Center" Margin="0,0,4,0" />
-            <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding UncropPaddingBottomPx, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding UncropOptions.PaddingBottomPx, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
         <TextBlock Text="Fill method" FontWeight="SemiBold" Margin="0,0,0,4" />
         <!-- Mirror -->
         <RadioButton Content="Mirror reflection" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
-                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}" />
-        <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Mirror}">
+                     IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}" />
+        <StackPanel Margin="16,0,0,8" Visibility="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Mirror}">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                 <RadioButton Content="Reflect 101" GroupName="UncropMirrorTypeDoc" Margin="0,0,8,0"
-                             IsChecked="{Binding SelectedUncropMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect101}" />
+                             IsChecked="{Binding UncropOptions.SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect101}" />
                 <RadioButton Content="Reflect" GroupName="UncropMirrorTypeDoc"
-                             IsChecked="{Binding SelectedUncropMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect}" />
+                             IsChecked="{Binding UncropOptions.SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect}" />
             </StackPanel>
             <DockPanel Margin="0,0,0,4">
                 <TextBlock Text="Blur:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="40" />
-                <TextBlock Text="{Binding UncropMirrorBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                <Slider Minimum="0" Maximum="50" Value="{Binding UncropMirrorBlurRadius}" SmallChange="2" LargeChange="10" />
+                <TextBlock Text="{Binding UncropOptions.MirrorBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                <Slider Minimum="0" Maximum="50" Value="{Binding UncropOptions.MirrorBlurRadius}" SmallChange="2" LargeChange="10" />
             </DockPanel>
             <DockPanel Margin="0,0,0,4">
                 <TextBlock Text="Fade:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="40" />
-                <TextBlock Text="{Binding UncropMirrorFadeOpacity, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                <Slider Minimum="0.0" Maximum="1.0" Value="{Binding UncropMirrorFadeOpacity}" SmallChange="0.05" LargeChange="0.2" />
+                <TextBlock Text="{Binding UncropOptions.MirrorFadeOpacity, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                <Slider Minimum="0.0" Maximum="1.0" Value="{Binding UncropOptions.MirrorFadeOpacity}" SmallChange="0.05" LargeChange="0.2" />
             </DockPanel>
         </StackPanel>
 
         <!-- Inpaint -->
         <RadioButton Content="Content-aware inpaint" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
-                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Inpaint}" />
-        <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Inpaint}">
+                     IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Inpaint}" />
+        <StackPanel Margin="16,0,0,8" Visibility="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Inpaint}">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                 <RadioButton Content="Telea" GroupName="UncropInpaintMethodDoc" Margin="0,0,8,0"
-                             IsChecked="{Binding SelectedUncropInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Telea}" />
+                             IsChecked="{Binding UncropOptions.SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Telea}" />
                 <RadioButton Content="Navier-Stokes" GroupName="UncropInpaintMethodDoc"
-                             IsChecked="{Binding SelectedUncropInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NavierStokes}" />
+                             IsChecked="{Binding UncropOptions.SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NavierStokes}" />
             </StackPanel>
             <DockPanel Margin="0,0,0,4">
                 <TextBlock Text="Radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
-                <TextBlock Text="{Binding UncropInpaintRadius, StringFormat={}{0:F0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                <Slider Minimum="1" Maximum="30" Value="{Binding UncropInpaintRadius}" />
+                <TextBlock Text="{Binding UncropOptions.InpaintRadius, StringFormat={}{0:F0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                <Slider Minimum="1" Maximum="30" Value="{Binding UncropOptions.InpaintRadius}" />
             </DockPanel>
-            <CheckBox Content="Pre-fill with edge colors" IsChecked="{Binding UncropInpaintPreFillEdgeAverage}" Margin="0,4,0,0" FontSize="11" />
+            <CheckBox Content="Pre-fill with edge colors" IsChecked="{Binding UncropOptions.InpaintPreFillEdgeAverage}" Margin="0,4,0,0" FontSize="11" />
         </StackPanel>
 
         <!-- Solid color / blur -->
         <RadioButton Content="Solid / Blurred Color" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
-                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
-        <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}">
-            <ComboBox ItemsSource="{Binding ColorSources}" SelectedItem="{Binding SelectedUncropColorSource}" Margin="0,0,0,6" />
+                     IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
+        <StackPanel Margin="16,0,0,8" Visibility="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}">
+            <ComboBox ItemsSource="{Binding UncropOptions.ColorSources}" SelectedItem="{Binding UncropOptions.SelectedColorSource}" Margin="0,0,0,6" />
             <StackPanel Orientation="Horizontal" Margin="0,0,0,6"
-                        Visibility="{Binding SelectedUncropColorSource, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=CustomColor}">
-                <Rectangle Width="24" Height="24" Fill="{Binding UncropCustomSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                        Visibility="{Binding UncropOptions.SelectedColorSource, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=CustomColor}">
+                <Rectangle Width="24" Height="24" Fill="{Binding UncropOptions.CustomSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
                 <Button x:Name="ChooseUncropColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseUncropColorButton_Click" />
-                <Popup IsOpen="{Binding IsUncropColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseUncropColorButton}"
+                <Popup IsOpen="{Binding UncropOptions.IsColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseUncropColorButton}"
                        StaysOpen="False" AllowsTransparency="True" Placement="Right">
                     <Border Background="White" BorderBrush="Gray" BorderThickness="1">
-                        <controls:SimpleColorPickerControl SelectedColor="{Binding UncropCustomSolidColor}" />
+                        <controls:SimpleColorPickerControl SelectedColor="{Binding UncropOptions.CustomSolidColor}" />
                     </Border>
                 </Popup>
             </StackPanel>
-            <CheckBox Content="Blur fill" IsChecked="{Binding UncropBlurredColorFill}" Margin="0,0,0,4" FontSize="11" />
-            <DockPanel Visibility="{Binding UncropBlurredColorFill, Converter={StaticResource BoolToVisibilityConverter}}">
+            <CheckBox Content="Blur fill" IsChecked="{Binding UncropOptions.BlurredColorFill}" Margin="0,0,0,4" FontSize="11" />
+            <DockPanel Visibility="{Binding UncropOptions.BlurredColorFill, Converter={StaticResource BoolToVisibilityConverter}}">
                 <TextBlock Text="Blur:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="40" />
-                <Slider Minimum="3" Maximum="101" Value="{Binding UncropBlurRadius}" />
+                <Slider Minimum="3" Maximum="101" Value="{Binding UncropOptions.BlurRadius}" />
             </DockPanel>
         </StackPanel>
 
         <!-- Replicate / Clamp -->
         <RadioButton Content="Edge clamp (Replicate)" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
-                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
+                     IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
 
         <!-- Zoom Blur -->
         <RadioButton Content="Zoom blur" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
-                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ZoomBlur}" />
+                     IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ZoomBlur}" />
 
         <!-- Gradient -->
         <RadioButton Content="Edge gradient" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
-                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeGradient}" />
+                     IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeGradient}" />
 
         <!-- Patch Synthesis -->
         <RadioButton Content="Patch synthesis (Texture)" GroupName="UncropFillModeDoc" Margin="0,0,0,8"
-                     IsChecked="{Binding SelectedUncropFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PatchSynthesis}" />
+                     IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PatchSynthesis}" />
 
         <Button Content="Apply Uncrop Fill" Command="{Binding ApplyUncropCommand}"
                 Height="32" FontWeight="SemiBold" Background="#FF0078D7" Foreground="White" BorderThickness="0" Margin="0,8,0,0" />

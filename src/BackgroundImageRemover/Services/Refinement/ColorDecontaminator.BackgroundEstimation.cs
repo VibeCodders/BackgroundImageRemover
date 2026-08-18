@@ -105,7 +105,10 @@ internal static class BackgroundEstimation
     {
         using var densityMask = new Mat();
         Cv2.Compare(density, Scalar.All(DensityThreshold), densityMask, CmpType.GE);
-        using var valid = new Mat();
+
+        // Owned by the caller: must NOT be a using-declaration, otherwise it is disposed
+        // before the method actually returns and the caller receives a dead Mat.
+        var valid = new Mat();
         Cv2.BitwiseAnd(edgeMask, densityMask, valid);
         return valid;
     }

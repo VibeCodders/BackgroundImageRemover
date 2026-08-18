@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Models;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
 using WpfPoint = System.Windows.Point;
@@ -24,6 +25,16 @@ public class ScribbleManager : IDisposable
     public bool HasScribbles => HasNonEmptyScribbles();
     public bool CanUndo => _undo.Count > 0;
     public bool CanRedo => _redo.Count > 0;
+
+    /// <summary>
+    /// Maps an <see cref="InteractionMode"/> to the corresponding <see cref="ScribbleMode"/>,
+    /// defaulting to foreground for non-background modes.
+    /// </summary>
+    public static ScribbleMode FromInteractionMode(InteractionMode mode) => mode switch
+    {
+        InteractionMode.ScribbleBackground => ScribbleMode.Background,
+        _ => ScribbleMode.Foreground
+    };
 
     public ScribbleManager(int maxHistoryDepth = 20)
     {

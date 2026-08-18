@@ -1,6 +1,5 @@
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Editing;
 using BackgroundImageRemover.Services.Refinement;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -41,8 +40,8 @@ public partial class DocumentViewModel
 
     private bool IsScribbling => OriginalMode is InteractionMode.ScribbleForeground or InteractionMode.ScribbleBackground;
 
-    private bool CanUndoExecute() => IsScribbling ? _scribbleManager.CanUndo : _editHistory.CanUndo;
-    private bool CanRedoExecute() => IsScribbling ? _scribbleManager.CanRedo : _editHistory.CanRedo;
+    private bool CanUndoExecute() => IsScribbling ? _scribbleManager.CanUndo : _editSession.CanUndo;
+    private bool CanRedoExecute() => IsScribbling ? _scribbleManager.CanRedo : _editSession.CanRedo;
 
     [RelayCommand(CanExecute = nameof(CanUndoExecute))]
     private void Undo()
@@ -54,17 +53,10 @@ public partial class DocumentViewModel
             return;
         }
 
-        if (_workingAlpha is null)
+        if (!_editSession.Undo(ref _workingAlpha))
         {
             return;
         }
-        var restored = _editHistory.Undo(_workingAlpha);
-        if (restored is null)
-        {
-            return;
-        }
-        _workingAlpha.Dispose();
-        _workingAlpha = restored;
         _workingResultHandEdited = true;
         IsDirty = true;
         RefreshUndoRedoState();
@@ -81,17 +73,10 @@ public partial class DocumentViewModel
             return;
         }
 
-        if (_workingAlpha is null)
+        if (!_editSession.Redo(ref _workingAlpha))
         {
             return;
         }
-        var restored = _editHistory.Redo(_workingAlpha);
-        if (restored is null)
-        {
-            return;
-        }
-        _workingAlpha.Dispose();
-        _workingAlpha = restored;
         _workingResultHandEdited = true;
         IsDirty = true;
         RefreshUndoRedoState();
@@ -117,7 +102,7 @@ public partial class DocumentViewModel
         {
             return;
         }
-        _editHistory.Push(_workingAlpha);
+        _editSession.Record(_workingAlpha);
         _workingResultHandEdited = true;
         IsDirty = true;
         RefreshUndoRedoState();
@@ -155,7 +140,7 @@ public partial class DocumentViewModel
         {
             return;
         }
-        _editHistory.Push(_workingAlpha);
+        _editSession.Record(_workingAlpha);
         _workingResultHandEdited = true;
         IsDirty = true;
         RefreshUndoRedoState();
@@ -174,11 +159,7 @@ public partial class DocumentViewModel
         if (_preview is null) return;
         ScribbleManager.EnsureMats(_preview.Bgr.Size());
 
-        var scribbleMode = OriginalMode == InteractionMode.ScribbleForeground
-            ? ScribbleMode.Foreground
-            : OriginalMode == InteractionMode.ScribbleBackground
-                ? ScribbleMode.Background
-                : ScribbleMode.Foreground; // fallback
+        var scribbleMode = ScribbleManager.FromInteractionMode(OriginalMode);
 
         ScribbleManager.StartStroke(imagePoint, scribbleMode);
         GrabCut.HasScribbles = ScribbleManager.HasScribbles;
@@ -186,11 +167,7 @@ public partial class DocumentViewModel
 
     public void OnOriginalStrokeMove(WpfPoint imagePoint)
     {
-        var scribbleMode = OriginalMode == InteractionMode.ScribbleForeground
-            ? ScribbleMode.Foreground
-            : OriginalMode == InteractionMode.ScribbleBackground
-                ? ScribbleMode.Background
-                : ScribbleMode.Foreground; // fallback
+        var scribbleMode = ScribbleManager.FromInteractionMode(OriginalMode);
 
         ScribbleManager.MoveStroke(imagePoint, scribbleMode);
         GrabCut.HasScribbles = ScribbleManager.HasScribbles;

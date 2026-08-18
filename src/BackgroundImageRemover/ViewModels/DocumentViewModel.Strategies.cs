@@ -1,100 +1,14 @@
-using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
-using BackgroundImageRemover.Services.Onnx;
-using BackgroundImageRemover.Services.Preview;
-using BackgroundImageRemover.Services.Sam;
 using BackgroundImageRemover.Services.Strategies;
-using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
-using WpfPoint = System.Windows.Point;
 
 namespace BackgroundImageRemover.ViewModels;
 
 public partial class DocumentViewModel
 {
-    private async Task EnsureOnnxReadyAsync()
-    {
-        var model = Onnx.SelectedModel;
-        Onnx.ErrorMessage = null;
-        Onnx.IsDownloading = true;
-
-        var success = await ModelDownloadHelper.EnsureOnnxModelReadyAsync(
-            _onnxStrategy,
-            model,
-            progress => Onnx.DownloadFraction = progress,
-            error => Onnx.ErrorMessage = error,
-            () =>
-            {
-                if (model == Onnx.SelectedModel)
-                {
-                    Onnx.IsModelReady = true;
-                    RequestPreviewDebounced();
-                }
-            },
-            _log,
-            CancellationToken.None);
-
-        Onnx.IsDownloading = false;
-    }
-
-    [RelayCommand]
-    private Task RetryOnnxDownloadAsync() => EnsureOnnxReadyAsync();
-
-    private async Task EnsureSamReadyAsync()
-    {
-        Sam.ErrorMessage = null;
-        Sam.IsDownloading = true;
-
-        var success = await ModelDownloadHelper.EnsureSamModelReadyAsync(
-            _samStrategy,
-            progress => Sam.DownloadFraction = progress,
-            error => Sam.ErrorMessage = error,
-            () =>
-            {
-                Sam.IsModelReady = true;
-                ExportCommand.NotifyCanExecuteChanged();
-                if (_loadedImage is not null)
-                {
-                    ComputeSamEmbedding();
-                }
-            },
-            _log,
-            CancellationToken.None);
-
-        Sam.IsDownloading = false;
-    }
-
-    [RelayCommand]
-    private Task RetrySamDownloadAsync() => EnsureSamReadyAsync();
-
-    private void ComputeSamEmbedding()
-    {
-        if (_loadedImage is null)
-        {
-            return;
-        }
-        _samEmbedding = ModelDownloadHelper.ComputeSamEmbeddingSafe(
-            _samStrategy,
-            _loadedImage.FullBgr,
-            error => StatusMessage = $"SAM embedding failed: {error}",
-            _log);
-    }
-
-    public void OnOriginalSamPointClicked(OpenCvSharp.Point previewPoint)
-    {
-        if (_samEmbedding is null)
-        {
-            StatusMessage = "SAM is still preparing this image, try again in a moment.";
-            return;
-        }
-        _samPromptPointPreview = new WpfPoint(previewPoint.X, previewPoint.Y);
-        Sam.HasClickedPoint = true;
-        RequestPreviewDebounced();
-    }
-
     private void RequestPreviewDebounced()
     {
         if (!IsImageLoaded || ResultMode != InteractionMode.None)
@@ -167,7 +81,7 @@ public partial class DocumentViewModel
         _workingResultIsLoadedCutout = true;
         _workingResultHandEdited = false;
 
-        _editHistory.Clear();
+        _editSession.Clear();
         RefreshUndoRedoState();
         OnPropertyChanged(nameof(HasWorkingResult));
         UndoCommand.NotifyCanExecuteChanged();
@@ -306,7 +220,7 @@ public partial class DocumentViewModel
         (_workingBgr, _workingAlpha) = BackgroundCompositingService.SplitBgra(result.Bgra);
         result.Dispose();
 
-        _editHistory.Clear();
+        _editSession.Clear();
         RefreshUndoRedoState();
         OnPropertyChanged(nameof(HasWorkingResult));
         UndoCommand.NotifyCanExecuteChanged();
@@ -322,10 +236,7 @@ public partial class DocumentViewModel
         {
             return;
         }
-        using var bgra = new Mat();
-        Cv2.CvtColor(_workingBgr, bgra, ColorConversionCodes.BGR2BGRA);
-        BackgroundCompositingService.ReplaceAlphaChannel(bgra, _workingAlpha);
-        ResultBitmap = bgra.ToBitmapSource();
+        ResultBitmap = _workingBgr.ToBitmapSource(_workingAlpha);
     }
 
     private void DisposeWorkingResult()

@@ -101,7 +101,7 @@ public class UncropViewModelTests
     {
         using var vm = CreateViewModel();
         await vm.LoadAsync("test_photo.jpg");
-        vm.Padding = new CanvasPadding(10, 10, 10, 10);
+        vm.Options.Padding = new CanvasPadding(10, 10, 10, 10);
 
         Assert.False(vm.IsDirty);
         await vm.ApplyFillCommand.ExecuteAsync(null);
@@ -112,7 +112,7 @@ public class UncropViewModelTests
         Assert.False(vm.CanUndo); // first fill has no prior result to undo to
 
         // Applying a second fill pushes the first result to edit history
-        vm.Padding = new CanvasPadding(20, 20, 20, 20);
+        vm.Options.Padding = new CanvasPadding(20, 20, 20, 20);
         await vm.ApplyFillCommand.ExecuteAsync(null);
         Assert.True(vm.CanUndo);
     }
@@ -130,23 +130,23 @@ public class UncropViewModelTests
     {
         using var vm = CreateViewModel();
         await vm.LoadAsync("test_photo.jpg");
-        vm.Padding = new CanvasPadding(15, 15, 15, 15);
-        vm.SelectedFillMode = fillMode;
-        vm.InpaintRadius = 10;
-        vm.BlendMargin = 4;
-        vm.InpaintPreFillEdgeAverage = true;
-        vm.SelectedMirrorType = UncropMirrorType.Reflect;
-        vm.MirrorBlurRadius = 10;
-        vm.MirrorFadeOpacity = 0.8;
-        vm.SelectedColorSource = UncropColorSource.CustomColor;
-        vm.BlurRadius = 21;
-        vm.ReplicateSmoothRadius = 5;
-        vm.ZoomBlurRadius = 30;
-        vm.ZoomScale = 1.4;
-        vm.SelectedGradientMode = UncropGradientMode.FourCorners;
-        vm.GradientNoiseAmount = 0.02;
-        vm.PatchSize = 24;
-        vm.PatchBlendOverlap = 6;
+        vm.Options.Padding = new CanvasPadding(15, 15, 15, 15);
+        vm.Options.SelectedFillMode = fillMode;
+        vm.Options.InpaintRadius = 10;
+        vm.Options.BlendMargin = 4;
+        vm.Options.InpaintPreFillEdgeAverage = true;
+        vm.Options.SelectedMirrorType = UncropMirrorType.Reflect;
+        vm.Options.MirrorBlurRadius = 10;
+        vm.Options.MirrorFadeOpacity = 0.8;
+        vm.Options.SelectedColorSource = UncropColorSource.CustomColor;
+        vm.Options.BlurRadius = 21;
+        vm.Options.ReplicateSmoothRadius = 5;
+        vm.Options.ZoomBlurRadius = 30;
+        vm.Options.ZoomScale = 1.4;
+        vm.Options.SelectedGradientMode = UncropGradientMode.FourCorners;
+        vm.Options.GradientNoiseAmount = 0.02;
+        vm.Options.PatchSize = 24;
+        vm.Options.PatchBlendOverlap = 6;
 
         Assert.True(vm.ApplyFillCommand.CanExecute(null));
         await vm.ApplyFillCommand.ExecuteAsync(null);
@@ -167,7 +167,7 @@ public class UncropViewModelTests
             new DummyFileLogService());
 
         await vm.LoadAsync("test_photo.jpg");
-        vm.Padding = new CanvasPadding(10, 10, 10, 10);
+        vm.Options.Padding = new CanvasPadding(10, 10, 10, 10);
 
         var fillTask = vm.ApplyFillCommand.ExecuteAsync(null);
         Assert.True(vm.IsBusy);

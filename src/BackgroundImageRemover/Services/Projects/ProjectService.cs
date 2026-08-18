@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.ImageIo;
@@ -144,9 +145,7 @@ public sealed class ProjectService : IProjectService
             return ImageCodecHelper.EncodePngBase64(bgr);
         }
 
-        using var bgra = new Mat();
-        Cv2.CvtColor(bgr, bgra, ColorConversionCodes.BGR2BGRA);
-        BackgroundCompositingService.ReplaceAlphaChannel(bgra, alpha);
+        using var bgra = bgr.ToBgra(alpha);
         return ImageCodecHelper.EncodePngBase64(bgra);
     }
 

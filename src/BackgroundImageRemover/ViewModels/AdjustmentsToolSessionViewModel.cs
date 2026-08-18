@@ -1,12 +1,10 @@
 using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Logging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
-using OpenCvSharp.WpfExtensions;
 
 namespace BackgroundImageRemover.ViewModels;
 
@@ -85,10 +83,7 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
         _workingBgr = _sourceImage.FullBgr.Clone();
         _workingAlpha = _sourceImage.FullAlpha?.Clone() ?? new Mat(_workingBgr.Size(), MatType.CV_8UC1, new Scalar(255));
 
-        using var bgra = new Mat();
-        Cv2.CvtColor(_workingBgr, bgra, ColorConversionCodes.BGR2BGRA);
-        BackgroundCompositingService.ReplaceAlphaChannel(bgra, _workingAlpha);
-        OriginalBitmap = bgra.ToBitmapSource();
+        OriginalBitmap = _workingBgr.ToBitmapSource(_workingAlpha);
         ResultBitmap = OriginalBitmap;
 
         StatusMessage = "Adjust sliders to preview visual changes.";
@@ -131,10 +126,7 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
         try
         {
             using var adjustedBgr = ImageProcessingHelper.ApplyAdjustments(_sourceImage.FullBgr, adjustments);
-            using var bgra = new Mat();
-            Cv2.CvtColor(adjustedBgr, bgra, ColorConversionCodes.BGR2BGRA);
-            BackgroundCompositingService.ReplaceAlphaChannel(bgra, _workingAlpha);
-            ResultBitmap = bgra.ToBitmapSource();
+            ResultBitmap = adjustedBgr.ToBitmapSource(_workingAlpha);
             IsDirty = true;
         }
         catch (Exception ex)

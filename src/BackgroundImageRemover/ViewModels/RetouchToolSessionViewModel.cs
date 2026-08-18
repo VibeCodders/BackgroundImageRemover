@@ -1,12 +1,10 @@
 using System.Windows.Media.Imaging;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Compositing;
-using BackgroundImageRemover.Services.Editing;
 using BackgroundImageRemover.Services.Refinement;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
-using OpenCvSharp.WpfExtensions;
 using WpfPoint = System.Windows.Point;
 
 namespace BackgroundImageRemover.ViewModels;
@@ -16,7 +14,7 @@ namespace BackgroundImageRemover.ViewModels;
 /// </summary>
 public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
 {
-    private readonly EditHistory _editHistory = new();
+    private readonly MatEditSession _editSession = new();
     private LoadedImage? _sourceImage;
 
     private Mat? _workingBgr;
@@ -76,7 +74,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     public void OnResultStrokeStart(WpfPoint imagePoint)
     {
         if (_workingAlpha is null) return;
-        _editHistory.Push(_workingAlpha);
+        _editSession.Record(_workingAlpha);
         IsDirty = true;
         RefreshUndoRedoState();
         _brushLastPoint = imagePoint;
@@ -104,7 +102,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     public void OnResultWandClicked(Point imagePoint)
     {
         if (_workingAlpha is null || _workingBgr is null) return;
-        _editHistory.Push(_workingAlpha);
+        _editSession.Record(_workingAlpha);
         IsDirty = true;
         RefreshUndoRedoState();
         MagicWandService.Apply(_workingBgr, _workingAlpha, imagePoint, MagicWandTolerance, add: BrushMode == BrushMode.Restore);
@@ -114,23 +112,16 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     private void RefreshResultBitmap()
     {
         if (_workingBgr is null || _workingAlpha is null) return;
-        using var bgra = new Mat();
-        Cv2.CvtColor(_workingBgr, bgra, ColorConversionCodes.BGR2BGRA);
-        BackgroundCompositingService.ReplaceAlphaChannel(bgra, _workingAlpha);
-        ResultBitmap = bgra.ToBitmapSource();
+        ResultBitmap = _workingBgr.ToBitmapSource(_workingAlpha);
     }
 
-    private bool CanUndoExecute() => _editHistory.CanUndo;
-    private bool CanRedoExecute() => _editHistory.CanRedo;
+    private bool CanUndoExecute() => _editSession.CanUndo;
+    private bool CanRedoExecute() => _editSession.CanRedo;
 
     [RelayCommand(CanExecute = nameof(CanUndoExecute))]
     private void Undo()
     {
-        if (_workingAlpha is null) return;
-        var restored = _editHistory.Undo(_workingAlpha);
-        if (restored is null) return;
-        _workingAlpha.Dispose();
-        _workingAlpha = restored;
+        if (!_editSession.Undo(ref _workingAlpha)) return;
         IsDirty = true;
         RefreshUndoRedoState();
         RefreshResultBitmap();
@@ -139,11 +130,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     [RelayCommand(CanExecute = nameof(CanRedoExecute))]
     private void Redo()
     {
-        if (_workingAlpha is null) return;
-        var restored = _editHistory.Redo(_workingAlpha);
-        if (restored is null) return;
-        _workingAlpha.Dispose();
-        _workingAlpha = restored;
+        if (!_editSession.Redo(ref _workingAlpha)) return;
         IsDirty = true;
         RefreshUndoRedoState();
         RefreshResultBitmap();
@@ -172,6 +159,6 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         _sourceImage?.Dispose();
         _workingBgr?.Dispose();
         _workingAlpha?.Dispose();
-        _editHistory.Dispose();
+        _editSession.Dispose();
     }
 }

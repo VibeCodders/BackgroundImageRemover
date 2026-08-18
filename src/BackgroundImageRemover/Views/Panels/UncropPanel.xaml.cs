@@ -15,7 +15,7 @@ public partial class UncropPanel : UserControl
     {
         if (DataContext is DocumentViewModel vm)
         {
-            vm.IsUncropColorPickerOpen = !vm.IsUncropColorPickerOpen;
+            vm.UncropOptions.IsColorPickerOpen = !vm.UncropOptions.IsColorPickerOpen;
         }
     }
 }

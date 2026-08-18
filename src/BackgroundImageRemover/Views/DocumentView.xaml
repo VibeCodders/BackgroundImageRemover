@@ -181,7 +181,7 @@
                 <!-- View when UNPAINT/UNCROP tool is active -->
                 <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Uncrop}" Margin="8">
                     <controls:UncropCanvasControl ImageSource="{Binding PreviewBitmap}"
-                                                  ImagePadding="{Binding UncropPadding, Mode=TwoWay}" />
+                                                  ImagePadding="{Binding UncropOptions.Padding, Mode=TwoWay}" />
                 </Grid>
 
                 <!-- When ActiveTool is not Uncrop: -->

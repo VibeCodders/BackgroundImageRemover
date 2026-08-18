@@ -1,4 +1,5 @@
 using OpenCvSharp;
+using OpenCvSharp.WpfExtensions;
 
 namespace BackgroundImageRemover.Helpers;
 
@@ -37,6 +38,21 @@ public static class MatExtensions
         var result = new Mat();
         Cv2.CvtColor(source, result, ColorConversionCodes.BGRA2BGR);
         return result;
+    }
+
+    /// <summary>
+    /// Composites a 3-channel BGR Mat with a single-channel alpha Mat into a fresh BGRA Mat,
+    /// eliminating the repeated BGR→BGRA conversion + alpha-channel replacement boilerplate.
+    /// </summary>
+    public static Mat ToBgra(this Mat bgr, Mat alpha)
+    {
+        ArgumentNullException.ThrowIfNull(bgr);
+        ArgumentNullException.ThrowIfNull(alpha);
+
+        var bgra = new Mat();
+        Cv2.CvtColor(bgr, bgra, ColorConversionCodes.BGR2BGRA);
+        BackgroundImageRemover.Services.Compositing.BackgroundCompositingService.ReplaceAlphaChannel(bgra, alpha);
+        return bgra;
     }
 
     /// <summary>
@@ -114,10 +130,22 @@ public static class MatExtensions
 
         using var previewAlpha = new Mat();
         Cv2.Resize(fullAlpha, previewAlpha, previewBgr.Size(), interpolation: InterpolationFlags.Area);
-        using var bgra = new Mat();
-        Cv2.CvtColor(previewBgr, bgra, ColorConversionCodes.BGR2BGRA);
-        BackgroundImageRemover.Services.Compositing.BackgroundCompositingService.ReplaceAlphaChannel(bgra, previewAlpha);
-        return OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(bgra);
+        using var bgra = previewBgr.ToBgra(previewAlpha);
+        return bgra.ToBitmapSource();
+    }
+
+    /// <summary>
+    /// Composites a 3-channel BGR Mat with a single-channel alpha Mat into a BGRA
+    /// <see cref="System.Windows.Media.Imaging.BitmapSource"/>, eliminating the repeated
+    /// BGR→BGRA conversion + alpha-channel replacement boilerplate across ViewModels.
+    /// </summary>
+    public static System.Windows.Media.Imaging.BitmapSource ToBitmapSource(this Mat bgr, Mat alpha)
+    {
+        ArgumentNullException.ThrowIfNull(bgr);
+        ArgumentNullException.ThrowIfNull(alpha);
+
+        using var bgra = bgr.ToBgra(alpha);
+        return bgra.ToBitmapSource();
     }
 
     /// <summary>

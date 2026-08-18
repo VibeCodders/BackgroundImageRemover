@@ -1,6 +1,6 @@
 using System.Diagnostics;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Refinement;
 using OpenCvSharp;
 
@@ -40,9 +40,7 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
 
             using var mask = context.EnableAlphaMatting ? AlphaMattingRefiner.Refine(bgr, rawMask) : rawMask.Clone();
 
-            var bgra = new Mat();
-            Cv2.CvtColor(bgr, bgra, ColorConversionCodes.BGR2BGRA);
-            BackgroundCompositingService.ReplaceAlphaChannel(bgra, mask);
+            var bgra = bgr.ToBgra(mask);
 
             PostProcessBgra(bgra, context);
 

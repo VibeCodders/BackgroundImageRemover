@@ -49,8 +49,8 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <TextBlock Text="Aspect ratio" FontWeight="Bold" Margin="0,0,0,4" />
-                    <ComboBox ItemsSource="{Binding AspectPresets}" DisplayMemberPath="Label"
-                              SelectedItem="{Binding SelectedPreset}" Margin="0,0,0,12" />
+                    <ComboBox ItemsSource="{Binding Options.AspectPresets}" DisplayMemberPath="Label"
+                              SelectedItem="{Binding Options.SelectedPreset}" Margin="0,0,0,12" />
 
                     <TextBlock Text="Padding (px)" FontWeight="Bold" Margin="0,0,0,4" />
                     <Grid Margin="0,0,0,12">
@@ -65,121 +65,121 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Left" VerticalAlignment="Center" Margin="0,0,4,4" />
-                        <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,8,4" Text="{Binding PaddingLeftPx, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,8,4" Text="{Binding Options.PaddingLeftPx, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock Grid.Row="0" Grid.Column="2" Text="Top" VerticalAlignment="Center" Margin="0,0,4,4" />
-                        <TextBox Grid.Row="0" Grid.Column="3" Margin="0,0,0,4" Text="{Binding PaddingTopPx, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Grid.Row="0" Grid.Column="3" Margin="0,0,0,4" Text="{Binding Options.PaddingTopPx, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Right" VerticalAlignment="Center" Margin="0,0,4,0" />
-                        <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,0" Text="{Binding PaddingRightPx, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,0" Text="{Binding Options.PaddingRightPx, UpdateSourceTrigger=PropertyChanged}" />
                         <TextBlock Grid.Row="1" Grid.Column="2" Text="Bottom" VerticalAlignment="Center" Margin="0,0,4,0" />
-                        <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding PaddingBottomPx, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding Options.PaddingBottomPx, UpdateSourceTrigger=PropertyChanged}" />
                     </Grid>
 
                     <TextBlock Text="Fill mode" FontWeight="Bold" Margin="0,0,0,4" />
                     
                     <!-- Mirror Mode -->
                     <RadioButton Content="Mirror" GroupName="UncropFillMode" Margin="0,0,0,4"
-                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}" />
-                    <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Mirror}">
+                                 IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Mirror}">
                         <TextBlock Text="Mirror reflection type:" FontSize="11" Foreground="#FF666666" Margin="0,0,0,2" />
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <RadioButton Content="Reflect 101" GroupName="UncropMirrorType" Margin="0,0,8,0"
-                                         IsChecked="{Binding SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect101}" />
+                                         IsChecked="{Binding Options.SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect101}" />
                             <RadioButton Content="Reflect" GroupName="UncropMirrorType"
-                                         IsChecked="{Binding SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect}" />
+                                         IsChecked="{Binding Options.SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect}" />
                         </StackPanel>
 
                         <DockPanel Margin="0,0,0,4">
                             <TextBlock Text="Blur radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding MirrorBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0" Maximum="50" Value="{Binding MirrorBlurRadius}" SmallChange="2" LargeChange="10" />
+                            <TextBlock Text="{Binding Options.MirrorBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="0" Maximum="50" Value="{Binding Options.MirrorBlurRadius}" SmallChange="2" LargeChange="10" />
                         </DockPanel>
 
                         <DockPanel Margin="0,0,0,4">
                             <TextBlock Text="Fade opacity:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding MirrorFadeOpacity, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding MirrorFadeOpacity}" SmallChange="0.05" LargeChange="0.2" />
+                            <TextBlock Text="{Binding Options.MirrorFadeOpacity, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Options.MirrorFadeOpacity}" SmallChange="0.05" LargeChange="0.2" />
                         </DockPanel>
                     </StackPanel>
 
                     <!-- Inpaint Mode -->
                     <RadioButton Content="Content-aware inpaint" GroupName="UncropFillMode" Margin="0,0,0,4"
-                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Inpaint}" />
-                    <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Inpaint}">
+                                 IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Inpaint}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Inpaint}">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <RadioButton Content="Telea" GroupName="UncropInpaintMethod" Margin="0,0,8,0"
-                                         IsChecked="{Binding SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Telea}" />
+                                         IsChecked="{Binding Options.SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Telea}" />
                             <RadioButton Content="Navier-Stokes" GroupName="UncropInpaintMethod"
-                                         IsChecked="{Binding SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NavierStokes}" />
+                                         IsChecked="{Binding Options.SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NavierStokes}" />
                         </StackPanel>
                         
                         <DockPanel Margin="0,0,0,4">
                             <TextBlock Text="Radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding InpaintRadius, StringFormat={}{0:F0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="1" Maximum="50" Value="{Binding InpaintRadius}" />
+                            <TextBlock Text="{Binding Options.InpaintRadius, StringFormat={}{0:F0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="1" Maximum="50" Value="{Binding Options.InpaintRadius}" />
                         </DockPanel>
 
                         <DockPanel Margin="0,0,0,4">
                             <TextBlock Text="Blend margin:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0" Maximum="30" Value="{Binding BlendMargin}" />
+                            <TextBlock Text="{Binding Options.BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                            <Slider Minimum="0" Maximum="30" Value="{Binding Options.BlendMargin}" />
                         </DockPanel>
 
-                        <CheckBox Content="Pre-fill edge colors" Margin="0,2,0,4" IsChecked="{Binding InpaintPreFillEdgeAverage}" />
+                        <CheckBox Content="Pre-fill edge colors" Margin="0,2,0,4" IsChecked="{Binding Options.InpaintPreFillEdgeAverage}" />
                     </StackPanel>
 
                     <!-- Solid Color Mode -->
                     <RadioButton Content="Solid color" GroupName="UncropFillMode" Margin="0,0,0,4"
-                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
-                    <StackPanel Margin="16,0,0,8" Visibility="{Binding SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}">
+                                 IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <RadioButton Content="Edge average" GroupName="UncropColorSource" Margin="0,0,8,0"
-                                         IsChecked="{Binding SelectedColorSource, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeAverage}" />
+                                         IsChecked="{Binding Options.SelectedColorSource, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeAverage}" />
                             <RadioButton Content="Custom color" GroupName="UncropColorSource"
-                                         IsChecked="{Binding SelectedColorSource, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CustomColor}" />
+                                         IsChecked="{Binding Options.SelectedColorSource, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CustomColor}" />
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6"
-                                    Visibility="{Binding SelectedColorSource, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=CustomColor}">
+                                    Visibility="{Binding Options.SelectedColorSource, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=CustomColor}">
                             <Button x:Name="UncropColorPickerButton" Padding="4,2" Click="UncropColorPickerButton_Click">
                                 <StackPanel Orientation="Horizontal">
-                                    <Rectangle Width="18" Height="18" Fill="{Binding CustomSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="#FF888888" Margin="0,0,6,0" />
+                                    <Rectangle Width="18" Height="18" Fill="{Binding Options.CustomSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="#FF888888" Margin="0,0,6,0" />
                                     <TextBlock Text="Choose color..." VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
-                            <Popup IsOpen="{Binding IsColorPickerOpen}" PlacementTarget="{Binding ElementName=UncropColorPickerButton}"
+                            <Popup IsOpen="{Binding Options.IsColorPickerOpen}" PlacementTarget="{Binding ElementName=UncropColorPickerButton}"
                                    StaysOpen="False" AllowsTransparency="True">
                                 <Border Background="#FF2D2D30" BorderBrush="#FF3F3F46" BorderThickness="1" Padding="8" CornerRadius="4">
-                                    <controls:SimpleColorPickerControl SelectedColor="{Binding CustomSolidColor, Mode=TwoWay}" />
+                                    <controls:SimpleColorPickerControl SelectedColor="{Binding Options.CustomSolidColor, Mode=TwoWay}" />
                                 </Border>
                             </Popup>
                         </StackPanel>
 
-                        <CheckBox Content="Blurred gradient fill" Margin="0,0,0,4" IsChecked="{Binding BlurredColorFill}" />
-                        <DockPanel Margin="0,0,0,4" Visibility="{Binding BlurredColorFill, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <CheckBox Content="Blurred gradient fill" Margin="0,0,0,4" IsChecked="{Binding Options.BlurredColorFill}" />
+                        <DockPanel Margin="0,0,0,4" Visibility="{Binding Options.BlurredColorFill, Converter={StaticResource BoolToVisibilityConverter}}">
                             <TextBlock Text="Blur radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <Slider Minimum="0" Maximum="101" Value="{Binding BlurRadius}" />
+                            <Slider Minimum="0" Maximum="101" Value="{Binding Options.BlurRadius}" />
                         </DockPanel>
                     </StackPanel>
 
                     <!-- Zoom Blur Mode -->
                     <RadioButton Content="Zoom &amp; Blur background" GroupName="UncropFillMode" Margin="0,0,0,4"
-                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ZoomBlur}" />
+                                 IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ZoomBlur}" />
 
                     <!-- Edge Gradient Mode -->
                     <RadioButton Content="Edge gradient" GroupName="UncropFillMode" Margin="0,0,0,4"
-                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeGradient}" />
+                                 IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeGradient}" />
 
                     <!-- Patch Synthesis Mode -->
                     <RadioButton Content="Patch texture synthesis" GroupName="UncropFillMode" Margin="0,0,0,4"
-                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PatchSynthesis}" />
+                                 IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PatchSynthesis}" />
 
                     <!-- Replicate Mode -->
                     <RadioButton Content="Edge stretch (Replicate)" GroupName="UncropFillMode" Margin="0,0,0,4"
-                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
+                                 IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
 
                     <!-- Wrap Mode -->
                     <RadioButton Content="Tile / Pattern (Wrap)" GroupName="UncropFillMode" Margin="0,0,0,4"
-                                 IsChecked="{Binding SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Wrap}" />
+                                 IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Wrap}" />
 
                     <Button Content="Preview fill" Command="{Binding ApplyFillCommand}" Margin="0,14,0,0" Padding="8" FontWeight="Bold" />
                 </StackPanel>
@@ -195,7 +195,7 @@
 
             <DockPanel Grid.Column="0" Margin="8">
                 <TextBlock DockPanel.Dock="Top" Text="Canvas Expansion (Drag handles or set padding)" FontWeight="Bold" Margin="0,0,0,4" />
-                <controls:UncropCanvasControl ImageSource="{Binding SourceBitmap}" ImagePadding="{Binding Padding, Mode=TwoWay}" />
+                <controls:UncropCanvasControl ImageSource="{Binding SourceBitmap}" ImagePadding="{Binding Options.Padding, Mode=TwoWay}" />
             </DockPanel>
 
             <DockPanel Grid.Column="1" Margin="8">

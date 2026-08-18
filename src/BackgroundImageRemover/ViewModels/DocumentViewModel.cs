@@ -160,7 +160,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     }
 
     [ObservableProperty]
-    private EditorTool _activeTool = EditorTool.RemoveBackground;
+    private EditorTool _activeTool = EditorTool.None;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
@@ -206,6 +206,13 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
     [ObservableProperty]
     private bool _isCompareMode;
+
+    /// <summary>
+    /// When true, displays the side-by-side split view (Original on left, Result on right).
+    /// When false (default), displays a single unified work area.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isSplitViewEnabled;
 
     /// <summary>True when the opened file already carries an alpha channel (a previously cleaned cutout).</summary>
     [ObservableProperty]
@@ -364,6 +371,8 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
                 }
                 break;
             case EditorTool.Uncrop:
+            case EditorTool.None:
+            default:
                 OriginalMode = InteractionMode.None;
                 ResultMode = InteractionMode.None;
                 break;

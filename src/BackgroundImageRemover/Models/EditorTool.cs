@@ -5,6 +5,9 @@ namespace BackgroundImageRemover.Models;
 /// </summary>
 public enum EditorTool
 {
+    /// <summary>No tool active; default clean view.</summary>
+    None,
+
     /// <summary>AI and algorithmic background removal (ONNX, SAM, ChromaKey, GrabCut).</summary>
     RemoveBackground,
 

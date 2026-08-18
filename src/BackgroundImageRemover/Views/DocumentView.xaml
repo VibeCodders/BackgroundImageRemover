@@ -72,6 +72,9 @@
                     <Button Content="Undo" Command="{Binding UndoCommand}" Padding="8,4" Margin="0,0,2,0" />
                     <Button Content="Redo" Command="{Binding RedoCommand}" Padding="8,4" Margin="0,0,4,0" />
                     <Separator Margin="4,0" />
+                    <ToggleButton Content="◫ Split View" IsChecked="{Binding IsSplitViewEnabled}" Padding="8,4" Margin="0,0,4,0"
+                                  ToolTip="Toggle side-by-side comparison view (Original on left, Result on right)" />
+                    <Separator Margin="4,0" />
                     <Button Content="Batch..." Command="{Binding BatchCommand}" Padding="8,4" />
                 </StackPanel>
 
@@ -124,8 +127,9 @@
             </StatusBarItem>
         </StatusBar>
 
-        <!-- Dynamic Contextual Side Panel -->
-        <Border DockPanel.Dock="Right" Width="330" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA">
+        <!-- Dynamic Contextual Side Panel (Only visible when a tool is active) -->
+        <Border DockPanel.Dock="Right" Width="330" Padding="14" BorderBrush="#FFCCCCCC" BorderThickness="1,0,0,0" Background="#FFFAFAFA"
+                Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground|Uncrop|Retouch|Adjustments}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <!-- PANEL 1: REMOVE BACKGROUND -->
@@ -180,42 +184,57 @@
                                                   ImagePadding="{Binding UncropPadding, Mode=TwoWay}" />
                 </Grid>
 
-                <!-- Dual-pane image view when Background Remover, Retouch, or Adjustments is active -->
-                <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground|Retouch|Adjustments}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <DockPanel Grid.Column="0" Margin="8">
-                        <TextBlock DockPanel.Dock="Top" Text="Original (draw rect / scribbles / SAM click)" FontWeight="Bold" Margin="0,0,0,4" />
-                        <controls:ImagePreviewControl x:Name="OriginalPreview"
-                                                       ImageSource="{Binding PreviewBitmap}"
-                                                       Mode="{Binding OriginalMode}"
-                                                       RectSelected="OriginalPreview_RectSelected"
-                                                       StrokeStart="OriginalPreview_StrokeStart"
-                                                       StrokeMove="OriginalPreview_StrokeMove"
-                                                       StrokeEnd="OriginalPreview_StrokeEnd"
-                                                       SamPointClicked="OriginalPreview_SamPointClicked" />
-                    </DockPanel>
-
-                    <DockPanel Grid.Column="1" Margin="8">
-                        <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
-
-                        <controls:CompareImageControl BeforeSource="{Binding PreviewBitmap}" AfterSource="{Binding ResultBitmap}"
-                                                       DividerPosition="{Binding CompareDividerPosition}"
-                                                       Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVisibilityConverter}}" />
-
-                        <controls:ImagePreviewControl x:Name="ResultEditPreview"
+                <!-- When ActiveTool is not Uncrop: -->
+                <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=None|RemoveBackground|Retouch|Adjustments}">
+                    <!-- Single View (Default: Split View OFF) -->
+                    <DockPanel Margin="8" Visibility="{Binding IsSplitViewEnabled, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                        <controls:ImagePreviewControl x:Name="SinglePreview"
                                                        ImageSource="{Binding ResultBitmap}"
                                                        Mode="{Binding ResultMode}"
                                                        BrushRadius="{Binding BrushRadius}"
                                                        StrokeStart="ResultEditPreview_StrokeStart"
                                                        StrokeMove="ResultEditPreview_StrokeMove"
                                                        StrokeEnd="ResultEditPreview_StrokeEnd"
-                                                       WandClicked="ResultEditPreview_WandClicked"
-                                                       Visibility="{Binding IsCompareMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                                                       WandClicked="ResultEditPreview_WandClicked" />
                     </DockPanel>
+
+                    <!-- Split View (When IsSplitViewEnabled is true) -->
+                    <Grid Visibility="{Binding IsSplitViewEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <DockPanel Grid.Column="0" Margin="8">
+                            <TextBlock DockPanel.Dock="Top" Text="Original (draw rect / scribbles / SAM click)" FontWeight="Bold" Margin="0,0,0,4" />
+                            <controls:ImagePreviewControl x:Name="OriginalPreview"
+                                                           ImageSource="{Binding PreviewBitmap}"
+                                                           Mode="{Binding OriginalMode}"
+                                                           RectSelected="OriginalPreview_RectSelected"
+                                                           StrokeStart="OriginalPreview_StrokeStart"
+                                                           StrokeMove="OriginalPreview_StrokeMove"
+                                                           StrokeEnd="OriginalPreview_StrokeEnd"
+                                                           SamPointClicked="OriginalPreview_SamPointClicked" />
+                        </DockPanel>
+
+                        <DockPanel Grid.Column="1" Margin="8">
+                            <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
+
+                            <controls:CompareImageControl BeforeSource="{Binding PreviewBitmap}" AfterSource="{Binding ResultBitmap}"
+                                                           DividerPosition="{Binding CompareDividerPosition}"
+                                                           Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                            <controls:ImagePreviewControl x:Name="ResultEditPreview"
+                                                           ImageSource="{Binding ResultBitmap}"
+                                                           Mode="{Binding ResultMode}"
+                                                           BrushRadius="{Binding BrushRadius}"
+                                                           StrokeStart="ResultEditPreview_StrokeStart"
+                                                           StrokeMove="ResultEditPreview_StrokeMove"
+                                                           StrokeEnd="ResultEditPreview_StrokeEnd"
+                                                           WandClicked="ResultEditPreview_WandClicked"
+                                                           Visibility="{Binding IsCompareMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                        </DockPanel>
+                    </Grid>
                 </Grid>
             </Grid>
         </Grid>

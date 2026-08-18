@@ -53,6 +53,7 @@ public partial class DocumentView : UserControl
     {
         if (e.PropertyName == nameof(DocumentViewModel.PreviewBitmap))
         {
+            SinglePreview.ResetView();
             OriginalPreview.ResetView();
             ResultEditPreview.ResetView();
         }

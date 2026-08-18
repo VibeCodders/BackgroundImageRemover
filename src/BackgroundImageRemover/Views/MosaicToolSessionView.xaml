@@ -95,6 +95,18 @@
                         <Slider Minimum="0" Maximum="32" Value="{Binding Jitter}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
                     </StackPanel>
 
+                    <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidFill}">
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,12">
+                            <Rectangle Width="24" Height="24" Fill="{Binding FillColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
+                            <Button x:Name="ChooseFillColorButton" Content="Choose color..." Margin="8,0,0,0" Click="ChooseFillColorButton_Click" />
+                            <Popup IsOpen="{Binding IsFillColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseFillColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
+                                <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                    <controls:SimpleColorPickerControl SelectedColor="{Binding FillColor}" />
+                                </Border>
+                            </Popup>
+                        </StackPanel>
+                    </StackPanel>
+
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" />
                 </StackPanel>
             </ScrollViewer>

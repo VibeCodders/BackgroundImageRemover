@@ -1,5 +1,6 @@
 using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
+using WpfColor = System.Windows.Media.Color;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -47,6 +48,12 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
     private int _jitter = 6;
 
     [ObservableProperty]
+    private WpfColor _fillColor = WpfColor.FromRgb(0, 0, 0);
+
+    [ObservableProperty]
+    private bool _isFillColorPickerOpen;
+
+    [ObservableProperty]
     private bool _wholeImage = true;
 
     [ObservableProperty]
@@ -87,6 +94,7 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
     partial void OnInvertRegionChanged(bool value) => RefreshResult();
     partial void OnStrengthChanged(double value) => RefreshResult();
     partial void OnJitterChanged(int value) => RefreshResult();
+    partial void OnFillColorChanged(WpfColor value) => RefreshResult();
     partial void OnWholeImageChanged(bool value) => RefreshResult();
     partial void OnPaintModeChanged(bool value) => RefreshResult();
 
@@ -140,6 +148,7 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
         InvertRegion = false;
         Strength = 1.0;
         Jitter = 6;
+        FillColor = WpfColor.FromRgb(0, 0, 0);
         RefreshResult();
     }
 
@@ -198,7 +207,7 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
             ? MosaicService.BlurSoft(src, region, BlurRadius, Strength)
             : MosaicService.Blur(src, region, BlurRadius),
         MosaicMode.Median => MosaicService.MedianBlur(src, region, BlurRadius),
-        MosaicMode.SolidFill => MosaicService.SolidFill(src, region, new Vec3b(0, 0, 0)),
+        MosaicMode.SolidFill => MosaicService.SolidFill(src, region, new Vec3b(FillColor.B, FillColor.G, FillColor.R)),
         MosaicMode.Crystallize => MosaicService.Crystallize(src, region, CellSize, Jitter),
         _ => MosaicService.Pixelate(src, region, CellSize)
     };

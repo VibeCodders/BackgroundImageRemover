@@ -5,5 +5,8 @@ public enum StrategyKind
     Onnx,
     GrabCut,
     ChromaKey,
-    Sam
+    Sam,
+    FloodFill,
+    KMeans,
+    Otsu
 }

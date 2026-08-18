@@ -76,6 +76,8 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     public GrabCutStrategyViewModel GrabCut { get; } = new();
     public OnnxStrategyViewModel Onnx { get; } = new();
     public SamStrategyViewModel Sam { get; } = new();
+    public FloodFillStrategyViewModel FloodFill { get; } = new();
+    public KMeansStrategyViewModel KMeans { get; } = new();
 
     private ShellViewModel? _shell;
 
@@ -358,6 +360,22 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
                 BatchCommand.NotifyCanExecuteChanged();
             }
             if (e.PropertyName is nameof(Onnx.FeatherPixels) or nameof(Onnx.EnableAlphaMatting) && Onnx.IsModelReady)
+            {
+                RequestPreviewDebounced();
+            }
+        };
+
+        FloodFill.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(FloodFill.Tolerance))
+            {
+                RequestPreviewDebounced();
+            }
+        };
+
+        KMeans.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(KMeans.ClusterCount))
             {
                 RequestPreviewDebounced();
             }

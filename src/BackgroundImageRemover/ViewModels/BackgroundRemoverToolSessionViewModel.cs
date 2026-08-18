@@ -53,6 +53,8 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     public GrabCutStrategyViewModel GrabCut { get; } = new();
     public OnnxStrategyViewModel Onnx { get; } = new();
     public SamStrategyViewModel Sam { get; } = new();
+    public FloodFillStrategyViewModel FloodFill { get; } = new();
+    public KMeansStrategyViewModel KMeans { get; } = new();
 
     [ObservableProperty]
     private StrategyKind _selectedStrategy = StrategyKind.ChromaKey;
@@ -147,6 +149,22 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
                 }
             }
             if (e.PropertyName is nameof(Onnx.FeatherPixels) or nameof(Onnx.EnableAlphaMatting) && Onnx.IsModelReady)
+            {
+                RequestPreviewDebounced();
+            }
+        };
+
+        FloodFill.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(FloodFill.Tolerance))
+            {
+                RequestPreviewDebounced();
+            }
+        };
+
+        KMeans.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(KMeans.ClusterCount))
             {
                 RequestPreviewDebounced();
             }

@@ -85,6 +85,25 @@
                     Visibility="{Binding Sam.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,4,0,8" />
         </StackPanel>
 
+        <!-- Flood fill options -->
+        <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=FloodFill}">
+            <TextBlock Text="Removes the connected background region starting from the image border." TextWrapping="Wrap" Margin="0,0,0,8" />
+            <TextBlock Text="Tolerance" />
+            <Slider Minimum="1" Maximum="100" Value="{Binding FloodFill.Tolerance}" />
+        </StackPanel>
+
+        <!-- K-Means options -->
+        <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=KMeans}">
+            <TextBlock Text="Clusters the image colors and removes the clusters touching the border." TextWrapping="Wrap" Margin="0,0,0,8" />
+            <TextBlock Text="Clusters" />
+            <Slider Minimum="2" Maximum="8" Value="{Binding KMeans.ClusterCount}" IsSnapToTickEnabled="True" TickFrequency="1" />
+        </StackPanel>
+
+        <!-- Otsu options -->
+        <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Otsu}">
+            <TextBlock Text="Automatic Otsu threshold for high-contrast subjects on a flat background." TextWrapping="Wrap" />
+        </StackPanel>
+
         <Separator Margin="0,16"/>
 
         <!-- Export background options -->

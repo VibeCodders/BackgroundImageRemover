@@ -95,6 +95,15 @@ public partial class BackgroundRemoverToolSessionViewModel
                     : (Point?)null,
                 SamEmbedding = _samEmbedding
             },
+            StrategyKind.FloodFill => new StrategyContext
+            {
+                FloodFillTolerance = FloodFill.Tolerance
+            },
+            StrategyKind.KMeans => new StrategyContext
+            {
+                KMeansClusters = KMeans.ClusterCount
+            },
+            StrategyKind.Otsu => new StrategyContext(),
             _ => new StrategyContext()
         };
     }

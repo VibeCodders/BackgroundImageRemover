@@ -81,6 +81,12 @@ public partial class App : Application
         services.AddSingleton<SamInferenceEngine>();
         services.AddSingleton<SamStrategy>();
         services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<SamStrategy>());
+        services.AddSingleton<FloodFillStrategy>();
+        services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<FloodFillStrategy>());
+        services.AddSingleton<KMeansStrategy>();
+        services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<KMeansStrategy>());
+        services.AddSingleton<OtsuStrategy>();
+        services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<OtsuStrategy>());
 
         services.AddTransient<DocumentViewModel>();
         services.AddSingleton<Func<DocumentViewModel>>(sp => sp.GetRequiredService<DocumentViewModel>);

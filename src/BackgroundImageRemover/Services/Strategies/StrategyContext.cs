@@ -51,4 +51,13 @@ public sealed record StrategyContext
 
     /// <summary>SAM: precomputed image embedding (a <see cref="Services.Sam.SamEmbedding"/>), shared across clicks/output sizes.</summary>
     public object? SamEmbedding { get; init; }
+
+    /// <summary>FloodFill: max Lab color distance from the border seed for a pixel to be flooded as background.</summary>
+    public double FloodFillTolerance { get; init; } = 20;
+
+    /// <summary>KMeans: number of color clusters to split the image into.</summary>
+    public int KMeansClusters { get; init; } = 4;
+
+    /// <summary>KMeans: a cluster is treated as background when at least this fraction of its pixels sit on the image border.</summary>
+    public double KMeansBorderFraction { get; init; } = 0.25;
 }

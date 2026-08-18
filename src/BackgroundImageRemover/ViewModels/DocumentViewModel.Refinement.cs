@@ -56,11 +56,11 @@ public partial class DocumentViewModel
             return;
         }
 
-        if (!_history.Undo(ref _workingBgr, ref _workingAlpha))
+        if (!_history.Undo(ref _workingBgr, ref _workingAlpha, out var name))
         {
             return;
         }
-        FinalizeHistoryRestore("Undone.");
+        FinalizeHistoryRestore($"Undone: {name}");
     }
 
     [RelayCommand(CanExecute = nameof(CanRedoExecute))]
@@ -77,11 +77,11 @@ public partial class DocumentViewModel
             return;
         }
 
-        if (!_history.Redo(ref _workingBgr, ref _workingAlpha))
+        if (!_history.Redo(ref _workingBgr, ref _workingAlpha, out var name))
         {
             return;
         }
-        FinalizeHistoryRestore("Redone.");
+        FinalizeHistoryRestore($"Redone: {name}");
     }
 
     private void RefreshUndoRedoState()
@@ -103,7 +103,7 @@ public partial class DocumentViewModel
         {
             return;
         }
-        _history.Record(_workingBgr, _workingAlpha);
+        _history.Record("Brush stroke", _workingBgr, _workingAlpha);
         _workingResultHandEdited = true;
         IsDirty = true;
         RefreshUndoRedoState();
@@ -169,7 +169,7 @@ public partial class DocumentViewModel
         {
             return;
         }
-        _history.Record(_workingBgr, _workingAlpha);
+        _history.Record("Magic wand", _workingBgr, _workingAlpha);
         _workingResultHandEdited = true;
         IsDirty = true;
         RefreshUndoRedoState();

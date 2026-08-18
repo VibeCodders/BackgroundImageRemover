@@ -126,6 +126,33 @@
             </DockPanel>
         </Border>
 
+        <!-- Undo/Redo History Panel -->
+        <Border DockPanel.Dock="Left" Width="220" Background="#FFFAFAFA" BorderBrush="#FFDDDDDD" BorderThickness="0,0,1,0"
+                Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
+            <DockPanel>
+                <Border DockPanel.Dock="Top" Background="#FFF0F0F0" Padding="10,8" BorderBrush="#FFDDDDDD" BorderThickness="0,0,0,1">
+                    <TextBlock Text="History" FontWeight="Bold" Foreground="#FF333333" />
+                </Border>
+                <TextBlock DockPanel.Dock="Top" Text="No edits yet" Foreground="#FF999999" FontStyle="Italic" Margin="10,8"
+                           Visibility="{Binding HasEditSteps, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                <ListBox ItemsSource="{Binding EditSteps}" BorderThickness="0" Background="Transparent"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock x:Name="StepText" Text="{Binding Name}" Foreground="#FF222222" FontSize="12"
+                                       Margin="2,3" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsUndone}" Value="True">
+                                    <Setter TargetName="StepText" Property="Foreground" Value="#FFAAAAAA" />
+                                    <Setter TargetName="StepText" Property="FontStyle" Value="Italic" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
         <!-- Active Tool Session Modal Banner (when a tool tab is currently open for this doc) -->
         <Border DockPanel.Dock="Top" Background="#FFF3E8FF" BorderBrush="#FFD8B4FE" BorderThickness="0,0,0,1" Padding="12,6"
                 Visibility="{Binding HasActiveToolSession, Converter={StaticResource BoolToVisibilityConverter}}">

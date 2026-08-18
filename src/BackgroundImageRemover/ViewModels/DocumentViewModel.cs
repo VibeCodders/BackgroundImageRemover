@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -126,17 +127,17 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     {
         if (_loadedImage is null) return;
 
-        RecordCurrentStateForUndo();
+        RecordCurrentStateForUndo(operationName);
         ReplaceWorkingState(newBgr, newAlpha);
         StatusMessage = $"Applied {operationName}.";
     }
 
     /// <summary>Snapshots the current working result (or the loaded image when no result exists yet).</summary>
-    private void RecordCurrentStateForUndo()
+    private void RecordCurrentStateForUndo(string operationName)
     {
         if (_workingBgr is not null && _workingAlpha is not null)
         {
-            _history.Record(_workingBgr, _workingAlpha);
+            _history.Record(operationName, _workingBgr, _workingAlpha);
             return;
         }
 
@@ -144,14 +145,25 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         {
             if (_loadedImage.FullAlpha is { } alpha)
             {
-                _history.Record(_loadedImage.FullBgr, alpha);
+                _history.Record(operationName, _loadedImage.FullBgr, alpha);
             }
             else
             {
                 using var opaque = new Mat(_loadedImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-                _history.Record(_loadedImage.FullBgr, opaque);
+                _history.Record(operationName, _loadedImage.FullBgr, opaque);
             }
         }
+    }
+
+    /// <summary>Rebuilds the observable timeline from the undo/redo history.</summary>
+    private void RefreshEditSteps()
+    {
+        EditSteps.Clear();
+        foreach (var step in _history.BuildSteps())
+        {
+            EditSteps.Add(step);
+        }
+        OnPropertyChanged(nameof(HasEditSteps));
     }
 
     /// <summary>Replaces the working BGR/alpha pair, rebuilding the loaded image and preview when the size changed.</summary>
@@ -361,6 +373,11 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     public bool HasWorkingResult => _workingAlpha is not null;
     public bool IsResultEditModeActive => ResultMode != InteractionMode.None;
 
+    /// <summary>Chronological undo/redo timeline for the history panel.</summary>
+    public ObservableCollection<EditHistoryStep> EditSteps { get; } = new();
+
+    public bool HasEditSteps => EditSteps.Count > 0;
+
     public DocumentViewModel(
         IImageLoaderService imageLoader,
         IImageExportService imageExporter,
@@ -404,6 +421,9 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _scribbleManager.StrokeUndone += (_, _) => RefreshScribbleOverlay();
         _scribbleManager.StrokeRedone += (_, _) => RefreshScribbleOverlay();
         _scribbleManager.ScribblesCleared += (_, _) => RefreshScribbleOverlay();
+
+        // Keep the history panel in sync with undo/redo timeline changes.
+        _history.Changed += (_, _) => RefreshEditSteps();
 
         ChromaKey.PropertyChanged += (_, e) =>
         {

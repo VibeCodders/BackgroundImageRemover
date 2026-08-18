@@ -142,13 +142,18 @@ public partial class ShellViewModel
         RefreshRecentProjects();
     }
 
+    /// <summary>
+    /// Closes one tab (prompting when dirty) and returns whether it was actually closed.
+    /// Tool-session tabs are cancelled (which removes them); the parent-document branch also
+    /// closes the session first. Returns false when the user cancels a save prompt.
+    /// </summary>
     [RelayCommand]
-    private async Task CloseTabAsync(IDocumentTab document)
+    private async Task<bool> CloseTabAsync(IDocumentTab document)
     {
         if (document is IToolSessionTab toolTab)
         {
             toolTab.Cancel();
-            return;
+            return true;
         }
 
         if (document is DocumentViewModel parentDoc && parentDoc.ActiveToolSession is { } activeSession)
@@ -159,13 +164,13 @@ public partial class ShellViewModel
 
         if (!await ConfirmCloseAsync(document))
         {
-            return;
+            return false;
         }
 
         int index = Documents.IndexOf(document);
         if (index < 0)
         {
-            return;
+            return false;
         }
         Documents.RemoveAt(index);
         document.Dispose();
@@ -175,6 +180,46 @@ public partial class ShellViewModel
             SelectedDocument = Documents.Count == 0 ? null
                 : Documents[Math.Min(index, Documents.Count - 1)];
         }
+        return true;
+    }
+
+    /// <summary>
+    /// Closes every tab except the one the context menu was opened on (right-click "Close
+    /// others"), prompting for dirty documents. Tool-session tabs are cancelled, and the
+    /// whole operation aborts if the user cancels a prompt.
+    /// </summary>
+    [RelayCommand]
+    private async Task CloseOtherTabsAsync(IDocumentTab? keep)
+    {
+        if (keep is null)
+        {
+            return;
+        }
+
+        foreach (var document in Documents.Where(d => !ReferenceEquals(d, keep)).ToList())
+        {
+            if (!await CloseTabAsync(document))
+            {
+                return; // user cancelled a save prompt: keep the rest untouched
+            }
+        }
+    }
+
+    /// <summary>Closes all tabs after confirming every dirty document (right-click "Close all").</summary>
+    [RelayCommand]
+    private async Task CloseAllTabsAsync()
+    {
+        if (!await ConfirmCloseAllAsync())
+        {
+            return;
+        }
+
+        foreach (var document in Documents.ToList())
+        {
+            Documents.Remove(document);
+            document.Dispose();
+        }
+        SelectedDocument = null;
     }
 
     /// <summary>

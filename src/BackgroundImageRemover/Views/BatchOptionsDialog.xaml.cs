@@ -14,7 +14,8 @@ public enum BatchOutputKind
     JpegWhite,
     JpegSolid,
     JpegGradient,
-    JpegBlur
+    JpegBlur,
+    JpegImage
 }
 
 /// <summary>Bindable state of the batch options dialog.</summary>
@@ -47,6 +48,10 @@ public sealed partial class BatchOptionsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBottomPickerOpen;
 
+    /// <summary>Background image composited behind JPEG cutouts (only for <see cref="BatchOutputKind.JpegImage"/>).</summary>
+    [ObservableProperty]
+    private string? _backgroundImagePath;
+
     public BatchExportOptions BuildOptions()
     {
         var options = OutputKind switch
@@ -75,6 +80,13 @@ public sealed partial class BatchOptionsViewModel : ObservableObject
                 GradientTop = GradientTop,
                 GradientBottom = GradientBottom
             },
+            BatchOutputKind.JpegImage => new BatchExportOptions
+            {
+                ExportJpeg = true,
+                JpegQuality = JpegQuality,
+                BackgroundMode = ExportBackgroundMode.Image,
+                BackgroundImagePath = BackgroundImagePath
+            },
             _ => new BatchExportOptions
             {
                 ExportJpeg = true,
@@ -99,6 +111,7 @@ public sealed partial class BatchOptionsViewModel : ObservableObject
             JpegQuality = settings.LastBatchJpegQuality;
         }
         SkipExisting = settings.LastBatchSkipExisting;
+        BackgroundImagePath = settings.LastBatchBackgroundImagePath;
     }
 
     /// <summary>Persists the chosen format and quality so the next batch starts where this one left off.</summary>
@@ -107,6 +120,7 @@ public sealed partial class BatchOptionsViewModel : ObservableObject
         settings.LastBatchOutputKind = OutputKind.ToString();
         settings.LastBatchJpegQuality = JpegQuality;
         settings.LastBatchSkipExisting = SkipExisting;
+        settings.LastBatchBackgroundImagePath = BackgroundImagePath;
     }
 }
 
@@ -136,4 +150,17 @@ public sealed partial class BatchOptionsDialog : Window
     private void ChooseSolid_Click(object sender, RoutedEventArgs e) => ViewModel.IsSolidPickerOpen = true;
     private void ChooseTop_Click(object sender, RoutedEventArgs e) => ViewModel.IsTopPickerOpen = true;
     private void ChooseBottom_Click(object sender, RoutedEventArgs e) => ViewModel.IsBottomPickerOpen = true;
+
+    private void ChooseBackgroundImage_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Choose background image",
+            Filter = "Image files|*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.webp;*.gif;*.tif;*.tiff;*.ico|All files|*.*"
+        };
+        if (dialog.ShowDialog(this) == true)
+        {
+            ViewModel.BackgroundImagePath = dialog.FileName;
+        }
+    }
 }

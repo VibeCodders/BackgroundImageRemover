@@ -28,4 +28,7 @@ public sealed class BatchExportOptions
     public WpfColor GradientTop { get; set; } = WpfColor.FromRgb(255, 255, 255);
     public WpfColor GradientBottom { get; set; } = WpfColor.FromRgb(120, 120, 120);
     public double BlurRadius { get; set; } = 10;
+
+    /// <summary>Image composited behind the cutout when <see cref="BackgroundMode"/> is <c>Image</c>.</summary>
+    public string? BackgroundImagePath { get; set; }
 }

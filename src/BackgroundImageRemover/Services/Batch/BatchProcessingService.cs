@@ -49,64 +49,88 @@ public sealed class BatchProcessingService : IBatchProcessingService
     {
         Directory.CreateDirectory(outputFolder);
 
-        int failed = 0;
-        int skipped = 0;
-        for (int i = 0; i < inputFiles.Count; i++)
+        // The background image is shared by every file in the batch: load it once up front
+        // (a stale/corrupt remembered path must not abort the whole batch, so it degrades
+        // to the solid-color fallback inside CompositeForJpeg).
+        LoadedImage? backgroundImage = null;
+        if (exportOptions is
+            { ExportJpeg: true, BackgroundMode: ExportBackgroundMode.Image, BackgroundImagePath: { Length: > 0 } bgPath })
         {
-            ct.ThrowIfCancellationRequested();
-            string file = inputFiles[i];
-            string baseName = Path.GetFileNameWithoutExtension(file);
-            string suffix = exportOptions is { ExportJpeg: true } ? "_cutout.jpg" : exportOptions is { ExportWebp: true } ? "_cutout.webp" : "_cutout.png";
-            string outPath = Path.Combine(outputFolder, baseName + suffix);
-
-            // With SkipExisting, files whose cutout already exists are left untouched so a
-            // batch can be re-run to fill in only the missing outputs (e.g. after adding
-            // new files to the input folder).
-            if (exportOptions is { SkipExisting: true } && File.Exists(outPath))
-            {
-                skipped++;
-                progress?.Report(new BatchProgress(i + 1, inputFiles.Count, file, failed, skipped));
-                continue;
-            }
-
-            progress?.Report(new BatchProgress(i, inputFiles.Count, file, failed, skipped));
-
             try
             {
-                using var loaded = await _loader.LoadAsync(file, ct);
-                using var result = await strategy.RunFullAsync(loaded.FullBgr, context, ct);
-
-                if (exportOptions is { ExportJpeg: true })
-                {
-                    using var composited = CompositeForJpeg(result.Bgra, exportOptions, loaded.FullBgr);
-                    await _exporter.ExportJpgAsync(composited, outPath, exportOptions.JpegQuality, ct);
-                }
-                else if (exportOptions is { ExportWebp: true })
-                {
-                    // WebP keeps the transparency like PNG but is typically much smaller.
-                    await _exporter.ExportWebpAsync(result.Bgra, outPath, exportOptions.JpegQuality, ct);
-                }
-                else
-                {
-                    await _exporter.ExportPngAsync(result.Bgra, outPath, ct);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
+                backgroundImage = await _loader.LoadAsync(bgPath, ct);
             }
             catch
             {
-                // Skip files that fail to load/process; the batch continues with the rest.
-                failed++;
+                backgroundImage = null;
             }
         }
 
-        progress?.Report(new BatchProgress(inputFiles.Count, inputFiles.Count, string.Empty, failed, skipped));
+        try
+        {
+            int failed = 0;
+            int skipped = 0;
+            for (int i = 0; i < inputFiles.Count; i++)
+            {
+                ct.ThrowIfCancellationRequested();
+                string file = inputFiles[i];
+                string baseName = Path.GetFileNameWithoutExtension(file);
+                string suffix = exportOptions is { ExportJpeg: true } ? "_cutout.jpg" : exportOptions is { ExportWebp: true } ? "_cutout.webp" : "_cutout.png";
+                string outPath = Path.Combine(outputFolder, baseName + suffix);
+
+                // With SkipExisting, files whose cutout already exists are left untouched so a
+                // batch can be re-run to fill in only the missing outputs (e.g. after adding
+                // new files to the input folder).
+                if (exportOptions is { SkipExisting: true } && File.Exists(outPath))
+                {
+                    skipped++;
+                    progress?.Report(new BatchProgress(i + 1, inputFiles.Count, file, failed, skipped));
+                    continue;
+                }
+
+                progress?.Report(new BatchProgress(i, inputFiles.Count, file, failed, skipped));
+
+                try
+                {
+                    using var loaded = await _loader.LoadAsync(file, ct);
+                    using var result = await strategy.RunFullAsync(loaded.FullBgr, context, ct);
+
+                    if (exportOptions is { ExportJpeg: true })
+                    {
+                        using var composited = CompositeForJpeg(result.Bgra, exportOptions, loaded.FullBgr, backgroundImage);
+                        await _exporter.ExportJpgAsync(composited, outPath, exportOptions.JpegQuality, ct);
+                    }
+                    else if (exportOptions is { ExportWebp: true })
+                    {
+                        // WebP keeps the transparency like PNG but is typically much smaller.
+                        await _exporter.ExportWebpAsync(result.Bgra, outPath, exportOptions.JpegQuality, ct);
+                    }
+                    else
+                    {
+                        await _exporter.ExportPngAsync(result.Bgra, outPath, ct);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch
+                {
+                    // Skip files that fail to load/process; the batch continues with the rest.
+                    failed++;
+                }
+            }
+
+            progress?.Report(new BatchProgress(inputFiles.Count, inputFiles.Count, string.Empty, failed, skipped));
+        }
+        finally
+        {
+            backgroundImage?.Dispose();
+        }
     }
 
     /// <summary>Composites a transparent cutout onto the requested background for JPEG output.</summary>
-    private static Mat CompositeForJpeg(Mat bgra, BatchExportOptions options, Mat sourceBgr)
+    private static Mat CompositeForJpeg(Mat bgra, BatchExportOptions options, Mat sourceBgr, LoadedImage? backgroundImage = null)
     {
         switch (options.BackgroundMode)
         {
@@ -117,6 +141,13 @@ public sealed class BatchProcessingService : IBatchProcessingService
                     new Vec3b(options.GradientBottom.B, options.GradientBottom.G, options.GradientBottom.R));
             case ExportBackgroundMode.Blur:
                 return BackgroundCompositingService.CompositeOntoBlurredImage(bgra, sourceBgr, options.BlurRadius);
+            case ExportBackgroundMode.Image:
+                if (backgroundImage is not null)
+                {
+                    return BackgroundCompositingService.CompositeOntoImage(bgra, backgroundImage.FullBgr);
+                }
+                // Unloadable background: fall back to the solid color instead of failing the file.
+                goto default;
             default:
                 return BackgroundCompositingService.CompositeOntoColor(
                     bgra,

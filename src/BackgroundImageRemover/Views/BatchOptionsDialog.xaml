@@ -57,6 +57,17 @@
                 </StackPanel>
             </StackPanel>
 
+            <RadioButton Content="JPEG — background image" GroupName="BatchFormat" Margin="0,0,0,4"
+                         IsChecked="{Binding OutputKind, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=JpegImage}" />
+            <StackPanel Orientation="Horizontal" Margin="18,0,0,6"
+                        Visibility="{Binding OutputKind, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=JpegImage}">
+                <TextBlock Text="{Binding BackgroundImagePath, TargetNullValue='(none)'}" VerticalAlignment="Center" FontSize="11"
+                           Foreground="#FF666666" MaxWidth="220" TextTrimming="CharacterEllipsis"
+                           ToolTip="{Binding BackgroundImagePath}" />
+                <Button x:Name="ChooseBackgroundImageButton" Content="Choose..." Margin="8,0,0,0"
+                        Click="ChooseBackgroundImage_Click" />
+            </StackPanel>
+
             <RadioButton Content="JPEG — blurred original" GroupName="BatchFormat" Margin="0,0,0,8"
                          IsChecked="{Binding OutputKind, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=JpegBlur}" />
 

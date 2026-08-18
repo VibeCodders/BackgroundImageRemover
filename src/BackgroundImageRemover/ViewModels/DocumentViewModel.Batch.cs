@@ -65,9 +65,12 @@ public partial class DocumentViewModel
         }
 
         // Let the user pick where the cutouts go; default to the last used output folder or
-        // the input folder's "cutouts" subfolder.
+        // the input folder's "cutouts" subfolder. The folder picker can only start inside an
+        // existing folder: on a first run the "cutouts" default does not exist yet, so start
+        // at the input folder instead of the OS default location.
         var defaultOutput = _settings.Current.LastBatchOutputFolder ?? Path.Combine(inputFolder, "cutouts");
-        var outputFolder = _dialogs.ShowOpenFolderDialog("Select output folder for cutouts", defaultOutput) ?? defaultOutput;
+        var pickerStart = Directory.Exists(defaultOutput) ? defaultOutput : inputFolder;
+        var outputFolder = _dialogs.ShowOpenFolderDialog("Select output folder for cutouts", pickerStart) ?? defaultOutput;
         var context = BuildContext();
 
         BatchProgress? lastReported = null;

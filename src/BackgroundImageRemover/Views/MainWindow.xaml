@@ -159,6 +159,19 @@
             <TabControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" ToolTip="{Binding CutoutHint}" MouseDown="TabHeader_MouseDown">
+                        <StackPanel.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Close"
+                                          Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          CommandParameter="{Binding}" />
+                                <MenuItem Header="Close others"
+                                          Command="{Binding DataContext.CloseOtherTabsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          CommandParameter="{Binding}" />
+                                <Separator />
+                                <MenuItem Header="Close all"
+                                          Command="{Binding DataContext.CloseAllTabsCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                            </ContextMenu>
+                        </StackPanel.ContextMenu>
                         <Ellipse Width="10" Height="10" Fill="LimeGreen" Stroke="Gray" StrokeThickness="0.5"
                                  Margin="0,0,6,0" VerticalAlignment="Center"
                                  ToolTip="{Binding CutoutHint}"

@@ -299,6 +299,100 @@ public class ShellViewModelTests
         Assert.Null(emptyShell.SelectedDocument);
     }
 
+    [Fact]
+    public async Task CloseOtherTabs_ClosesEveryTabExceptTheKeptOne()
+    {
+        var shell = CreateShell(new FakeSettingsService());
+        var tab1 = new FakeTab { Title = "A" };
+        var tab2 = new FakeTab { Title = "B" };
+        var tab3 = new FakeTab { Title = "C" };
+        shell.Documents.Add(tab1);
+        shell.Documents.Add(tab2);
+        shell.Documents.Add(tab3);
+        shell.SelectedDocument = tab1;
+
+        await shell.CloseOtherTabsCommand.ExecuteAsync(tab2);
+
+        Assert.Single(shell.Documents);
+        Assert.Same(tab2, shell.Documents[0]);
+    }
+
+    [Fact]
+    public async Task CloseOtherTabs_DoesNothingWithoutATargetTab()
+    {
+        var shell = CreateShell(new FakeSettingsService());
+        var tab = new FakeTab { Title = "A" };
+        shell.Documents.Add(tab);
+
+        await shell.CloseOtherTabsCommand.ExecuteAsync(null);
+
+        Assert.Single(shell.Documents);
+    }
+
+    [Fact]
+    public async Task CloseOtherTabs_AbortsAndKeepsTheRest_WhenUserCancelsDirtyPrompt()
+    {
+        var shell = CreateShell(new FakeSettingsService(), new CancelCloseDialogService());
+        var dirty = new FakeTab { Title = "Dirty", IsDirty = true };
+        var kept = new FakeTab { Title = "Kept" };
+        var clean = new FakeTab { Title = "Clean" };
+        shell.Documents.Add(dirty);
+        shell.Documents.Add(kept);
+        shell.Documents.Add(clean);
+
+        await shell.CloseOtherTabsCommand.ExecuteAsync(kept);
+
+        // The dirty tab prompts first and cancels, so no tab is closed at all.
+        Assert.Equal(3, shell.Documents.Count);
+    }
+
+    [Fact]
+    public async Task CloseAllTabs_ClosesEverythingAndClearsSelection()
+    {
+        var shell = CreateShell(new FakeSettingsService());
+        var tab1 = new FakeTab { Title = "A" };
+        var tab2 = new FakeTab { Title = "B" };
+        shell.Documents.Add(tab1);
+        shell.Documents.Add(tab2);
+        shell.SelectedDocument = tab1;
+
+        await shell.CloseAllTabsCommand.ExecuteAsync(null);
+
+        Assert.Empty(shell.Documents);
+        Assert.Null(shell.SelectedDocument);
+    }
+
+    [Fact]
+    public async Task CloseAllTabs_KeepsEverythingWhenUserCancelsDirtyPrompt()
+    {
+        var shell = CreateShell(new FakeSettingsService(), new CancelCloseDialogService());
+        var dirty = new FakeTab { Title = "Dirty", IsDirty = true };
+        var clean = new FakeTab { Title = "Clean" };
+        shell.Documents.Add(dirty);
+        shell.Documents.Add(clean);
+        shell.SelectedDocument = dirty;
+
+        await shell.CloseAllTabsCommand.ExecuteAsync(null);
+
+        Assert.Equal(2, shell.Documents.Count);
+        Assert.Same(dirty, shell.SelectedDocument);
+    }
+
+    private sealed class CancelCloseDialogService : IDialogService
+    {
+        public string? ShowOpenImageDialog() => throw new NotImplementedException();
+        public string? ShowSavePngDialog(string? suggestedFileName, string title = "Export PNG", string? initialDirectory = null) => throw new NotImplementedException();
+        public string? ShowSaveJpgDialog(string? suggestedFileName, string title = "Export JPEG", string? initialDirectory = null) => throw new NotImplementedException();
+        public string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP", string? initialDirectory = null) => throw new NotImplementedException();
+        public string? ShowOpenFolderDialog(string title, string? initialDirectory = null) => throw new NotImplementedException();
+        public string? ShowOpenProjectDialog() => throw new NotImplementedException();
+        public string? ShowSaveProjectDialog(string? suggestedFileName) => throw new NotImplementedException();
+        public BackgroundImageRemover.Models.BatchExportOptions? ShowBatchOptionsDialog() => null;
+        public CloseDocumentResult ConfirmCloseDocument(string documentName) => CloseDocumentResult.Cancel;
+        public void ShowPreferencesDialog() { }
+        public bool ConfirmRestoreRecovery(int documentCount) => false;
+    }
+
     private sealed class FakeImageDialogService : IDialogService
     {
         private readonly string? _chosenPath;

@@ -33,6 +33,7 @@ public class BatchProcessingServiceTests
     {
         public readonly List<string> ExportedPaths = new();
         public readonly List<int> JpegQualities = new();
+        public readonly List<Mat> JpgMats = new();
 
         public Task ExportPngAsync(Mat bgra, string filePath, CancellationToken ct = default)
         {
@@ -44,6 +45,7 @@ public class BatchProcessingServiceTests
         {
             ExportedPaths.Add(filePath);
             JpegQualities.Add(quality);
+            JpgMats.Add(bgr.Clone()); // keep an owned copy: the service disposes its buffer after exporting
             return Task.CompletedTask;
         }
 
@@ -52,6 +54,18 @@ public class BatchProcessingServiceTests
             ExportedPaths.Add(filePath);
             return Task.CompletedTask;
         }
+    }
+
+    /// <summary>Strategy whose cutout is fully transparent, so the composited JPEG shows the background alone.</summary>
+    private sealed class TransparentCutoutStrategy : IBackgroundRemovalStrategy
+    {
+        public StrategyKind Kind => StrategyKind.ChromaKey;
+
+        public Task<RemovalResult> RunPreviewAsync(Mat previewBgr, StrategyContext context, CancellationToken ct)
+            => Task.FromResult(new RemovalResult(new Mat(previewBgr.Size(), MatType.CV_8UC4, Scalar.All(0)), 0));
+
+        public Task<RemovalResult> RunFullAsync(Mat fullBgr, StrategyContext context, CancellationToken ct)
+            => Task.FromResult(new RemovalResult(new Mat(fullBgr.Size(), MatType.CV_8UC4, Scalar.All(0)), 0));
     }
 
     private sealed class FakeStrategy : IBackgroundRemovalStrategy
@@ -120,6 +134,59 @@ public class BatchProcessingServiceTests
         Assert.Equal(2, exporter.ExportedPaths.Count);
         Assert.All(exporter.ExportedPaths, p => Assert.EndsWith("_cutout.jpg", p, StringComparison.OrdinalIgnoreCase));
         Assert.All(exporter.JpegQualities, q => Assert.Equal(80, q));
+    }
+
+    [Fact]
+    public async Task RunAsync_WithImageBackground_CompositesCutoutOntoChosenImage()
+    {
+        // The fake loader serves the same gray(128) image for inputs and for the background.
+        var loader = new FakeImageLoaderService();
+        var exporter = new FakeImageExportService();
+        var service = new BatchProcessingService(loader, exporter);
+        var options = new BatchExportOptions
+        {
+            ExportJpeg = true,
+            BackgroundMode = ExportBackgroundMode.Image,
+            BackgroundImagePath = "bg.png"
+        };
+
+        await service.RunAsync(
+            new[] { "a.png" }, new TransparentCutoutStrategy(), new StrategyContext(), "out",
+            progress: null, CancellationToken.None, options);
+
+        var exported = Assert.Single(exporter.JpgMats);
+        // The fully-transparent cutout lets the background image show through: gray(128),
+        // not the white solid-color fallback.
+        var px = exported.At<Vec3b>(0, 0);
+        Assert.Equal(128, px.Item0);
+        Assert.Equal(128, px.Item1);
+        Assert.Equal(128, px.Item2);
+    }
+
+    [Fact]
+    public async Task RunAsync_WithUnloadableBackgroundImage_FallsBackToSolidColor()
+    {
+        var loader = new FakeImageLoaderService { PathToFail = "bg.png" };
+        var exporter = new FakeImageExportService();
+        var service = new BatchProcessingService(loader, exporter);
+        var options = new BatchExportOptions
+        {
+            ExportJpeg = true,
+            BackgroundMode = ExportBackgroundMode.Image,
+            BackgroundImagePath = "bg.png",
+            SolidColor = System.Windows.Media.Colors.White
+        };
+
+        await service.RunAsync(
+            new[] { "a.png" }, new TransparentCutoutStrategy(), new StrategyContext(), "out",
+            progress: null, CancellationToken.None, options);
+
+        // The batch must not abort: the cutout is composited onto the solid color instead.
+        var exported = Assert.Single(exporter.JpgMats);
+        var px = exported.At<Vec3b>(0, 0);
+        Assert.Equal(255, px.Item0);
+        Assert.Equal(255, px.Item1);
+        Assert.Equal(255, px.Item2);
     }
 
     [Fact]

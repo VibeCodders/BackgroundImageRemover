@@ -60,6 +60,9 @@ public sealed class AppSettings
     /// <summary>Last "skip existing outputs" choice for the batch dialog.</summary>
     public bool LastBatchSkipExisting { get; set; }
 
+    /// <summary>Last background image chosen for JPEG batch output, restored next time.</summary>
+    public string? LastBatchBackgroundImagePath { get; set; }
+
     // --- Last single-image export settings, restored when a new document opens ---
 
     /// <summary>Last export background mode (an <c>ExportBackgroundMode</c> enum name).</summary>

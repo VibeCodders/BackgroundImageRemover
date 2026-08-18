@@ -84,6 +84,24 @@ public class BatchOptionsViewModelTests
     }
 
     [Fact]
+    public void BuildOptions_JpegImage_UsesChosenBackgroundImagePath()
+    {
+        var vm = new BatchOptionsViewModel
+        {
+            OutputKind = BatchOutputKind.JpegImage,
+            BackgroundImagePath = @"C:\wallpapers\beach.png",
+            JpegQuality = 85
+        };
+
+        var opts = vm.BuildOptions();
+
+        Assert.True(opts.ExportJpeg);
+        Assert.Equal(ExportBackgroundMode.Image, opts.BackgroundMode);
+        Assert.Equal(@"C:\wallpapers\beach.png", opts.BackgroundImagePath);
+        Assert.Equal(85, opts.JpegQuality);
+    }
+
+    [Fact]
     public void Restore_AppliesLastSessionFormatAndQuality()
     {
         var settings = new AppSettings
@@ -118,20 +136,38 @@ public class BatchOptionsViewModelTests
     }
 
     [Fact]
+    public void Restore_AppliesLastBackgroundImagePath()
+    {
+        var settings = new AppSettings
+        {
+            LastBatchOutputKind = nameof(BatchOutputKind.JpegImage),
+            LastBatchBackgroundImagePath = @"C:\wallpapers\beach.png"
+        };
+        var vm = new BatchOptionsViewModel();
+
+        vm.Restore(settings);
+
+        Assert.Equal(BatchOutputKind.JpegImage, vm.OutputKind);
+        Assert.Equal(@"C:\wallpapers\beach.png", vm.BackgroundImagePath);
+    }
+
+    [Fact]
     public void Persist_WritesChoicesToSettings()
     {
         var settings = new AppSettings();
         var vm = new BatchOptionsViewModel
         {
-            OutputKind = BatchOutputKind.JpegSolid,
+            OutputKind = BatchOutputKind.JpegImage,
             JpegQuality = 92,
-            SkipExisting = true
+            SkipExisting = true,
+            BackgroundImagePath = @"C:\wallpapers\beach.png"
         };
 
         vm.Persist(settings);
 
-        Assert.Equal(nameof(BatchOutputKind.JpegSolid), settings.LastBatchOutputKind);
+        Assert.Equal(nameof(BatchOutputKind.JpegImage), settings.LastBatchOutputKind);
         Assert.Equal(92, settings.LastBatchJpegQuality);
         Assert.True(settings.LastBatchSkipExisting);
+        Assert.Equal(@"C:\wallpapers\beach.png", settings.LastBatchBackgroundImagePath);
     }
 }

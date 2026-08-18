@@ -128,11 +128,7 @@ public partial class DocumentViewModel
         {
             AdoptLoadedCutout();
         }
-        else
-        {
-            // Auto-run the selected strategy so the result pane and split compare view are
-            // immediately useful without requiring the user to tweak a setting first.
-            RequestPreviewDebounced();
-        }
+        // Non-cutout images open with no effect applied: the original preview stays visible
+        // until the user picks a removal strategy and triggers a preview.
     }
 }

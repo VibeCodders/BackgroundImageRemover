@@ -248,7 +248,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         Onnx.IsModelReady = _onnxStrategy.IsReady(Onnx.SelectedModel);
         Sam.IsModelReady = _samStrategy.IsReady;
 
-        RequestPreviewDebounced();
+        // Start with no effect: a preview runs only after the user picks a strategy or tweaks a control.
     }
 
     partial void OnSelectedStrategyChanged(StrategyKind value)

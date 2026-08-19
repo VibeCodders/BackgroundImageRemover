@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using BackgroundImageRemover.Services.Dialogs;
 using CommunityToolkit.Mvvm.Input;
@@ -278,9 +279,12 @@ public partial class ShellViewModel
         return true;
     }
 
-    public void RefreshRecentFiles() => SyncFrom(RecentFiles, _settings.Current.RecentFiles);
+    /// <summary>Repopulates the recent-files menu, hiding entries whose files no longer exist
+    /// (a deleted file would otherwise open a tab that immediately fails and disappears).</summary>
+    public void RefreshRecentFiles() => SyncFrom(RecentFiles, _settings.Current.RecentFiles.Where(File.Exists));
 
-    public void RefreshRecentProjects() => SyncFrom(RecentProjects, _settings.Current.RecentProjects);
+    /// <summary>Repopulates the recent-projects menu, hiding entries whose files no longer exist.</summary>
+    public void RefreshRecentProjects() => SyncFrom(RecentProjects, _settings.Current.RecentProjects.Where(File.Exists));
 
     private static void SyncFrom(ObservableCollection<string> target, IEnumerable<string> source)
     {

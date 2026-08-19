@@ -1,3 +1,4 @@
+using System.IO;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.Settings;
 using BackgroundImageRemover.ViewModels;
@@ -78,49 +79,92 @@ public class ShellViewModelTests
     [Fact]
     public void RefreshRecentFiles_ReplacesContentsWithCurrentSettingsState()
     {
+        using var dir = new TempDir();
+        var file = dir.CreateFile("new.png");
         var settings = new FakeSettingsService();
         var shell = CreateShell(settings);
         Assert.Empty(shell.RecentFiles);
 
-        settings.AddRecentFile("new.png");
+        settings.AddRecentFile(file);
         shell.RefreshRecentFiles();
 
-        Assert.Equal(new[] { "new.png" }, shell.RecentFiles);
+        Assert.Equal(new[] { file }, shell.RecentFiles);
     }
 
     [Fact]
     public void RefreshRecentProjects_ReplacesContentsWithCurrentSettingsState()
     {
+        using var dir = new TempDir();
+        var project = dir.CreateFile("new.ibrproj");
         var settings = new FakeSettingsService();
         var shell = CreateShell(settings);
         Assert.Empty(shell.RecentProjects);
 
-        settings.AddRecentProject("new.ibrproj");
+        settings.AddRecentProject(project);
         shell.RefreshRecentProjects();
 
-        Assert.Equal(new[] { "new.ibrproj" }, shell.RecentProjects);
+        Assert.Equal(new[] { project }, shell.RecentProjects);
     }
 
     [Fact]
     public void RefreshRecentFiles_DoesNotDuplicateEntries_WhenCalledRepeatedly()
     {
+        using var dir = new TempDir();
+        var only = dir.CreateFile("only.png");
         var settings = new FakeSettingsService();
-        settings.Current.RecentFiles.Add("only.png");
+        settings.Current.RecentFiles.Add(only);
         var shell = CreateShell(settings);
 
         shell.RefreshRecentFiles();
         shell.RefreshRecentFiles();
 
-        Assert.Equal(new[] { "only.png" }, shell.RecentFiles);
+        Assert.Equal(new[] { only }, shell.RecentFiles);
+    }
+
+    [Fact]
+    public void RefreshRecentFiles_HidesEntriesWhoseFilesNoLongerExist()
+    {
+        using var dir = new TempDir();
+        var existing = dir.CreateFile("exists.png");
+        var missing = Path.Combine(dir.Path, "deleted.png"); // never created
+
+        var settings = new FakeSettingsService();
+        settings.Current.RecentFiles.Add(missing);
+        settings.Current.RecentFiles.Add(existing);
+        var shell = CreateShell(settings);
+
+        shell.RefreshRecentFiles();
+
+        // A deleted file must not show up: opening it would spawn a tab that immediately
+        // fails to load and then silently disappears.
+        Assert.Equal(new[] { existing }, shell.RecentFiles);
+    }
+
+    [Fact]
+    public void RefreshRecentProjects_HidesEntriesWhoseFilesNoLongerExist()
+    {
+        using var dir = new TempDir();
+        var existing = dir.CreateFile("project.ibrproj");
+        var missing = Path.Combine(dir.Path, "deleted.ibrproj"); // never created
+
+        var settings = new FakeSettingsService();
+        settings.Current.RecentProjects.Add(missing);
+        settings.Current.RecentProjects.Add(existing);
+        var shell = CreateShell(settings);
+
+        shell.RefreshRecentProjects();
+
+        Assert.Equal(new[] { existing }, shell.RecentProjects);
     }
 
     [Fact]
     public void ClearRecentFiles_EmptiesBothListAndSettings()
     {
+        using var dir = new TempDir();
         var settings = new FakeSettingsService();
-        settings.AddRecentFile("a.png");
-        settings.AddRecentFile("b.png");
-        settings.AddRecentProject("p.ibrproj");
+        settings.AddRecentFile(dir.CreateFile("a.png"));
+        settings.AddRecentFile(dir.CreateFile("b.png"));
+        settings.AddRecentProject(dir.CreateFile("p.ibrproj"));
         var shell = CreateShell(settings);
         shell.RefreshRecentFiles();
         shell.RefreshRecentProjects();
@@ -464,6 +508,30 @@ public class ShellViewModelTests
 
         Assert.Equal(2, shell.Documents.Count);
         Assert.Same(dirty, shell.SelectedDocument);
+    }
+
+    /// <summary>Creates a disposable temp folder with helper to create files inside it, so
+    /// recent-menu tests exercise the real on-disk existence filter.</summary>
+    private sealed class TempDir : IDisposable
+    {
+        public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"recent_tests_{Guid.NewGuid():N}");
+
+        public TempDir() => Directory.CreateDirectory(Path);
+
+        public string CreateFile(string name)
+        {
+            var full = System.IO.Path.Combine(Path, name);
+            File.WriteAllText(full, "x");
+            return full;
+        }
+
+        public void Dispose()
+        {
+            if (Directory.Exists(Path))
+            {
+                Directory.Delete(Path, true);
+            }
+        }
     }
 
     private sealed class FailingImageLoaderService : BackgroundImageRemover.Services.ImageIo.IImageLoaderService

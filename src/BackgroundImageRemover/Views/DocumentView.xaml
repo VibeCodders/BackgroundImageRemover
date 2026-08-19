@@ -117,6 +117,11 @@
                     <Button Content="Undo" Command="{Binding UndoCommand}" Padding="8,4" Margin="0,0,2,0" />
                     <Button Content="Redo" Command="{Binding RedoCommand}" Padding="8,4" Margin="0,0,4,0" />
                     <Separator Margin="4,0" />
+                    <Button Content="↺" Command="{Binding Rotate90CcwCommand}" Padding="8,4" Margin="0,0,2,0" FontSize="14"
+                            ToolTip="Rotate 90° counter-clockwise (undoable)" />
+                    <Button Content="↻" Command="{Binding Rotate90CwCommand}" Padding="8,4" Margin="0,0,4,0" FontSize="14"
+                            ToolTip="Rotate 90° clockwise (undoable)" />
+                    <Separator Margin="4,0" />
                     <ToggleButton Content="◫ Split View" IsChecked="{Binding IsSplitViewEnabled}" Padding="8,4" Margin="0,0,4,0"
                                   ToolTip="Toggle side-by-side comparison view (Original on left, Result on right)" />
                     <ToggleButton Content="◑ Compare" IsChecked="{Binding IsCompareMode}" Padding="8,4" Margin="0,0,4,0"

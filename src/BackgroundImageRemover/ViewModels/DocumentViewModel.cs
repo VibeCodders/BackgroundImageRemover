@@ -205,6 +205,12 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
         _preview = preview;
         PreviewBitmap = preview.Bgr.ToBitmapSource();
+
+        // A size-changing edit (crop, resize, transform, frame, compose...) rebuilt the
+        // source image above: keep the status-bar dimensions in sync or they go stale.
+        ImageWidth = _loadedImage.FullBgr.Width;
+        ImageHeight = _loadedImage.FullBgr.Height;
+        OnPropertyChanged(nameof(ImageDimensions));
     }
 
     /// <summary>Finalizes the UI state after an undo/redo restored a different working result.</summary>
@@ -291,6 +297,8 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
     [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
     [NotifyCanExecuteChangedFor(nameof(ApplyUncropCommand))]
+    [NotifyCanExecuteChangedFor(nameof(Rotate90CwCommand))]
+    [NotifyCanExecuteChangedFor(nameof(Rotate90CcwCommand))]
     private bool _isImageLoaded;
 
     private readonly BusyGate _busyGate = new();

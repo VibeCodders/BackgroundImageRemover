@@ -73,6 +73,11 @@ public partial class DocumentViewModel
                 ? preview.Bgr.BuildPreviewWithAlpha(a)
                 : preview.Bgr.ToBitmapSource();
 
+            // The uncrop expanded the canvas: keep the status-bar dimensions in sync.
+            ImageWidth = _loadedImage.FullBgr.Width;
+            ImageHeight = _loadedImage.FullBgr.Height;
+            OnPropertyChanged(nameof(ImageDimensions));
+
             // Set as new working image
             DisposeWorkingResult();
             _workingBgr = _loadedImage.FullBgr.Clone();

@@ -47,8 +47,10 @@ public partial class App : Application
         var autosave = _serviceProvider.GetRequiredService<IAutosaveService>();
         autosave.Start(shell);
 
-        // Apply the persisted theme and language before the window is shown.
+        // Apply the persisted theme and language before the window is shown, then watch for
+        // Windows light/dark toggles so "Follow Windows" updates live (no restart needed).
         ThemeManager.Apply(settings.Current.Theme);
+        ThemeManager.StartWatching();
         LocalizationService.Instance.Language = settings.Current.Language;
 
         // Open files passed on the command line (e.g. double-clicking a .ibrproj or an image
@@ -145,6 +147,7 @@ public partial class App : Application
         // The user has confirmed closing all tabs, so no recovery data must survive: leftover
         // snapshots would be misread as a crash on the next launch.
         _serviceProvider?.GetService<IAutosaveService>()?.CleanupOnExit();
+        ThemeManager.StopWatching();
         _serviceProvider?.Dispose();
         base.OnExit(e);
     }

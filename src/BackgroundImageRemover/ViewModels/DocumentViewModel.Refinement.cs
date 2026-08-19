@@ -42,11 +42,20 @@ public partial class DocumentViewModel
     // While a background run (preview, full-res export, adjustments, uncrop) is in flight,
     // Undo/Redo must stay disabled: the UI thread may dispose the live Mats mid-run and
     // racing a history restore against the worker was surfacing as "Cannot access a disposed
-    // object". The run's inputs are snapshots, but the working result it writes back is live.
-    private bool CanUndoExecute() => !IsBusy && (IsScribbling ? _scribbleManager.CanUndo : _history.CanUndo);
-    private bool CanRedoExecute() => !IsBusy && (IsScribbling ? _scribbleManager.CanRedo : _history.CanRedo);
+    // object". The busy gate is applied structurally by UndoCommand/RedoCommand below, so
+    // this predicate only answers "is there anything to undo/redo".
+    private bool CanUndoExecute() => IsScribbling ? _scribbleManager.CanUndo : _history.CanUndo;
+    private bool CanRedoExecute() => IsScribbling ? _scribbleManager.CanRedo : _history.CanRedo;
 
-    [RelayCommand(CanExecute = nameof(CanUndoExecute))]
+    private IRelayCommand? _undoCommand;
+
+    /// <summary>Undo while busy is disabled by the gate: the history restore would dispose
+    /// the live working Mats mid-run.</summary>
+    public IRelayCommand UndoCommand => _undoCommand ??= _busyGate.Gate(new RelayCommand(Undo, CanUndoExecute));
+
+    private IRelayCommand? _redoCommand;
+    public IRelayCommand RedoCommand => _redoCommand ??= _busyGate.Gate(new RelayCommand(Redo, CanRedoExecute));
+
     private void Undo()
     {
         if (IsScribbling && TryUndoScribble())
@@ -67,7 +76,6 @@ public partial class DocumentViewModel
         FinalizeHistoryRestore($"Undone: {name}");
     }
 
-    [RelayCommand(CanExecute = nameof(CanRedoExecute))]
     private void Redo()
     {
         if (IsScribbling && TryRedoScribble())
@@ -88,18 +96,17 @@ public partial class DocumentViewModel
         FinalizeHistoryRestore($"Redone: {name}");
     }
 
+    /// <summary>Recomputes the observable Undo/Redo availability. The commands themselves are
+    /// gated structurally by <see cref="BusyGate"/>; the observable state mirrors the same
+    /// rule so bindings/tests see "nothing to undo" while a background run is in flight.
+    /// Runs from the gate's BusyChanged hook and after every history change.</summary>
     private void RefreshUndoRedoState()
     {
-        CanUndo = CanUndoExecute();
-        CanRedo = CanRedoExecute();
+        CanUndo = !IsBusy && CanUndoExecute();
+        CanRedo = !IsBusy && CanRedoExecute();
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
     }
-
-    /// <summary>Re-evaluates Undo/Redo availability when a background run starts or ends, so
-    /// the buttons (and the <see cref="CanUndo"/>/<see cref="CanRedo"/> state) never lag
-    /// behind the busy gate.</summary>
-    partial void OnIsBusyChanged(bool value) => RefreshUndoRedoState();
 
     // --- Result-pane refinement: brush and magic wand, operating on the working alpha ---
 

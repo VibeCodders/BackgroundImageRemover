@@ -79,10 +79,11 @@ public partial class DocumentViewModel
     }
 
     /// <summary>Replacing the current document while a background run is in flight would
-    /// dispose the live Mats the run may still touch; the Open button stays disabled then.</summary>
-    private bool CanOpenFile() => !IsBusy;
+    /// dispose the live Mats the run may still touch; the gate keeps Open disabled then.
+    /// Nothing else blocks opening, so there is no predicate.</summary>
+    private IAsyncRelayCommand? _openFileCommand;
+    public IAsyncRelayCommand OpenFileCommand => _openFileCommand ??= _busyGate.Gate(new AsyncRelayCommand(OpenFileAsync));
 
-    [RelayCommand(CanExecute = nameof(CanOpenFile))]
     private async Task OpenFileAsync()
     {
         var path = _dialogs.ShowOpenImageDialog();
@@ -119,9 +120,12 @@ public partial class DocumentViewModel
         }
     }
 
-    private bool CanPasteFromClipboard() => !IsBusy;
+    private IAsyncRelayCommand? _pasteFromClipboardCommand;
 
-    [RelayCommand(CanExecute = nameof(CanPasteFromClipboard))]
+    /// <summary>Like Open, pasting replaces the current document and is gated while busy.</summary>
+    public IAsyncRelayCommand PasteFromClipboardCommand
+        => _pasteFromClipboardCommand ??= _busyGate.Gate(new AsyncRelayCommand(PasteFromClipboardAsync));
+
     private async Task PasteFromClipboardAsync()
     {
         var clipboardBitmap = ViewInteractionHelper.TryGetClipboardImage();

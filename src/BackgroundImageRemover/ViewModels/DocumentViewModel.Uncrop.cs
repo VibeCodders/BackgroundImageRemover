@@ -12,7 +12,9 @@ public partial class DocumentViewModel
     public UncropOptionsViewModel UncropOptions { get; } = new();
 
     // --- Uncrop Commands ---
-    private bool CanApplyUncrop() => IsImageLoaded && !IsBusy && UncropOptions.CanExecute();
+    // The busy half of the guard comes from the gate (ApplyUncropCommand is routed through
+    // it below); this predicate only answers "is there a valid uncrop configuration".
+    private bool CanApplyUncrop() => IsImageLoaded && UncropOptions.CanExecute();
 
     private bool CanCancelUncrop() => IsBusy && _uncropCts is not null && !_uncropCts.IsCancellationRequested;
 
@@ -26,7 +28,9 @@ public partial class DocumentViewModel
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanApplyUncrop))]
+    private IAsyncRelayCommand? _applyUncropCommand;
+    public IAsyncRelayCommand ApplyUncropCommand => _applyUncropCommand ??= _busyGate.Gate(new AsyncRelayCommand(ApplyUncropAsync, CanApplyUncrop));
+
     private async Task ApplyUncropAsync()
     {
         if (_loadedImage is null)

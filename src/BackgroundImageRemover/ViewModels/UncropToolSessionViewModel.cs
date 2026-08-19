@@ -1,4 +1,5 @@
 using System.Windows.Media.Imaging;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.ImageIo;
@@ -35,12 +36,15 @@ public partial class UncropToolSessionViewModel : ToolSessionViewModelBase
     [NotifyCanExecuteChangedFor(nameof(ApplyFillCommand))]
     private bool _isImageLoaded;
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ApplyFillCommand))]
-    [NotifyCanExecuteChangedFor(nameof(CancelFillCommand))]
-    [NotifyCanExecuteChangedFor(nameof(SaveAsCommand))]
-    [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
-    private bool _isBusy;
+    private readonly BusyGate _busyGate = new();
+
+    /// <summary>True while a fill/apply is in flight; gated commands (ApplyFill, SaveAs) are
+    /// disabled and re-evaluated automatically by the gate on every flip.</summary>
+    public bool IsBusy
+    {
+        get => _busyGate.IsBusy;
+        set => _busyGate.SetBusy(value);
+    }
 
     [ObservableProperty]
     private BitmapSource? _previewResult;
@@ -69,6 +73,11 @@ public partial class UncropToolSessionViewModel : ToolSessionViewModelBase
         _imageLoader = imageLoader;
         _imageExporter = imageExporter;
         _log = log;
+
+        // The busy overlay binds IsBusy, and the Cancel button must stay enabled while busy:
+        // re-raise the property and re-evaluate the tracked cancel command on every flip.
+        _busyGate.BusyChanged += value => OnPropertyChanged(nameof(IsBusy));
+        _busyGate.Track(CancelFillCommand);
 
         _resultSession = new UncropResultSession(
             () => _sourceImage,

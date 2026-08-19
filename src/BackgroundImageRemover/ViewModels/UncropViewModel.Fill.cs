@@ -34,9 +34,11 @@ public partial class UncropViewModel
         }
     }
 
-    private bool CanOpenImage() => !IsBusy;
+    /// <summary>Replacing the image while a fill is in flight would dispose the source Mats
+    /// the worker may still touch; the gate keeps Open disabled then.</summary>
+    private IAsyncRelayCommand? _openImageCommand;
+    public IAsyncRelayCommand OpenImageCommand => _openImageCommand ??= _busyGate.Gate(new AsyncRelayCommand(OpenImageAsync));
 
-    [RelayCommand(CanExecute = nameof(CanOpenImage))]
     private async Task OpenImageAsync()
     {
         var path = _dialogs.ShowOpenImageDialog();
@@ -67,7 +69,9 @@ public partial class UncropViewModel
         Options.Reset();
     }
 
-    private bool CanApplyFill() => IsImageLoaded && !IsBusy && Options.CanExecute();
+    // The busy half of the fill guard comes from the gate (ApplyFillCommand is routed through
+    // it below); this predicate only answers "is there a valid configuration".
+    private bool CanApplyFill() => IsImageLoaded && Options.CanExecute();
 
     private bool CanCancelFill() => IsBusy && _fillCts is not null && !_fillCts.IsCancellationRequested;
 
@@ -81,7 +85,9 @@ public partial class UncropViewModel
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanApplyFill))]
+    private IAsyncRelayCommand? _applyFillCommand;
+    public IAsyncRelayCommand ApplyFillCommand => _applyFillCommand ??= _busyGate.Gate(new AsyncRelayCommand(ApplyFillAsync, CanApplyFill));
+
     private async Task ApplyFillAsync()
     {
         if (_sourceImage is null)
@@ -170,9 +176,11 @@ public partial class UncropViewModel
         RedoCommand.NotifyCanExecuteChanged();
     }
 
-    private bool CanSave() => _resultSession.HasResult && !IsBusy;
+    private bool CanSave() => _resultSession.HasResult;
 
-    [RelayCommand(CanExecute = nameof(CanSave))]
+    private IAsyncRelayCommand? _saveAsCommand;
+    public IAsyncRelayCommand SaveAsCommand => _saveAsCommand ??= _busyGate.Gate(new AsyncRelayCommand(SaveAsAsync, CanSave));
+
     private async Task SaveAsAsync()
     {
         await _resultSession.SaveAsync();

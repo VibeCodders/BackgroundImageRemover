@@ -26,11 +26,15 @@ public partial class DocumentViewModel
         _batchCts?.Cancel();
         BatchStatus = "Cancelling...";
     }
-    private bool CanBatch() => IsImageLoaded && !IsBusy && !IsBatchRunning
+    // The busy half of the batch guard comes from the gate (BatchCommand is routed through
+    // it below); this predicate only answers "is there a ready strategy input".
+    private bool CanBatch() => IsImageLoaded && !IsBatchRunning
         && SelectedStrategy is not (StrategyKind.GrabCut or StrategyKind.Sam)
         && (SelectedStrategy != StrategyKind.Onnx || Onnx.IsModelReady);
 
-    [RelayCommand(CanExecute = nameof(CanBatch))]
+    private IAsyncRelayCommand? _batchCommand;
+    public IAsyncRelayCommand BatchCommand => _batchCommand ??= _busyGate.Gate(new AsyncRelayCommand(BatchAsync, CanBatch));
+
     private async Task BatchAsync()
     {
         if (!_strategies.TryGetValue(SelectedStrategy, out var strategy))

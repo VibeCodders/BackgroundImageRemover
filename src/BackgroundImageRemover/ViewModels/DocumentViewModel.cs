@@ -293,14 +293,19 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     [NotifyCanExecuteChangedFor(nameof(ApplyUncropCommand))]
     private bool _isImageLoaded;
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
-    [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
-    [NotifyCanExecuteChangedFor(nameof(ApplyUncropCommand))]
-    [NotifyCanExecuteChangedFor(nameof(CancelUncropCommand))]
-    [NotifyCanExecuteChangedFor(nameof(OpenFileCommand))]
-    [NotifyCanExecuteChangedFor(nameof(PasteFromClipboardCommand))]
-    private bool _isBusy;
+    private readonly BusyGate _busyGate = new();
+
+    /// <summary>
+    /// True while a background run is in flight. Commands that must not run while busy are
+    /// routed through <see cref="BusyGate.Gate"/> (see the UndoCommand/ExportCommand/...
+    /// properties) and are disabled and re-evaluated automatically on every flip — nothing
+    /// else to wire up. Raised as a property change so the busy overlay follows it.
+    /// </summary>
+    public bool IsBusy
+    {
+        get => _busyGate.IsBusy;
+        set => _busyGate.SetBusy(value);
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageDimensions))]
@@ -459,6 +464,19 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
         _useGpuForOnnx = settings.Current.UseGpuForOnnx;
         _onnxStrategy.SetUseGpu(_useGpuForOnnx);
+
+        // The busy flag drives the undo/redo availability (they would dispose the live
+        // working Mats while a run is in flight) and must raise PropertyChanged for the
+        // busy overlay binding.
+        _busyGate.BusyChanged += value =>
+        {
+            OnPropertyChanged(nameof(IsBusy));
+            RefreshUndoRedoState();
+        };
+
+        // Cancel-style commands must stay enabled while busy: they are re-evaluated on every
+        // busy flip (their CanExecute is "busy AND something") without being gated.
+        _busyGate.Track(CancelUncropCommand);
 
         _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         _debounceTimer.Tick += (_, _) =>

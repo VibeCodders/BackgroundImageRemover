@@ -79,8 +79,10 @@ public partial class DocumentViewModel
     [ObservableProperty]
     private bool _isGradientBottomColorPickerOpen;
 
-    private bool CanExport() => IsImageLoaded && !IsBusy
-        && (HasWorkingResult || IsSelectedStrategyReady());
+    // The busy half of the export guard is applied structurally by the gate (every export
+    // command is routed through it below), so this predicate only answers "is there a
+    // strategy input ready".
+    private bool CanExport() => IsImageLoaded && (HasWorkingResult || IsSelectedStrategyReady());
 
     private bool IsSelectedStrategyReady() => SelectedStrategy switch
     {
@@ -92,31 +94,45 @@ public partial class DocumentViewModel
     };
 
     /// <summary>Exports the full-size cutout without cropping (transparent margins kept).</summary>
-    [RelayCommand(CanExecute = nameof(CanExport))]
+    private IAsyncRelayCommand? _exportCommand;
+    public IAsyncRelayCommand ExportCommand => _exportCommand ??= _busyGate.Gate(new AsyncRelayCommand(ExportAsync, CanExport));
+
     private Task ExportAsync() => ExportCoreAsync(crop: false, ExportFormat.Png);
 
     /// <summary>Exports the cutout trimmed to the subject (transparent borders removed).</summary>
-    [RelayCommand(CanExecute = nameof(CanExport))]
+    private IAsyncRelayCommand? _exportCroppedCommand;
+    public IAsyncRelayCommand ExportCroppedCommand => _exportCroppedCommand ??= _busyGate.Gate(new AsyncRelayCommand(ExportCroppedAsync, CanExport));
+
     private Task ExportCroppedAsync() => ExportCoreAsync(crop: true, ExportFormat.Png);
 
     /// <summary>Exports the full-size cutout as a JPEG (composited onto a background, since JPEG has no alpha).</summary>
-    [RelayCommand(CanExecute = nameof(CanExport))]
+    private IAsyncRelayCommand? _exportJpgCommand;
+    public IAsyncRelayCommand ExportJpgCommand => _exportJpgCommand ??= _busyGate.Gate(new AsyncRelayCommand(ExportJpgAsync, CanExport));
+
     private Task ExportJpgAsync() => ExportCoreAsync(crop: false, ExportFormat.Jpeg);
 
     /// <summary>Exports the trimmed cutout as a JPEG (composited onto a background).</summary>
-    [RelayCommand(CanExecute = nameof(CanExport))]
+    private IAsyncRelayCommand? _exportJpgCroppedCommand;
+    public IAsyncRelayCommand ExportJpgCroppedCommand => _exportJpgCroppedCommand ??= _busyGate.Gate(new AsyncRelayCommand(ExportJpgCroppedAsync, CanExport));
+
     private Task ExportJpgCroppedAsync() => ExportCoreAsync(crop: true, ExportFormat.Jpeg);
 
     /// <summary>Exports the full-size cutout as a WebP (transparency preserved, smaller than PNG).</summary>
-    [RelayCommand(CanExecute = nameof(CanExport))]
+    private IAsyncRelayCommand? _exportWebpCommand;
+    public IAsyncRelayCommand ExportWebpCommand => _exportWebpCommand ??= _busyGate.Gate(new AsyncRelayCommand(ExportWebpAsync, CanExport));
+
     private Task ExportWebpAsync() => ExportCoreAsync(crop: false, ExportFormat.Webp);
 
     /// <summary>Exports the trimmed cutout as a WebP (transparent borders removed).</summary>
-    [RelayCommand(CanExecute = nameof(CanExport))]
+    private IAsyncRelayCommand? _exportWebpCroppedCommand;
+    public IAsyncRelayCommand ExportWebpCroppedCommand => _exportWebpCroppedCommand ??= _busyGate.Gate(new AsyncRelayCommand(ExportWebpCroppedAsync, CanExport));
+
     private Task ExportWebpCroppedAsync() => ExportCoreAsync(crop: true, ExportFormat.Webp);
 
     /// <summary>Copies the full-resolution cutout to the clipboard as a PNG image.</summary>
-    [RelayCommand(CanExecute = nameof(CanExport))]
+    private IAsyncRelayCommand? _copyToClipboardCommand;
+    public IAsyncRelayCommand CopyToClipboardCommand => _copyToClipboardCommand ??= _busyGate.Gate(new AsyncRelayCommand(CopyToClipboardAsync, CanExport));
+
     private async Task CopyToClipboardAsync()
     {
         if (!await EnsureWorkingResultAsync() || _workingBgr is null || _workingAlpha is null)

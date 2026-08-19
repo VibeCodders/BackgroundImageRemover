@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using BackgroundImageRemover.Helpers;
+
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Dialogs;
@@ -121,9 +122,15 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     [ObservableProperty]
     private bool _sampleColorMode;
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ApplyCommand))]
-    private bool _isBusy;
+    private readonly BusyGate _busyGate = new();
+
+    /// <summary>True while a preview/apply is in flight; raises PropertyChanged for the busy
+    /// overlay and re-evaluates the tracked commands on every flip.</summary>
+    public bool IsBusy
+    {
+        get => _busyGate.IsBusy;
+        set => _busyGate.SetBusy(value);
+    }
 
     [ObservableProperty]
     private string? _busyMessage;
@@ -156,6 +163,11 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         _onnxStrategy = onnxStrategy;
         _grabCutStrategy = grabCutStrategy;
         _samStrategy = samStrategy;
+
+        // The busy overlay binds IsBusy, and Apply is tracked so its (re)evaluation follows
+        // the busy flag like the generated NotifyCanExecuteChangedFor used to.
+        _busyGate.BusyChanged += value => OnPropertyChanged(nameof(IsBusy));
+        _busyGate.Track(ApplyCommand);
 
         _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         _debounceTimer.Tick += async (_, _) =>

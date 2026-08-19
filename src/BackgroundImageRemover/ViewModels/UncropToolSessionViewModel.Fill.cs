@@ -23,7 +23,9 @@ public partial class UncropToolSessionViewModel
         Options.Reset();
     }
 
-    private bool CanApplyFill() => IsImageLoaded && !IsBusy && Options.CanExecute();
+    // The busy half of the fill guard comes from the gate (ApplyFillCommand is routed through
+    // it below); this predicate only answers "is there a valid configuration".
+    private bool CanApplyFill() => IsImageLoaded && Options.CanExecute();
 
     private bool CanCancelFill() => IsBusy && _fillCts is not null && !_fillCts.IsCancellationRequested;
 
@@ -37,7 +39,9 @@ public partial class UncropToolSessionViewModel
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanApplyFill))]
+    private IAsyncRelayCommand? _applyFillCommand;
+    public IAsyncRelayCommand ApplyFillCommand => _applyFillCommand ??= _busyGate.Gate(new AsyncRelayCommand(ApplyFillAsync, CanApplyFill));
+
     private async Task ApplyFillAsync()
     {
         if (_sourceImage is null)
@@ -126,9 +130,11 @@ public partial class UncropToolSessionViewModel
         RedoCommand.NotifyCanExecuteChanged();
     }
 
-    private bool CanSave() => _resultSession.HasResult && !IsBusy;
+    private bool CanSave() => _resultSession.HasResult;
 
-    [RelayCommand(CanExecute = nameof(CanSave))]
+    private IAsyncRelayCommand? _saveAsCommand;
+    public IAsyncRelayCommand SaveAsCommand => _saveAsCommand ??= _busyGate.Gate(new AsyncRelayCommand(SaveAsAsync, CanSave));
+
     private async Task SaveAsAsync()
     {
         await _resultSession.SaveAsync();

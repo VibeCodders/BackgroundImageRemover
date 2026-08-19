@@ -298,6 +298,8 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     [NotifyCanExecuteChangedFor(nameof(BatchCommand))]
     [NotifyCanExecuteChangedFor(nameof(ApplyUncropCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelUncropCommand))]
+    [NotifyCanExecuteChangedFor(nameof(OpenFileCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PasteFromClipboardCommand))]
     private bool _isBusy;
 
     [ObservableProperty]

@@ -156,7 +156,11 @@ public partial class DocumentViewModel
             using var fgScribble = ScribbleManager.SnapshotForegroundScribble();
             using var bgScribble = ScribbleManager.SnapshotBackgroundScribble();
             var context = BuildContext(grabCutFg: fgScribble, grabCutBg: bgScribble);
-            var result = await strategy.RunPreviewAsync(_preview.Bgr, context, cts.Token);
+
+            // Snapshot the (small) preview Mat on the UI thread: loading another image or
+            // closing the tab disposes _preview while a run may still be in flight.
+            using var previewBgr = _preview.Bgr.Clone();
+            var result = await strategy.RunPreviewAsync(previewBgr, context, cts.Token);
 
             if (cts.IsCancellationRequested)
             {
@@ -203,7 +207,12 @@ public partial class DocumentViewModel
             : null;
         var context = BuildContext(_preview.ScaleFactor, fgFull, bgFull);
 
-        return await strategy.RunFullAsync(_loadedImage.FullBgr, context, ct);
+        // Snapshot the source on the UI thread: the run happens on a worker and undo/redo or
+        // loading another image can dispose _loadedImage mid-run -- the run must never read
+        // the live Mat after that (it previously surfaced as "Cannot access a disposed
+        // object" on apply/export).
+        using var fullBgr = _loadedImage.FullBgr.Clone();
+        return await strategy.RunFullAsync(fullBgr, context, ct);
     }
 
     /// <summary>True when the working result is authoritative and must be kept as-is on export.</summary>

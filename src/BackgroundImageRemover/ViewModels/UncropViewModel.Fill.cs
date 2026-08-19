@@ -101,8 +101,11 @@ public partial class UncropViewModel
             CancelFillCommand.NotifyCanExecuteChanged();
             StatusMessage = "Filling...";
 
+            // Snapshot the source on the UI thread: the fill runs on a worker and closing the
+            // window mid-run disposes _sourceImage, which would otherwise be read after disposal.
+            using var sourceBgr = _sourceImage.FullBgr.Clone();
             using var filledBgr = await UncropOperationHelper.ExecuteUncropAsync(
-                _sourceImage.FullBgr, config, _fillService, ct);
+                sourceBgr, config, _fillService, ct);
 
             var bgra = UncropOperationHelper.ApplyFinishing(filledBgr, config);
 

@@ -1,6 +1,7 @@
 using System.IO;
 using BackgroundImageRemover.Services.ImageIo;
 using OpenCvSharp;
+using OpenCvSharp.WpfExtensions;
 
 namespace BackgroundImageRemover.Tests.Services;
 
@@ -33,6 +34,28 @@ public class ImageLoaderServiceTests
         {
             File.Delete(path);
         }
+    }
+
+    [Fact]
+    public async Task LoadFromBitmapSourceAsync_WithAnUnfrozenSourceOwnedByAnotherThread_Succeeds()
+    {
+        // Clipboard paste hands the loader a BitmapSource created on the UI thread, unfrozen.
+        // The loader decodes on a worker thread, and WPF forbids touching an unfrozen
+        // Freezable from a non-owner thread -- so the loader must make it shareable on the
+        // caller's thread first. Regression: "The calling thread cannot access this object
+        // because a different thread owns it".
+        var loader = new ImageLoaderService();
+
+        using var bgra = new Mat(8, 6, MatType.CV_8UC4, new Scalar(10, 20, 30, 255));
+        var source = bgra.ToBitmapSource(); // created on this (owner) thread, unfrozen
+        Assert.False(source.IsFrozen);
+
+        using var loaded = await loader.LoadFromBitmapSourceAsync(source, "clipboard.png");
+
+        Assert.Equal(6, loaded.FullBgr.Cols);
+        Assert.Equal(8, loaded.FullBgr.Rows);
+        Assert.Equal(3, loaded.FullBgr.Channels());
+        Assert.NotNull(loaded.FullAlpha);
     }
 
     [Fact]

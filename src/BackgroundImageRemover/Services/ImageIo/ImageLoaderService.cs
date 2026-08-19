@@ -100,26 +100,50 @@ public sealed class ImageLoaderService : IImageLoaderService
 
     public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
     {
-        return Task.Run(() =>
+        if (bitmapSource is null)
         {
-            var mat = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToMat(bitmapSource);
-            if (mat.Channels() == 4)
-            {
-                var (bgr, alpha) = BackgroundCompositingService.SplitBgra(mat);
-                mat.Dispose();
-                return new LoadedImage(sourceName, bgr, alpha);
-            }
+            throw new ArgumentNullException(nameof(bitmapSource));
+        }
 
-            if (mat.Channels() == 3)
+        // The source is owned by the calling (UI) thread, but the decode below runs on a
+        // worker: WPF forbids touching an unfrozen Freezable from a non-owner thread ("The
+        // calling thread cannot access this object..."). Freeze it here, on the owner thread,
+        // so the worker can read it -- clipboard/URI BitmapImages are always freezable. If a
+        // source ever cannot be frozen, decode it right here on the owner thread instead.
+        if (!bitmapSource.IsFrozen)
+        {
+            try
             {
-                return new LoadedImage(sourceName, mat);
+                bitmapSource.Freeze();
             }
+            catch (InvalidOperationException)
+            {
+                return Task.FromResult(DecodeFromBitmapSource(bitmapSource, sourceName));
+            }
+        }
 
-            using var bgrMat = new Mat();
-            Cv2.CvtColor(mat, bgrMat, ColorConversionCodes.GRAY2BGR);
+        return Task.Run(() => DecodeFromBitmapSource(bitmapSource, sourceName));
+    }
+
+    private static LoadedImage DecodeFromBitmapSource(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName)
+    {
+        var mat = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToMat(bitmapSource);
+        if (mat.Channels() == 4)
+        {
+            var (bgr, alpha) = BackgroundCompositingService.SplitBgra(mat);
             mat.Dispose();
-            return new LoadedImage(sourceName, bgrMat.Clone());
-        });
+            return new LoadedImage(sourceName, bgr, alpha);
+        }
+
+        if (mat.Channels() == 3)
+        {
+            return new LoadedImage(sourceName, mat);
+        }
+
+        using var bgrMat = new Mat();
+        Cv2.CvtColor(mat, bgrMat, ColorConversionCodes.GRAY2BGR);
+        mat.Dispose();
+        return new LoadedImage(sourceName, bgrMat.Clone());
     }
 
     private static LoadedImage LoadWithoutAlpha(byte[] bytes, string filePath, int orientation)

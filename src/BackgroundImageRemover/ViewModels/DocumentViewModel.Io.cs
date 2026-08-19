@@ -78,7 +78,11 @@ public partial class DocumentViewModel
         };
     }
 
-    [RelayCommand]
+    /// <summary>Replacing the current document while a background run is in flight would
+    /// dispose the live Mats the run may still touch; the Open button stays disabled then.</summary>
+    private bool CanOpenFile() => !IsBusy;
+
+    [RelayCommand(CanExecute = nameof(CanOpenFile))]
     private async Task OpenFileAsync()
     {
         var path = _dialogs.ShowOpenImageDialog();
@@ -115,7 +119,9 @@ public partial class DocumentViewModel
         }
     }
 
-    [RelayCommand]
+    private bool CanPasteFromClipboard() => !IsBusy;
+
+    [RelayCommand(CanExecute = nameof(CanPasteFromClipboard))]
     private async Task PasteFromClipboardAsync()
     {
         var clipboardBitmap = ViewInteractionHelper.TryGetClipboardImage();

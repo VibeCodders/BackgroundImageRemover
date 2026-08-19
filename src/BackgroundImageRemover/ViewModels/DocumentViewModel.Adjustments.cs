@@ -91,12 +91,17 @@ public partial class DocumentViewModel
             using var fallbackAlpha = (_workingBgr is null || _workingAlpha is null) && _loadedImage.FullAlpha is null
                 ? new Mat(_loadedImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255))
                 : null;
-            Mat targetBgr = _workingBgr ?? _loadedImage.FullBgr;
-            Mat targetAlpha = _workingAlpha ?? _loadedImage.FullAlpha ?? fallbackAlpha!;
+            // Snapshot the inputs on the UI thread: the worker must never read Mats the UI
+            // can dispose mid-run (undo/redo stays enabled while busy, and loading a new
+            // image replaces the loaded state). Previously the live _workingBgr/_loadedImage
+            // refs were handed to the worker, which surfaced as "Cannot access a disposed
+            // object" if the user hit undo while adjustments were computing.
+            using var sourceBgr = (_workingBgr ?? _loadedImage.FullBgr).Clone();
+            using var sourceAlpha = (_workingAlpha ?? _loadedImage.FullAlpha ?? fallbackAlpha!).Clone();
 
-            var adjustedBgr = await Task.Run(() => ImageProcessingHelper.ApplyAdjustments(targetBgr, adjustments));
+            var adjustedBgr = await Task.Run(() => ImageProcessingHelper.ApplyAdjustments(sourceBgr, adjustments));
 
-            ApplyToolResult(adjustedBgr, targetAlpha.Clone(), "Adjustments");
+            ApplyToolResult(adjustedBgr, sourceAlpha.Clone(), "Adjustments");
 
             ResetAdjustments();
             StatusMessage = "Image adjustments applied successfully.";

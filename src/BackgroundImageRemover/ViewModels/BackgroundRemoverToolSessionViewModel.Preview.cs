@@ -46,7 +46,11 @@ public partial class BackgroundRemoverToolSessionViewModel
             using var fgScribble = ScribbleManager.SnapshotForegroundScribble();
             using var bgScribble = ScribbleManager.SnapshotBackgroundScribble();
             var context = BuildContext(grabCutFg: fgScribble, grabCutBg: bgScribble);
-            var result = await strategy.RunPreviewAsync(_preview.Bgr, context, cts.Token);
+
+            // Snapshot the (small) preview Mat on the UI thread: closing the tab or loading a
+            // new image disposes _preview while a run may still be in flight.
+            using var previewBgr = _preview.Bgr.Clone();
+            var result = await strategy.RunPreviewAsync(previewBgr, context, cts.Token);
 
             if (cts.IsCancellationRequested)
             {

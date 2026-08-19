@@ -46,8 +46,12 @@ public partial class DocumentViewModel
             CancelUncropCommand.NotifyCanExecuteChanged();
             StatusMessage = "Applying uncrop expansion...";
 
+            // Snapshot the source on the UI thread: the fill runs on a worker and the user
+            // can still trigger undo/redo or open another image while it computes, both of
+            // which would dispose _loadedImage mid-run.
+            using var sourceBgr = _loadedImage.FullBgr.Clone();
             using var filledBgr = await UncropOperationHelper.ExecuteUncropAsync(
-                _loadedImage.FullBgr, config, _uncropFillService, ct);
+                sourceBgr, config, _uncropFillService, ct);
 
             // Apply finishing (flip, grain, border, rounded corners), then split back to BGR + alpha.
             using var finishedBgra = UncropOperationHelper.ApplyFinishing(filledBgr, config);

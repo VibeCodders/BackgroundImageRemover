@@ -39,8 +39,12 @@ public partial class DocumentViewModel
         or InteractionMode.EraseForeground
         or InteractionMode.EraseBackground;
 
-    private bool CanUndoExecute() => IsScribbling ? _scribbleManager.CanUndo : _history.CanUndo;
-    private bool CanRedoExecute() => IsScribbling ? _scribbleManager.CanRedo : _history.CanRedo;
+    // While a background run (preview, full-res export, adjustments, uncrop) is in flight,
+    // Undo/Redo must stay disabled: the UI thread may dispose the live Mats mid-run and
+    // racing a history restore against the worker was surfacing as "Cannot access a disposed
+    // object". The run's inputs are snapshots, but the working result it writes back is live.
+    private bool CanUndoExecute() => !IsBusy && (IsScribbling ? _scribbleManager.CanUndo : _history.CanUndo);
+    private bool CanRedoExecute() => !IsBusy && (IsScribbling ? _scribbleManager.CanRedo : _history.CanRedo);
 
     [RelayCommand(CanExecute = nameof(CanUndoExecute))]
     private void Undo()
@@ -91,6 +95,11 @@ public partial class DocumentViewModel
         UndoCommand.NotifyCanExecuteChanged();
         RedoCommand.NotifyCanExecuteChanged();
     }
+
+    /// <summary>Re-evaluates Undo/Redo availability when a background run starts or ends, so
+    /// the buttons (and the <see cref="CanUndo"/>/<see cref="CanRedo"/> state) never lag
+    /// behind the busy gate.</summary>
+    partial void OnIsBusyChanged(bool value) => RefreshUndoRedoState();
 
     // --- Result-pane refinement: brush and magic wand, operating on the working alpha ---
 

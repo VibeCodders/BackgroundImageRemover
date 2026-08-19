@@ -39,12 +39,22 @@ public partial class BackgroundRemoverToolSessionViewModel
                 : null;
             var context = BuildContext(_preview.ScaleFactor, fgFull, bgFull);
 
-            var fullResult = await strategy.RunFullAsync(_sourceImage.FullBgr, context, cts.Token);
+            // Snapshot the source on the UI thread: the run happens on a worker and pressing
+            // Esc/Cancel mid-apply closes the tab, which disposes _sourceImage -- the run must
+            // not read it after that.
+            using var fullBgr = _sourceImage.FullBgr.Clone();
+            var fullResult = await strategy.RunFullAsync(fullBgr, context, cts.Token);
             var (bgr, alpha) = BackgroundCompositingService.SplitBgra(fullResult.Bgra);
             fullResult.Dispose();
 
             _parentDocument.ApplyToolResult(bgr, alpha, $"Remove Background ({SelectedStrategy})");
             succeeded = true;
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a newer apply or the tab was closed mid-run: this is not a
+            // failure, so it must not surface as "Apply failed" or log an error.
+            StatusMessage = "Apply cancelled.";
         }
         catch (Exception ex)
         {

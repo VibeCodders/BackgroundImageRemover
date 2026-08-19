@@ -99,6 +99,41 @@ public class GrabCutStrategyTests
     }
 
     [Fact]
+    public async Task ConcurrentPreviewAndFullRuns_DoNotDisposeTheSharedCacheMidUse()
+    {
+        // The strategy instance is shared by the debounced preview and the full-res apply,
+        // which can overlap on separate background threads. The cached label mask must never
+        // be disposed by one call while another is still reading it.
+        var strategy = new GrabCutStrategy();
+        using var preview = MakeSubjectImage(100, 75, new Rect(20, 15, 60, 45));
+        using var full = MakeSubjectImage(200, 150, new Rect(40, 30, 120, 90));
+        var previewContext = new StrategyContext { GrabCutRect = new Rect(15, 10, 70, 55), DecontaminateEdges = false };
+        var fullContext = new StrategyContext { GrabCutRect = new Rect(30, 20, 140, 110), DecontaminateEdges = false };
+
+        var tasks = new List<Task>();
+        for (int i = 0; i < 24; i++)
+        {
+            if (i % 2 == 0)
+            {
+                tasks.Add(Task.Run(async () =>
+                {
+                    using var result = await strategy.RunPreviewAsync(preview, previewContext, CancellationToken.None);
+                }));
+            }
+            else
+            {
+                tasks.Add(Task.Run(async () =>
+                {
+                    using var result = await strategy.RunFullAsync(full, fullContext, CancellationToken.None);
+                }));
+            }
+        }
+
+        // Must complete without an ObjectDisposedException from the shared label-mask cache.
+        await Task.WhenAll(tasks);
+    }
+
+    [Fact]
     public async Task RunFullAsync_WithoutARectOrScribbles_DefaultsToFullImageAndSucceeds()
     {
         var strategy = new GrabCutStrategy();
@@ -109,6 +144,40 @@ public class GrabCutStrategyTests
 
         Assert.Equal(100, result.Bgra.Width);
         Assert.Equal(100, result.Bgra.Height);
+        Assert.NotNull(strategy.LastLabelMask);
+    }
+
+    [Fact]
+    public async Task RunFullAsync_WithScribbleCopies_OnlyTouchesTheCallerOwnedMats()
+    {
+        // Mirrors the apply flow: the ViewModel resizes the manager's scribbles into copies
+        // it owns, and the run must proceed even if the manager's live Mats are disposed in
+        // the meantime (regression: copies that died before RunFullAsync started -- the old
+        // "using var inside an if" scope -- threw "Cannot access a disposed object").
+        var strategy = new GrabCutStrategy();
+        using var full = MakeSubjectImage(200, 150, new Rect(40, 30, 120, 90));
+
+        var liveForeground = new Mat(full.Size(), MatType.CV_8UC1, Scalar.All(0));
+        var liveBackground = new Mat(full.Size(), MatType.CV_8UC1, Scalar.All(0));
+        Cv2.Rectangle(liveForeground, new Rect(80, 60, 20, 20), Scalar.All(255), thickness: -1);
+        Cv2.Rectangle(liveBackground, new Rect(5, 5, 20, 20), Scalar.All(255), thickness: -1);
+
+        using var fgCopy = liveForeground.Clone();
+        using var bgCopy = liveBackground.Clone();
+        liveForeground.Dispose();
+        liveBackground.Dispose();
+
+        var context = new StrategyContext
+        {
+            GrabCutRect = new Rect(30, 20, 140, 110),
+            GrabCutForegroundScribble = fgCopy,
+            GrabCutBackgroundScribble = bgCopy,
+            DecontaminateEdges = false
+        };
+
+        using var result = await strategy.RunFullAsync(full, context, CancellationToken.None);
+
+        Assert.Equal(200, result.Bgra.Width);
         Assert.NotNull(strategy.LastLabelMask);
     }
 

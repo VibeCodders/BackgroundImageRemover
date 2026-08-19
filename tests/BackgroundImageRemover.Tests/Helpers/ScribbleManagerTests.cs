@@ -76,6 +76,61 @@ public class ScribbleManagerTests
     }
 
     [Fact]
+    public void Snapshot_ReturnsNullWhenNoScribblesExist()
+    {
+        using var manager = new ScribbleManager();
+        Assert.Null(manager.SnapshotForegroundScribble());
+        Assert.Null(manager.SnapshotBackgroundScribble());
+    }
+
+    [Fact]
+    public void Snapshot_SurvivesManagerClear_AndIsIndependentOfTheLiveMask()
+    {
+        // Preview/apply runs on background threads must use snapshots, never the live Mats:
+        // the UI thread disposes the live Mats on Clear/Undo/Redo mid-run. A snapshot taken
+        // before Clear must stay fully usable afterwards (regression: "Cannot access a
+        // disposed object" when a rect selection cleared the scribbles mid-preview).
+        using var manager = new ScribbleManager();
+        manager.EnsureMats(new Size(60, 60));
+        DrawHorizontal(manager, ScribbleMode.Foreground, xFrom: 5, xTo: 45, y: 10);
+        DrawHorizontal(manager, ScribbleMode.Background, xFrom: 5, xTo: 45, y: 40);
+
+        using var fgSnapshot = manager.SnapshotForegroundScribble();
+        using var bgSnapshot = manager.SnapshotBackgroundScribble();
+        Assert.NotNull(fgSnapshot);
+        Assert.NotNull(bgSnapshot);
+
+        // The UI thread now clears (e.g. the user drew a new rectangle).
+        manager.Clear();
+        Assert.Null(manager.ForegroundScribble);
+
+        // The snapshots still carry the scribble pixels and are safe to hand to OpenCV.
+        Assert.True(Cv2.CountNonZero(fgSnapshot!) > 0);
+        Assert.True(Cv2.CountNonZero(bgSnapshot!) > 0);
+        using var cleared = new Mat();
+        Cv2.Compare(fgSnapshot, new Scalar(255), cleared, CmpType.EQ); // any operation must not throw
+    }
+
+    [Fact]
+    public void Snapshot_IsUnaffectedByUndoDisposingTheLiveMats()
+    {
+        using var manager = new ScribbleManager();
+        manager.EnsureMats(new Size(60, 60));
+        DrawHorizontal(manager, ScribbleMode.Foreground, xFrom: 5, xTo: 45, y: 10);
+
+        using var snapshot = manager.SnapshotForegroundScribble();
+        Assert.NotNull(snapshot);
+
+        // Undo swaps in clones and disposes the live Mats; the snapshot must remain valid.
+        manager.StartStroke(new WpfPoint(10, 10), ScribbleMode.Foreground);
+        manager.MoveStroke(new WpfPoint(20, 10), ScribbleMode.Foreground);
+        manager.EndStroke();
+        Assert.True(manager.Undo());
+
+        Assert.True(Cv2.CountNonZero(snapshot!) > 0);
+    }
+
+    [Fact]
     public void BuildOverlayBitmap_ReturnsNullWhenEmpty_AndBitmapAfterScribble()
     {
         using var manager = new ScribbleManager();

@@ -41,7 +41,11 @@ public partial class BackgroundRemoverToolSessionViewModel
 
         try
         {
-            var context = BuildContext();
+            // Snapshot the scribble masks on the UI thread: background preview threads must
+            // never touch the manager's live Mats, which the UI disposes on stroke/undo/clear.
+            using var fgScribble = ScribbleManager.SnapshotForegroundScribble();
+            using var bgScribble = ScribbleManager.SnapshotBackgroundScribble();
+            var context = BuildContext(grabCutFg: fgScribble, grabCutBg: bgScribble);
             var result = await strategy.RunPreviewAsync(_preview.Bgr, context, cts.Token);
 
             if (cts.IsCancellationRequested)
@@ -62,7 +66,7 @@ public partial class BackgroundRemoverToolSessionViewModel
         }
     }
 
-    private StrategyContext BuildContext(double scaleToFull = 1.0)
+    private StrategyContext BuildContext(double scaleToFull = 1.0, Mat? grabCutFg = null, Mat? grabCutBg = null)
     {
         var strategyContext = SelectedStrategy switch
         {
@@ -81,8 +85,11 @@ public partial class BackgroundRemoverToolSessionViewModel
                         (int)Math.Round(r.Width * scaleToFull),
                         (int)Math.Round(r.Height * scaleToFull))
                     : (Rect?)null,
-                GrabCutForegroundScribble = scaleToFull == 1.0 ? ScribbleManager.ForegroundScribble : null,
-                GrabCutBackgroundScribble = scaleToFull == 1.0 ? ScribbleManager.BackgroundScribble : null,
+                // The caller passes ownership-transferred snapshots (preview) or full-res
+                // resized copies (apply) that stay valid for the whole background run -- never
+                // the manager's live Mats, which the UI thread may dispose mid-run.
+                GrabCutForegroundScribble = grabCutFg,
+                GrabCutBackgroundScribble = grabCutBg,
                 GrabCutIterations = 3,
                 GrabCutFeatherPixels = Math.Max(1, (int)Math.Round(2 * scaleToFull))
             },

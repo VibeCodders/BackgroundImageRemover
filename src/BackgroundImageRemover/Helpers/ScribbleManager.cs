@@ -215,12 +215,38 @@ public class ScribbleManager : IDisposable
     /// <summary>
     /// Gets the foreground scribble mat (read-only).
     /// </summary>
+    /// <remarks>
+    /// The returned Mat is owned by this manager and may be disposed at any time by the next
+    /// stroke, undo/redo, clear or <see cref="Dispose"/>. Background threads must never hold
+    /// this reference; use <see cref="SnapshotForegroundScribble"/> instead.
+    /// </remarks>
     public Mat? ForegroundScribble => _fgScribble;
 
     /// <summary>
     /// Gets the background scribble mat (read-only).
     /// </summary>
+    /// <remarks>
+    /// The returned Mat is owned by this manager and may be disposed at any time by the next
+    /// stroke, undo/redo, clear or <see cref="Dispose"/>. Background threads must never hold
+    /// this reference; use <see cref="SnapshotBackgroundScribble"/> instead.
+    /// </remarks>
     public Mat? BackgroundScribble => _bgScribble;
+
+    /// <summary>
+    /// Returns a private clone of the current foreground scribble mask, or null when there is
+    /// none. The caller owns the clone and it stays valid even if the manager later clears,
+    /// undoes or redraws the live masks -- preview/apply runs on background threads must use
+    /// these snapshots, never <see cref="ForegroundScribble"/>.
+    /// </summary>
+    public Mat? SnapshotForegroundScribble() => _fgScribble?.Clone();
+
+    /// <summary>
+    /// Returns a private clone of the current background scribble mask, or null when there is
+    /// none. The caller owns the clone and it stays valid even if the manager later clears,
+    /// undoes or redraws the live masks -- preview/apply runs on background threads must use
+    /// these snapshots, never <see cref="BackgroundScribble"/>.
+    /// </summary>
+    public Mat? SnapshotBackgroundScribble() => _bgScribble?.Clone();
 
     /// <summary>
     /// Renders the current scribbles as a semi-transparent overlay bitmap (green = foreground,

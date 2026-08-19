@@ -19,7 +19,7 @@ public partial class DocumentViewModel
         _debounceTimer.Start();
     }
 
-    private StrategyContext BuildContext(double scaleToFull = 1.0)
+    private StrategyContext BuildContext(double scaleToFull = 1.0, Mat? grabCutFg = null, Mat? grabCutBg = null)
     {
         var strategyContext = SelectedStrategy switch
         {
@@ -38,11 +38,11 @@ public partial class DocumentViewModel
                         (int)Math.Round(r.Width * scaleToFull),
                         (int)Math.Round(r.Height * scaleToFull))
                     : (Rect?)null,
-                // At preview scale (1.0), the scribbles are already in the right coordinate
-                // space -- use them directly. A scaled-up (export) call overrides these with
-                // resized copies; see RunStrategyFullAsync.
-                GrabCutForegroundScribble = scaleToFull == 1.0 ? ScribbleManager.ForegroundScribble : null,
-                GrabCutBackgroundScribble = scaleToFull == 1.0 ? ScribbleManager.BackgroundScribble : null,
+                // The caller passes ownership-transferred snapshots (preview) or full-res
+                // resized copies (apply/export) that stay valid for the whole background run --
+                // never the manager's live Mats, which the UI thread may dispose mid-run.
+                GrabCutForegroundScribble = grabCutFg,
+                GrabCutBackgroundScribble = grabCutBg,
                 // Same iteration count as the preview, so the full-res result matches what the user saw.
                 GrabCutIterations = 3,
                 // Scale the feather with the resolution so the export keeps the same relative
@@ -151,7 +151,11 @@ public partial class DocumentViewModel
 
         try
         {
-            var context = BuildContext();
+            // Snapshot the scribble masks on the UI thread: background preview threads must
+            // never touch the manager's live Mats, which the UI disposes on stroke/undo/clear.
+            using var fgScribble = ScribbleManager.SnapshotForegroundScribble();
+            using var bgScribble = ScribbleManager.SnapshotBackgroundScribble();
+            var context = BuildContext(grabCutFg: fgScribble, grabCutBg: bgScribble);
             var result = await strategy.RunPreviewAsync(_preview.Bgr, context, cts.Token);
 
             if (cts.IsCancellationRequested)
@@ -187,15 +191,17 @@ public partial class DocumentViewModel
             throw new InvalidOperationException("No image loaded.");
         }
 
-        var context = BuildContext(_preview.ScaleFactor);
-
-        if (SelectedStrategy == StrategyKind.GrabCut && ScribbleManager.HasScribbles)
-        {
-            using var fgFull = ScribbleManager.ForegroundScribble?.ResizeScribble(_loadedImage.FullBgr.Size());
-            using var bgFull = ScribbleManager.BackgroundScribble?.ResizeScribble(_loadedImage.FullBgr.Size());
-            context = context with { GrabCutForegroundScribble = fgFull, GrabCutBackgroundScribble = bgFull };
-            return await strategy.RunFullAsync(_loadedImage.FullBgr, context, ct);
-        }
+        // Full-res scribble copies must stay alive for the whole background run. Declaring
+        // them with "using var" inside the if would dispose them at the closing brace --
+        // before RunFullAsync even starts -- which surfaced as "Cannot access a disposed
+        // object" on apply/export. They are declared here, in the method scope.
+        using var fgFull = SelectedStrategy == StrategyKind.GrabCut && ScribbleManager.HasScribbles
+            ? ScribbleManager.ForegroundScribble?.ResizeScribble(_loadedImage.FullBgr.Size())
+            : null;
+        using var bgFull = SelectedStrategy == StrategyKind.GrabCut && ScribbleManager.HasScribbles
+            ? ScribbleManager.BackgroundScribble?.ResizeScribble(_loadedImage.FullBgr.Size())
+            : null;
+        var context = BuildContext(_preview.ScaleFactor, fgFull, bgFull);
 
         return await strategy.RunFullAsync(_loadedImage.FullBgr, context, ct);
     }

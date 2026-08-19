@@ -18,12 +18,24 @@ public sealed class GrabCutStrategy : StrategyBase
     // Two independent GrabCut runs at different resolutions can settle on visibly different
     // boundaries even with the same inputs, since the color-model statistics differ; seeding
     // keeps the full-res result a refinement of what the user saw, not a fresh guess.
-    // The desktop app serializes preview/apply calls per strategy, so a single-instance cache
-    // is safe in practice; a concurrent call would simply see a stale/overwritten mask.
+    //
+    // The strategy is a singleton shared by the debounced preview, full-res apply/export and
+    // batch processing, which run on separate background threads. ComputeMask is serialized
+    // with _sync so the cached label mask can never be disposed by one call while another is
+    // still reading it (which previously surfaced as "Cannot access a disposed object").
+    private readonly object _sync = new();
     private Mat? _lastLabelMask;
     private Size _lastLabelMaskSize;
 
     protected override Mat ComputeMask(Mat bgr, StrategyContext context, CancellationToken ct)
+    {
+        lock (_sync)
+        {
+            return ComputeMaskCore(bgr, context, ct);
+        }
+    }
+
+    private Mat ComputeMaskCore(Mat bgr, StrategyContext context, CancellationToken ct)
     {
         var rect = ClampRect(context.GrabCutRect, bgr);
         bool hasForeground = context.GrabCutForegroundScribble is not null;

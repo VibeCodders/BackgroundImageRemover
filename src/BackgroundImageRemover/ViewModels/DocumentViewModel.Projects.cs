@@ -14,10 +14,14 @@ namespace BackgroundImageRemover.ViewModels;
 
 public partial class DocumentViewModel
 {
-    private bool CanSaveProject() => IsImageLoaded && !IsBusy;
+    // The busy half of the save guard comes from the gate (both save commands are routed
+    // through it below); this predicate only answers "is an image loaded".
+    private bool CanSaveProject() => IsImageLoaded;
 
     /// <summary>Saves the document to its current project path, or asks for one on first save.</summary>
-    [RelayCommand(CanExecute = nameof(CanSaveProject))]
+    private IAsyncRelayCommand? _saveProjectCommand;
+    public IAsyncRelayCommand SaveProjectCommand => _saveProjectCommand ??= _busyGate.Gate(new AsyncRelayCommand(SaveProjectAsync, CanSaveProject));
+
     private async Task SaveProjectAsync()
     {
         if (ProjectPath is null)
@@ -37,7 +41,9 @@ public partial class DocumentViewModel
         return !IsDirty;
     }
 
-    [RelayCommand(CanExecute = nameof(CanSaveProject))]
+    private IAsyncRelayCommand? _saveProjectAsCommand;
+    public IAsyncRelayCommand SaveProjectAsCommand => _saveProjectAsCommand ??= _busyGate.Gate(new AsyncRelayCommand(SaveProjectAsAsync, CanSaveProject));
+
     private async Task SaveProjectAsAsync()
     {
         if (_loadedImage is null)
@@ -68,12 +74,21 @@ public partial class DocumentViewModel
         }
         var settings = BuildProjectDocument();
         settings.Title = Title;
+
+        // Snapshot on the UI thread: the autosave deliberately does not set IsBusy (it must
+        // stay invisible and skip busy documents), so the clones are the only thing keeping
+        // the worker from reading Mats the UI can dispose mid-save.
+        using var originalBgr = _loadedImage.FullBgr.Clone();
+        using var originalAlpha = _loadedImage.FullAlpha?.Clone();
+        using var workingBgr = _workingBgr?.Clone();
+        using var workingAlpha = _workingAlpha?.Clone();
+
         await _projectService.SaveAsync(
             path,
-            _loadedImage.FullBgr,
-            _loadedImage.FullAlpha,
-            _workingBgr,
-            _workingAlpha,
+            originalBgr,
+            originalAlpha,
+            workingBgr,
+            workingAlpha,
             settings);
     }
 
@@ -86,13 +101,25 @@ public partial class DocumentViewModel
 
         try
         {
+            IsBusy = true;
+            BusyMessage = "Saving project...";
             var settings = BuildProjectDocument();
+
+            // Snapshot the Mats on the UI thread: the service encodes them on a worker, and
+            // undo/redo, opening another image, or closing the tab could dispose the live
+            // fields mid-save ("Cannot access a disposed object"). The busy flag also keeps
+            // Undo/Open/Export disabled for the duration, like every other background run.
+            using var originalBgr = _loadedImage.FullBgr.Clone();
+            using var originalAlpha = _loadedImage.FullAlpha?.Clone();
+            using var workingBgr = _workingBgr?.Clone();
+            using var workingAlpha = _workingAlpha?.Clone();
+
             await _projectService.SaveAsync(
                 path,
-                _loadedImage.FullBgr,
-                _loadedImage.FullAlpha,
-                _workingBgr,
-                _workingAlpha,
+                originalBgr,
+                originalAlpha,
+                workingBgr,
+                workingAlpha,
                 settings);
 
             ProjectPath = path;
@@ -106,6 +133,10 @@ public partial class DocumentViewModel
         {
             StatusMessage = $"Save project failed: {ex.Message}";
             _log.Error("Save project failed", ex);
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 

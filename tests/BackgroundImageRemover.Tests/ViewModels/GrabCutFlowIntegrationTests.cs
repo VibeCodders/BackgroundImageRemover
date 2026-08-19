@@ -296,6 +296,83 @@ public class GrabCutFlowIntegrationTests
         });
 
     [Fact]
+    public void SaveProject_WhileAnExportIsInFlight_IsDisabledAndTheDocumentStaysConsistent()
+        => RunOnSta(async () =>
+        {
+            var gated = new ApplyGatedGrabCutStrategy();
+            var doc = CreateDocument(gated);
+            var shell = CreateShell(doc, new IBackgroundRemovalStrategy[] { gated }, new GrabCutStrategy());
+            doc.SetShell(shell);
+            shell.Documents.Add(doc);
+
+            await doc.LoadImageAsync("subject.png");
+            doc.SelectedStrategy = StrategyKind.GrabCut;
+            doc.GrabCut.SelectedRect = new Rect(30, 20, 140, 110);
+
+            var exportTask = doc.ExportCommand.ExecuteAsync(null);
+            PumpUntil(() => gated.FullRunEntries >= 1, TimeSpan.FromSeconds(10));
+            Assert.True(doc.IsBusy);
+
+            // Saving while the export is in flight would read the live working Mats mid-run:
+            // the gate keeps both save commands disabled.
+            Assert.False(doc.SaveProjectCommand.CanExecute(null));
+            Assert.False(doc.SaveProjectAsCommand.CanExecute(null));
+
+            // Let the export finish: it completes, and saving becomes available again.
+            gated.Proceed.Set();
+            await exportTask;
+
+            Assert.False(doc.IsBusy);
+            Assert.True(doc.HasWorkingResult);
+            Assert.DoesNotContain("failed", doc.StatusMessage ?? "", StringComparison.OrdinalIgnoreCase);
+            Assert.True(doc.SaveProjectCommand.CanExecute(null));
+
+            doc.Dispose();
+        });
+
+    [Fact]
+    public void SaveProject_WithLiveStateDisposedMidSave_CompletesUsingItsOwnCopies()
+        => RunOnSta(async () =>
+        {
+            var saveService = new GatedRecordingProjectService();
+            var doc = CreateDocument(projectService: saveService);
+            var shell = CreateShell(doc, new IBackgroundRemovalStrategy[] { new GrabCutStrategy() }, new GrabCutStrategy());
+            doc.SetShell(shell);
+            shell.Documents.Add(doc);
+
+            await doc.LoadImageAsync("subject.png");
+
+            // Give the document a working result so the save has live BGR/alpha to persist
+            // (ApplyToolResult takes ownership of these Mats).
+            var bgr = new Mat(ImageHeight, ImageWidth, MatType.CV_8UC3, Scalar.All(120));
+            var alpha = new Mat(ImageHeight, ImageWidth, MatType.CV_8UC1, Scalar.All(255));
+            doc.ApplyToolResult(bgr, alpha, "Test edit");
+            doc.ProjectPath = "test.ibrproj"; // skip the save dialog
+
+            // Start the save and hold it inside the service (it encodes on a worker).
+            var saveTask = doc.SaveProjectCommand.ExecuteAsync(null);
+            PumpUntil(() => saveService.Entered.IsSet, TimeSpan.FromSeconds(10));
+            Assert.True(doc.IsBusy); // the save now runs behind the busy gate
+            Assert.False(doc.UndoCommand.CanExecute(null)); // ...so undo cannot race it
+
+            // The user triggers undo / opens another image / closes the tab mid-save:
+            // dispose the live working state. The in-flight save must keep using its own
+            // copies -- previously it read the live Mats and hit the disposed ones.
+            doc.Dispose();
+
+            // While the save is still in flight, the Mats it received are independent copies
+            // that survived the document's disposal (they are disposed only when the save
+            // method exits).
+            Assert.False(saveService.OriginalBgr!.IsDisposed);
+            Assert.False(saveService.WorkingBgr!.IsDisposed);
+            Assert.False(saveService.WorkingAlpha!.IsDisposed);
+            Assert.Equal(ImageWidth * (long)ImageHeight, saveService.WorkingBgr.Total());
+
+            saveService.Proceed.Set();
+            await saveTask;
+        });
+
+    [Fact]
     public void Export_WithANewRectangleAndCtrlZMidRun_CompletesAndLeavesTheDocumentConsistent()
         => RunOnSta(async () =>
         {
@@ -436,6 +513,45 @@ public class GrabCutFlowIntegrationTests
             }, ct);
     }
 
+    /// <summary>Captures the Mats a save hands over and holds the save at a gate, so a test
+    /// can dispose the document's live state mid-save and prove the service received
+    /// independent copies, not the live fields.</summary>
+    private sealed class GatedRecordingProjectService : IProjectService
+    {
+        public ManualResetEventSlim Entered { get; } = new(false);
+        public ManualResetEventSlim Proceed { get; } = new(false);
+
+        public Mat? OriginalBgr { get; private set; }
+        public Mat? OriginalAlpha { get; private set; }
+        public Mat? WorkingBgr { get; private set; }
+        public Mat? WorkingAlpha { get; private set; }
+
+        public Task SaveAsync(
+            string path,
+            Mat originalBgr,
+            Mat? originalAlpha,
+            Mat? workingBgr,
+            Mat? workingAlpha,
+            ProjectDocument settings,
+            CancellationToken ct = default)
+            => Task.Run(() =>
+            {
+                OriginalBgr = originalBgr;
+                OriginalAlpha = originalAlpha;
+                WorkingBgr = workingBgr;
+                WorkingAlpha = workingAlpha;
+                Entered.Set();
+                Proceed.Wait(ct);
+            }, ct);
+
+        public Task<LoadedProject> LoadAsync(string path, CancellationToken ct = default)
+            => Task.FromResult(new LoadedProject
+            {
+                Settings = new ProjectDocument(),
+                OriginalBgr = new Mat(1, 1, MatType.CV_8UC3)
+            });
+    }
+
     /// <summary>Records Error calls so tests can assert that a cancelled apply was not
     /// reported as a failure.</summary>
     private sealed class RecordingFileLogService : IFileLogService
@@ -479,7 +595,10 @@ public class GrabCutFlowIntegrationTests
 
     // ---- fakes (same pattern as the other ViewModel test files) ----
 
-    private static DocumentViewModel CreateDocument(IBackgroundRemovalStrategy? strategy = null, IFileLogService? log = null)
+    private static DocumentViewModel CreateDocument(
+        IBackgroundRemovalStrategy? strategy = null,
+        IFileLogService? log = null,
+        IProjectService? projectService = null)
     {
         var grabCut = strategy as GrabCutStrategy ?? new GrabCutStrategy();
         log ??= new FakeFileLogService();
@@ -490,7 +609,7 @@ public class GrabCutFlowIntegrationTests
             new FakeDialogService(),
             new FakeBatchProcessingService(),
             new FakeSettingsService(),
-            new FakeProjectService(),
+            projectService ?? new FakeProjectService(),
             log,
             strategy is null ? new IBackgroundRemovalStrategy[] { grabCut } : new[] { strategy },
             new OnnxStrategy(new OnnxInferenceEngine(new FakeModelCacheService(), log)),

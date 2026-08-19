@@ -2,9 +2,20 @@ using System.IO;
 
 namespace BackgroundImageRemover.Services.Logging;
 
+/// <summary>Log severity level.</summary>
+public enum LogLevel
+{
+    Debug,
+    Info,
+    Warning,
+    Error
+}
+
 public interface IFileLogService
 {
+    void Debug(string message);
     void Info(string message);
+    void Warning(string message);
     void Error(string message, Exception? exception = null);
 }
 
@@ -36,12 +47,13 @@ public sealed class FileLogService : IFileLogService
 
     private string CurrentLogFile => Path.Combine(_logDirectory, $"{DateTime.Now:yyyy-MM-dd}.log");
 
-    public void Info(string message) => Write("INFO", message);
-
+    public void Debug(string message) => Write(LogLevel.Debug, message);
+    public void Info(string message) => Write(LogLevel.Info, message);
+    public void Warning(string message) => Write(LogLevel.Warning, message);
     public void Error(string message, Exception? exception = null)
-        => Write("ERROR", exception is null ? message : $"{message}{Environment.NewLine}{exception}");
+        => Write(LogLevel.Error, exception is null ? message : $"{message}{Environment.NewLine}{exception}");
 
-    private void Write(string level, string message)
+    private void Write(LogLevel level, string message)
     {
         try
         {

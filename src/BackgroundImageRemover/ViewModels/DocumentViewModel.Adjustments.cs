@@ -62,15 +62,15 @@ public partial class DocumentViewModel
 
         var adjustments = new ImageAdjustments
         {
-            Brightness = AdjBrightness,
-            Contrast = AdjContrast,
-            Saturation = AdjSaturation,
-            HueShift = AdjHueShift,
-            Temperature = AdjTemperature,
-            Tint = AdjTint,
-            Vignette = AdjVignette,
-            BlurRadius = AdjBlurRadius,
-            SharpenStrength = AdjSharpenStrength
+            Brightness = Math.Clamp(AdjBrightness, -100, 100),
+            Contrast = Math.Clamp(AdjContrast, 0.1, 3.0),
+            Saturation = Math.Clamp(AdjSaturation, 0.0, 3.0),
+            HueShift = Math.Clamp(AdjHueShift, -180, 180),
+            Temperature = Math.Clamp(AdjTemperature, -100, 100),
+            Tint = Math.Clamp(AdjTint, -100, 100),
+            Vignette = Math.Clamp(AdjVignette, 0.0, 1.0),
+            BlurRadius = Math.Clamp(AdjBlurRadius, 0, 50),
+            SharpenStrength = Math.Clamp(AdjSharpenStrength, 0.0, 3.0)
         };
 
         if (adjustments.IsIdentity)

@@ -70,6 +70,11 @@ public partial class DocumentViewModel
     [ObservableProperty]
     private double _exportShadowOpacity = 0.45;
 
+    /// <summary>Color of the baked-in drop shadow (defaults to black). Exposed so users can
+    /// tint the shadow (e.g. a dark gray for a softer look).</summary>
+    [ObservableProperty]
+    private WpfColor _exportShadowColor = WpfColor.FromRgb(0, 0, 0);
+
     [ObservableProperty]
     private bool _isColorPickerOpen;
 
@@ -222,7 +227,11 @@ public partial class DocumentViewModel
             // A drop shadow is baked into a padded, still-transparent canvas before the
             // background is composited, so it works with every background mode.
             using var shadowed = ExportDropShadowEnabled
-                ? BackgroundCompositingService.ApplyDropShadow(exportBgra, ExportShadowOffset, ExportShadowOffset, ExportShadowBlur, ExportShadowOpacity)
+                ? BackgroundCompositingService.ApplyDropShadow(
+                    exportBgra,
+                    ExportShadowOffset, ExportShadowOffset,
+                    ExportShadowBlur, ExportShadowOpacity,
+                    new Vec3b(ExportShadowColor.B, ExportShadowColor.G, ExportShadowColor.R))
                 : null;
             var subject = shadowed ?? exportBgra;
 
@@ -385,6 +394,10 @@ public partial class DocumentViewModel
         {
             ExportShadowOpacity = s.LastExportShadowOpacity;
         }
+        if (TryParseColor(s.LastExportShadowColor) is { } shadow)
+        {
+            ExportShadowColor = shadow;
+        }
     }
 
     /// <summary>Persists the current export settings so the next document opens with them.</summary>
@@ -402,6 +415,7 @@ public partial class DocumentViewModel
         s.LastExportShadowOffset = ExportShadowOffset;
         s.LastExportShadowBlur = ExportShadowBlur;
         s.LastExportShadowOpacity = ExportShadowOpacity;
+        s.LastExportShadowColor = ExportShadowColor.ToString();
         _settings.Save();
     }
 

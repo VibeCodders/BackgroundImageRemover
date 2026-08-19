@@ -97,4 +97,7 @@ public sealed class AppSettings
 
     /// <summary>Last drop-shadow opacity, 0..1.</summary>
     public double LastExportShadowOpacity { get; set; } = 0.45;
+
+    /// <summary>Last drop-shadow color (WPF color string).</summary>
+    public string? LastExportShadowColor { get; set; }
 }

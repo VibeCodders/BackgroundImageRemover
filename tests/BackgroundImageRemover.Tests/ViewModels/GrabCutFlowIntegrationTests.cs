@@ -557,7 +557,9 @@ public class GrabCutFlowIntegrationTests
     private sealed class RecordingFileLogService : IFileLogService
     {
         public List<string> Errors { get; } = new();
+        public void Debug(string message) { }
         public void Info(string message) { }
+        public void Warning(string message) { }
         public void Error(string message, Exception? exception = null) => Errors.Add(message);
     }
 
@@ -723,7 +725,9 @@ public class GrabCutFlowIntegrationTests
 
     private sealed class FakeFileLogService : IFileLogService
     {
+        public void Debug(string message) { }
         public void Info(string message) { }
+        public void Warning(string message) { }
         public void Error(string message, Exception? exception = null) { }
     }
 

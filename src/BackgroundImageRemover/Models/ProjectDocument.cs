@@ -40,6 +40,9 @@ public sealed class ProjectDocument
     public double ExportShadowBlur { get; set; } = 6;
     public double ExportShadowOpacity { get; set; } = 0.45;
 
+    /// <summary>Drop shadow color as a WPF color string (e.g. "#FF000000" for black).</summary>
+    public string ExportShadowColor { get; set; } = "#FF000000";
+
     public double BrushRadius { get; set; } = 20;
     public double BrushHardness { get; set; } = 0.5;
     public string BrushMode { get; set; } = nameof(BrushModeEnum.Restore);
@@ -50,4 +53,7 @@ public sealed class ProjectDocument
 
     /// <summary>SAM prompt point in preview coordinates; null when none was clicked. [X, Y]</summary>
     public int[]? SamPoint { get; set; }
+
+    /// <summary>Additional SAM foreground points in preview coordinates; null when none were added.</summary>
+    public int[][]? SamPromptPoints { get; set; }
 }

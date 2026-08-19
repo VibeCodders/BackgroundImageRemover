@@ -18,4 +18,8 @@ public partial class SamStrategyViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _hasClickedPoint;
+
+    /// <summary>Number of additional foreground points the user has placed (beyond the primary click).</summary>
+    [ObservableProperty]
+    private int _additionalPointCount;
 }

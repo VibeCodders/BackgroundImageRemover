@@ -197,16 +197,23 @@ public static class BackgroundCompositingService
         double dx = Math.Cos(rad);
         double dy = Math.Sin(rad);
 
-        using var xRamp = new Mat(size, MatType.CV_32FC1);
-        using var yRamp = new Mat(size, MatType.CV_32FC1);
+        // Build the x/y ramps efficiently using row/column repetition instead of a
+        // pixel-per-pixel Set loop (O(width+height) instead of O(width*height)).
+        using var xRow = new Mat(1, size.Width, MatType.CV_32FC1);
+        for (int x = 0; x < size.Width; x++)
+        {
+            xRow.Set(0, x, (float)x);
+        }
+        using var xRamp = new Mat();
+        Cv2.Repeat(xRow, size.Height, 1, xRamp);
+
+        using var yCol = new Mat(size.Height, 1, MatType.CV_32FC1);
         for (int y = 0; y < size.Height; y++)
         {
-            for (int x = 0; x < size.Width; x++)
-            {
-                xRamp.Set(y, x, (float)x);
-                yRamp.Set(y, x, (float)y);
-            }
+            yCol.Set(y, 0, (float)y);
         }
+        using var yRamp = new Mat();
+        Cv2.Repeat(yCol, 1, size.Width, yRamp);
 
         using var proj = new Mat();
         Cv2.AddWeighted(xRamp, dx, yRamp, dy, 0, proj);

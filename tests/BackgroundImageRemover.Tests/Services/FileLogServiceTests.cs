@@ -41,7 +41,7 @@ public class FileLogServiceTests
             string logFile = Path.Combine(dir, DateTime.Now.ToString("yyyy-MM-dd") + ".log");
             Assert.True(File.Exists(logFile));
             Assert.Contains("hello", File.ReadAllText(logFile));
-            Assert.Contains("INFO", File.ReadAllText(logFile));
+            Assert.Contains("[Info]", File.ReadAllText(logFile));
         }
         finally
         {

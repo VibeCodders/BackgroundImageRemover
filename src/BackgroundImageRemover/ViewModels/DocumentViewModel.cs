@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -71,7 +71,8 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private WpfPoint? _brushLastPoint;
 
     private SamEmbedding? _samEmbedding;
-    private WpfPoint? _samPromptPointPreview;`n    private List<WpfPoint>? _samPromptPointsPreview;
+    private WpfPoint? _samPromptPointPreview;
+    private List<WpfPoint>? _samPromptPointsPreview;
     private WpfPoint? _magicWandSeedPreview;
 
     public ChromaKeyStrategyViewModel ChromaKey { get; } = new();

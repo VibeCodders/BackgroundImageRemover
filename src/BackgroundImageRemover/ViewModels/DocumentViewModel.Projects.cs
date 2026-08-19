@@ -171,7 +171,8 @@ public partial class DocumentViewModel
             BrushMode = BrushMode.ToString(),
             MagicWandTolerance = MagicWandTolerance,
             GrabCutRect = GrabCut.SelectedRect is { } rect ? new[] { rect.X, rect.Y, rect.Width, rect.Height } : null,
-            SamPoint = _samPromptPointPreview is { } p ? new[] { (int)Math.Round(p.X), (int)Math.Round(p.Y) } : null
+            SamPoint = _samPromptPointPreview is { } p ? new[] { (int)Math.Round(p.X), (int)Math.Round(p.Y) } : null,
+            SamPromptPoints = _samPromptPointsPreview?.Select(p => new[] { (int)Math.Round(p.X), (int)Math.Round(p.Y) }).ToArray()
         };
     }
 
@@ -245,6 +246,14 @@ public partial class DocumentViewModel
         {
             _samPromptPointPreview = new WpfPoint(sam[0], sam[1]);
             Sam.HasClickedPoint = true;
+        }
+
+        if (p.SamPromptPoints is { Length: > 0 } additionalPoints)
+        {
+            _samPromptPointsPreview = additionalPoints
+                .Where(pt => pt is { Length: 2 })
+                .Select(pt => new WpfPoint(pt[0], pt[1]))
+                .ToList();
         }
     }
 

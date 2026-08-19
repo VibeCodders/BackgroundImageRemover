@@ -78,4 +78,11 @@ public partial class BackgroundRemoverToolSessionViewModel
         UndoScribbleCommand.NotifyCanExecuteChanged();
         RedoScribbleCommand.NotifyCanExecuteChanged();
     }
+
+    /// <summary>Clears all SAM prompt points (both primary and additional).</summary>
+    [RelayCommand]
+    private void ClearSamPoints()
+    {
+        ClearSamPromptPoints();
+    }
 }

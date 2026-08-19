@@ -334,5 +334,42 @@ public sealed class ImageProcessingHelperTests
 
         Assert.Equal(128, result.At<Vec3b>(0, 0).Item0);
     }
-}
 
+    [Fact]
+    public void ApplyAdjustments_ExtremeValues_DoesNotCrash()
+    {
+        // Extreme parameter values should not crash the adjustment pipeline.
+        using var src = new Mat(10, 10, MatType.CV_8UC3, new Scalar(128, 128, 128));
+        var adj = new ImageAdjustments
+        {
+            Brightness = 200,
+            Contrast = 10.0,
+            Saturation = 5.0,
+            HueShift = 500,
+            Temperature = 300,
+            Tint = 300,
+            Vignette = 5.0,
+            BlurRadius = 100,
+            SharpenStrength = 10.0,
+            Exposure = 0.1,
+            Highlights = 200,
+            Shadows = 200,
+            Denoise = 5.0,
+            Vibrance = 5.0,
+            Clarity = 5.0,
+            Fade = 5.0,
+            Grain = 5.0,
+            Monochrome = 5.0,
+            Dehaze = 5.0,
+            Soften = 5.0,
+            SepiaTone = 5.0,
+            InvertAmount = 5.0,
+            PosterizeLevels = 1
+        };
+
+        using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
+
+        Assert.Equal(src.Size(), result.Size());
+        Assert.Equal(src.Type(), result.Type());
+    }
+}

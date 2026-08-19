@@ -108,6 +108,8 @@ public partial class BackgroundRemoverToolSessionViewModel
                 SamPromptPoint = _samPromptPointPreview is { } p
                     ? new Point((int)Math.Round(p.X * scaleToFull), (int)Math.Round(p.Y * scaleToFull))
                     : (Point?)null,
+                SamPromptPoints = _samPromptPointsPreview?.Select(p =>
+                    new Point((int)Math.Round(p.X * scaleToFull), (int)Math.Round(p.Y * scaleToFull))).ToArray(),
                 SamEmbedding = _samEmbedding
             },
             StrategyKind.FloodFill => new StrategyContext
@@ -184,6 +186,33 @@ public partial class BackgroundRemoverToolSessionViewModel
         }
         _samPromptPointPreview = new WpfPoint(imagePoint.X, imagePoint.Y);
         Sam.HasClickedPoint = true;
+        RequestPreviewDebounced();
+    }
+
+    /// <summary>
+    /// Adds an additional foreground point for SAM segmentation. Multiple points refine the
+    /// selection: the primary click plus any added points all feed the decoder together.
+    /// </summary>
+    public void OnOriginalSamAdditionalPointClicked(Point imagePoint)
+    {
+        if (SelectedStrategy != StrategyKind.Sam)
+        {
+            return;
+        }
+        _samPromptPointsPreview ??= new List<WpfPoint>();
+        _samPromptPointsPreview.Add(new WpfPoint(imagePoint.X, imagePoint.Y));
+        Sam.AdditionalPointCount = _samPromptPointsPreview.Count;
+        Sam.HasClickedPoint = true;
+        RequestPreviewDebounced();
+    }
+
+    /// <summary>Clears all SAM prompt points (both primary and additional).</summary>
+    public void ClearSamPromptPoints()
+    {
+        _samPromptPointPreview = null;
+        _samPromptPointsPreview?.Clear();
+        Sam.AdditionalPointCount = 0;
+        Sam.HasClickedPoint = false;
         RequestPreviewDebounced();
     }
 

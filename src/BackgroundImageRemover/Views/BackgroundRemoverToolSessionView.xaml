@@ -137,7 +137,11 @@
 
                     <!-- SAM options -->
                     <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Sam}">
-                        <TextBlock Text="Click on the subject in the Original image." TextWrapping="Wrap" Margin="0,0,0,8" />
+                        <TextBlock Text="Click on the subject in the Original image. Additional clicks refine the selection." TextWrapping="Wrap" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding Sam.AdditionalPointCount, StringFormat='Additional points: {0}'}" Margin="0,0,0,8" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="Clear all points" Command="{Binding ClearSamPointsCommand}" Padding="8,3" Margin="0,0,4,0" />
+                        </StackPanel>
                         <TextBlock Text="{Binding Sam.HasClickedPoint, StringFormat='Point selected: {0}'}" Margin="0,0,0,8" />
                         <StackPanel Visibility="{Binding Sam.IsDownloading, Converter={StaticResource BoolToVisibilityConverter}}">
                             <TextBlock Text="Downloading SAM model..." Margin="0,0,0,4" />

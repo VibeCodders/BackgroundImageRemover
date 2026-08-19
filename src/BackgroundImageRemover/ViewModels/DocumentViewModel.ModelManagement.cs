@@ -87,6 +87,35 @@ public partial class DocumentViewModel
         RequestPreviewDebounced();
     }
 
+    /// <summary>
+    /// Adds an additional foreground point for SAM segmentation in the main editor.
+    /// Multiple points refine the selection: the primary click plus any added points
+    /// all feed the decoder together.
+    /// </summary>
+    public void OnOriginalSamAdditionalPointClicked(OpenCvSharp.Point previewPoint)
+    {
+        if (_samEmbedding is null)
+        {
+            StatusMessage = "SAM is still preparing this image, try again in a moment.";
+            return;
+        }
+        _samPromptPointsPreview ??= new List<WpfPoint>();
+        _samPromptPointsPreview.Add(new WpfPoint(previewPoint.X, previewPoint.Y));
+        Sam.AdditionalPointCount = _samPromptPointsPreview.Count;
+        Sam.HasClickedPoint = true;
+        RequestPreviewDebounced();
+    }
+
+    /// <summary>Clears all SAM prompt points (both primary and additional).</summary>
+    public void ClearSamPromptPoints()
+    {
+        _samPromptPointPreview = null;
+        _samPromptPointsPreview?.Clear();
+        Sam.AdditionalPointCount = 0;
+        Sam.HasClickedPoint = false;
+        RequestPreviewDebounced();
+    }
+
     public void OnOriginalWandClicked(OpenCvSharp.Point previewPoint)
     {
         if (SelectedStrategy != StrategyKind.MagicWand)

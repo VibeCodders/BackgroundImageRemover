@@ -46,6 +46,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     private SamEmbedding? _samEmbedding;
     private WpfPoint? _samPromptPointPreview;
+    private List<WpfPoint>? _samPromptPointsPreview;
     private WpfPoint? _magicWandSeedPreview;
 
     public override string ToolBadge => "✂ Background Remover";

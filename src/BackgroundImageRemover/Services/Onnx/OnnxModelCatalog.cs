@@ -45,6 +45,11 @@ public static class OnnxModelCatalog
                 OnnxModelKind.Rmbg14, "RMBG-1.4 (BRIA, high quality)", "rmbg14.onnx",
                 "https://huggingface.co/briaai/RMBG-1.4/resolve/main/onnx/model.onnx",
                 1024, UnitMean, UnitStd),
+
+            [OnnxModelKind.BriaRm] = new(
+                OnnxModelKind.BriaRm, "BiRefNet (large, best quality)", "bria_rm.onnx",
+                "https://github.com/danielgatis/rembg/releases/download/v0.0.0/bria_rm.onnx",
+                1024, UnitMean, UnitStd),
         };
 
     public static OnnxModelDefinition Get(OnnxModelKind kind)

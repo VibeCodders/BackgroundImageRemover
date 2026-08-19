@@ -30,11 +30,27 @@ public sealed class SamStrategy : StrategyBase, ISamModelStrategy
 
     protected override Mat ComputeMask(Mat bgr, StrategyContext context, CancellationToken ct)
     {
-        if (context.SamPromptPoint is not { } point || context.SamEmbedding is not SamEmbedding embedding)
+        if (context.SamEmbedding is not SamEmbedding embedding)
         {
-            throw new InvalidOperationException("SAM requires a clicked point and a computed image embedding.");
+            throw new InvalidOperationException("SAM requires a computed image embedding.");
         }
 
-        return _engine.InferMask(embedding, bgr.Size(), point);
+        // Aggregate all prompt points: the primary point plus any additional foreground points.
+        var points = new List<Point>();
+        if (context.SamPromptPoint is { } primary)
+        {
+            points.Add(primary);
+        }
+        if (context.SamPromptPoints is { } extra)
+        {
+            points.AddRange(extra);
+        }
+
+        if (points.Count == 0)
+        {
+            throw new InvalidOperationException("SAM requires at least one clicked point and a computed image embedding.");
+        }
+
+        return _engine.InferMask(embedding, bgr.Size(), [.. points]);
     }
 }

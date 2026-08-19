@@ -62,6 +62,7 @@ public partial class DocumentViewModel
                 SamPromptPoint = _samPromptPointPreview is { } p
                     ? new Point((int)Math.Round(p.X * scaleToFull), (int)Math.Round(p.Y * scaleToFull))
                     : (Point?)null,
+                SamPromptPoints = _samPromptPointsPreview?.Select(p => new Point((int)Math.Round(p.X * scaleToFull), (int)Math.Round(p.Y * scaleToFull))).ToArray(),
                 SamEmbedding = _samEmbedding
             },
             StrategyKind.FloodFill => new StrategyContext

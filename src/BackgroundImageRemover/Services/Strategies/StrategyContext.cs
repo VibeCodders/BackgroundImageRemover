@@ -49,6 +49,9 @@ public sealed record StrategyContext
     /// <summary>SAM: the clicked foreground point, in the coordinate space of the Mat being processed.</summary>
     public Point? SamPromptPoint { get; init; }
 
+    /// <summary>SAM: additional clicked foreground points, in the coordinate space of the Mat being processed.</summary>
+    public Point[]? SamPromptPoints { get; init; }
+
     /// <summary>SAM: precomputed image embedding (a <see cref="Services.Sam.SamEmbedding"/>), shared across clicks/output sizes.</summary>
     public object? SamEmbedding { get; init; }
 

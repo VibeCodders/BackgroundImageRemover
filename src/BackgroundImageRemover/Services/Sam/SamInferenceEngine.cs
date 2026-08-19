@@ -92,19 +92,32 @@ public sealed class SamInferenceEngine : IDisposable
         return new SamEmbedding { Data = embeddingData, SourceImageSize = bgr.Size() };
     }
 
-    /// <summary>Runs the decoder for one foreground point, returning a 0-255 mask sized to <paramref name="targetSize"/>.</summary>
-    public Mat InferMask(SamEmbedding embedding, Size targetSize, Point promptPoint)
+    /// <summary>Runs the decoder for one or more foreground points, returning a 0-255 mask sized to <paramref name="targetSize"/>.</summary>
+    public Mat InferMask(SamEmbedding embedding, Size targetSize, params Point[] promptPoints)
     {
         if (_decoder is null)
         {
             throw new InvalidOperationException("Call EnsureReadyAsync before InferMask.");
         }
 
-        var pointCoords = new DenseTensor<float>(new[] { 1, 1, 2 });
-        pointCoords[0, 0, 0] = promptPoint.X;
-        pointCoords[0, 0, 1] = promptPoint.Y;
-        var pointLabels = new DenseTensor<float>(new[] { 1, 1 });
-        pointLabels[0, 0] = 1f; // 1 = foreground click
+        if (promptPoints is null || promptPoints.Length == 0)
+        {
+            throw new ArgumentException("At least one prompt point is required.", nameof(promptPoints));
+        }
+
+        int n = promptPoints.Length;
+        var pointCoords = new DenseTensor<float>(new[] { 1, n, 2 });
+        for (int i = 0; i < n; i++)
+        {
+            pointCoords[0, i, 0] = promptPoints[i].X;
+            pointCoords[0, i, 1] = promptPoints[i].Y;
+        }
+
+        var pointLabels = new DenseTensor<float>(new[] { 1, n });
+        for (int i = 0; i < n; i++)
+        {
+            pointLabels[0, i] = 1f; // 1 = foreground click
+        }
 
         var maskInput = new DenseTensor<float>(new[] { 1, 1, LowResMaskSize, LowResMaskSize });
         var hasMaskInput = new DenseTensor<float>(new[] { 1 });

@@ -5,10 +5,11 @@
         Title="Batch Output Options"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         SizeToContent="WidthAndHeight" ShowInTaskbar="False"
-        Background="#FFF8F9FA">
-    <Border BorderBrush="#FFCCCCCC" BorderThickness="1" Padding="22" CornerRadius="8" Margin="12">
+        TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}"
+        Background="{DynamicResource Theme.WindowBackground}">
+    <Border BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Padding="22" CornerRadius="8" Margin="12">
         <StackPanel MinWidth="360">
-            <TextBlock Text="Output format" FontSize="15" FontWeight="Bold" Foreground="#FF222222" Margin="0,0,0,8" />
+            <TextBlock Text="Output format" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource Theme.ForegroundBrush}" Margin="0,0,0,8" />
 
             <RadioButton Content="PNG — keep transparency" GroupName="BatchFormat" Margin="0,0,0,4"
                          IsChecked="{Binding OutputKind, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Png}" />
@@ -25,7 +26,7 @@
                 <Rectangle Width="24" Height="24" Fill="{Binding SolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" VerticalAlignment="Center" />
                 <Button x:Name="ChooseSolidButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseSolid_Click" />
                 <Popup IsOpen="{Binding IsSolidPickerOpen}" PlacementTarget="{Binding ElementName=ChooseSolidButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                    <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                    <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                         <controls:SimpleColorPickerControl SelectedColor="{Binding SolidColor}" />
                     </Border>
                 </Popup>
@@ -36,21 +37,21 @@
             <StackPanel Margin="18,0,0,6"
                         Visibility="{Binding OutputKind, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=JpegGradient}">
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                    <TextBlock Text="Top" VerticalAlignment="Center" Width="36" FontSize="11" Foreground="#FF666666" />
+                    <TextBlock Text="Top" VerticalAlignment="Center" Width="36" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
                     <Rectangle Width="24" Height="24" Fill="{Binding GradientTop, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
                     <Button x:Name="ChooseTopButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseTop_Click" />
                     <Popup IsOpen="{Binding IsTopPickerOpen}" PlacementTarget="{Binding ElementName=ChooseTopButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                        <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                        <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                             <controls:SimpleColorPickerControl SelectedColor="{Binding GradientTop}" />
                         </Border>
                     </Popup>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Bottom" VerticalAlignment="Center" Width="36" FontSize="11" Foreground="#FF666666" />
+                    <TextBlock Text="Bottom" VerticalAlignment="Center" Width="36" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
                     <Rectangle Width="24" Height="24" Fill="{Binding GradientBottom, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
                     <Button x:Name="ChooseBottomButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseBottom_Click" />
                     <Popup IsOpen="{Binding IsBottomPickerOpen}" PlacementTarget="{Binding ElementName=ChooseBottomButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                        <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                        <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                             <controls:SimpleColorPickerControl SelectedColor="{Binding GradientBottom}" />
                         </Border>
                     </Popup>
@@ -62,7 +63,7 @@
             <StackPanel Orientation="Horizontal" Margin="18,0,0,6"
                         Visibility="{Binding OutputKind, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=JpegImage}">
                 <TextBlock Text="{Binding BackgroundImagePath, TargetNullValue='(none)'}" VerticalAlignment="Center" FontSize="11"
-                           Foreground="#FF666666" MaxWidth="220" TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource Theme.MutedForegroundBrush}" MaxWidth="220" TextTrimming="CharacterEllipsis"
                            ToolTip="{Binding BackgroundImagePath}" />
                 <Button x:Name="ChooseBackgroundImageButton" Content="Choose..." Margin="8,0,0,0"
                         Click="ChooseBackgroundImage_Click" />
@@ -73,7 +74,7 @@
 
             <DockPanel Margin="0,0,0,4">
                 <TextBlock Text="Image quality" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                <TextBlock Text="{Binding JpegQuality, StringFormat='{}{0:0}'}" Foreground="#FF666666" DockPanel.Dock="Right" />
+                <TextBlock Text="{Binding JpegQuality, StringFormat='{}{0:0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
             </DockPanel>
             <Slider Minimum="50" Maximum="100" Value="{Binding JpegQuality}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,12" />
 
@@ -82,7 +83,7 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Cancel" IsCancel="True" Padding="16,6" Margin="0,0,8,0" Cursor="Hand" />
-                <Button Content="OK" IsDefault="True" Click="Ok_Click" Padding="20,6" Background="#FF0078D7" Foreground="White" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand" />
+                <Button Content="OK" IsDefault="True" Click="Ok_Click" Padding="20,6" Background="{DynamicResource Theme.AccentBackground}" Foreground="{DynamicResource Theme.AccentForeground}" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand" />
             </StackPanel>
         </StackPanel>
     </Border>

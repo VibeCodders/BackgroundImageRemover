@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="400" d:DesignWidth="300">
     <StackPanel>
-        <TextBlock Text="Retouch &amp; Refinement" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF222222" />
+        <TextBlock Text="Retouch &amp; Refinement" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
         <TextBlock Text="Active Tool:" FontWeight="SemiBold" Margin="0,0,0,4" />
         <UniformGrid Columns="3" Margin="0,0,0,8">

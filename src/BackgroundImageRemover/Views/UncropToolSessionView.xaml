@@ -32,7 +32,7 @@
                             Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}"
                             BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
                     <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}"
-                            Padding="16,6" Background="#FF0078D7" Foreground="White"
+                            Padding="16,6" Background="{DynamicResource Theme.AccentBackground}" Foreground="{DynamicResource Theme.AccentForeground}"
                             BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
                 </StackPanel>
             </DockPanel>
@@ -160,7 +160,7 @@
                             </Button>
                             <Popup IsOpen="{Binding Options.IsColorPickerOpen}" PlacementTarget="{Binding ElementName=UncropColorPickerButton}"
                                    StaysOpen="False" AllowsTransparency="True">
-                                <Border Background="#FF2D2D30" BorderBrush="#FF3F3F46" BorderThickness="1" Padding="8" CornerRadius="4">
+                                <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1" Padding="8" CornerRadius="4">
                                     <controls:SimpleColorPickerControl SelectedColor="{Binding Options.CustomSolidColor, Mode=TwoWay}" />
                                 </Border>
                             </Popup>
@@ -217,7 +217,7 @@
                         </Button>
                         <Popup IsOpen="{Binding Options.IsBorderColorPickerOpen}" PlacementTarget="{Binding ElementName=UncropBorderColorButton}"
                                StaysOpen="False" AllowsTransparency="True">
-                            <Border Background="#FF2D2D30" BorderBrush="#FF3F3F46" BorderThickness="1" Padding="8" CornerRadius="4">
+                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1" Padding="8" CornerRadius="4">
                                 <controls:SimpleColorPickerControl SelectedColor="{Binding Options.BorderColor, Mode=TwoWay}" />
                             </Border>
                         </Popup>

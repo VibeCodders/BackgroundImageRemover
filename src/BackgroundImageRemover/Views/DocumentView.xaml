@@ -31,12 +31,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#FFE0E7FF" />
-                                <Setter TargetName="border" Property="BorderBrush" Value="#FF6366F1" />
-                                <Setter Property="Foreground" Value="#FF4338CA" />
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Theme.HoverBackground}" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource Theme.ButtonBorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#FFC7D2FE" />
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Theme.PressedBackground}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.5" />
@@ -64,10 +64,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#FFE0E7FF" />
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Theme.HoverBackground}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#FFC7D2FE" />
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Theme.PressedBackground}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.5" />
@@ -79,7 +79,7 @@
         </Style>
     </UserControl.Resources>
 
-    <DockPanel>
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <!-- Top Main Tools Ribbon / Toolbar -->
         <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1" Padding="8,4">
             <DockPanel>
@@ -124,7 +124,7 @@
                     <Separator Margin="4,0" />
                     <Button Content="Batch..." Command="{Binding BatchCommand}" Padding="8,4" />
                     <Button Content="✕ Cancel batch" Command="{Binding CancelBatchCommand}" Padding="8,4"
-                            Foreground="#FFB91C1C" FontWeight="SemiBold"
+                            Foreground="{DynamicResource Theme.DangerForeground}" FontWeight="SemiBold"
                             Visibility="{Binding IsBatchRunning, Converter={StaticResource BoolToVisibilityConverter}}"
                             ToolTip="Stop the running batch after the current file" />
                 </StackPanel>
@@ -135,7 +135,7 @@
                             Click="ToolsMenuButton_Click" Cursor="Hand" FontWeight="SemiBold" />
                     <Popup x:Name="ToolsPopup" PlacementTarget="{Binding ElementName=ToolsMenuButton}" Placement="Bottom"
                            StaysOpen="False" AllowsTransparency="True">
-                        <Border Background="White" BorderBrush="#FFCCCCCC" BorderThickness="1" CornerRadius="6"
+                        <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1" CornerRadius="6"
                                 Padding="6" MinWidth="240" MaxHeight="520" Margin="0,4,0,0">
                             <StackPanel>
                                 <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -188,7 +188,7 @@
                                        Margin="2,3" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
                             <DataTemplate.Triggers>
                                 <DataTrigger Binding="{Binding IsUndone}" Value="True">
-                                    <Setter TargetName="StepText" Property="Foreground" Value="#FFAAAAAA" />
+                                    <Setter TargetName="StepText" Property="Foreground" Value="{DynamicResource Theme.MutedForegroundBrush}" />
                                     <Setter TargetName="StepText" Property="FontStyle" Value="Italic" />
                                 </DataTrigger>
                             </DataTemplate.Triggers>
@@ -199,12 +199,12 @@
         </Border>
 
         <!-- Active Tool Session Modal Banner (when a tool tab is currently open for this doc) -->
-        <Border DockPanel.Dock="Top" Background="#FFF3E8FF" BorderBrush="#FFD8B4FE" BorderThickness="0,0,0,1" Padding="12,6"
+        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.InfoBannerBackground}" BorderBrush="{DynamicResource Theme.InfoBannerBorderBrush}" BorderThickness="0,0,0,1" Padding="12,6"
                 Visibility="{Binding HasActiveToolSession, Converter={StaticResource BoolToVisibilityConverter}}">
             <DockPanel>
-                <TextBlock Text="⚡ Modal Tool Session is currently active for this document." FontWeight="SemiBold" Foreground="#FF6B21A8" VerticalAlignment="Center" />
+                <TextBlock Text="⚡ Modal Tool Session is currently active for this document." FontWeight="SemiBold" Foreground="{DynamicResource Theme.InfoBannerForeground}" VerticalAlignment="Center" />
                 <Button Content="Return to Tool Tab →" Command="{Binding OpenToolTabCommand}" CommandParameter="{Binding ActiveTool}"
-                        HorizontalAlignment="Right" Padding="10,3" Background="#FF7E22CE" Foreground="White" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand" />
+                        HorizontalAlignment="Right" Padding="10,3" Background="#FF7E22CE" Foreground="{DynamicResource Theme.AccentForeground}" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand" />
             </DockPanel>
         </Border>
 
@@ -213,7 +213,7 @@
             <StatusBarItem>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding CutoutStatus}"
-                               Foreground="#FF1E7A33"
+                               Foreground="{DynamicResource Theme.SuccessForeground}"
                                FontWeight="SemiBold"
                                Margin="0,0,12,0"
                                VerticalAlignment="Center"
@@ -224,17 +224,17 @@
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock x:Name="CursorPositionLabel" VerticalAlignment="Center" Margin="0,0,12,0"
-                               Foreground="#FF555555" FontSize="11" MinWidth="72"
+                               Foreground="{DynamicResource Theme.MutedForegroundBrush}" FontSize="11" MinWidth="72"
                                ToolTip="Image pixel coordinates under the cursor" />
                     <TextBlock Text="{Binding ImageDimensions}" VerticalAlignment="Center" Margin="0,0,12,0"
-                               Foreground="#FF555555" FontSize="11" ToolTip="Current image dimensions in pixels" />
+                               Foreground="{DynamicResource Theme.MutedForegroundBrush}" FontSize="11" ToolTip="Current image dimensions in pixels" />
                     <Button Content="📂 Open folder" Command="{Binding RevealLastExportInExplorerCommand}"
                             Padding="8,2" Margin="0,0,12,0" FontSize="11" Cursor="Hand"
                             ToolTip="Open the folder of the last exported file in Explorer"
                             Visibility="{Binding HasLastExport, Converter={StaticResource BoolToVisibilityConverter}}" />
                     <StackPanel Orientation="Horizontal" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
                         <ProgressBar IsIndeterminate="True" Width="100" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding BusyMessage}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" Foreground="#FF555555" />
+                        <TextBlock Text="{Binding BusyMessage}" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
                     </StackPanel>
                 </StackPanel>
             </StatusBarItem>
@@ -268,23 +268,23 @@
         <Grid>
             <!-- Empty State / Open Image Drop Prompt -->
             <Grid Visibility="{Binding IsImageLoaded, Converter={StaticResource InverseBoolToVisibilityConverter}}" Background="{DynamicResource Theme.PanelBackground}">
-                <Border BorderBrush="#FFCCCCCC" BorderThickness="2" CornerRadius="12" Margin="40" Padding="30"
-                        Background="White" MaxWidth="600" MaxHeight="380" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Border BorderBrush="{DynamicResource Theme.CardBorderBrush}" BorderThickness="2" CornerRadius="12" Margin="40" Padding="30"
+                        Background="{DynamicResource Theme.CardBackground}" MaxWidth="600" MaxHeight="380" VerticalAlignment="Center" HorizontalAlignment="Center">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Border Width="64" Height="64" CornerRadius="32" Background="#FFE6F2FB" HorizontalAlignment="Center" Margin="0,0,0,16">
+                        <Border Width="64" Height="64" CornerRadius="32" Background="{DynamicResource Theme.IconBackground}" HorizontalAlignment="Center" Margin="0,0,0,16">
                             <TextBlock Text="🖼" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
-                        <TextBlock Text="Welcome to Background Image Remover" FontSize="20" FontWeight="Bold" Foreground="#FF222222" HorizontalAlignment="Center" Margin="0,0,0,8" />
+                        <TextBlock Text="Welcome to Background Image Remover" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource Theme.ForegroundBrush}" HorizontalAlignment="Center" Margin="0,0,0,8" />
                         <TextBlock Text="Open an image to start editing, removing backgrounds, outpainting, or retouching"
-                                   FontSize="13" Foreground="#FF666666" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,24" />
+                                   FontSize="13" Foreground="{DynamicResource Theme.MutedForegroundBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,24" />
                         
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Button Content="📁 Open Image..." Command="{Binding OpenFileCommand}"
-                                    Padding="16,8" Height="36" FontWeight="SemiBold" Background="#FF0078D7" Foreground="White" BorderThickness="0" Cursor="Hand" Margin="0,0,12,0" />
+                                    Padding="16,8" Height="36" FontWeight="SemiBold" Background="{DynamicResource Theme.AccentBackground}" Foreground="{DynamicResource Theme.AccentForeground}" BorderThickness="0" Cursor="Hand" Margin="0,0,12,0" />
                             <Button Content="📋 Paste Image" Command="{Binding PasteFromClipboardCommand}"
-                                    Padding="16,8" Height="36" FontWeight="SemiBold" Background="#FFF0F0F0" Foreground="#FF333333" BorderBrush="#FFCCCCCC" BorderThickness="1" Cursor="Hand" />
+                                    Padding="16,8" Height="36" FontWeight="SemiBold" Background="{DynamicResource Theme.ButtonBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.ButtonBorderBrush}" BorderThickness="1" Cursor="Hand" />
                         </StackPanel>
-                        <TextBlock Text="Or drag &amp; drop an image anywhere into this window" FontSize="11" Foreground="#FF888888" HorizontalAlignment="Center" Margin="0,16,0,0" />
+                        <TextBlock Text="Or drag &amp; drop an image anywhere into this window" FontSize="11" Foreground="{DynamicResource Theme.SubtleForegroundBrush}" HorizontalAlignment="Center" Margin="0,16,0,0" />
                     </StackPanel>
                 </Border>
             </Grid>

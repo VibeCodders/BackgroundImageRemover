@@ -106,7 +106,7 @@
                             <Rectangle Width="24" Height="24" Fill="{Binding FillColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
                             <Button x:Name="ChooseFillColorButton" Content="Choose color..." Margin="8,0,0,0" Click="ChooseFillColorButton_Click" />
                             <Popup IsOpen="{Binding IsFillColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseFillColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                                <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                                     <controls:SimpleColorPickerControl SelectedColor="{Binding FillColor}" />
                                 </Border>
                             </Popup>

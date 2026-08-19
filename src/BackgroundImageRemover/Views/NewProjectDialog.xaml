@@ -8,20 +8,21 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
-        Background="#FFF8F9FA"
+        TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}"
+        Background="{DynamicResource Theme.WindowBackground}"
         Width="580" Height="460">
     <Window.Resources>
         <Style x:Key="ProjectCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#FFE0E0E0" />
+            <Setter Property="Background" Value="{DynamicResource Theme.CardBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Theme.CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1.5" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="16" />
             <Setter Property="Cursor" Value="Hand" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="#FF0078D7" />
-                    <Setter Property="Background" Value="#FFF0F7FF" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource Theme.AccentBackground}" />
+                    <Setter Property="Background" Value="{DynamicResource Theme.CardHoverBackground}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -30,17 +31,17 @@
     <DockPanel Margin="24">
         <!-- Header -->
         <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20">
-            <TextBlock Text="Create a New Project" FontSize="20" FontWeight="Bold" Foreground="#FF222222" />
-            <TextBlock Text="Choose what you would like to do with your image" FontSize="13" Foreground="#FF666666" Margin="0,4,0,0" />
+            <TextBlock Text="Create a New Project" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+            <TextBlock Text="Choose what you would like to do with your image" FontSize="13" Foreground="{DynamicResource Theme.MutedForegroundBrush}" Margin="0,4,0,0" />
         </StackPanel>
 
         <!-- Bottom Action Bar -->
         <DockPanel DockPanel.Dock="Bottom" Margin="0,20,0,0">
             <CheckBox x:Name="PickImageCheckBox" Content="Select image immediately after creating" IsChecked="True"
-                      VerticalAlignment="Center" Foreground="#FF444444" />
+                      VerticalAlignment="Center" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Cancel" IsCancel="True" Width="85" Height="30" Padding="12,4" Margin="0,0,8,0"
-                        Background="#FFF0F0F0" BorderBrush="#FFCCCCCC" Click="CancelButton_Click" />
+                        Click="CancelButton_Click" />
             </StackPanel>
         </DockPanel>
 
@@ -63,20 +64,20 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Width="48" Height="48" CornerRadius="24" Background="#FFE6F2FB"
+                    <Border Grid.Row="0" Width="48" Height="48" CornerRadius="24" Background="{DynamicResource Theme.IconBackground}"
                             HorizontalAlignment="Left" Margin="0,0,0,12">
                         <!-- Magic Wand / Scissors Icon Symbol -->
-                        <TextBlock Text="✂" FontSize="22" Foreground="#FF0078D7" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <TextBlock Text="✂" FontSize="22" Foreground="{DynamicResource Theme.AccentBackground}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
 
                     <TextBlock Grid.Row="1" Text="Background Remover" FontSize="15" FontWeight="SemiBold"
-                               Foreground="#FF111111" Margin="0,0,0,6" />
+                               Foreground="{DynamicResource Theme.ForegroundBrush}" Margin="0,0,0,6" />
 
                     <TextBlock Grid.Row="2" Text="Cut out subjects and erase background using AI ONNX models, SAM, ChromaKey or GrabCut, with full brush retouching."
-                               FontSize="12" Foreground="#FF555555" TextWrapping="Wrap" LineHeight="17" />
+                               FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" LineHeight="17" />
 
                     <Button Grid.Row="3" Content="Select" Margin="0,16,0,0" Height="30" FontWeight="SemiBold"
-                            Background="#FF0078D7" Foreground="White" BorderThickness="0"
+                            Background="{DynamicResource Theme.AccentBackground}" Foreground="{DynamicResource Theme.AccentForeground}" BorderThickness="0"
                             Click="BackgroundRemoverButton_Click" />
                 </Grid>
             </Border>
@@ -92,20 +93,20 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Width="48" Height="48" CornerRadius="24" Background="#FFFBF0E6"
+                    <Border Grid.Row="0" Width="48" Height="48" CornerRadius="24" Background="{DynamicResource Theme.IconBackgroundWarm}"
                             HorizontalAlignment="Left" Margin="0,0,0,12">
                         <!-- Expand / Canvas Icon Symbol -->
                         <TextBlock Text="⤢" FontSize="24" Foreground="#FFE87000" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
 
                     <TextBlock Grid.Row="1" Text="Uncrop / Outpaint" FontSize="15" FontWeight="SemiBold"
-                               Foreground="#FF111111" Margin="0,0,0,6" />
+                               Foreground="{DynamicResource Theme.ForegroundBrush}" Margin="0,0,0,6" />
 
                     <TextBlock Grid.Row="2" Text="Expand image boundaries and aspect ratios using Content-Aware Inpainting (Telea/Navier-Stokes), Mirror, or custom borders."
-                               FontSize="12" Foreground="#FF555555" TextWrapping="Wrap" LineHeight="17" />
+                               FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" LineHeight="17" />
 
                     <Button Grid.Row="3" Content="Select" Margin="0,16,0,0" Height="30" FontWeight="SemiBold"
-                            Background="#FFE87000" Foreground="White" BorderThickness="0"
+                            Background="#FFE87000" Foreground="{DynamicResource Theme.AccentForeground}" BorderThickness="0"
                             Click="UncropButton_Click" />
                 </Grid>
             </Border>

@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="850" d:DesignWidth="1200"
              AllowDrop="True" Drop="UncropView_Drop" DragOver="UncropView_DragOver">
-    <DockPanel>
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <!-- Toolbar -->
         <ToolBar DockPanel.Dock="Top">
             <Button Content="Open image..." Command="{Binding OpenImageCommand}" Padding="8,2" />
@@ -33,7 +33,7 @@
         </StatusBar>
 
         <!-- Sidebar controls -->
-        <Border DockPanel.Dock="Left" Width="290" Margin="12" BorderBrush="#FFCCCCCC" BorderThickness="0,0,1,0" Padding="0,0,12,0">
+        <Border DockPanel.Dock="Left" Width="290" Margin="12" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0" Padding="0,0,12,0">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel>
@@ -69,7 +69,7 @@
                     <RadioButton Content="Mirror" GroupName="UncropFillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mirror}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Mirror}">
-                        <TextBlock Text="Mirror reflection type:" FontSize="11" Foreground="#FF666666" Margin="0,0,0,2" />
+                        <TextBlock Text="Mirror reflection type:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" Margin="0,0,0,2" />
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                             <RadioButton Content="Reflect 101" GroupName="UncropMirrorType" Margin="0,0,8,0"
                                          IsChecked="{Binding Options.SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect101}" />
@@ -78,13 +78,13 @@
                         </StackPanel>
 
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.MirrorBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="0" Maximum="50" Value="{Binding Options.MirrorBlurRadius}" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
                         </DockPanel>
 
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Fade opacity:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Fade opacity:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.MirrorFadeOpacity, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Options.MirrorFadeOpacity}" SmallChange="0.05" LargeChange="0.2" TickFrequency="0.05" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
                         </DockPanel>
@@ -103,13 +103,13 @@
                         </StackPanel>
                         
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.InpaintRadius, StringFormat={}{0:F0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="1" Maximum="50" Value="{Binding Options.InpaintRadius}" SmallChange="1" LargeChange="5" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
                         </DockPanel>
 
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blend margin:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Blend margin:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="0" Maximum="30" Value="{Binding Options.BlendMargin}" SmallChange="1" LargeChange="5" TickFrequency="2" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
                         </DockPanel>
@@ -142,7 +142,7 @@
                             </Button>
                             <Popup IsOpen="{Binding Options.IsColorPickerOpen}" PlacementTarget="{Binding ElementName=UncropColorPickerButton}"
                                    StaysOpen="False" AllowsTransparency="True">
-                                <Border Background="#FF2D2D30" BorderBrush="#FF3F3F46" BorderThickness="1" Padding="8" CornerRadius="4">
+                                <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1" Padding="8" CornerRadius="4">
                                     <controls:SimpleColorPickerControl SelectedColor="{Binding Options.CustomSolidColor, Mode=TwoWay}" />
                                 </Border>
                             </Popup>
@@ -153,7 +153,7 @@
 
                         <DockPanel Margin="0,0,0,4"
                                    Visibility="{Binding Options.BlurredColorFill, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.BlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="0" Maximum="101" Value="{Binding Options.BlurRadius}" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
                         </DockPanel>
@@ -164,17 +164,17 @@
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ZoomBlur}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ZoomBlur}">
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.ZoomBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="1" Maximum="101" Value="{Binding Options.ZoomBlurRadius}" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
                         </DockPanel>
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Zoom scale:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Zoom scale:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.ZoomScale, StringFormat={}{0:F2}x}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="1.0" Maximum="2.5" Value="{Binding Options.ZoomScale}" SmallChange="0.05" LargeChange="0.25" TickFrequency="0.05" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
                         </DockPanel>
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blend margin:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Blend margin:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="0" Maximum="30" Value="{Binding Options.BlendMargin}" SmallChange="1" LargeChange="5" TickFrequency="2" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
                         </DockPanel>
@@ -184,11 +184,11 @@
                     <RadioButton Content="Edge gradient" GroupName="UncropFillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeGradient}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=EdgeGradient}">
-                        <TextBlock Text="Gradient style:" FontSize="11" Foreground="#FF666666" Margin="0,0,0,2" />
+                        <TextBlock Text="Gradient style:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" Margin="0,0,0,2" />
                         <ComboBox ItemsSource="{Binding Options.GradientModes}" SelectedItem="{Binding Options.SelectedGradientMode}" Margin="0,0,0,6" />
 
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Noise (dither):" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Noise (dither):" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.GradientNoiseAmount, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="0.0" Maximum="0.20" Value="{Binding Options.GradientNoiseAmount}" SmallChange="0.01" LargeChange="0.05" TickFrequency="0.01" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
                         </DockPanel>
@@ -199,12 +199,12 @@
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PatchSynthesis}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=PatchSynthesis}">
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Patch size:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Patch size:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.PatchSize, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="8" Maximum="64" Value="{Binding Options.PatchSize}" SmallChange="4" LargeChange="8" TickFrequency="4" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
                         </DockPanel>
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blend overlap:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Blend overlap:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.PatchBlendOverlap, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="2" Maximum="24" Value="{Binding Options.PatchBlendOverlap}" SmallChange="2" LargeChange="4" TickFrequency="2" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
                         </DockPanel>
@@ -215,7 +215,7 @@
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Replicate}">
                         <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Smoothing:" FontSize="11" Foreground="#FF666666" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
+                            <TextBlock Text="Smoothing:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
                             <TextBlock Text="{Binding Options.ReplicateSmoothRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
                             <Slider Minimum="0" Maximum="30" Value="{Binding Options.ReplicateSmoothRadius}" SmallChange="2" LargeChange="6" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
                         </DockPanel>

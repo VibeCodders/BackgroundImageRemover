@@ -4,10 +4,11 @@
         Title="Preferences"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         SizeToContent="WidthAndHeight" ShowInTaskbar="False"
-        Background="#FFF8F9FA">
-    <Border BorderBrush="#FFCCCCCC" BorderThickness="1" Padding="22" CornerRadius="8" Margin="12">
+        TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}"
+        Background="{DynamicResource Theme.WindowBackground}">
+    <Border BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Padding="22" CornerRadius="8" Margin="12">
         <StackPanel MinWidth="380">
-            <TextBlock Text="Theme" FontSize="15" FontWeight="Bold" Foreground="#FF222222" Margin="0,0,0,8" />
+            <TextBlock Text="Theme" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource Theme.ForegroundBrush}" Margin="0,0,0,8" />
 
             <RadioButton Content="Follow Windows" GroupName="Theme" Margin="0,0,0,4"
                          IsChecked="{Binding Theme, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=System}" />
@@ -16,7 +17,7 @@
             <RadioButton Content="Dark" GroupName="Theme" Margin="0,0,0,16"
                          IsChecked="{Binding Theme, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Dark}" />
 
-            <TextBlock Text="Language" FontSize="15" FontWeight="Bold" Foreground="#FF222222" Margin="0,0,0,8" />
+            <TextBlock Text="Language" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource Theme.ForegroundBrush}" Margin="0,0,0,8" />
 
             <ComboBox SelectedIndex="{Binding LanguageIndex}" Margin="0,0,0,16" Padding="4">
                 <ComboBoxItem Content="System" />
@@ -24,11 +25,11 @@
                 <ComboBoxItem Content="Italiano" />
             </ComboBox>
 
-            <TextBlock Text="Startup" FontSize="15" FontWeight="Bold" Foreground="#FF222222" Margin="0,0,0,8" />
+            <TextBlock Text="Startup" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource Theme.ForegroundBrush}" Margin="0,0,0,8" />
 
             <CheckBox Content="Reopen the last opened files on startup" IsChecked="{Binding ReopenLastSession}" Margin="0,0,0,12" />
 
-            <TextBlock Text="Autosave" FontSize="15" FontWeight="Bold" Foreground="#FF222222" Margin="0,0,0,8" />
+            <TextBlock Text="Autosave" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource Theme.ForegroundBrush}" Margin="0,0,0,8" />
 
             <CheckBox Content="Save a recovery snapshot of dirty documents periodically" IsChecked="{Binding EnableAutosave}" Margin="0,0,0,8" />
 
@@ -42,7 +43,7 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Cancel" IsCancel="True" Padding="16,6" Margin="0,0,8,0" Cursor="Hand" />
-                <Button Content="OK" IsDefault="True" Click="Ok_Click" Padding="20,6" Background="#FF0078D7" Foreground="White" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand" />
+                <Button Content="OK" IsDefault="True" Click="Ok_Click" Padding="20,6" Background="{DynamicResource Theme.AccentBackground}" Foreground="{DynamicResource Theme.AccentForeground}" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand" />
             </StackPanel>
         </StackPanel>
     </Border>

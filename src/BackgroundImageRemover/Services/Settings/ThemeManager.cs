@@ -29,7 +29,7 @@ public static class ThemeManager
         int existing = -1;
         for (int i = 0; i < merged.Count; i++)
         {
-            if (merged[i].Source is { } source && source.OriginalString.Contains("Theme", StringComparison.OrdinalIgnoreCase))
+            if (merged[i].Source is { } source && IsThemeDictionary(source.OriginalString))
             {
                 existing = i;
                 break;
@@ -45,6 +45,11 @@ public static class ThemeManager
             merged.Add(dictionary);
         }
     }
+
+    /// <summary>True for the app's own theme dictionaries (and not e.g. the shared ControlStyles dictionary).</summary>
+    private static bool IsThemeDictionary(string path)
+        => path.EndsWith("DarkTheme.xaml", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith("LightTheme.xaml", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>True when Windows uses the light theme for apps (registry AppsUseLightTheme).</summary>
     public static bool SystemUsesLightTheme()

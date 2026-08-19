@@ -125,7 +125,7 @@
                             <TextBlock Text="Downloading model..." Margin="0,0,0,4" />
                             <ProgressBar Height="16" Minimum="0" Maximum="1" Value="{Binding Onnx.DownloadFraction, Mode=OneWay}" />
                         </StackPanel>
-                        <TextBlock Text="{Binding Onnx.ErrorMessage}" Foreground="Red" TextWrapping="Wrap"
+                        <TextBlock Text="{Binding Onnx.ErrorMessage}" Foreground="{DynamicResource Theme.DangerForeground}" TextWrapping="Wrap"
                                    Visibility="{Binding Onnx.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
                         <Button Content="Retry download" Command="{Binding RetryOnnxDownloadCommand}"
                                 Visibility="{Binding Onnx.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,4,0,8" />
@@ -143,7 +143,7 @@
                             <TextBlock Text="Downloading SAM model..." Margin="0,0,0,4" />
                             <ProgressBar Height="16" Minimum="0" Maximum="1" Value="{Binding Sam.DownloadFraction, Mode=OneWay}" />
                         </StackPanel>
-                        <TextBlock Text="{Binding Sam.ErrorMessage}" Foreground="Red" TextWrapping="Wrap"
+                        <TextBlock Text="{Binding Sam.ErrorMessage}" Foreground="{DynamicResource Theme.DangerForeground}" TextWrapping="Wrap"
                                    Visibility="{Binding Sam.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
                         <Button Content="Retry download" Command="{Binding RetrySamDownloadCommand}"
                                 Visibility="{Binding Sam.ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" Margin="0,4,0,8" />
@@ -237,7 +237,7 @@
                         <Button x:Name="ChooseSolidColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseSolidColorButton_Click" />
                         <Popup IsOpen="{Binding ParentDocument.IsColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseSolidColorButton}"
                                StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                                 <controls:SimpleColorPickerControl SelectedColor="{Binding ParentDocument.ExportSolidColor}" />
                             </Border>
                         </Popup>
@@ -264,7 +264,7 @@
                             <Button x:Name="ChooseGradientTopColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseGradientTopColorButton_Click" />
                             <Popup IsOpen="{Binding ParentDocument.IsGradientTopColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseGradientTopColorButton}"
                                    StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                                <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                                     <controls:SimpleColorPickerControl SelectedColor="{Binding ParentDocument.ExportGradientTopColor}" />
                                 </Border>
                             </Popup>
@@ -275,7 +275,7 @@
                             <Button x:Name="ChooseGradientBottomColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseGradientBottomColorButton_Click" />
                             <Popup IsOpen="{Binding ParentDocument.IsGradientBottomColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseGradientBottomColorButton}"
                                    StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                                <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                                     <controls:SimpleColorPickerControl SelectedColor="{Binding ParentDocument.ExportGradientBottomColor}" />
                                 </Border>
                             </Popup>

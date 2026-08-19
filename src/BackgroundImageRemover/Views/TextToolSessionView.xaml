@@ -63,7 +63,7 @@
                         <Rectangle Width="24" Height="24" Fill="{Binding Color, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
                         <Button x:Name="ChooseColorButton" Content="Choose color..." Margin="8,0,0,0" Click="ChooseColorButton_Click" />
                         <Popup IsOpen="{Binding IsColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                                 <controls:SimpleColorPickerControl SelectedColor="{Binding Color}" />
                             </Border>
                         </Popup>
@@ -113,7 +113,7 @@
                         <Rectangle Width="24" Height="24" Fill="{Binding OutlineColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
                         <Button x:Name="ChooseOutlineColorButton" Content="Outline color..." Margin="8,0,0,0" Click="ChooseOutlineColorButton_Click" />
                         <Popup IsOpen="{Binding IsOutlineColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseOutlineColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                                 <controls:SimpleColorPickerControl SelectedColor="{Binding OutlineColor}" />
                             </Border>
                         </Popup>
@@ -139,7 +139,7 @@
                         <Rectangle Width="24" Height="24" Fill="{Binding ShadowColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
                         <Button x:Name="ChooseShadowColorButton" Content="Shadow color..." Margin="8,0,0,0" Click="ChooseShadowColorButton_Click" />
                         <Popup IsOpen="{Binding IsShadowColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseShadowColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                                 <controls:SimpleColorPickerControl SelectedColor="{Binding ShadowColor}" />
                             </Border>
                         </Popup>
@@ -151,7 +151,7 @@
                             <Rectangle Width="24" Height="24" Fill="{Binding PlateColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
                             <Button x:Name="ChoosePlateColorButton" Content="Plate color..." Margin="8,0,0,0" Click="ChoosePlateColorButton_Click" />
                             <Popup IsOpen="{Binding IsPlateColorPickerOpen}" PlacementTarget="{Binding ElementName=ChoosePlateColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                                <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
                                     <controls:SimpleColorPickerControl SelectedColor="{Binding PlateColor}" />
                                 </Border>
                             </Popup>

@@ -101,7 +101,7 @@
         </DataTemplate>
     </Window.Resources>
 
-    <DockPanel>
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <Menu DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1" Padding="4,2">
             <MenuItem Header="{Binding [File], Source={x:Static services:LocalizationService.Instance}}">
                 <MenuItem Header="{Binding [OpenImage], Source={x:Static services:LocalizationService.Instance}}" Command="{Binding NewProjectCommand}" InputGestureText="Ctrl+N" />

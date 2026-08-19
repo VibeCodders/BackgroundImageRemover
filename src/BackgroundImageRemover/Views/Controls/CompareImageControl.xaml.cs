@@ -48,6 +48,7 @@ public partial class CompareImageControl : UserControl
 
     private Point? _panStart;
     private Point _panStartTranslate;
+    private MouseButton _panButton = MouseButton.Middle;
     private bool _draggingDivider;
 
     public CompareImageControl()
@@ -218,18 +219,12 @@ public partial class CompareImageControl : UserControl
             return;
         }
 
-        if (e.MiddleButton == MouseButtonState.Pressed)
-        {
-            _panStart = e.GetPosition(this);
-            _panStartTranslate = new Point(PanTranslate.X, PanTranslate.Y);
-            RootGrid.CaptureMouse();
-            e.Handled = true;
-        }
+        TryStartPan(e);
     }
 
     private void RootGrid_MouseMove(object sender, MouseEventArgs e)
     {
-        if (_panStart is { } panStart && e.MiddleButton == MouseButtonState.Pressed)
+        if (_panStart is { } panStart && IsPanButtonDown(e))
         {
             var p = ViewInteractionHelper.ComputePan(panStart, _panStartTranslate, e.GetPosition(this));
             PanTranslate.X = p.X;
@@ -240,7 +235,7 @@ public partial class CompareImageControl : UserControl
 
     private void RootGrid_MouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (_panStart is not null && e.MiddleButton == MouseButtonState.Released)
+        if (_panStart is not null && e.ChangedButton == _panButton)
         {
             _panStart = null;
             RootGrid.ReleaseMouseCapture();
@@ -250,12 +245,56 @@ public partial class CompareImageControl : UserControl
 
     private void RootGrid_MouseLeave(object sender, MouseEventArgs e)
     {
-        if (_panStart is not null && e.MiddleButton == MouseButtonState.Released)
+        if (_panStart is not null && !IsPanButtonDown(e))
         {
             _panStart = null;
             RootGrid.ReleaseMouseCapture();
         }
     }
+
+    /// <summary>
+    /// Starts a pan when the gesture matches: middle-drag, right-drag, or Ctrl+left-drag.
+    /// Returns true when a pan was started.
+    /// </summary>
+    private bool TryStartPan(MouseButtonEventArgs e)
+    {
+        MouseButton? panButton = GetPanButton(e);
+        if (panButton is not { } pb)
+        {
+            return false;
+        }
+
+        _panButton = pb;
+        _panStart = e.GetPosition(this);
+        _panStartTranslate = new Point(PanTranslate.X, PanTranslate.Y);
+        RootGrid.CaptureMouse();
+        e.Handled = true;
+        return true;
+    }
+
+    private static MouseButton? GetPanButton(MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Middle)
+        {
+            return MouseButton.Middle;
+        }
+        if (e.ChangedButton == MouseButton.Right)
+        {
+            return MouseButton.Right;
+        }
+        if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            return MouseButton.Left;
+        }
+        return null;
+    }
+
+    private bool IsPanButtonDown(MouseEventArgs e) => _panButton switch
+    {
+        MouseButton.Left => e.LeftButton == MouseButtonState.Pressed,
+        MouseButton.Right => e.RightButton == MouseButtonState.Pressed,
+        _ => e.MiddleButton == MouseButtonState.Pressed,
+    };
 
     private bool ImageSourceAvailable() => AfterSource is not null || BeforeSource is not null;
 

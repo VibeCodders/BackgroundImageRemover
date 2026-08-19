@@ -108,6 +108,7 @@ public partial class ImagePreviewControl : UserControl
     private Point? _dragStart;
     private Point? _panStart;
     private Point _panStartTranslate;
+    private MouseButton _panButton = MouseButton.Middle;
     private Polyline? _activeStrokeVisual;
 
     public ImagePreviewControl()

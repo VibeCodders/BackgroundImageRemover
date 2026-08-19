@@ -30,7 +30,12 @@ public static class PreviewToolShortcuts
         [Key.J] = EditorTool.Liquify,
         [Key.P] = EditorTool.Perspective,
         [Key.K] = EditorTool.Fx,
-        [Key.I] = EditorTool.TiltShift
+        [Key.I] = EditorTool.TiltShift,
+        [Key.Q] = EditorTool.ColorPicker,
+        [Key.D] = EditorTool.Blur,
+        [Key.N] = EditorTool.Sharpen,
+        [Key.V] = EditorTool.Vignette,
+        [Key.Y] = EditorTool.Emoji
     };
 
     /// <summary>W selects the Magic Wand removal strategy (it is not a modal tool tab).</summary>

@@ -105,6 +105,11 @@ public partial class ShellViewModel : ObservableObject
             EditorTool.Perspective => new PerspectiveToolSessionViewModel(this, doc),
             EditorTool.Fx => new FxToolSessionViewModel(this, doc),
             EditorTool.TiltShift => new TiltShiftToolSessionViewModel(this, doc),
+            EditorTool.ColorPicker => new ColorPickerToolSessionViewModel(this, doc),
+            EditorTool.Blur => new BlurToolSessionViewModel(this, doc),
+            EditorTool.Sharpen => new SharpenToolSessionViewModel(this, doc),
+            EditorTool.Vignette => new VignetteToolSessionViewModel(this, doc),
+            EditorTool.Emoji => new EmojiToolSessionViewModel(this, doc),
             _ => null
         };
 

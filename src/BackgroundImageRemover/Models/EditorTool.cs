@@ -63,5 +63,20 @@ public enum EditorTool
     Fx,
 
     /// <summary>Tilt-shift miniature effect.</summary>
-    TiltShift
+    TiltShift,
+
+    /// <summary>Samples pixel colors from the image under the cursor for copy/inspection.</summary>
+    ColorPicker,
+
+    /// <summary>Selective blur on a painted region or the whole image.</summary>
+    Blur,
+
+    /// <summary>Selective sharpening on a painted region or the whole image.</summary>
+    Sharpen,
+
+    /// <summary>Adds a vignette (darken/lighten edges) effect.</summary>
+    Vignette,
+
+    /// <summary>Renders emoji or text glyphs as decorative overlays on the image.</summary>
+    Emoji
 }

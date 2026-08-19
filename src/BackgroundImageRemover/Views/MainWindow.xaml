@@ -99,6 +99,21 @@
         <DataTemplate DataType="{x:Type vm:TiltShiftToolSessionViewModel}">
             <views:TiltShiftToolSessionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ColorPickerToolSessionViewModel}">
+            <views:ColorPickerToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BlurToolSessionViewModel}">
+            <views:BlurToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SharpenToolSessionViewModel}">
+            <views:SharpenToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:VignetteToolSessionViewModel}">
+            <views:VignetteToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:EmojiToolSessionViewModel}">
+            <views:EmojiToolSessionView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">

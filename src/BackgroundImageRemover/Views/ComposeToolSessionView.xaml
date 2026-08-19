@@ -195,7 +195,7 @@
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
-                <Image Source="{Binding ResultBitmap}" Stretch="Uniform" />
+                <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
             </Border>
         </Grid>
     </DockPanel>

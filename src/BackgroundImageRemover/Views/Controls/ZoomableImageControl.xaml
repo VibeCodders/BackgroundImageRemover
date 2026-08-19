@@ -1,15 +1,14 @@
-<UserControl x:Class="BackgroundImageRemover.Views.Controls.CompareImageControl"
+<UserControl x:Class="BackgroundImageRemover.Views.Controls.ZoomableImageControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
+             ClipToBounds="True"
              d:DesignHeight="400" d:DesignWidth="400">
     <Grid x:Name="RootGrid"
-          ClipToBounds="True"
           Focusable="True"
           KeyDown="RootGrid_KeyDown"
-          SizeChanged="RootGrid_SizeChanged"
           MouseWheel="RootGrid_MouseWheel"
           MouseDown="RootGrid_MouseDown"
           MouseMove="RootGrid_MouseMove"
@@ -38,23 +37,8 @@
                 </TransformGroup>
             </Grid.RenderTransform>
 
-            <Image x:Name="BeforeImage" Stretch="Uniform"
-                   Source="{Binding BeforeSource, RelativeSource={RelativeSource AncestorType=UserControl}}" />
-
-            <Image x:Name="AfterImage" Stretch="Uniform"
-                   Source="{Binding AfterSource, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                <Image.Clip>
-                    <RectangleGeometry x:Name="AfterClip" />
-                </Image.Clip>
-            </Image>
-
-            <Rectangle x:Name="DividerLine" Width="2" Fill="White" HorizontalAlignment="Left" IsHitTestVisible="False" />
-
-            <!-- Divider handle: a plain Border with manual mouse capture, so dragging stays
-                 correct even when the content above is zoomed/panned. -->
-            <Border x:Name="DividerThumb" Width="20" HorizontalAlignment="Left" VerticalAlignment="Stretch"
-                    Background="Transparent" Cursor="SizeWE"
-                    MouseDown="DividerThumb_MouseDown" MouseMove="DividerThumb_MouseMove" MouseUp="DividerThumb_MouseUp" />
+            <Image x:Name="ImageHost" Stretch="Uniform"
+                   Source="{Binding ImageSource, RelativeSource={RelativeSource AncestorType=UserControl}}" />
         </Grid>
 
         <!-- Zoom HUD: outside the zoom/pan transform so it stays fixed, showing the current
@@ -69,9 +53,9 @@
                            Foreground="#FF444444" Margin="0,0,8,0" MinWidth="42" TextAlignment="Right"
                            ToolTip="Zoom relative to the fit-to-window size" />
                 <Button x:Name="ZoomFitButton" Content="Fit" Click="ZoomFit_Click" Padding="7,1" FontSize="11"
-                        Cursor="Hand" Margin="0,0,2,0" ToolTip="Fit the images to the window (middle double-click)" />
+                        Cursor="Hand" Margin="0,0,2,0" ToolTip="Fit the image to the window (middle double-click)" />
                 <Button x:Name="ZoomActualButton" Content="1:1" Click="ZoomActual_Click" Padding="7,1" FontSize="11"
-                        Cursor="Hand" ToolTip="Show the images at actual pixel size" />
+                        Cursor="Hand" ToolTip="Show the image at actual pixel size" />
             </StackPanel>
         </Border>
     </Grid>

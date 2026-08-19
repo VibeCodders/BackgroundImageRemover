@@ -7,50 +7,26 @@ using BackgroundImageRemover.Helpers;
 namespace BackgroundImageRemover.Views.Controls;
 
 /// <summary>
-/// Before/after reveal slider: "After" is drawn over "Before", clipped to the divider position.
-/// Supports the same zoom/pan as the other previews: wheel zooms toward the cursor, middle-drag
-/// pans, middle double-click resets, Ctrl+Plus/Minus/0/1 while focused.
+/// Passive, read-only image preview with zoom and pan (no editing interactions). Mouse wheel
+/// zooms toward the cursor, middle-drag pans, middle double-click (or the Fit button) resets,
+/// and Ctrl+Plus/Minus/0/1 provide keyboard zoom while the control has focus.
 /// </summary>
-public partial class CompareImageControl : UserControl
+public partial class ZoomableImageControl : UserControl
 {
-    public static readonly DependencyProperty BeforeSourceProperty =
-        DependencyProperty.Register(nameof(BeforeSource), typeof(BitmapSource), typeof(CompareImageControl),
-            new PropertyMetadata(null));
+    public static readonly DependencyProperty ImageSourceProperty =
+        DependencyProperty.Register(nameof(ImageSource), typeof(BitmapSource), typeof(ZoomableImageControl),
+            new PropertyMetadata(null, OnImageSourceChanged));
 
-    public static readonly DependencyProperty AfterSourceProperty =
-        DependencyProperty.Register(nameof(AfterSource), typeof(BitmapSource), typeof(CompareImageControl),
-            new PropertyMetadata(null));
-
-    public static readonly DependencyProperty DividerPositionProperty =
-        DependencyProperty.Register(nameof(DividerPosition), typeof(double), typeof(CompareImageControl),
-            new FrameworkPropertyMetadata(0.5,
-                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                OnDividerPositionChanged));
-
-    public BitmapSource? BeforeSource
+    public BitmapSource? ImageSource
     {
-        get => (BitmapSource?)GetValue(BeforeSourceProperty);
-        set => SetValue(BeforeSourceProperty, value);
-    }
-
-    public BitmapSource? AfterSource
-    {
-        get => (BitmapSource?)GetValue(AfterSourceProperty);
-        set => SetValue(AfterSourceProperty, value);
-    }
-
-    /// <summary>0 = fully "before", 1 = fully "after".</summary>
-    public double DividerPosition
-    {
-        get => (double)GetValue(DividerPositionProperty);
-        set => SetValue(DividerPositionProperty, value);
+        get => (BitmapSource?)GetValue(ImageSourceProperty);
+        set => SetValue(ImageSourceProperty, value);
     }
 
     private Point? _panStart;
     private Point _panStartTranslate;
-    private bool _draggingDivider;
 
-    public CompareImageControl()
+    public ZoomableImageControl()
     {
         InitializeComponent();
         ZoomScale.Changed += (_, _) => UpdateZoomHud();
@@ -75,91 +51,21 @@ public partial class CompareImageControl : UserControl
     {
         get
         {
-            var source = AfterSource ?? BeforeSource;
-            if (source is null)
+            if (ImageSource is null)
             {
                 return 1.0;
             }
 
             var content = CoordinateMapper.ImageControlContentRect(
                 ZoomPanHost.ActualWidth, ZoomPanHost.ActualHeight,
-                source.PixelWidth, source.PixelHeight);
-            return content.Width > 0 ? source.PixelWidth / content.Width : 1.0;
+                ImageSource.PixelWidth, ImageSource.PixelHeight);
+            return content.Width > 0 ? ImageSource.PixelWidth / content.Width : 1.0;
         }
-    }
-
-    private static void OnDividerPositionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        => ((CompareImageControl)d).UpdateClip();
-
-    private void RootGrid_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateClip();
-
-    private void UpdateClip()
-    {
-        double width = ZoomPanHost.ActualWidth;
-        double height = ZoomPanHost.ActualHeight;
-        double dividerX = width * Math.Clamp(DividerPosition, 0.0, 1.0);
-
-        AfterClip.Rect = new Rect(0, 0, dividerX, height);
-        DividerLine.Height = height;
-        DividerLine.Margin = new Thickness(dividerX, 0, 0, 0);
-        DividerThumb.Margin = new Thickness(dividerX - 10, 0, 0, 0);
-    }
-
-    private void DividerThumb_MouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ChangedButton != MouseButton.Left)
-        {
-            return;
-        }
-
-        _draggingDivider = true;
-        DividerThumb.CaptureMouse();
-        UpdateDividerFromMouse(e);
-        e.Handled = true;
-    }
-
-    private void DividerThumb_MouseMove(object sender, MouseEventArgs e)
-    {
-        if (!_draggingDivider)
-        {
-            return;
-        }
-
-        UpdateDividerFromMouse(e);
-        e.Handled = true;
-    }
-
-    private void DividerThumb_MouseUp(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ChangedButton != MouseButton.Left)
-        {
-            return;
-        }
-
-        _draggingDivider = false;
-        DividerThumb.ReleaseMouseCapture();
-        e.Handled = true;
-    }
-
-    /// <summary>
-    /// Positions the divider from the mouse in the (pre-transform) host space, so it tracks
-    /// the image content exactly even while zoomed or panned.
-    /// </summary>
-    private void UpdateDividerFromMouse(MouseEventArgs e)
-    {
-        double width = ZoomPanHost.ActualWidth;
-        if (width <= 0)
-        {
-            return;
-        }
-
-        double localX = e.GetPosition(ZoomPanHost).X;
-        DividerPosition = Math.Clamp(localX / width, 0.0, 1.0);
     }
 
     private void RootGrid_KeyDown(object sender, KeyEventArgs e)
     {
-        if (Keyboard.Modifiers != ModifierKeys.Control || ImageSourceAvailable() is false)
+        if (Keyboard.Modifiers != ModifierKeys.Control || ImageSource is null)
         {
             return;
         }
@@ -191,7 +97,7 @@ public partial class CompareImageControl : UserControl
 
     private void RootGrid_MouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (!ImageSourceAvailable())
+        if (ImageSource is null)
         {
             return;
         }
@@ -209,6 +115,7 @@ public partial class CompareImageControl : UserControl
 
     private void RootGrid_MouseDown(object sender, MouseButtonEventArgs e)
     {
+        // Give the control keyboard focus on click so the zoom shortcuts work immediately.
         RootGrid.Focus();
 
         if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
@@ -250,6 +157,8 @@ public partial class CompareImageControl : UserControl
 
     private void RootGrid_MouseLeave(object sender, MouseEventArgs e)
     {
+        // A middle-drag that leaves the control would otherwise stay captured until the
+        // button is released anywhere; release it when the cursor exits the control.
         if (_panStart is not null && e.MiddleButton == MouseButtonState.Released)
         {
             _panStart = null;
@@ -257,11 +166,9 @@ public partial class CompareImageControl : UserControl
         }
     }
 
-    private bool ImageSourceAvailable() => AfterSource is not null || BeforeSource is not null;
-
     private void ZoomBy(double factor)
     {
-        if (!ImageSourceAvailable())
+        if (ImageSource is null)
         {
             return;
         }
@@ -280,7 +187,7 @@ public partial class CompareImageControl : UserControl
 
     private void ZoomActual()
     {
-        if (!ImageSourceAvailable())
+        if (ImageSource is null)
         {
             return;
         }
@@ -301,7 +208,7 @@ public partial class CompareImageControl : UserControl
 
     private void UpdateZoomHud()
     {
-        if (!ImageSourceAvailable())
+        if (ImageSource is null)
         {
             ZoomHud.Visibility = Visibility.Collapsed;
             return;
@@ -309,5 +216,11 @@ public partial class CompareImageControl : UserControl
 
         ZoomHud.Visibility = Visibility.Visible;
         ZoomPercentLabel.Text = $"{Math.Round(ZoomScale.ScaleX * 100)}%";
+    }
+
+    private static void OnImageSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var control = (ZoomableImageControl)d;
+        control.ResetView();
     }
 }

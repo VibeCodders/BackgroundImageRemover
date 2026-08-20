@@ -82,6 +82,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     public FloodFillStrategyViewModel FloodFill { get; } = new();
     public KMeansStrategyViewModel KMeans { get; } = new();
     public MagicWandStrategyViewModel MagicWand { get; } = new();
+    public InpaintStrategyViewModel Inpaint { get; } = new();
 
     private ShellViewModel? _shell;
 
@@ -663,6 +664,13 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
             StrategyKind.MagicWand => InteractionMode.MagicWand,
             _ => InteractionMode.None
         };
+
+        if (value == StrategyKind.Inpaint)
+        {
+            // Inpaint has no click-to-seed interaction: it floods from the image border, so
+            // there is no special interaction mode to enter.
+            OriginalMode = InteractionMode.None;
+        }
 
         if (value == StrategyKind.Onnx && !Onnx.IsModelReady)
         {

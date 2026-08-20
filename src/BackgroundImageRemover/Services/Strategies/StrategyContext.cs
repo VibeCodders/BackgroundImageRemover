@@ -117,4 +117,10 @@ public sealed record StrategyContext
 
     /// <summary>Applies CLAHE contrast to the mask alpha to sharpen soft transitions.</summary>
     public bool MaskClahe { get; init; }
+
+    /// <summary>Inpaint: max Lab color distance from the border seed for a pixel to be flooded as background.</summary>
+    public double InpaintTolerance { get; init; } = 20;
+
+    /// <summary>Inpaint: radius (in pixels) passed to OpenCV's Navier-Stokes inpaint algorithm.</summary>
+    public double InpaintRadius { get; init; } = 3;
 }

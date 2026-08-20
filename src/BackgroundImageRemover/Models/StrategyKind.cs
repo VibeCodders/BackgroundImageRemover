@@ -9,5 +9,6 @@ public enum StrategyKind
     FloodFill,
     KMeans,
     Otsu,
-    MagicWand
+    MagicWand,
+    Inpaint
 }

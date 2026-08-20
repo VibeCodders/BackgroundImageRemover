@@ -81,6 +81,11 @@ public partial class DocumentViewModel
                 MagicWandTolerance = MagicWand.Tolerance
             },
             StrategyKind.Otsu => new StrategyContext(),
+            StrategyKind.Inpaint => new StrategyContext
+            {
+                InpaintTolerance = Inpaint.Tolerance,
+                InpaintRadius = Inpaint.Radius
+            },
             _ => new StrategyContext()
         };
 

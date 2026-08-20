@@ -128,6 +128,11 @@ public partial class BackgroundRemoverToolSessionViewModel
                 MagicWandTolerance = MagicWand.Tolerance
             },
             StrategyKind.Otsu => new StrategyContext(),
+            StrategyKind.Inpaint => new StrategyContext
+            {
+                InpaintTolerance = Inpaint.Tolerance,
+                InpaintRadius = Inpaint.Radius
+            },
             _ => new StrategyContext()
         };
 

@@ -59,6 +59,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     public FloodFillStrategyViewModel FloodFill { get; } = new();
     public KMeansStrategyViewModel KMeans { get; } = new();
     public MagicWandStrategyViewModel MagicWand { get; } = new();
+    public InpaintStrategyViewModel Inpaint { get; } = new();
 
     [ObservableProperty]
     private StrategyKind _selectedStrategy = StrategyKind.ChromaKey;
@@ -278,6 +279,13 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
                 StrategyKind.MagicWand => InteractionMode.MagicWand,
                 _ => InteractionMode.None
             };
+
+        if (value == StrategyKind.Inpaint)
+        {
+            // Inpaint has no click-to-seed interaction: it floods from the image border, so
+            // there is no special interaction mode to enter.
+            OriginalMode = InteractionMode.None;
+        }
 
         if (value == StrategyKind.Onnx && !Onnx.IsModelReady)
         {

@@ -27,7 +27,9 @@ public static class StrategyShortcuts
         [Key.D7] = StrategyKind.Otsu,
         [Key.NumPad7] = StrategyKind.Otsu,
         [Key.D8] = StrategyKind.MagicWand,
-        [Key.NumPad8] = StrategyKind.MagicWand
+        [Key.NumPad8] = StrategyKind.MagicWand,
+        [Key.D9] = StrategyKind.Inpaint,
+        [Key.NumPad9] = StrategyKind.Inpaint
     };
 
     /// <summary>Returns the strategy mapped to the key, or null when the key switches nothing.</summary>

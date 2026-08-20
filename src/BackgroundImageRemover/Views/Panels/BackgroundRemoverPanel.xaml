@@ -51,10 +51,10 @@
             </UniformGrid>
             <TextBlock Text="Erase:" FontWeight="SemiBold" Margin="0,4,0,4" />
             <UniformGrid Columns="2" Margin="0,0,0,4">
-                <RadioButton Content="⌫ Erase FG" GroupName="ScribbleMode" Margin="0,0,4,4"
+                <RadioButton Content="&#x232B; Erase FG" GroupName="ScribbleMode" Margin="0,0,4,4"
                              IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EraseForeground, Mode=OneWay}"
                              Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.EraseForeground}" />
-                <RadioButton Content="⌫ Erase BG" GroupName="ScribbleMode" Margin="4,0,0,4"
+                <RadioButton Content="&#x232B; Erase BG" GroupName="ScribbleMode" Margin="4,0,0,4"
                              IsChecked="{Binding OriginalMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EraseBackground, Mode=OneWay}"
                              Command="{Binding SetOriginalScribbleModeCommand}" CommandParameter="{x:Static models:InteractionMode.EraseBackground}" />
             </UniformGrid>
@@ -119,6 +119,15 @@
             <TextBlock Text="{Binding MagicWand.HasClickedPoint, StringFormat='Point selected: {0}'}" Margin="0,0,0,8" />
             <TextBlock Text="Tolerance" />
             <Slider Minimum="1" Maximum="100" Value="{Binding MagicWand.Tolerance}" />
+        </StackPanel>
+
+        <!-- Inpaint options -->
+        <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Inpaint}">
+            <TextBlock Text="Floods the connected background region from the image border and in-paints it, then removes it." TextWrapping="Wrap" Margin="0,0,0,8" />
+            <TextBlock Text="Tolerance" />
+            <Slider Minimum="1" Maximum="100" Value="{Binding Inpaint.Tolerance}" TickFrequency="5" />
+            <TextBlock Text="Inpaint radius (px)" Margin="0,8,0,0" />
+            <Slider Minimum="1" Maximum="20" Value="{Binding Inpaint.Radius}" TickFrequency="1" IsSnapToTickEnabled="True" />
         </StackPanel>
 
         <!-- Global finishing controls, applied to every strategy -->
@@ -218,7 +227,7 @@
             </StackPanel>
         </StackPanel>
 
-        <DockPanel Margin="0,8,0,0">
+        <DockPanel Margin="0,16">
             <TextBlock Text="JPEG quality" DockPanel.Dock="Left" />
             <TextBlock Text="{Binding ExportJpegQuality, StringFormat='{}{0:0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
         </DockPanel>

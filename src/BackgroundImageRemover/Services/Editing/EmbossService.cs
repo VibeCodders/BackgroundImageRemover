@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -8,7 +9,7 @@ public static class EmbossService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input!.Clone();
+            return input.CloneOrEmpty();
         }
 
         using var kernel = new Mat(3, 3, MatType.CV_64F);
@@ -22,16 +23,11 @@ public static class EmbossService
         kernel.Set<double>(2, 1, 1);
         kernel.Set<double>(2, 2, 2);
 
-        var result = new Mat();
-        Cv2.Filter2D(input, result, MatType.CV_16S, kernel);
+        using var filtered = new Mat();
+        Cv2.Filter2D(input, filtered, MatType.CV_16S, kernel);
+        using var typed = new Mat();
+        filtered.ConvertTo(typed, input.Type());
 
-        if (result.Type() != input.Type())
-        {
-            result.ConvertTo(result, input.Type());
-        }
-
-        var blended = new Mat();
-        Cv2.AddWeighted(result, strength, input, 1 - strength, 0, blended);
-        return blended;
+        return ImageProcessingUtility.BlendLinear(input, typed, strength);
     }
 }

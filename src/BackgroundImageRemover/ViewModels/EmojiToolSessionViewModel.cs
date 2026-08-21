@@ -1,4 +1,3 @@
-using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
@@ -10,16 +9,13 @@ using WpfColor = System.Windows.Media.Color;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for placing emoji-style decorative marks (stars, hearts, sparkles, etc.) on the image.</summary>
-public partial class EmojiToolSessionViewModel : ToolSessionViewModelBase
+public partial class EmojiToolSessionViewModel : PreviewToolSessionViewModelBase
 {
     public override string ToolBadge => "🎉 Emoji";
     public override string AccentColor => "#F59E0B";
 
     public IReadOnlyList<EmojiOverlayService.EmojiKind> EmojiKinds { get; } =
         Enum.GetValues<EmojiOverlayService.EmojiKind>().ToArray();
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     private EmojiOverlayService.EmojiKind _selectedEmoji = EmojiOverlayService.EmojiKind.Star;
@@ -54,34 +50,31 @@ public partial class EmojiToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private bool _isColorPickerOpen;
 
-    [ObservableProperty]
-    private string? _statusMessage;
+    protected override string OperationName => "Emoji";
+
+    protected override bool IsEffectActive => Opacity > 1e-4;
 
     public EmojiToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
-        : base(shell, parentDocument)
+        : base(shell, parentDocument, "Choose an emoji, size and color, then apply.")
     {
-        InitSourceAlpha();
-        RefreshResult();
-        StatusMessage = "Choose an emoji, size and color, then apply.";
+        RefreshPreview();
     }
 
-    partial void OnSelectedEmojiChanged(EmojiOverlayService.EmojiKind value) => RefreshResult();
-    partial void OnEmojiSizeChanged(int value) => RefreshResult();
-    partial void OnEmojiColorChanged(WpfColor value) => RefreshResult();
-    partial void OnOpacityChanged(double value) => RefreshResult();
-    partial void OnScatterModeChanged(bool value) => RefreshResult();
-    partial void OnScatterCountChanged(int value) => RefreshResult();
-    partial void OnMinSizeChanged(int value) => RefreshResult();
-    partial void OnMaxSizeChanged(int value) => RefreshResult();
-    partial void OnAnchorChanged(TextAnchor value) => RefreshResult();
-    partial void OnMarginChanged(int value) => RefreshResult();
+    partial void OnSelectedEmojiChanged(EmojiOverlayService.EmojiKind value) => RefreshPreview();
+    partial void OnEmojiSizeChanged(int value) => RefreshPreview();
+    partial void OnEmojiColorChanged(WpfColor value) => RefreshPreview();
+    partial void OnOpacityChanged(double value) => RefreshPreview();
+    partial void OnScatterModeChanged(bool value) => RefreshPreview();
+    partial void OnScatterCountChanged(int value) => RefreshPreview();
+    partial void OnMinSizeChanged(int value) => RefreshPreview();
+    partial void OnMaxSizeChanged(int value) => RefreshPreview();
+    partial void OnAnchorChanged(TextAnchor value) => RefreshPreview();
+    partial void OnMarginChanged(int value) => RefreshPreview();
 
-    private Point ComputeEmojiPosition()
+    private Point ComputeEmojiPosition(Mat image)
     {
-        if (_sourceImage is null) return new Point(0, 0);
-
-        int w = _sourceImage.FullBgr.Width;
-        int h = _sourceImage.FullBgr.Height;
+        int w = image.Width;
+        int h = image.Height;
         int m = Margin;
         int s = EmojiSize;
 
@@ -99,28 +92,17 @@ public partial class EmojiToolSessionViewModel : ToolSessionViewModelBase
         };
     }
 
-    private void RefreshResult()
+    protected override Mat ApplyEffect(Mat bgr)
     {
-        if (_sourceImage is null || _workingAlpha is null) return;
-
-        Mat result;
+        var color = EmojiColor.ToVec3b();
         if (ScatterMode)
         {
-            result = EmojiOverlayService.RenderScatter(
-                _sourceImage.FullBgr, SelectedEmoji, ScatterCount, MinSize, Math.Max(MinSize, MaxSize),
-                EmojiColor.ToVec3b(), Opacity);
-        }
-        else
-        {
-            var pos = ComputeEmojiPosition();
-            result = EmojiOverlayService.Render(
-                _sourceImage.FullBgr, SelectedEmoji, new Point((int)pos.X, (int)pos.Y), EmojiSize,
-                EmojiColor.ToVec3b(), Opacity);
+            return EmojiOverlayService.RenderScatter(
+                bgr, SelectedEmoji, ScatterCount, MinSize, Math.Max(MinSize, MaxSize), color, Opacity);
         }
 
-        using var _ = result;
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
-        IsDirty = Opacity > 1e-4;
+        var pos = ComputeEmojiPosition(bgr);
+        return EmojiOverlayService.Render(bgr, SelectedEmoji, new Point((int)pos.X, (int)pos.Y), EmojiSize, color, Opacity);
     }
 
     [RelayCommand]
@@ -136,29 +118,6 @@ public partial class EmojiToolSessionViewModel : ToolSessionViewModelBase
         MaxSize = 60;
         Anchor = TextAnchor.BottomRight;
         Margin = 20;
-        RefreshResult();
-    }
-
-    public override Task ApplyAsync()
-    {
-        Mat? result = null;
-        if (_sourceImage is not null)
-        {
-            if (ScatterMode)
-            {
-                result = EmojiOverlayService.RenderScatter(
-                    _sourceImage.FullBgr, SelectedEmoji, ScatterCount, MinSize, Math.Max(MinSize, MaxSize),
-                    EmojiColor.ToVec3b(), Opacity);
-            }
-            else
-            {
-                var pos = ComputeEmojiPosition();
-                result = EmojiOverlayService.Render(
-                    _sourceImage.FullBgr, SelectedEmoji, new Point((int)pos.X, (int)pos.Y), EmojiSize,
-                    EmojiColor.ToVec3b(), Opacity);
-            }
-        }
-        ApplyAndClose(result, "Emoji");
-        return Task.CompletedTask;
+        RefreshPreview();
     }
 }

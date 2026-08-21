@@ -1,6 +1,3 @@
-using System.Windows.Media.Imaging;
-using BackgroundImageRemover.Helpers;
-using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,13 +6,10 @@ using OpenCvSharp;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for adding vignette (darken/lighten edges) effects.</summary>
-public partial class VignetteToolSessionViewModel : ToolSessionViewModelBase
+public partial class VignetteToolSessionViewModel : PreviewToolSessionViewModelBase
 {
     public override string ToolBadge => "🔳 Vignette";
-    public override string AccentColor => "#A78BFA";
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
+    public override string AccentColor => "#A78BDA";
 
     [ObservableProperty]
     private double _strength = 0.3;
@@ -29,30 +23,23 @@ public partial class VignetteToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private bool _invert;
 
-    [ObservableProperty]
-    private string? _statusMessage;
+    protected override string OperationName => "Vignette";
+
+    protected override bool IsEffectActive => Strength > 1e-4;
 
     public VignetteToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
-        : base(shell, parentDocument)
+        : base(shell, parentDocument, "Adjust vignette strength, roundness and feather.")
     {
-        InitSourceAlpha();
-        RefreshResult();
-        StatusMessage = "Adjust vignette strength, roundness and feather.";
+        RefreshPreview();
     }
 
-    partial void OnStrengthChanged(double value) => RefreshResult();
-    partial void OnRoundnessChanged(double value) => RefreshResult();
-    partial void OnFeatherChanged(double value) => RefreshResult();
-    partial void OnInvertChanged(bool value) => RefreshResult();
+    partial void OnStrengthChanged(double value) => RefreshPreview();
+    partial void OnRoundnessChanged(double value) => RefreshPreview();
+    partial void OnFeatherChanged(double value) => RefreshPreview();
+    partial void OnInvertChanged(bool value) => RefreshPreview();
 
-    private void RefreshResult()
-    {
-        if (_sourceImage is null || _workingAlpha is null) return;
-
-        using var result = VignetteService.Apply(_sourceImage.FullBgr, Strength, Roundness, Feather, Invert);
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
-        IsDirty = Strength > 1e-4;
-    }
+    protected override Mat ApplyEffect(Mat bgr)
+        => VignetteService.Apply(bgr, Strength, Roundness, Feather, Invert);
 
     [RelayCommand]
     private void Reset()
@@ -61,17 +48,6 @@ public partial class VignetteToolSessionViewModel : ToolSessionViewModelBase
         Roundness = 0.5;
         Feather = 0.5;
         Invert = false;
-        RefreshResult();
-    }
-
-    public override Task ApplyAsync()
-    {
-        Mat? result = null;
-        if (_sourceImage is not null && _workingAlpha is not null)
-        {
-            result = VignetteService.Apply(_sourceImage.FullBgr, Strength, Roundness, Feather, Invert);
-        }
-        ApplyAndClose(result, "Vignette");
-        return Task.CompletedTask;
+        RefreshPreview();
     }
 }

@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -8,7 +9,7 @@ public static class NoiseService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input!.Clone();
+            return input.CloneOrEmpty();
         }
 
         using var noise = new Mat(input.Size(), input.Type());
@@ -28,7 +29,7 @@ public static class NoiseService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input!.Clone();
+            return input.CloneOrEmpty();
         }
 
         var result = input.Clone();

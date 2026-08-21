@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -8,7 +9,7 @@ public static class PixelateService
     {
         if (input is null || input.Empty() || blockSize <= 1)
         {
-            return input!.Clone();
+            return input.CloneOrEmpty();
         }
 
         int width = input.Cols;

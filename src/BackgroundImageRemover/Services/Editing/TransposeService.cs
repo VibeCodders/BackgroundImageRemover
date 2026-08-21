@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -15,7 +16,7 @@ public static class TransposeService
     {
         if (input is null || input.Empty())
         {
-            return new Mat();
+            return input.CloneOrEmpty();
         }
 
         var result = new Mat();

@@ -1,6 +1,3 @@
-using System.Windows.Media.Imaging;
-using BackgroundImageRemover.Helpers;
-using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,13 +6,10 @@ using OpenCvSharp;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for the tilt-shift / miniature effect.</summary>
-public partial class TiltShiftToolSessionViewModel : ToolSessionViewModelBase
+public partial class TiltShiftToolSessionViewModel : PreviewToolSessionViewModelBase
 {
     public override string ToolBadge => "📐 Tilt-Shift";
     public override string AccentColor => "#4F46E5";
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     private double _focusCenter = 0.5;
@@ -32,31 +26,24 @@ public partial class TiltShiftToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private double _saturationBoost = 0.3;
 
-    [ObservableProperty]
-    private string? _statusMessage;
+    protected override string OperationName => "Tilt-Shift";
+
+    protected override bool IsEffectActive => BlurRadius > 0 || Math.Abs(SaturationBoost) > 1e-4;
 
     public TiltShiftToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
-        : base(shell, parentDocument)
+        : base(shell, parentDocument, "Adjust the focus band, blur and saturation.")
     {
-        InitSourceAlpha();
-        RefreshResult();
-        StatusMessage = "Adjust the focus band, blur and saturation.";
+        RefreshPreview();
     }
 
-    partial void OnFocusCenterChanged(double value) => RefreshResult();
-    partial void OnFocusWidthChanged(double value) => RefreshResult();
-    partial void OnBlurRadiusChanged(double value) => RefreshResult();
-    partial void OnVerticalChanged(bool value) => RefreshResult();
-    partial void OnSaturationBoostChanged(double value) => RefreshResult();
+    partial void OnFocusCenterChanged(double value) => RefreshPreview();
+    partial void OnFocusWidthChanged(double value) => RefreshPreview();
+    partial void OnBlurRadiusChanged(double value) => RefreshPreview();
+    partial void OnVerticalChanged(bool value) => RefreshPreview();
+    partial void OnSaturationBoostChanged(double value) => RefreshPreview();
 
-    private void RefreshResult()
-    {
-        if (_sourceImage is null || _workingAlpha is null) return;
-        using var result = TiltShiftService.Apply(
-            _sourceImage.FullBgr, FocusCenter, FocusWidth, BlurRadius, Vertical, SaturationBoost);
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
-        IsDirty = BlurRadius > 0 || Math.Abs(SaturationBoost) > 1e-4;
-    }
+    protected override Mat ApplyEffect(Mat bgr)
+        => TiltShiftService.Apply(bgr, FocusCenter, FocusWidth, BlurRadius, Vertical, SaturationBoost);
 
     [RelayCommand]
     private void Reset()
@@ -66,17 +53,6 @@ public partial class TiltShiftToolSessionViewModel : ToolSessionViewModelBase
         BlurRadius = 12;
         Vertical = false;
         SaturationBoost = 0.3;
-        RefreshResult();
-    }
-
-    public override Task ApplyAsync()
-    {
-        Mat? result = null;
-        if (_sourceImage is not null && _workingAlpha is not null)
-        {
-            result = TiltShiftService.Apply(_sourceImage.FullBgr, FocusCenter, FocusWidth, BlurRadius, Vertical, SaturationBoost);
-        }
-        ApplyAndClose(result, "Tilt-Shift");
-        return Task.CompletedTask;
+        RefreshPreview();
     }
 }

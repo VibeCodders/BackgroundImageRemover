@@ -1,5 +1,3 @@
-using System.Windows.Media.Imaging;
-using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -9,13 +7,10 @@ using OpenCvSharp;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for artistic color filters (grayscale, sepia, invert, posterize, emboss, sketch).</summary>
-public partial class FiltersToolSessionViewModel : ToolSessionViewModelBase
+public partial class FiltersToolSessionViewModel : PreviewToolSessionViewModelBase
 {
     public override string ToolBadge => "🎨 Filters";
     public override string AccentColor => "#D946EF";
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEffect))]
@@ -30,29 +25,22 @@ public partial class FiltersToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private int _posterizeLevels = 4;
 
-    [ObservableProperty]
-    private string? _statusMessage;
+    protected override string OperationName => "Filters";
+
+    protected override bool IsEffectActive => SelectedFilter != FilterKind.None && Intensity > 0.001;
 
     public FiltersToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
-        : base(shell, parentDocument)
+        : base(shell, parentDocument, "Choose a filter and adjust its intensity.")
     {
-        InitSourceAlpha();
         RefreshPreview();
-        StatusMessage = "Choose a filter and adjust its intensity.";
     }
 
     partial void OnSelectedFilterChanged(FilterKind value) => RefreshPreview();
     partial void OnIntensityChanged(double value) => RefreshPreview();
     partial void OnPosterizeLevelsChanged(int value) => RefreshPreview();
 
-    private void RefreshPreview()
-    {
-        if (_sourceImage is null || _workingAlpha is null) return;
-
-        using var filtered = FilterService.Apply(_sourceImage.FullBgr, SelectedFilter, Intensity, PosterizeLevels);
-        ResultBitmap = filtered.ToBitmapSource(_workingAlpha);
-        IsDirty = SelectedFilter != FilterKind.None && Intensity > 0.001;
-    }
+    protected override Mat ApplyEffect(Mat bgr)
+        => FilterService.Apply(bgr, SelectedFilter, Intensity, PosterizeLevels);
 
     [RelayCommand]
     private void Reset()
@@ -61,16 +49,5 @@ public partial class FiltersToolSessionViewModel : ToolSessionViewModelBase
         Intensity = 1.0;
         PosterizeLevels = 4;
         RefreshPreview();
-    }
-
-    public override Task ApplyAsync()
-    {
-        Mat? filtered = null;
-        if (_sourceImage is not null && _workingAlpha is not null)
-        {
-            filtered = FilterService.Apply(_sourceImage.FullBgr, SelectedFilter, Intensity, PosterizeLevels);
-        }
-        ApplyAndClose(filtered, "Filters");
-        return Task.CompletedTask;
     }
 }

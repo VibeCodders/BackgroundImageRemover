@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -19,7 +20,7 @@ public static class RotateService
     {
         if (input is null || input.Empty())
         {
-            return new Mat();
+            return input.CloneOrEmpty();
         }
 
         if (Math.Abs(angle) < 1e-6)

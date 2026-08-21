@@ -1,4 +1,3 @@
-using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
@@ -9,13 +8,10 @@ using OpenCvSharp;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for levels adjustment (black point, white point, gamma).</summary>
-public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
+public partial class LevelsToolSessionViewModel : PreviewToolSessionViewModelBase
 {
     public override string ToolBadge => "📊 Levels";
     public override string AccentColor => "#B45309";
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     private double _blackPoint = 0.0;
@@ -47,48 +43,40 @@ public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private bool _invertEnabled;
 
-    [ObservableProperty]
-    private string? _statusMessage;
+    protected override string OperationName => "Levels";
+
+    protected override bool IsEffectActive =>
+        Math.Abs(BlackPoint) > 1e-4
+        || Math.Abs(WhitePoint - 255) > 1e-4
+        || Math.Abs(Gamma - 1.0) > 1e-4
+        || Math.Abs(OutputBlack) > 1e-4
+        || Math.Abs(OutputWhite - 255) > 1e-4
+        || AutoLevelsEnabled
+        || AutoWhiteBalanceEnabled
+        || EqualizeEnabled
+        || InvertEnabled;
 
     public LevelsToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
-        : base(shell, parentDocument)
+        : base(shell, parentDocument, "Adjust black point, white point and gamma.")
     {
-        InitSourceAlpha();
-        RefreshResult();
-        StatusMessage = "Adjust black point, white point and gamma.";
+        RefreshPreview();
     }
 
-    partial void OnBlackPointChanged(double value) => RefreshResult();
-    partial void OnWhitePointChanged(double value) => RefreshResult();
-    partial void OnGammaChanged(double value) => RefreshResult();
-    partial void OnChannelChanged(LevelsChannel value) => RefreshResult();
-    partial void OnOutputBlackChanged(double value) => RefreshResult();
-    partial void OnOutputWhiteChanged(double value) => RefreshResult();
-    partial void OnAutoLevelsEnabledChanged(bool value) => RefreshResult();
-    partial void OnAutoWhiteBalanceEnabledChanged(bool value) => RefreshResult();
-    partial void OnEqualizeEnabledChanged(bool value) => RefreshResult();
-    partial void OnInvertEnabledChanged(bool value) => RefreshResult();
+    partial void OnBlackPointChanged(double value) => RefreshPreview();
+    partial void OnWhitePointChanged(double value) => RefreshPreview();
+    partial void OnGammaChanged(double value) => RefreshPreview();
+    partial void OnChannelChanged(LevelsChannel value) => RefreshPreview();
+    partial void OnOutputBlackChanged(double value) => RefreshPreview();
+    partial void OnOutputWhiteChanged(double value) => RefreshPreview();
+    partial void OnAutoLevelsEnabledChanged(bool value) => RefreshPreview();
+    partial void OnAutoWhiteBalanceEnabledChanged(bool value) => RefreshPreview();
+    partial void OnEqualizeEnabledChanged(bool value) => RefreshPreview();
+    partial void OnInvertEnabledChanged(bool value) => RefreshPreview();
 
-    private void RefreshResult()
-    {
-        if (_sourceImage is null || _workingAlpha is null) return;
-        using var result = BuildResult(_sourceImage.FullBgr);
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
-        IsDirty = Math.Abs(BlackPoint) > 1e-4
-            || Math.Abs(WhitePoint - 255) > 1e-4
-            || Math.Abs(Gamma - 1.0) > 1e-4
-            || Math.Abs(OutputBlack) > 1e-4
-            || Math.Abs(OutputWhite - 255) > 1e-4
-            || AutoLevelsEnabled
-            || AutoWhiteBalanceEnabled
-            || EqualizeEnabled
-            || InvertEnabled;
-    }
-
-    private Mat BuildResult(Mat src)
+    protected override Mat ApplyEffect(Mat bgr)
     {
         bool owns = false;
-        var current = src;
+        var current = bgr;
         current = current.SafeChainWithCatch(r => AutoWhiteBalanceEnabled ? LevelsService.AutoWhiteBalance(r) : r, ref owns);
         current = current.SafeChainWithCatch(r => AutoLevelsEnabled ? LevelsService.AutoLevels(r) : r, ref owns);
         current = current.SafeChainWithCatch(r => LevelsService.Apply(r, BlackPoint, WhitePoint, Gamma, Channel, OutputBlack, OutputWhite), ref owns);
@@ -96,7 +84,6 @@ public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
         current = current.SafeChainWithCatch(r => InvertEnabled ? LevelsService.Invert(r) : r, ref owns);
         return current;
     }
-
 
     [RelayCommand]
     private void Reset()
@@ -111,17 +98,6 @@ public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
         AutoWhiteBalanceEnabled = false;
         EqualizeEnabled = false;
         InvertEnabled = false;
-        RefreshResult();
-    }
-
-    public override Task ApplyAsync()
-    {
-        Mat? bgr = null;
-        if (_sourceImage is not null && _workingAlpha is not null)
-        {
-            bgr = BuildResult(_sourceImage.FullBgr);
-        }
-        ApplyAndClose(bgr, "Levels");
-        return Task.CompletedTask;
+        RefreshPreview();
     }
 }

@@ -1,4 +1,3 @@
-using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
@@ -10,13 +9,10 @@ using WpfColor = System.Windows.Media.Color;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for rendering a text watermark overlay.</summary>
-public partial class TextToolSessionViewModel : ToolSessionViewModelBase
+public partial class TextToolSessionViewModel : PreviewToolSessionViewModelBase
 {
     public override string ToolBadge => "✎ Text";
     public override string AccentColor => "#DB2777";
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     private string? _text = "Watermark";
@@ -93,15 +89,14 @@ public partial class TextToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private bool _isShadowColorPickerOpen;
 
-    [ObservableProperty]
-    private string? _statusMessage;
+    protected override string OperationName => "Text";
+
+    protected override bool IsEffectActive => !string.IsNullOrWhiteSpace(Text);
 
     public TextToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
-        : base(shell, parentDocument)
+        : base(shell, parentDocument, "Type text and choose its position, size and color.")
     {
-        InitSourceAlpha();
         RefreshPreview();
-        StatusMessage = "Type text and choose its position, size and color.";
     }
 
     partial void OnTextChanged(string? value) => RefreshPreview();
@@ -151,26 +146,9 @@ public partial class TextToolSessionViewModel : ToolSessionViewModelBase
         PlatePadding = PlatePadding
     };
 
-    private void RefreshPreview()
-    {
-        if (_sourceImage is null || _workingAlpha is null) return;
-
-        using var rendered = TextOverlayService.Render(_sourceImage.FullBgr, BuildOptions());
-        ResultBitmap = rendered.ToBitmapSource(_workingAlpha);
-        IsDirty = !string.IsNullOrWhiteSpace(Text);
-    }
+    protected override Mat ApplyEffect(Mat bgr)
+        => TextOverlayService.Render(bgr, BuildOptions());
 
     [RelayCommand]
     private void ClearText() => Text = string.Empty;
-
-    public override Task ApplyAsync()
-    {
-        Mat? rendered = null;
-        if (_sourceImage is not null && _workingAlpha is not null)
-        {
-            rendered = TextOverlayService.Render(_sourceImage.FullBgr, BuildOptions());
-        }
-        ApplyAndClose(rendered, "Text");
-        return Task.CompletedTask;
-    }
 }

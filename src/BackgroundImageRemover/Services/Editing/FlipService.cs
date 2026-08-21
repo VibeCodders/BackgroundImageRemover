@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -16,7 +17,7 @@ public static class FlipService
     {
         if (input is null || input.Empty())
         {
-            return new Mat();
+            return input.CloneOrEmpty();
         }
 
         var flipCode = mode switch

@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -16,7 +17,7 @@ public static class DuplicateService
     {
         if (input is null || input.Empty())
         {
-            return new Mat();
+            return input.CloneOrEmpty();
         }
 
         return input.Clone();

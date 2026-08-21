@@ -1,6 +1,4 @@
-using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
-using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,13 +7,10 @@ using OpenCvSharp;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for cinematic/optical effects.</summary>
-public partial class FxToolSessionViewModel : ToolSessionViewModelBase
+public partial class FxToolSessionViewModel : PreviewToolSessionViewModelBase
 {
     public override string ToolBadge => "✨ FX";
     public override string AccentColor => "#C026D3";
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     private double _glowStrength;
@@ -35,28 +30,29 @@ public partial class FxToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private double _bokehSize = 20;
 
-    [ObservableProperty]
-    private string? _statusMessage;
+    protected override string OperationName => "FX";
+
+    protected override bool IsEffectActive =>
+        GlowStrength + BloomStrength + LightLeakStrength + ChromaticAberrationStrength > 1e-4
+        || BokehCount > 0;
 
     public FxToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
-        : base(shell, parentDocument)
+        : base(shell, parentDocument, "Add glow, bloom, light leaks, aberration or bokeh.")
     {
-        InitSourceAlpha();
-        RefreshResult();
-        StatusMessage = "Add glow, bloom, light leaks, aberration or bokeh.";
+        RefreshPreview();
     }
 
-    partial void OnGlowStrengthChanged(double value) => RefreshResult();
-    partial void OnBloomStrengthChanged(double value) => RefreshResult();
-    partial void OnLightLeakStrengthChanged(double value) => RefreshResult();
-    partial void OnChromaticAberrationStrengthChanged(double value) => RefreshResult();
-    partial void OnBokehCountChanged(int value) => RefreshResult();
-    partial void OnBokehSizeChanged(double value) => RefreshResult();
+    partial void OnGlowStrengthChanged(double value) => RefreshPreview();
+    partial void OnBloomStrengthChanged(double value) => RefreshPreview();
+    partial void OnLightLeakStrengthChanged(double value) => RefreshPreview();
+    partial void OnChromaticAberrationStrengthChanged(double value) => RefreshPreview();
+    partial void OnBokehCountChanged(int value) => RefreshPreview();
+    partial void OnBokehSizeChanged(double value) => RefreshPreview();
 
-    private Mat BuildResult()
+    protected override Mat ApplyEffect(Mat bgr)
     {
         bool owns = true;
-        var result = _sourceImage!.FullBgr.Clone();
+        var result = bgr.Clone();
         result = result.SafeChainWithCatch(r => BloomStrength > 1e-4 ? FxService.Bloom(r, BloomStrength) : r, ref owns);
         result = result.SafeChainWithCatch(r => GlowStrength > 1e-4 ? FxService.Glow(r, GlowStrength) : r, ref owns);
         result = result.SafeChainWithCatch(r => LightLeakStrength > 1e-4 ? FxService.LightLeak(r, LightLeakStrength) : r, ref owns);
@@ -65,31 +61,12 @@ public partial class FxToolSessionViewModel : ToolSessionViewModelBase
         return result;
     }
 
-    private void RefreshResult()
-    {
-        if (_sourceImage is null || _workingAlpha is null) return;
-        using var result = BuildResult();
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
-        IsDirty = GlowStrength + BloomStrength + LightLeakStrength + ChromaticAberrationStrength > 1e-4 || BokehCount > 0;
-    }
-
     [RelayCommand]
     private void Reset()
     {
         GlowStrength = BloomStrength = LightLeakStrength = ChromaticAberrationStrength = 0;
         BokehCount = 0;
         BokehSize = 20;
-        RefreshResult();
-    }
-
-    public override Task ApplyAsync()
-    {
-        Mat? result = null;
-        if (_sourceImage is not null && _workingAlpha is not null)
-        {
-            result = BuildResult();
-        }
-        ApplyAndClose(result, "FX");
-        return Task.CompletedTask;
+        RefreshPreview();
     }
 }

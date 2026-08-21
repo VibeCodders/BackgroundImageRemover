@@ -69,6 +69,34 @@ public static class MatExtensions
     }
 
     /// <summary>
+    /// Returns a clone of <paramref name="source"/>, or an empty Mat when the source is null,
+    /// disposed or empty. Eliminates the repeated <c>if (mat is null || mat.Empty())</c> guard
+    /// boilerplate scattered across the editing services.
+    /// </summary>
+    public static Mat CloneOrEmpty(this Mat? source)
+    {
+        if (source is null || source.IsDisposed || source.Empty())
+        {
+            return new Mat();
+        }
+        return source.Clone();
+    }
+
+    /// <summary>
+    /// Returns <paramref name="source"/> when it is non-null and non-empty, otherwise an empty Mat.
+    /// Unlike <see cref="CloneOrEmpty"/> the original (non-empty) instance is returned without copying,
+    /// which is handy for the "no-op" fast path of an effect.
+    /// </summary>
+    public static Mat OrEmpty(this Mat? source)
+    {
+        if (source is null || source.IsDisposed || source.Empty())
+        {
+            return new Mat();
+        }
+        return source;
+    }
+
+    /// <summary>
     /// Replaces the alpha channel of a 4-channel BGRA Mat in-place with a single-channel alpha Mat.
     /// </summary>
     public static void SetAlphaChannel(this Mat bgra, Mat alpha)

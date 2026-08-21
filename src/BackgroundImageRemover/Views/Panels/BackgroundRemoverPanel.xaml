@@ -5,23 +5,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
              xmlns:models="clr-namespace:BackgroundImageRemover.Models"
-             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="300">
-    <UserControl.Resources>
-        <ObjectDataProvider x:Key="StrategyKindValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
-            <ObjectDataProvider.MethodParameters>
-                <x:Type TypeName="models:StrategyKind" />
-            </ObjectDataProvider.MethodParameters>
-        </ObjectDataProvider>
-    </UserControl.Resources>
+
 
     <StackPanel>
         <TextBlock Text="Background Removal" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
-        <TextBlock Text="Strategy" FontWeight="SemiBold" Margin="0,0,0,4" />
-        <ComboBox ItemsSource="{Binding Source={StaticResource StrategyKindValues}}"
-                  SelectedItem="{Binding SelectedStrategy}"
-                  Margin="0,0,0,16" />
+        <TextBlock Text="Select a strategy from the toolbar on the left" 
+                   FontStyle="Italic" 
+                   Foreground="{DynamicResource Theme.MutedForegroundBrush}" 
+                   Margin="0,0,0,12" 
+                   TextWrapping="Wrap" />
 
         <!-- Chroma Key options -->
         <StackPanel Visibility="{Binding SelectedStrategy, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ChromaKey}">

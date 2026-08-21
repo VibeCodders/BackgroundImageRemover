@@ -1,0 +1,154 @@
+<UserControl x:Class="BackgroundImageRemover.Views.Controls.StrategyToolbar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:models="clr-namespace:BackgroundImageRemover.Models"
+             mc:Ignorable="d"
+             d:DesignHeight="400" d:DesignWidth="60">
+    <UserControl.Resources>
+        <Style x:Key="StrategyToolButton" TargetType="RadioButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
+            <Setter Property="Width" Value="48" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Margin" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                CornerRadius="8" Padding="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Theme.HoverBackground}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Theme.AccentBackground}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Theme.AccentForeground}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="{DynamicResource Theme.BarBackground}" 
+            BorderBrush="{DynamicResource Theme.BorderBrush}" 
+            BorderThickness="0,0,1,0"
+            Padding="4">
+        <StackPanel>
+            <TextBlock Text="Tools" FontWeight="Bold" 
+                       Foreground="{DynamicResource Theme.ForegroundBrush}" 
+                       HorizontalAlignment="Center" 
+                       Margin="0,8,0,12" FontSize="10" />
+
+            <!-- Strategy Tools -->
+            <RadioButton GroupName="StrategyTools" 
+                         Style="{StaticResource StrategyToolButton}"
+                         Command="{Binding SelectStrategyCommand}" 
+                         CommandParameter="{x:Static models:StrategyKind.Onnx}"
+                         ToolTip="AI-powered background removal (ONNX)">
+                <Path Data="{StaticResource OnnxIcon}" 
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                      Stretch="Uniform" 
+                      Width="24" Height="24" />
+            </RadioButton>
+
+            <RadioButton GroupName="StrategyTools" 
+                         Style="{StaticResource StrategyToolButton}"
+                         Command="{Binding SelectStrategyCommand}" 
+                         CommandParameter="{x:Static models:StrategyKind.GrabCut}"
+                         ToolTip="GrabCut selection algorithm">
+                <Path Data="{StaticResource GrabCutIcon}" 
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                      Stretch="Uniform" 
+                      Width="24" Height="24" />
+            </RadioButton>
+
+            <RadioButton GroupName="StrategyTools" 
+                         Style="{StaticResource StrategyToolButton}"
+                         Command="{Binding SelectStrategyCommand}" 
+                         CommandParameter="{x:Static models:StrategyKind.ChromaKey}"
+                         ToolTip="Chroma key (green screen)">
+                <Path Data="{StaticResource ChromaKeyIcon}" 
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                      Stretch="Uniform" 
+                      Width="24" Height="24" />
+            </RadioButton>
+
+            <RadioButton GroupName="StrategyTools" 
+                         Style="{StaticResource StrategyToolButton}"
+                         Command="{Binding SelectStrategyCommand}" 
+                         CommandParameter="{x:Static models:StrategyKind.Sam}"
+                         ToolTip="Segment Anything Model (SAM)">
+                <Path Data="{StaticResource SamIcon}" 
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                      Stretch="Uniform" 
+                      Width="24" Height="24" />
+            </RadioButton>
+
+            <RadioButton GroupName="StrategyTools" 
+                         Style="{StaticResource StrategyToolButton}"
+                         Command="{Binding SelectStrategyCommand}" 
+                         CommandParameter="{x:Static models:StrategyKind.FloodFill}"
+                         ToolTip="Flood fill background removal">
+                <Path Data="{StaticResource FloodFillIcon}" 
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                      Stretch="Uniform" 
+                      Width="24" Height="24" />
+            </RadioButton>
+
+            <RadioButton GroupName="StrategyTools" 
+                         Style="{StaticResource StrategyToolButton}"
+                         Command="{Binding SelectStrategyCommand}" 
+                         CommandParameter="{x:Static models:StrategyKind.KMeans}"
+                         ToolTip="K-Means clustering">
+                <Path Data="{StaticResource KMeansIcon}" 
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                      Stretch="Uniform" 
+                      Width="24" Height="24" />
+            </RadioButton>
+
+            <RadioButton GroupName="StrategyTools" 
+                         Style="{StaticResource StrategyToolButton}"
+                         Command="{Binding SelectStrategyCommand}" 
+                         CommandParameter="{x:Static models:StrategyKind.Otsu}"
+                         ToolTip="Otsu thresholding">
+                <Path Data="{StaticResource OtsuIcon}" 
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                      Stretch="Uniform" 
+                      Width="24" Height="24" />
+            </RadioButton>
+
+            <RadioButton GroupName="StrategyTools" 
+                         Style="{StaticResource StrategyToolButton}"
+                         Command="{Binding SelectStrategyCommand}" 
+                         CommandParameter="{x:Static models:StrategyKind.MagicWand}"
+                         ToolTip="Magic wand selection">
+                <Path Data="{StaticResource MagicWandIcon}" 
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                      Stretch="Uniform" 
+                      Width="24" Height="24" />
+            </RadioButton>
+
+            <RadioButton GroupName="StrategyTools" 
+                         Style="{StaticResource StrategyToolButton}"
+                         Command="{Binding SelectStrategyCommand}" 
+                         CommandParameter="{x:Static models:StrategyKind.Inpaint}"
+                         ToolTip="Inpaint background removal">
+                <Path Data="{StaticResource InpaintIcon}" 
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                      Stretch="Uniform" 
+                      Width="24" Height="24" />
+            </RadioButton>
+        </StackPanel>
+    </Border>
+</UserControl>

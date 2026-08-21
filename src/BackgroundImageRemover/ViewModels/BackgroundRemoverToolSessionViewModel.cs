@@ -63,6 +63,12 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     [ObservableProperty]
     private StrategyKind _selectedStrategy = StrategyKind.ChromaKey;
 
+    [RelayCommand]
+    private void SelectStrategy(StrategyKind strategy)
+    {
+        SelectedStrategy = strategy;
+    }
+
     [ObservableProperty]
     private BitmapSource? _previewBitmap;
 

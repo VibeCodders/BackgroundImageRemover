@@ -8,6 +8,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <!-- Implicit control styles shared by both themes (colors resolved with DynamicResource). -->
                 <ResourceDictionary Source="Themes/ControlStyles.xaml" />
+                <!-- Strategy icon resources -->
+                <ResourceDictionary Source="Themes/StrategyIcons.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />

@@ -179,6 +179,12 @@
             </DockPanel>
         </Border>
 
+        <!-- Strategy Toolbar (only visible when Background Remover tool is active) -->
+        <Border DockPanel.Dock="Left" Background="{DynamicResource Theme.BarBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0"
+                Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground}">
+            <controls:StrategyToolbar DataContext="{Binding ActiveToolSession}" />
+        </Border>
+
         <!-- Undo/Redo History Panel -->
         <Border DockPanel.Dock="Left" Width="220" Background="{DynamicResource Theme.PanelBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0"
                 Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">

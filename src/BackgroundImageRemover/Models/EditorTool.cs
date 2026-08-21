@@ -78,5 +78,8 @@ public enum EditorTool
     Vignette,
 
     /// <summary>Renders emoji or text glyphs as decorative overlays on the image.</summary>
-    Emoji
+    Emoji,
+
+    /// <summary>Arbitrary-angle rotation of the document (with optional canvas expansion).</summary>
+    Rotate
 }

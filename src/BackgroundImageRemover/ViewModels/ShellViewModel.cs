@@ -10,6 +10,7 @@ using BackgroundImageRemover.Services.Sam;
 using BackgroundImageRemover.Services.Settings;
 using BackgroundImageRemover.Services.Strategies;
 using CommunityToolkit.Mvvm.ComponentModel;
+using BackgroundImageRemover.ViewModels.Tools;
 
 namespace BackgroundImageRemover.ViewModels;
 
@@ -110,6 +111,7 @@ public partial class ShellViewModel : ObservableObject
             EditorTool.Sharpen => new SharpenToolSessionViewModel(this, doc),
             EditorTool.Vignette => new VignetteToolSessionViewModel(this, doc),
             EditorTool.Emoji => new EmojiToolSessionViewModel(this, doc),
+            EditorTool.Rotate => new RotateToolSessionViewModel(this, doc),
             _ => null
         };
 
@@ -134,7 +136,7 @@ public partial class ShellViewModel : ObservableObject
     /// <summary>
     /// Closes a tool session directly without prompting.
     /// </summary>
-    public void CloseTabDirect(IToolSessionTab toolTab)
+    public virtual void CloseTabDirect(IToolSessionTab toolTab)
     {
         if (toolTab.ParentDocument is { } parent)
         {

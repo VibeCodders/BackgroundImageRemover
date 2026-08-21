@@ -1,0 +1,59 @@
+using OpenCvSharp;
+using BackgroundImageRemover.Services.Editing;
+using Xunit;
+
+namespace BackgroundImageRemover.Tests.Services;
+
+public class GrayscaleServiceTests
+{
+    [Fact]
+    public void ToGrayscale_StrengthZero_ReturnsUnchangedImage()
+    {
+        using var input = new Mat(1, 1, MatType.CV_8UC3, new Scalar(10, 20, 30));
+        using var result = GrayscaleService.ToGrayscale(input, 0);
+
+        using var diff = new Mat();
+        Cv2.Absdiff(input, result, diff);
+        Assert.Equal(0, Cv2.CountNonZero(diff));
+        Assert.Equal(input.Size(), result.Size());
+        Assert.Equal(input.Type(), result.Type());
+    }
+
+    [Fact]
+    public void ToGrayscale_StrengthOne_ConvertsToGrayscale()
+    {
+        using var input = new Mat(1, 1, MatType.CV_8UC3, new Scalar(10, 20, 30));
+        using var result = GrayscaleService.ToGrayscale(input, 1);
+
+        var gray = new Mat();
+        Cv2.CvtColor(input, gray, ColorConversionCodes.BGR2GRAY);
+        using var grayBgr = new Mat();
+        Cv2.CvtColor(gray, grayBgr, ColorConversionCodes.GRAY2BGR);
+
+        var expected = grayBgr.Get<Vec3b>(0, 0);
+        var pixel = result.Get<Vec3b>(0, 0);
+        Assert.Equal(expected, pixel);
+        Assert.Equal(input.Size(), result.Size());
+        Assert.Equal(input.Type(), result.Type());
+    }
+
+    [Fact]
+    public void ToGrayscale_StrengthHalf_BlendsCorrectly()
+    {
+        using var input = new Mat(1, 1, MatType.CV_8UC3, new Scalar(10, 20, 30));
+        using var result = GrayscaleService.ToGrayscale(input, 0.5);
+
+        var gray = new Mat();
+        Cv2.CvtColor(input, gray, ColorConversionCodes.BGR2GRAY);
+        using var grayBgr = new Mat();
+        Cv2.CvtColor(gray, grayBgr, ColorConversionCodes.GRAY2BGR);
+
+        var expected = grayBgr.Get<Vec3b>(0, 0);
+        var pixel = result.Get<Vec3b>(0, 0);
+        Assert.Equal((byte)((10 + expected[0]) / 2), pixel[0]);
+        Assert.Equal((byte)((20 + expected[1]) / 2), pixel[1]);
+        Assert.Equal((byte)((30 + expected[2]) / 2), pixel[2]);
+        Assert.Equal(input.Size(), result.Size());
+        Assert.Equal(input.Type(), result.Type());
+    }
+}

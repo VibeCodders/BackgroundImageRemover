@@ -9,54 +9,46 @@ public static class MosaicService
     /// <summary>Pixelates a region (or the whole image when <paramref name="region"/> is null) with the given cell size.</summary>
     public static Mat Pixelate(Mat src, Rect? region, int cellSize)
     {
-        var result = src.Clone();
-        var bounds = region is { } r ? GeometryHelper.ClampToSize(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
-        cellSize = Math.Max(1, cellSize);
+        return ImageProcessingUtility.ApplyToRegion(src, region, roi =>
+        {
+            cellSize = Math.Max(1, cellSize);
+            int smallW = Math.Max(1, roi.Width / cellSize);
+            int smallH = Math.Max(1, roi.Height / cellSize);
 
-        int smallW = Math.Max(1, bounds.Width / cellSize);
-        int smallH = Math.Max(1, bounds.Height / cellSize);
-
-        using var roi = new Mat(result, bounds);
-        using var small = new Mat();
-        Cv2.Resize(roi, small, new Size(smallW, smallH), interpolation: InterpolationFlags.Area);
-        Cv2.Resize(small, roi, bounds.Size, interpolation: InterpolationFlags.Nearest);
-        return result;
+            using var small = new Mat();
+            Cv2.Resize(roi, small, new Size(smallW, smallH), 0, 0, InterpolationFlags.Area);
+            Cv2.Resize(small, roi, new Size(roi.Width, roi.Height), 0, 0, InterpolationFlags.Nearest);
+        });
     }
 
     /// <summary>Blurs a region (or the whole image when <paramref name="region"/> is null) with the given radius.</summary>
     public static Mat Blur(Mat src, Rect? region, int radius)
     {
-        var result = src.Clone();
-        var bounds = region is { } r ? GeometryHelper.ClampToSize(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
-        radius = Math.Max(1, radius);
-
-        using var roi = new Mat(result, bounds);
-        Cv2.GaussianBlur(roi, roi, new Size(0, 0), radius, radius);
-        return result;
+        return ImageProcessingUtility.ApplyToRegion(src, region, roi =>
+        {
+            radius = Math.Max(1, radius);
+            Cv2.GaussianBlur(roi, roi, new Size(0, 0), radius, radius);
+        });
     }
 
     /// <summary>Applies a median blur (edge-preserving) to a region or the whole image.</summary>
     public static Mat MedianBlur(Mat src, Rect? region, int radius)
     {
-        var result = src.Clone();
-        var bounds = region is { } r ? GeometryHelper.ClampToSize(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
-        radius = Math.Max(1, radius);
-        int k = radius % 2 == 0 ? radius + 1 : radius;
-
-        using var roi = new Mat(result, bounds);
-        Cv2.MedianBlur(roi, roi, k);
-        return result;
+        return ImageProcessingUtility.ApplyToRegion(src, region, roi =>
+        {
+            radius = Math.Max(1, radius);
+            int k = radius % 2 == 0 ? radius + 1 : radius;
+            Cv2.MedianBlur(roi, roi, k);
+        });
     }
 
     /// <summary>Fills a region (or the whole image) with a solid color.</summary>
     public static Mat SolidFill(Mat src, Rect? region, Vec3b color)
     {
-        var result = src.Clone();
-        var bounds = region is { } r ? GeometryHelper.ClampToSize(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
-
-        using var roi = new Mat(result, bounds);
-        roi.SetTo(new Scalar(color.Item0, color.Item1, color.Item2));
-        return result;
+        return ImageProcessingUtility.ApplyToRegion(src, region, roi =>
+        {
+            roi.SetTo(new Scalar(color.Item0, color.Item1, color.Item2));
+        });
     }
 
     /// <summary>Pixelates the whole image except the selected region (inverted censorship).</summary>

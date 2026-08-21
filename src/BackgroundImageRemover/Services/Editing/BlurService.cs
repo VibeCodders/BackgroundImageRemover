@@ -14,7 +14,7 @@ public static class BlurService
     public static Mat BlurRegion(Mat bgr, Mat mask, double radius)
     {
         radius = Math.Max(0.5, radius);
-        int ksize = Math.Max(1, (int)Math.Round(radius * 2) | 1);
+        int ksize = ImageProcessingUtility.GaussianKernelSize(radius);
 
         using var blurred = new Mat();
         Cv2.GaussianBlur(bgr, blurred, new Size(ksize, ksize), radius, radius);
@@ -26,7 +26,7 @@ public static class BlurService
     public static Mat BlurAll(Mat bgr, double radius)
     {
         radius = Math.Max(0.5, radius);
-        int ksize = Math.Max(1, (int)Math.Round(radius * 2) | 1);
+        int ksize = ImageProcessingUtility.GaussianKernelSize(radius);
         var result = new Mat();
         Cv2.GaussianBlur(bgr, result, new Size(ksize, ksize), radius, radius);
         return result;

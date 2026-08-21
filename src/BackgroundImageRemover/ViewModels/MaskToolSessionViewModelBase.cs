@@ -33,9 +33,6 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
     [ObservableProperty]
     private bool _paintMode;
 
-    [ObservableProperty]
-    private string? _statusMessage;
-
     protected MaskToolSessionViewModelBase(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {

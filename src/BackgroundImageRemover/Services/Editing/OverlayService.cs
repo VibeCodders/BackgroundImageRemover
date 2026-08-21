@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -167,35 +168,7 @@ public static class OverlayService
 
     private static void BlendNormal(Mat roi, Mat overlayRoi, double opacity)
     {
-        var channels = Cv2.Split(overlayRoi);
-        try
-        {
-            using var alphaF = new Mat();
-            channels[3].ConvertTo(alphaF, MatType.CV_32FC1, opacity / 255.0);
-
-            using var overlayBgr = new Mat();
-            Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, overlayBgr);
-
-            using var overlayF = new Mat();
-            overlayBgr.ConvertTo(overlayF, MatType.CV_32FC3);
-            using var baseF = new Mat();
-            roi.ConvertTo(baseF, MatType.CV_32FC3);
-
-            using var alpha3 = new Mat();
-            Cv2.CvtColor(alphaF, alpha3, ColorConversionCodes.GRAY2BGR);
-
-            using var fgWeighted = overlayF.Mul(alpha3).ToMat();
-            using var oneMinus = new Mat();
-            Cv2.Subtract(new Mat(alpha3.Size(), alpha3.Type(), Scalar.All(1.0)), alpha3, oneMinus);
-            using var bgWeighted = baseF.Mul(oneMinus).ToMat();
-
-            using var blended = (fgWeighted + bgWeighted).ToMat();
-            blended.ConvertTo(roi, MatType.CV_8UC3);
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
+        ImageProcessingUtility.AlphaComposite(roi, overlayRoi, opacity);
     }
 
     private static void BlendPixel(Vec3b basePx, Vec3b fg, OverlayBlendMode blend, out Vec3b result)

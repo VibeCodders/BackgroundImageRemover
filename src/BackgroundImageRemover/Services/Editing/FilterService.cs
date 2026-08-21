@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -54,15 +55,7 @@ public static class FilterService
 
     private static Mat Posterize(Mat input, int levels)
     {
-        int bucket = Math.Max(1, 256 / Math.Max(1, levels));
-        var lut = new byte[256];
-        for (int i = 0; i < lut.Length; i++)
-        {
-            lut[i] = (byte)((i / bucket) * bucket);
-        }
-
-        using var lutMat = new Mat(1, 256, MatType.CV_8UC1);
-        lutMat.SetArray(lut);
+        using var lutMat = ImageProcessingUtility.BuildPosterizeLut(levels);
         var result = new Mat();
         Cv2.LUT(input, lutMat, result);
         return result;
@@ -167,21 +160,7 @@ public static class FilterService
     /// <summary>Vivid: boosted saturation.</summary>
     private static Mat Vivid(Mat input)
     {
-        using var hsv = new Mat();
-        Cv2.CvtColor(input, hsv, ColorConversionCodes.BGR2HSV);
-        var channels = Cv2.Split(hsv);
-        try
-        {
-            channels[1].ConvertTo(channels[1], MatType.CV_8UC1, 1.5);
-            Cv2.Merge(channels, hsv);
-            var result = new Mat();
-            Cv2.CvtColor(hsv, result, ColorConversionCodes.HSV2BGR);
-            return result;
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
+        return ImageProcessingUtility.AdjustSaturation(input, 0.5);
     }
 
     /// <summary>Vintage: sepia with reduced contrast.</summary>
@@ -232,10 +211,7 @@ public static class FilterService
     /// <summary>Noir: high-contrast black and white.</summary>
     private static Mat Noir(Mat input)
     {
-        using var gray = new Mat();
-        Cv2.CvtColor(input, gray, ColorConversionCodes.BGR2GRAY);
-        using var grayBgr = new Mat();
-        Cv2.CvtColor(gray, grayBgr, ColorConversionCodes.GRAY2BGR);
+        using var grayBgr = input.ToGrayBgr();
         var result = new Mat();
         grayBgr.ConvertTo(result, MatType.CV_8UC3, 1.5, -30);
         return result;
@@ -243,17 +219,6 @@ public static class FilterService
 
     private static Mat Blend(Mat original, Mat filtered, double intensity)
     {
-        if (intensity <= 0.001)
-        {
-            return original.Clone();
-        }
-        if (intensity >= 0.999)
-        {
-            return filtered.Clone();
-        }
-
-        var result = new Mat();
-        Cv2.AddWeighted(original, 1.0 - intensity, filtered, intensity, 0, result);
-        return result;
+        return ImageProcessingUtility.BlendLinear(original, filtered, intensity);
     }
 }

@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
@@ -279,27 +280,7 @@ public static class TextOverlayService
         using var blockRoi = new Mat(blockBgra, new Rect(0, 0, w, h));
         using var dstRoi = new Mat(result, new Rect(x, y, w, h));
 
-        using var bsplit = ChannelSplit.Of(blockRoi);
-        using var alpha = new Mat();
-        bsplit[3].ConvertTo(alpha, MatType.CV_32FC1, opacity / 255.0);
-        using var alpha3 = new Mat();
-        Cv2.CvtColor(alpha, alpha3, ColorConversionCodes.GRAY2BGR);
-
-        using var blockBgr = new Mat();
-        Cv2.Merge(new[] { bsplit[0], bsplit[1], bsplit[2] }, blockBgr);
-        using var dstF = new Mat();
-        dstRoi.ConvertTo(dstF, MatType.CV_32FC3);
-        using var blockF = new Mat();
-        blockBgr.ConvertTo(blockF, MatType.CV_32FC3);
-
-        using var inv = new Mat();
-        Cv2.Subtract(new Mat(alpha3.Size(), alpha3.Type(), Scalar.All(1.0)), alpha3, inv);
-        using var dstWeighted = dstF.Mul(inv).ToMat();
-        using var blockWeighted = blockF.Mul(alpha3).ToMat();
-        using var blended = (dstWeighted + blockWeighted).ToMat();
-        using var outRoi = new Mat();
-        blended.ConvertTo(outRoi, MatType.CV_8UC3);
-        outRoi.CopyTo(dstRoi);
+        ImageProcessingUtility.AlphaComposite(dstRoi, blockRoi, opacity);
 
         return result;
     }

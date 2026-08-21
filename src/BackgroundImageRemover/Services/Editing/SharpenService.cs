@@ -12,8 +12,8 @@ public static class SharpenService
     /// </summary>
     public static Mat SharpenRegion(Mat bgr, Mat mask, double strength)
     {
-        strength = Math.Clamp(strength, 0.0, 1.0);
-        if (strength <= 1e-4)
+        strength = EditingGuard.ClampStrength(strength);
+        if (!EditingGuard.IsEffectSignificant(strength))
         {
             return bgr.Clone();
         }
@@ -30,8 +30,8 @@ public static class SharpenService
     /// <summary>Sharpens the entire image with an unsharp mask of <paramref name="strength"/> (0..1).</summary>
     public static Mat SharpenAll(Mat bgr, double strength)
     {
-        strength = Math.Clamp(strength, 0.0, 1.0);
-        if (strength <= 1e-4)
+        strength = EditingGuard.ClampStrength(strength);
+        if (!EditingGuard.IsEffectSignificant(strength))
         {
             return bgr.Clone();
         }

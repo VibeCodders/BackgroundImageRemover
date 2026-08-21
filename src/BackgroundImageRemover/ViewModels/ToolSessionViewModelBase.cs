@@ -36,6 +36,9 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
     [NotifyPropertyChangedFor(nameof(TabTitle))]
     private bool _isDirty;
 
+    [ObservableProperty]
+    private string? _statusMessage;
+
     public string? DirtyHint => IsDirty ? "Unapplied changes in tool session." : null;
     public virtual bool IsCutout => false;
     public virtual string? CutoutHint => null;

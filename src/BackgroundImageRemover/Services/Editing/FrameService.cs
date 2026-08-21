@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
 
@@ -253,13 +254,14 @@ public static class FrameService
         var channels = new Mat[4];
         try
         {
+            using var invFactor = new Mat();
+            Cv2.Subtract(new Mat(factor.Size(), factor.Type(), Scalar.All(1.0)), factor, invFactor);
+
             for (int i = 0; i < 3; i++)
             {
                 using var chF = new Mat();
                 split[i].ConvertTo(chF, MatType.CV_32FC1);
-                using var inv = new Mat();
-                Cv2.Subtract(new Mat(factor.Size(), factor.Type(), Scalar.All(1.0)), factor, inv);
-                using var baseW = chF.Mul(inv).ToMat();
+                using var baseW = chF.Mul(invFactor).ToMat();
                 using var colorW = new Mat();
                 Cv2.Multiply(factor, Scalar.All(colorValues[i]), colorW);
                 channels[i] = (baseW + colorW).ToMat();
@@ -285,41 +287,6 @@ public static class FrameService
     /// <summary>Alpha-composites a colored overlay (using its alpha) over a BGRA image, scaled by <paramref name="opacity"/>.</summary>
     private static Mat CompositeOverlay(Mat baseBgra, Mat overlayBgra, double opacity)
     {
-        using var bsplit = ChannelSplit.Of(baseBgra);
-        using var osplit = ChannelSplit.Of(overlayBgra);
-        using var a = new Mat();
-        osplit[3].ConvertTo(a, MatType.CV_32FC1, opacity / 255.0);
-
-        var channels = new Mat[4];
-        try
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                using var baseF = new Mat();
-                bsplit[i].ConvertTo(baseF, MatType.CV_32FC1);
-                using var overF = new Mat();
-                osplit[i].ConvertTo(overF, MatType.CV_32FC1);
-                using var inv = new Mat();
-                Cv2.Subtract(new Mat(a.Size(), a.Type(), Scalar.All(1.0)), a, inv);
-                using var baseWeighted = baseF.Mul(inv).ToMat();
-                using var overWeighted = overF.Mul(a).ToMat();
-                channels[i] = (baseWeighted + overWeighted).ToMat();
-            }
-
-            channels[3] = new Mat();
-            bsplit[3].ConvertTo(channels[3], MatType.CV_32FC1);
-            var merged = new Mat();
-            Cv2.Merge(channels, merged);
-            using (merged)
-            {
-                var result = new Mat();
-                merged.ConvertTo(result, MatType.CV_8UC4);
-                return result;
-            }
-        }
-        finally
-        {
-            foreach (var ch in channels) ch?.Dispose();
-        }
+        return ImageProcessingUtility.CompositeOverBgra(baseBgra, overlayBgra, opacity);
     }
 }

@@ -29,7 +29,7 @@ public static class TiltShiftService
             if (blurRadius > 1e-4)
             {
                 using var blurred = new Mat();
-                int kernel = Math.Max(1, (int)Math.Round(blurRadius * 2) | 1);
+                int kernel = ImageProcessingUtility.GaussianKernelSize(blurRadius);
                 Cv2.GaussianBlur(current, blurred, new Size(kernel, kernel), blurRadius, blurRadius);
                 using var mask = BuildFocusMask(current.Size(), focusCenter, focusWidth, vertical);
                 // Blend blurred image in where the mask is white, keep original where black.
@@ -40,22 +40,9 @@ public static class TiltShiftService
 
             if (Math.Abs(saturationBoost) > 1e-4)
             {
-                using var hsv = new Mat();
-                Cv2.CvtColor(current, hsv, ColorConversionCodes.BGR2HSV);
-                var channels = Cv2.Split(hsv);
-                try
-                {
-                    channels[1].ConvertTo(channels[1], MatType.CV_8UC1, 1.0 + saturationBoost);
-                    Cv2.Merge(channels, hsv);
-                    var boosted = new Mat();
-                    Cv2.CvtColor(hsv, boosted, ColorConversionCodes.HSV2BGR);
-                    current.Dispose();
-                    current = boosted;
-                }
-                finally
-                {
-                    foreach (var ch in channels) ch.Dispose();
-                }
+                var boosted = ImageProcessingUtility.AdjustSaturation(current, saturationBoost);
+                current.Dispose();
+                current = boosted;
             }
 
             return current;

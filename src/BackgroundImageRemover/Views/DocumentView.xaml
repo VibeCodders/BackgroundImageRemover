@@ -108,18 +108,32 @@
 
         <!-- Main Toolbar (always visible like GIMP), horizontally resizable so widening it
              lets the icon groups wrap into 2, 3+ columns instead of a single column.
-             GridSplitter works directly against a preceding DockPanel.Dock="Left" sibling's
-             Width, so no enclosing Grid or extra column is needed for that. -->
-        <Border DockPanel.Dock="Left" x:Name="ToolbarHost" Width="76" MinWidth="60" MaxWidth="480"
-                Background="{DynamicResource Theme.BarBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0">
-            <controls:StrategyToolbar DataContext="{Binding}" />
-        </Border>
-        <GridSplitter DockPanel.Dock="Left" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                      Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the tool palette" />
+             A real Grid (not a bare DockPanel) hosts the splitter so the drag reliably
+             resizes the ToolbarColumn - GridSplitter only guarantees this behavior inside
+             an actual Grid.ColumnDefinitions. -->
+        <Grid DockPanel.Dock="Left">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ToolbarColumn" Width="76" MinWidth="60" MaxWidth="480" />
+                <ColumnDefinition Width="5" />
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" x:Name="ToolbarHost"
+                    Background="{DynamicResource Theme.BarBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0">
+                <controls:StrategyToolbar DataContext="{Binding}" />
+            </Border>
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                          Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the tool palette" />
+        </Grid>
 
-        <!-- Left Panel Stack: History, Layers, Channels, Paths -->
-        <Border DockPanel.Dock="Left" Width="220" Background="{DynamicResource Theme.PanelBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0"
-                Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
+        <!-- Left Panel Stack: History, Layers, Channels, Paths (resizable) -->
+        <Grid DockPanel.Dock="Left"
+              Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220" MinWidth="160" MaxWidth="480" />
+                <ColumnDefinition Width="5" />
+            </Grid.ColumnDefinitions>
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                          Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the side panel" />
+        <Border Grid.Column="0" Background="{DynamicResource Theme.PanelBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0">
         <DockPanel>
             <!-- History Panel -->
             <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
@@ -165,6 +179,7 @@
             </Border>
         </DockPanel>
         </Border>
+        </Grid>
 
         <!-- Active Tool Session Modal Banner (when a tool tab is currently open for this doc) -->
         <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.InfoBannerBackground}" BorderBrush="{DynamicResource Theme.InfoBannerBorderBrush}" BorderThickness="0,0,0,1" Padding="12,6"
@@ -208,9 +223,16 @@
             </StatusBarItem>
         </StatusBar>
 
-        <!-- Dynamic Contextual Side Panel (Only visible when a tool is active) -->
-        <Border DockPanel.Dock="Right" Width="330" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}"
-                Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground|Uncrop|Retouch|Adjustments}">
+        <!-- Dynamic Contextual Side Panel (Only visible when a tool is active), resizable -->
+        <Grid DockPanel.Dock="Right"
+              Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground|Uncrop|Retouch|Adjustments}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="330" MinWidth="240" MaxWidth="600" />
+            </Grid.ColumnDefinitions>
+            <GridSplitter Grid.Column="0" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                          Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the tool options panel" />
+            <Border Grid.Column="1" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <!-- PANEL 1: REMOVE BACKGROUND -->
@@ -230,7 +252,8 @@
                         Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Adjustments}" />
                 </StackPanel>
             </ScrollViewer>
-        </Border>
+            </Border>
+        </Grid>
 
         <!-- Central Work Area -->
         <Grid>

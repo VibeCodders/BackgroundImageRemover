@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Settings;
 using BackgroundImageRemover.Services.Strategies;
 using BackgroundImageRemover.ViewModels;
 
@@ -36,6 +37,72 @@ public partial class DocumentView : UserControl
 
         Loaded += DocumentView_Loaded;
         Unloaded += DocumentView_Unloaded;
+        RestorePanelWidths();
+    }
+
+    /// <summary>Resolves the settings service, or null if unavailable (e.g. XAML designer,
+    /// where <see cref="App.OnStartup"/> never ran and the DI container was never built).</summary>
+    private static ISettingsService? TryGetSettingsService()
+    {
+        try
+        {
+            return App.Services?.GetService(typeof(ISettingsService)) as ISettingsService;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Applies previously saved panel widths (if any) so the layout the user chose
+    /// in one tab/session carries over, rather than resetting to the XAML defaults.</summary>
+    private void RestorePanelWidths()
+    {
+        var state = TryGetSettingsService()?.Current;
+        if (state is null)
+        {
+            return;
+        }
+
+        if (state.ToolbarPanelWidth is { } toolbarWidth)
+        {
+            ToolbarColumn.Width = new GridLength(toolbarWidth);
+        }
+        if (state.HistoryPanelWidth is { } historyWidth)
+        {
+            HistoryColumn.Width = new GridLength(historyWidth);
+        }
+        if (state.ToolOptionsPanelWidth is { } toolOptionsWidth)
+        {
+            ToolOptionsColumn.Width = new GridLength(toolOptionsWidth);
+        }
+    }
+
+    private void ToolbarSplitter_DragCompleted(object sender, DragCompletedEventArgs e)
+    {
+        if (TryGetSettingsService() is { } settings)
+        {
+            settings.Current.ToolbarPanelWidth = ToolbarColumn.Width.Value;
+            settings.Save();
+        }
+    }
+
+    private void HistorySplitter_DragCompleted(object sender, DragCompletedEventArgs e)
+    {
+        if (TryGetSettingsService() is { } settings)
+        {
+            settings.Current.HistoryPanelWidth = HistoryColumn.Width.Value;
+            settings.Save();
+        }
+    }
+
+    private void ToolOptionsSplitter_DragCompleted(object sender, DragCompletedEventArgs e)
+    {
+        if (TryGetSettingsService() is { } settings)
+        {
+            settings.Current.ToolOptionsPanelWidth = ToolOptionsColumn.Width.Value;
+            settings.Save();
+        }
     }
 
     private void OnToolShortcut(object? sender, EditorTool tool) => ViewModel?.OpenToolTab(tool);

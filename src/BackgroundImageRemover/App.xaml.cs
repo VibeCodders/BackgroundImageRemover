@@ -23,6 +23,12 @@ public partial class App : Application
 {
     private ServiceProvider? _serviceProvider;
 
+    /// <summary>
+    /// App-wide service locator for views instantiated by WPF's own data templates (e.g. per-tab
+    /// <see cref="Views.DocumentView"/>), which the DI container never constructs directly.
+    /// </summary>
+    public static IServiceProvider Services { get; private set; } = null!;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -30,6 +36,7 @@ public partial class App : Application
         var services = new ServiceCollection();
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
+        Services = _serviceProvider;
 
         var log = _serviceProvider.GetRequiredService<IFileLogService>();
         DispatcherUnhandledException += (_, args) =>

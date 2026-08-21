@@ -121,18 +121,20 @@
                 <controls:StrategyToolbar DataContext="{Binding}" />
             </Border>
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                          Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the tool palette" />
+                          Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the tool palette"
+                          DragCompleted="ToolbarSplitter_DragCompleted" />
         </Grid>
 
         <!-- Left Panel Stack: History, Layers, Channels, Paths (resizable) -->
         <Grid DockPanel.Dock="Left"
               Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="220" MinWidth="160" MaxWidth="480" />
+                <ColumnDefinition x:Name="HistoryColumn" Width="220" MinWidth="160" MaxWidth="480" />
                 <ColumnDefinition Width="5" />
             </Grid.ColumnDefinitions>
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                          Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the side panel" />
+                          Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the side panel"
+                          DragCompleted="HistorySplitter_DragCompleted" />
         <Border Grid.Column="0" Background="{DynamicResource Theme.PanelBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0">
         <DockPanel>
             <!-- History Panel -->
@@ -228,10 +230,11 @@
               Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground|Uncrop|Retouch|Adjustments}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="330" MinWidth="240" MaxWidth="600" />
+                <ColumnDefinition x:Name="ToolOptionsColumn" Width="330" MinWidth="240" MaxWidth="600" />
             </Grid.ColumnDefinitions>
             <GridSplitter Grid.Column="0" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                          Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the tool options panel" />
+                          Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the tool options panel"
+                          DragCompleted="ToolOptionsSplitter_DragCompleted" />
             <Border Grid.Column="1" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>

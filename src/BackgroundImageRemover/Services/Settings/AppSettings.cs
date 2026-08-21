@@ -45,6 +45,11 @@ public sealed class AppSettings
     public double? WindowHeight { get; set; }
     public bool WindowMaximized { get; set; }
 
+    // Last widths chosen for the DocumentView's resizable panels, restored on the next launch.
+    public double? ToolbarPanelWidth { get; set; }
+    public double? HistoryPanelWidth { get; set; }
+    public double? ToolOptionsPanelWidth { get; set; }
+
     /// <summary>Last folder chosen for batch input, used as the starting point next time.</summary>
     public string? LastBatchInputFolder { get; set; }
 

@@ -151,13 +151,4 @@ public partial class DocumentView : UserControl
     private void ResultEditPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel?.OnResultStrokeEnd();
     private void ResultEditPreview_WandClicked(object? sender, OpenCvSharp.Point e) => ViewModel?.OnResultWandClicked(e);
 
-    private void ToolsMenuButton_Click(object sender, RoutedEventArgs e)
-    {
-        ToolsPopup.IsOpen = !ToolsPopup.IsOpen;
-    }
-
-    private void ToolButton_Click(object sender, RoutedEventArgs e)
-    {
-        ToolsPopup.IsOpen = false;
-    }
 }

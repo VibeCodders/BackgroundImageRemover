@@ -179,10 +179,9 @@
             </DockPanel>
         </Border>
 
-        <!-- Strategy Toolbar (only visible when Background Remover tool is active) -->
-        <Border DockPanel.Dock="Left" Background="{DynamicResource Theme.BarBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0"
-                Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground}">
-            <controls:StrategyToolbar DataContext="{Binding ActiveToolSession}" />
+        <!-- Main Toolbar (always visible like GIMP) -->
+        <Border DockPanel.Dock="Left" Background="{DynamicResource Theme.BarBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0">
+            <controls:StrategyToolbar DataContext="{Binding}" />
         </Border>
 
         <!-- Undo/Redo History Panel -->

@@ -44,111 +44,314 @@
             BorderBrush="{DynamicResource Theme.BorderBrush}" 
             BorderThickness="0,0,1,0"
             Padding="4">
-        <StackPanel>
-            <TextBlock Text="Tools" FontWeight="Bold" 
-                       Foreground="{DynamicResource Theme.ForegroundBrush}" 
-                       HorizontalAlignment="Center" 
-                       Margin="0,8,0,12" FontSize="10" />
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="Tools" FontWeight="Bold" 
+                           Foreground="{DynamicResource Theme.ForegroundBrush}" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,8,0,12" FontSize="10" />
 
-            <!-- Strategy Tools -->
-            <RadioButton GroupName="StrategyTools" 
-                         Style="{StaticResource StrategyToolButton}"
-                         Command="{Binding SelectStrategyCommand}" 
-                         CommandParameter="{x:Static models:StrategyKind.Onnx}"
-                         ToolTip="AI-powered background removal (ONNX)">
-                <Path Data="{StaticResource OnnxIcon}" 
-                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                      Stretch="Uniform" 
-                      Width="24" Height="24" />
-            </RadioButton>
+                <!-- Editor Tools -->
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.RemoveBackground}"
+                             ToolTip="Background Remover (R)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=RemoveBackground}">
+                    <Path Data="{StaticResource OnnxIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
 
-            <RadioButton GroupName="StrategyTools" 
-                         Style="{StaticResource StrategyToolButton}"
-                         Command="{Binding SelectStrategyCommand}" 
-                         CommandParameter="{x:Static models:StrategyKind.GrabCut}"
-                         ToolTip="GrabCut selection algorithm">
-                <Path Data="{StaticResource GrabCutIcon}" 
-                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                      Stretch="Uniform" 
-                      Width="24" Height="24" />
-            </RadioButton>
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Uncrop}"
+                             ToolTip="Uncrop / Expand (U)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Uncrop}">
+                    <Path Data="{StaticResource UncropIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
 
-            <RadioButton GroupName="StrategyTools" 
-                         Style="{StaticResource StrategyToolButton}"
-                         Command="{Binding SelectStrategyCommand}" 
-                         CommandParameter="{x:Static models:StrategyKind.ChromaKey}"
-                         ToolTip="Chroma key (green screen)">
-                <Path Data="{StaticResource ChromaKeyIcon}" 
-                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                      Stretch="Uniform" 
-                      Width="24" Height="24" />
-            </RadioButton>
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Retouch}"
+                             ToolTip="Retouch &amp; Brush (B)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Retouch}">
+                    <Path Data="{StaticResource RetouchIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
 
-            <RadioButton GroupName="StrategyTools" 
-                         Style="{StaticResource StrategyToolButton}"
-                         Command="{Binding SelectStrategyCommand}" 
-                         CommandParameter="{x:Static models:StrategyKind.Sam}"
-                         ToolTip="Segment Anything Model (SAM)">
-                <Path Data="{StaticResource SamIcon}" 
-                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                      Stretch="Uniform" 
-                      Width="24" Height="24" />
-            </RadioButton>
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Adjustments}"
+                             ToolTip="Adjustments (A)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Adjustments}">
+                    <Path Data="{StaticResource AdjustmentsIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
 
-            <RadioButton GroupName="StrategyTools" 
-                         Style="{StaticResource StrategyToolButton}"
-                         Command="{Binding SelectStrategyCommand}" 
-                         CommandParameter="{x:Static models:StrategyKind.FloodFill}"
-                         ToolTip="Flood fill background removal">
-                <Path Data="{StaticResource FloodFillIcon}" 
-                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                      Stretch="Uniform" 
-                      Width="24" Height="24" />
-            </RadioButton>
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Filters}"
+                             ToolTip="Filters (F)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Filters}">
+                    <Path Data="{StaticResource FiltersIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
 
-            <RadioButton GroupName="StrategyTools" 
-                         Style="{StaticResource StrategyToolButton}"
-                         Command="{Binding SelectStrategyCommand}" 
-                         CommandParameter="{x:Static models:StrategyKind.KMeans}"
-                         ToolTip="K-Means clustering">
-                <Path Data="{StaticResource KMeansIcon}" 
-                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                      Stretch="Uniform" 
-                      Width="24" Height="24" />
-            </RadioButton>
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Transform}"
+                             ToolTip="Transform (T)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Transform}">
+                    <Path Data="{StaticResource TransformIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
 
-            <RadioButton GroupName="StrategyTools" 
-                         Style="{StaticResource StrategyToolButton}"
-                         Command="{Binding SelectStrategyCommand}" 
-                         CommandParameter="{x:Static models:StrategyKind.Otsu}"
-                         ToolTip="Otsu thresholding">
-                <Path Data="{StaticResource OtsuIcon}" 
-                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                      Stretch="Uniform" 
-                      Width="24" Height="24" />
-            </RadioButton>
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Compose}"
+                             ToolTip="Compose (C)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Compose}">
+                    <Path Data="{StaticResource ComposeIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
 
-            <RadioButton GroupName="StrategyTools" 
-                         Style="{StaticResource StrategyToolButton}"
-                         Command="{Binding SelectStrategyCommand}" 
-                         CommandParameter="{x:Static models:StrategyKind.MagicWand}"
-                         ToolTip="Magic wand selection">
-                <Path Data="{StaticResource MagicWandIcon}" 
-                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                      Stretch="Uniform" 
-                      Width="24" Height="24" />
-            </RadioButton>
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Frame}"
+                             ToolTip="Frame (G)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Frame}">
+                    <Path Data="{StaticResource FrameIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
 
-            <RadioButton GroupName="StrategyTools" 
-                         Style="{StaticResource StrategyToolButton}"
-                         Command="{Binding SelectStrategyCommand}" 
-                         CommandParameter="{x:Static models:StrategyKind.Inpaint}"
-                         ToolTip="Inpaint background removal">
-                <Path Data="{StaticResource InpaintIcon}" 
-                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                      Stretch="Uniform" 
-                      Width="24" Height="24" />
-            </RadioButton>
-        </StackPanel>
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Text}"
+                             ToolTip="Text (X)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Text}">
+                    <Path Data="{StaticResource TextIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Crop}"
+                             ToolTip="Crop (E)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Crop}">
+                    <Path Data="{StaticResource CropIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Resize}"
+                             ToolTip="Resize (S)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Resize}">
+                    <Path Data="{StaticResource ResizeIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Mosaic}"
+                             ToolTip="Mosaic (M)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mosaic}">
+                    <Path Data="{StaticResource MosaicIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Overlay}"
+                             ToolTip="Overlay (O)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}">
+                    <Path Data="{StaticResource OverlayIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Levels}"
+                             ToolTip="Levels (L)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Levels}">
+                    <Path Data="{StaticResource LevelsIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Heal}"
+                             ToolTip="Heal (H)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heal}">
+                    <Path Data="{StaticResource HealIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Liquify}"
+                             ToolTip="Liquify (J)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Liquify}">
+                    <Path Data="{StaticResource LiquifyIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Perspective}"
+                             ToolTip="Perspective (P)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Perspective}">
+                    <Path Data="{StaticResource PerspectiveIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Fx}"
+                             ToolTip="FX (K)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Fx}">
+                    <Path Data="{StaticResource FxIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.TiltShift}"
+                             ToolTip="Tilt-Shift (I)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=TiltShift}">
+                    <Path Data="{StaticResource TiltShiftIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.ColorPicker}"
+                             ToolTip="Color Picker (Q)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorPicker}">
+                    <Path Data="{StaticResource ColorPickerIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Blur}"
+                             ToolTip="Blur (W)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Blur}">
+                    <Path Data="{StaticResource BlurIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Sharpen}"
+                             ToolTip="Sharpen (Z)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Sharpen}">
+                    <Path Data="{StaticResource SharpenIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Vignette}"
+                             ToolTip="Vignette (V)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Vignette}">
+                    <Path Data="{StaticResource VignetteIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Emoji}"
+                             ToolTip="Emoji (Y)"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Emoji}">
+                    <Path Data="{StaticResource EmojiIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools" 
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenToolTabCommand}" 
+                             CommandParameter="{x:Static models:EditorTool.Rotate}"
+                             ToolTip="Rotate"
+                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rotate}">
+                    <Path Data="{StaticResource RotateIcon}" 
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform" 
+                          Width="24" Height="24" />
+                </RadioButton>
+            </StackPanel>
+        </ScrollViewer>
     </Border>
 </UserControl>

@@ -231,7 +231,7 @@ public partial class DocumentViewModel
                     exportBgra,
                     ExportShadowOffset, ExportShadowOffset,
                     ExportShadowBlur, ExportShadowOpacity,
-                    new Vec3b(ExportShadowColor.B, ExportShadowColor.G, ExportShadowColor.R))
+                    ExportShadowColor.ToVec3b())
                 : null;
             var subject = shadowed ?? exportBgra;
 
@@ -257,7 +257,7 @@ public partial class DocumentViewModel
 
                 case ExportBackgroundMode.SolidColor:
                 {
-                    var colorBgr = new Vec3b(ExportSolidColor.B, ExportSolidColor.G, ExportSolidColor.R);
+                    var colorBgr = ExportSolidColor.ToVec3b();
                     using var composited = BackgroundCompositingService.CompositeOntoColor(subject, colorBgr);
                     await ExportBgrAsAsync(composited, path, format);
                     break;
@@ -290,8 +290,8 @@ public partial class DocumentViewModel
 
                 case ExportBackgroundMode.Gradient:
                 {
-                    var top = new Vec3b(ExportGradientTopColor.B, ExportGradientTopColor.G, ExportGradientTopColor.R);
-                    var bottom = new Vec3b(ExportGradientBottomColor.B, ExportGradientBottomColor.G, ExportGradientBottomColor.R);
+                    var top = ExportGradientTopColor.ToVec3b();
+                    var bottom = ExportGradientBottomColor.ToVec3b();
                     using var composited = BackgroundCompositingService.CompositeOntoGradient(subject, top, bottom);
                     await ExportBgrAsAsync(composited, path, format);
                     break;

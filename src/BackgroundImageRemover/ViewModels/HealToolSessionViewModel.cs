@@ -105,46 +105,14 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool
 
     private Mat BuildResult()
     {
+        bool owns = true;
         var result = _workingBgr!.Clone();
-        try
-        {
-            if (_healMask is not null && Cv2.CountNonZero(_healMask) > 0)
-            {
-                var healed = HealService.HealRegion(result, _healMask, HealRadius, InpaintMethod);
-                result.Dispose();
-                result = healed;
-            }
-            if (RemoveDustKernel > 0)
-            {
-                var dusted = HealService.RemoveDust(result, RemoveDustKernel);
-                result.Dispose();
-                result = dusted;
-            }
-            if (RemoveScratchesStrength > 1e-4)
-            {
-                var cleaned = HealService.RemoveScratches(result, RemoveScratchesStrength);
-                result.Dispose();
-                result = cleaned;
-            }
-            if (SurfaceSmoothStrength > 1e-4)
-            {
-                var smoothed = HealService.SurfaceSmooth(result, SurfaceSmoothStrength);
-                result.Dispose();
-                result = smoothed;
-            }
-            if (DetailEnhanceStrength > 1e-4)
-            {
-                var enhanced = HealService.DetailEnhance(result, DetailEnhanceStrength);
-                result.Dispose();
-                result = enhanced;
-            }
-            return result;
-        }
-        catch
-        {
-            result.Dispose();
-            throw;
-        }
+        result = result.SafeChainWithCatch(r => _healMask is not null && Cv2.CountNonZero(_healMask) > 0 ? HealService.HealRegion(r, _healMask, HealRadius, InpaintMethod) : r, ref owns);
+        result = result.SafeChainWithCatch(r => RemoveDustKernel > 0 ? HealService.RemoveDust(r, RemoveDustKernel) : r, ref owns);
+        result = result.SafeChainWithCatch(r => RemoveScratchesStrength > 1e-4 ? HealService.RemoveScratches(r, RemoveScratchesStrength) : r, ref owns);
+        result = result.SafeChainWithCatch(r => SurfaceSmoothStrength > 1e-4 ? HealService.SurfaceSmooth(r, SurfaceSmoothStrength) : r, ref owns);
+        result = result.SafeChainWithCatch(r => DetailEnhanceStrength > 1e-4 ? HealService.DetailEnhance(r, DetailEnhanceStrength) : r, ref owns);
+        return result;
     }
 
     private void RefreshResult()

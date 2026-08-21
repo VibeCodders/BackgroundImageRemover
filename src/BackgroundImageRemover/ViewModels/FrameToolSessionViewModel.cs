@@ -200,7 +200,7 @@ namespace BackgroundImageRemover.ViewModels;
         Mat current = UseMatColor
             ? FrameService.AddPaddingWithColor(
                 bgra, PaddingTop, PaddingRight, PaddingBottom, PaddingLeft,
-                new Vec3b(MatColor.B, MatColor.G, MatColor.R))
+                MatColor.ToVec3b())
             : FrameService.AddPadding(bgra, PaddingTop, PaddingRight, PaddingBottom, PaddingLeft);
 
         try
@@ -210,14 +210,14 @@ namespace BackgroundImageRemover.ViewModels;
                 using var bordered = GradientBorderEnabled
                     ? FrameService.AddGradientBorder(
                         current, BorderThickness,
-                        new Vec3b(GradientBorderColorA.B, GradientBorderColorA.G, GradientBorderColorA.R),
-                        new Vec3b(GradientBorderColorB.B, GradientBorderColorB.G, GradientBorderColorB.R),
+                        GradientBorderColorA.ToVec3b(),
+                        GradientBorderColorB.ToVec3b(),
                         BorderOpacity)
                     : BorderTop && BorderRight && BorderBottom && BorderLeft
                         ? FrameService.AddBorder(
-                            current, BorderThickness, new Vec3b(BorderColor.B, BorderColor.G, BorderColor.R), BorderOpacity)
+                            current, BorderThickness, BorderColor.ToVec3b(), BorderOpacity)
                         : FrameService.AddPartialBorder(
-                            current, BorderThickness, new Vec3b(BorderColor.B, BorderColor.G, BorderColor.R), BorderOpacity,
+                            current, BorderThickness, BorderColor.ToVec3b(), BorderOpacity,
                             BorderTop, BorderRight, BorderBottom, BorderLeft);
                 current.Dispose();
                 current = bordered.Clone();
@@ -235,7 +235,7 @@ namespace BackgroundImageRemover.ViewModels;
             if (InnerBorderThickness > 0)
             {
                 using var accented = FrameService.AddInnerBorder(
-                    current, InnerBorderThickness, new Vec3b(InnerBorderColor.B, InnerBorderColor.G, InnerBorderColor.R), InnerBorderOpacity);
+                    current, InnerBorderThickness, InnerBorderColor.ToVec3b(), InnerBorderOpacity);
                 current.Dispose();
                 current = accented.Clone();
             }
@@ -250,7 +250,7 @@ namespace BackgroundImageRemover.ViewModels;
             if (PolaroidEnabled)
             {
                 using var polaroid = FrameService.AddPolaroidBar(
-                    current, PolaroidHeight, new Vec3b(PolaroidColor.B, PolaroidColor.G, PolaroidColor.R));
+                    current, PolaroidHeight, PolaroidColor.ToVec3b());
                 current.Dispose();
                 current = polaroid.Clone();
             }
@@ -258,7 +258,7 @@ namespace BackgroundImageRemover.ViewModels;
             if (VignetteEnabled)
             {
                 using var vignetted = FrameService.AddVignette(
-                    current, VignetteStrength, new Vec3b(VignetteColor.B, VignetteColor.G, VignetteColor.R));
+                    current, VignetteStrength, VignetteColor.ToVec3b());
                 current.Dispose();
                 current = vignetted.Clone();
             }

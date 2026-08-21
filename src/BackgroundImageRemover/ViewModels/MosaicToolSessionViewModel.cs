@@ -133,7 +133,7 @@ public partial class MosaicToolSessionViewModel : MaskToolSessionViewModelBase
             ? MosaicService.BlurSoft(src, region, BlurRadius, Strength)
             : MosaicService.Blur(src, region, BlurRadius),
         MosaicMode.Median => MosaicService.MedianBlur(src, region, BlurRadius),
-        MosaicMode.SolidFill => MosaicService.SolidFill(src, region, new Vec3b(FillColor.B, FillColor.G, FillColor.R)),
+        MosaicMode.SolidFill => MosaicService.SolidFill(src, region, FillColor.ToVec3b()),
         MosaicMode.Crystallize => MosaicService.Crystallize(src, region, CellSize, Jitter),
         _ => MosaicService.Pixelate(src, region, CellSize)
     };

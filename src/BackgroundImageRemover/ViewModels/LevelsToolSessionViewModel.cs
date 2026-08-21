@@ -87,44 +87,16 @@ public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
 
     private Mat BuildResult(Mat src)
     {
-        Mat current = src;
         bool owns = false;
-
-        if (AutoWhiteBalanceEnabled)
-        {
-            current = LevelsService.AutoWhiteBalance(current);
-            owns = true;
-        }
-
-        if (AutoLevelsEnabled)
-        {
-            current = Replace(current, LevelsService.AutoLevels(current), ref owns);
-        }
-
-        current = Replace(current, LevelsService.Apply(current, BlackPoint, WhitePoint, Gamma, Channel, OutputBlack, OutputWhite), ref owns);
-
-        if (EqualizeEnabled)
-        {
-            current = Replace(current, LevelsService.Equalize(current), ref owns);
-        }
-
-        if (InvertEnabled)
-        {
-            current = Replace(current, LevelsService.Invert(current), ref owns);
-        }
-
+        var current = src;
+        current = current.SafeChainWithCatch(r => AutoWhiteBalanceEnabled ? LevelsService.AutoWhiteBalance(r) : r, ref owns);
+        current = current.SafeChainWithCatch(r => AutoLevelsEnabled ? LevelsService.AutoLevels(r) : r, ref owns);
+        current = current.SafeChainWithCatch(r => LevelsService.Apply(r, BlackPoint, WhitePoint, Gamma, Channel, OutputBlack, OutputWhite), ref owns);
+        current = current.SafeChainWithCatch(r => EqualizeEnabled ? LevelsService.Equalize(r) : r, ref owns);
+        current = current.SafeChainWithCatch(r => InvertEnabled ? LevelsService.Invert(r) : r, ref owns);
         return current;
     }
 
-    private static Mat Replace(Mat previous, Mat next, ref bool ownsPrevious)
-    {
-        if (ownsPrevious)
-        {
-            previous.Dispose();
-        }
-        ownsPrevious = true;
-        return next;
-    }
 
     [RelayCommand]
     private void Reset()

@@ -108,14 +108,14 @@ public partial class EmojiToolSessionViewModel : ToolSessionViewModelBase
         {
             result = EmojiOverlayService.RenderScatter(
                 _sourceImage.FullBgr, SelectedEmoji, ScatterCount, MinSize, Math.Max(MinSize, MaxSize),
-                new Vec3b(EmojiColor.B, EmojiColor.G, EmojiColor.R), Opacity);
+                EmojiColor.ToVec3b(), Opacity);
         }
         else
         {
             var pos = ComputeEmojiPosition();
             result = EmojiOverlayService.Render(
                 _sourceImage.FullBgr, SelectedEmoji, new Point((int)pos.X, (int)pos.Y), EmojiSize,
-                new Vec3b(EmojiColor.B, EmojiColor.G, EmojiColor.R), Opacity);
+                EmojiColor.ToVec3b(), Opacity);
         }
 
         using var _ = result;
@@ -148,14 +148,14 @@ public partial class EmojiToolSessionViewModel : ToolSessionViewModelBase
             {
                 result = EmojiOverlayService.RenderScatter(
                     _sourceImage.FullBgr, SelectedEmoji, ScatterCount, MinSize, Math.Max(MinSize, MaxSize),
-                    new Vec3b(EmojiColor.B, EmojiColor.G, EmojiColor.R), Opacity);
+                    EmojiColor.ToVec3b(), Opacity);
             }
             else
             {
                 var pos = ComputeEmojiPosition();
                 result = EmojiOverlayService.Render(
                     _sourceImage.FullBgr, SelectedEmoji, new Point((int)pos.X, (int)pos.Y), EmojiSize,
-                    new Vec3b(EmojiColor.B, EmojiColor.G, EmojiColor.R), Opacity);
+                    EmojiColor.ToVec3b(), Opacity);
             }
         }
         ApplyAndClose(result, "Emoji");

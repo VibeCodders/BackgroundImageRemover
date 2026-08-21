@@ -179,76 +179,19 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     /// <summary>Applies the whole-image retouch effects on top of the brush/wand alpha edits.</summary>
     private Mat BuildResultBgr()
     {
+        bool owns = true;
         var result = _workingBgr!.Clone();
-        try
-        {
-            if (RemoveDustKernel > 0)
-            {
-                var dusted = RetouchEffectsService.RemoveDust(result, RemoveDustKernel);
-                result.Dispose();
-                result = dusted;
-            }
-            if (SurfaceBlur > 1e-4)
-            {
-                var smoothed = RetouchEffectsService.SurfaceBlur(result, SurfaceBlur);
-                result.Dispose();
-                result = smoothed;
-            }
-            if (AutoContrast)
-            {
-                var contrasted = RetouchEffectsService.AutoContrast(result);
-                result.Dispose();
-                result = contrasted;
-            }
-            if (AutoWhiteBalance)
-            {
-                var balanced = RetouchEffectsService.AutoWhiteBalance(result);
-                result.Dispose();
-                result = balanced;
-            }
-            if (ChromaticAberration > 1e-4)
-            {
-                var aberrated = RetouchEffectsService.ChromaticAberration(result, ChromaticAberration);
-                result.Dispose();
-                result = aberrated;
-            }
-            if (Dehaze > 1e-4)
-            {
-                var dehazed = RetouchEffectsService.Dehaze(result, Dehaze);
-                result.Dispose();
-                result = dehazed;
-            }
-            if (BlurBackgroundRadius > 0)
-            {
-                var blurred = RetouchEffectsService.BlurBackground(result, _workingAlpha!, BlurBackgroundRadius);
-                result.Dispose();
-                result = blurred;
-            }
-            if (SharpenStrength > 1e-4)
-            {
-                var sharpened = RetouchEffectsService.SharpenSubject(result, _workingAlpha!, SharpenStrength);
-                result.Dispose();
-                result = sharpened;
-            }
-            if (ColorBoost > 1e-4)
-            {
-                var boosted = RetouchEffectsService.ColorBoost(result, _workingAlpha!, ColorBoost);
-                result.Dispose();
-                result = boosted;
-            }
-            if (Defringe)
-            {
-                var defringed = RetouchEffectsService.Defringe(result, _workingAlpha!);
-                result.Dispose();
-                result = defringed;
-            }
-            return result;
-        }
-        catch
-        {
-            result.Dispose();
-            throw;
-        }
+        result = result.SafeChainWithCatch(r => RemoveDustKernel > 0 ? RetouchEffectsService.RemoveDust(r, RemoveDustKernel) : r, ref owns);
+        result = result.SafeChainWithCatch(r => SurfaceBlur > 1e-4 ? RetouchEffectsService.SurfaceBlur(r, SurfaceBlur) : r, ref owns);
+        result = result.SafeChainWithCatch(r => AutoContrast ? RetouchEffectsService.AutoContrast(r) : r, ref owns);
+        result = result.SafeChainWithCatch(r => AutoWhiteBalance ? RetouchEffectsService.AutoWhiteBalance(r) : r, ref owns);
+        result = result.SafeChainWithCatch(r => ChromaticAberration > 1e-4 ? RetouchEffectsService.ChromaticAberration(r, ChromaticAberration) : r, ref owns);
+        result = result.SafeChainWithCatch(r => Dehaze > 1e-4 ? RetouchEffectsService.Dehaze(r, Dehaze) : r, ref owns);
+        result = result.SafeChainWithCatch(r => BlurBackgroundRadius > 0 ? RetouchEffectsService.BlurBackground(r, _workingAlpha!, BlurBackgroundRadius) : r, ref owns);
+        result = result.SafeChainWithCatch(r => SharpenStrength > 1e-4 ? RetouchEffectsService.SharpenSubject(r, _workingAlpha!, SharpenStrength) : r, ref owns);
+        result = result.SafeChainWithCatch(r => ColorBoost > 1e-4 ? RetouchEffectsService.ColorBoost(r, _workingAlpha!, ColorBoost) : r, ref owns);
+        result = result.SafeChainWithCatch(r => Defringe ? RetouchEffectsService.Defringe(r, _workingAlpha!) : r, ref owns);
+        return result;
     }
 
     private void RefreshResultBitmap()

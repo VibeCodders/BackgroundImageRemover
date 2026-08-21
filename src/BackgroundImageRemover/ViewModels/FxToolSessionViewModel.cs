@@ -55,46 +55,14 @@ public partial class FxToolSessionViewModel : ToolSessionViewModelBase
 
     private Mat BuildResult()
     {
+        bool owns = true;
         var result = _sourceImage!.FullBgr.Clone();
-        try
-        {
-            if (BloomStrength > 1e-4)
-            {
-                var bloomed = FxService.Bloom(result, BloomStrength);
-                result.Dispose();
-                result = bloomed;
-            }
-            if (GlowStrength > 1e-4)
-            {
-                var glowed = FxService.Glow(result, GlowStrength);
-                result.Dispose();
-                result = glowed;
-            }
-            if (LightLeakStrength > 1e-4)
-            {
-                var leaked = FxService.LightLeak(result, LightLeakStrength);
-                result.Dispose();
-                result = leaked;
-            }
-            if (ChromaticAberrationStrength > 1e-4)
-            {
-                var aberrated = FxService.ChromaticAberration(result, ChromaticAberrationStrength);
-                result.Dispose();
-                result = aberrated;
-            }
-            if (BokehCount > 0)
-            {
-                var bokeh = FxService.Bokeh(result, BokehCount, BokehSize);
-                result.Dispose();
-                result = bokeh;
-            }
-            return result;
-        }
-        catch
-        {
-            result.Dispose();
-            throw;
-        }
+        result = result.SafeChainWithCatch(r => BloomStrength > 1e-4 ? FxService.Bloom(r, BloomStrength) : r, ref owns);
+        result = result.SafeChainWithCatch(r => GlowStrength > 1e-4 ? FxService.Glow(r, GlowStrength) : r, ref owns);
+        result = result.SafeChainWithCatch(r => LightLeakStrength > 1e-4 ? FxService.LightLeak(r, LightLeakStrength) : r, ref owns);
+        result = result.SafeChainWithCatch(r => ChromaticAberrationStrength > 1e-4 ? FxService.ChromaticAberration(r, ChromaticAberrationStrength) : r, ref owns);
+        result = result.SafeChainWithCatch(r => BokehCount > 0 ? FxService.Bokeh(r, BokehCount, BokehSize) : r, ref owns);
+        return result;
     }
 
     private void RefreshResult()

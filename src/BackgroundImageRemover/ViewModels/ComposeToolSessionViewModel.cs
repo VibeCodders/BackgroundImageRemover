@@ -209,65 +209,27 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
         using var bgra = _workingBgr!.ToBgra(_workingAlpha!);
         BackgroundCompositingService.ZeroFullyTransparentPixels(bgra);
 
-        Mat current = bgra.Clone();
-        try
+        bool owns = true;
+        var current = bgra.Clone();
+        current = current.SafeChainWithCatch(r => SubjectFlipHorizontal ? TransformService.FlipHorizontal(r).Clone() : r, ref owns);
+        current = current.SafeChainWithCatch(r => SubjectFlipVertical ? TransformService.FlipVertical(r).Clone() : r, ref owns);
+        current = current.SafeChainWithCatch(r => Math.Abs(SubjectScale - 100.0) > 1e-4 ? TransformService.Resize(r, SubjectScale / 100.0).Clone() : r, ref owns);
+        current = current.SafeChainWithCatch(r => Math.Abs(SubjectRotation) > 1e-4 ? TransformService.Rotate(r, SubjectRotation).Clone() : r, ref owns);
+        current = current.SafeChainWithCatch(r => Math.Abs(SubjectOpacity - 100.0) > 1e-4 ? BackgroundCompositingService.ApplySubjectOpacity(r, SubjectOpacity / 100.0).Clone() : r, ref owns);
+
+        if (DropShadowEnabled)
         {
-            if (SubjectFlipHorizontal)
-            {
-                using var flipped = TransformService.FlipHorizontal(current);
-                current.Dispose();
-                current = flipped.Clone();
-            }
-            if (SubjectFlipVertical)
-            {
-                using var flipped = TransformService.FlipVertical(current);
-                current.Dispose();
-                current = flipped.Clone();
-            }
-
-            if (Math.Abs(SubjectScale - 100.0) > 1e-4)
-            {
-                using var scaled = TransformService.Resize(current, SubjectScale / 100.0);
-                current.Dispose();
-                current = scaled.Clone();
-            }
-
-            if (Math.Abs(SubjectRotation) > 1e-4)
-            {
-                using var rotated = TransformService.Rotate(current, SubjectRotation);
-                current.Dispose();
-                current = rotated.Clone();
-            }
-
-            if (Math.Abs(SubjectOpacity - 100.0) > 1e-4)
-            {
-                using var faded = BackgroundCompositingService.ApplySubjectOpacity(current, SubjectOpacity / 100.0);
-                current.Dispose();
-                current = faded.Clone();
-            }
-
-            if (DropShadowEnabled)
-            {
-                double rad = ShadowAngle * Math.PI / 180.0;
-                double offsetX = ShadowDistance * Math.Cos(rad);
-                double offsetY = ShadowDistance * Math.Sin(rad);
-                using var shadowed = BackgroundCompositingService.ApplyDropShadow(
-                    current, offsetX, offsetY, ShadowBlur, ShadowOpacity,
-                    new Vec3b(ShadowColor.B, ShadowColor.G, ShadowColor.R));
-                current.Dispose();
-                current = shadowed.Clone();
-            }
-
-            using var placed = BackgroundCompositingService.PlaceOnCanvas(
-                current, BackgroundPadding, SubjectOffsetX, SubjectOffsetY);
-            current.Dispose();
-            return placed.Clone();
+            double rad = ShadowAngle * Math.PI / 180.0;
+            double offsetX = ShadowDistance * Math.Cos(rad);
+            double offsetY = ShadowDistance * Math.Sin(rad);
+            current = current.SafeChainWithCatch(r => BackgroundCompositingService.ApplyDropShadow(
+                r, offsetX, offsetY, ShadowBlur, ShadowOpacity,
+                ShadowColor.ToVec3b()).Clone(), ref owns);
         }
-        catch
-        {
-            current.Dispose();
-            throw;
-        }
+
+        current = current.SafeChainWithCatch(r => BackgroundCompositingService.PlaceOnCanvas(
+            r, BackgroundPadding, SubjectOffsetX, SubjectOffsetY).Clone(), ref owns);
+        return current;
     }
 
     private Mat CompositeOnto(Mat subject)
@@ -275,11 +237,11 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
         return BackgroundMode switch
         {
             ExportBackgroundMode.SolidColor => BackgroundCompositingService.CompositeOntoColor(
-                subject, new Vec3b(SolidColor.B, SolidColor.G, SolidColor.R)),
+                subject, SolidColor.ToVec3b()),
             ExportBackgroundMode.Gradient => BackgroundCompositingService.CompositeOntoGradient(
                 subject,
-                new Vec3b(GradientTopColor.B, GradientTopColor.G, GradientTopColor.R),
-                new Vec3b(GradientBottomColor.B, GradientBottomColor.G, GradientBottomColor.R),
+                GradientTopColor.ToVec3b(),
+                GradientBottomColor.ToVec3b(),
                 GradientAngle),
             ExportBackgroundMode.Blur => BackgroundCompositingService.CompositeOntoBlurredImage(
                 subject, _sourceImage!.FullBgr, BlurRadius),
@@ -313,7 +275,7 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
             }
         }
 
-        var matte = new Vec3b(SolidColor.B, SolidColor.G, SolidColor.R);
+        var matte = SolidColor.ToVec3b();
         return BackgroundCompositingService.CompositeOntoImage(subject, _backgroundBgr, FitMode, matte);
     }
 

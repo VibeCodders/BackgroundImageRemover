@@ -107,18 +107,15 @@
         </Border>
 
         <!-- Main Toolbar (always visible like GIMP), horizontally resizable so widening it
-             lets the icon groups wrap into 2, 3+ columns instead of a single column. -->
-        <Grid DockPanel.Dock="Left">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="ToolbarColumn" Width="64" MinWidth="56" MaxWidth="420" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Background="{DynamicResource Theme.BarBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0">
-                <controls:StrategyToolbar DataContext="{Binding}" />
-            </Border>
-            <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                          Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the tool palette" />
-        </Grid>
+             lets the icon groups wrap into 2, 3+ columns instead of a single column.
+             GridSplitter works directly against a preceding DockPanel.Dock="Left" sibling's
+             Width, so no enclosing Grid or extra column is needed for that. -->
+        <Border DockPanel.Dock="Left" x:Name="ToolbarHost" Width="76" MinWidth="60" MaxWidth="480"
+                Background="{DynamicResource Theme.BarBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0">
+            <controls:StrategyToolbar DataContext="{Binding}" />
+        </Border>
+        <GridSplitter DockPanel.Dock="Left" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      Background="Transparent" Cursor="SizeWE" ToolTip="Drag to resize the tool palette" />
 
         <!-- Left Panel Stack: History, Layers, Channels, Paths -->
         <Border DockPanel.Dock="Left" Width="220" Background="{DynamicResource Theme.PanelBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0"

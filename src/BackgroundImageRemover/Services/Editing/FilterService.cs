@@ -15,9 +15,9 @@ public static class FilterService
 
         using var filtered = kind switch
         {
-            FilterKind.Grayscale => ToGrayscale(inputBgr),
+            FilterKind.Grayscale => GrayscaleService.ToGrayscale(inputBgr, 1.0),
             FilterKind.Sepia => ToSepia(inputBgr),
-            FilterKind.Invert => Invert(inputBgr),
+            FilterKind.Invert => LevelsService.Invert(inputBgr),
             FilterKind.Posterize => Posterize(inputBgr, posterizeLevels),
             FilterKind.Emboss => Emboss(inputBgr),
             FilterKind.Sketch => Sketch(inputBgr),
@@ -37,15 +37,6 @@ public static class FilterService
         return Blend(inputBgr, filtered, intensity);
     }
 
-    private static Mat ToGrayscale(Mat input)
-    {
-        using var gray = new Mat();
-        Cv2.CvtColor(input, gray, ColorConversionCodes.BGR2GRAY);
-        var result = new Mat();
-        Cv2.CvtColor(gray, result, ColorConversionCodes.GRAY2BGR);
-        return result;
-    }
-
     private static Mat ToSepia(Mat input)
     {
         // Row-major matrix mapping the BGR input vector to a sepia BGR output vector.
@@ -58,13 +49,6 @@ public static class FilterService
         });
         var result = new Mat();
         Cv2.Transform(input, result, sepia);
-        return result;
-    }
-
-    private static Mat Invert(Mat input)
-    {
-        var result = new Mat();
-        Cv2.BitwiseNot(input, result);
         return result;
     }
 

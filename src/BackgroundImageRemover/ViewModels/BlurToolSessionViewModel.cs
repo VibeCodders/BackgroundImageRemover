@@ -13,8 +13,6 @@ namespace BackgroundImageRemover.ViewModels;
 public partial class BlurToolSessionViewModel : ToolSessionViewModelBase
 {
     private readonly BrushStrokeController _strokes = new();
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
     private Mat? _paintedMask;
 
     public override string ToolBadge => "🌫 Blur";
@@ -55,11 +53,9 @@ public partial class BlurToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-        _paintedMask = new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, Scalar.All(0));
-        SourceBitmap = _sourceImage.FullBgr.ToBitmapSource(_workingAlpha);
+        InitSourceAlpha();
+        _paintedMask = new Mat(_sourceImage!.FullBgr.Size(), MatType.CV_8UC1, Scalar.All(0));
+        SourceBitmap = _sourceImage.FullBgr.ToBitmapSource(_workingAlpha!);
         RefreshResult();
         StatusMessage = "Choose whole-image or paint a region to blur, then apply.";
     }
@@ -154,7 +150,7 @@ public partial class BlurToolSessionViewModel : ToolSessionViewModelBase
                 result = _sourceImage.FullBgr.Clone();
             }
 
-            _parentDocument.ApplyToolResult(result, _workingAlpha.Clone(), "Blur");
+            _parentDocument.ApplyToolResult(result, _workingAlpha!.Clone(), "Blur");
         }
         _shell.CloseTabDirect(this);
         return Task.CompletedTask;
@@ -162,8 +158,7 @@ public partial class BlurToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
+        base.Dispose();
         _paintedMask?.Dispose();
     }
 }

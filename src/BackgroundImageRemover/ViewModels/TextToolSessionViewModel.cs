@@ -12,9 +12,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for rendering a text watermark overlay.</summary>
 public partial class TextToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
-
     public override string ToolBadge => "✎ Text";
     public override string AccentColor => "#DB2777";
 
@@ -102,14 +99,7 @@ public partial class TextToolSessionViewModel : ToolSessionViewModelBase
     public TextToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
-        InitFromParent();
-    }
-
-    private void InitFromParent()
-    {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
         RefreshPreview();
         StatusMessage = "Type text and choose its position, size and color.";
     }
@@ -175,18 +165,12 @@ public partial class TextToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
+        Mat? rendered = null;
         if (_sourceImage is not null && _workingAlpha is not null)
         {
-            var rendered = TextOverlayService.Render(_sourceImage.FullBgr, BuildOptions());
-            _parentDocument.ApplyToolResult(rendered, _workingAlpha.Clone(), "Text");
+            rendered = TextOverlayService.Render(_sourceImage.FullBgr, BuildOptions());
         }
-        _shell.CloseTabDirect(this);
+        ApplyAndClose(rendered, "Text");
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
     }
 }

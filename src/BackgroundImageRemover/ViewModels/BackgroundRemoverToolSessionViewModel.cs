@@ -37,7 +37,6 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     private CancellationTokenSource? _previewCts;
     private CancellationTokenSource? _processCts;
 
-    private LoadedImage? _sourceImage;
     private PreviewImage? _preview;
     private RemovalResult? _lastPreviewResult;
 
@@ -249,8 +248,8 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        var preview = _downscaler.CreatePreview(_sourceImage.FullBgr);
+        InitSourceAlpha();
+        var preview = _downscaler.CreatePreview(_sourceImage!.FullBgr);
         _preview = preview;
 
         bool isActualCutout = BackgroundCompositingService.HasMeaningfulTransparency(_sourceImage.FullAlpha);
@@ -358,10 +357,10 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         _previewCts?.Dispose();
         _processCts?.Cancel();
         _processCts?.Dispose();
-        _sourceImage?.Dispose();
         _preview?.Dispose();
         _lastPreviewResult?.Dispose();
         _samEmbedding = null;
         ScribbleManager.Dispose();
+        base.Dispose();
     }
 }

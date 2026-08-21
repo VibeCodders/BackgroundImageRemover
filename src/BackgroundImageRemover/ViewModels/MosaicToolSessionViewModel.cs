@@ -14,8 +14,6 @@ namespace BackgroundImageRemover.ViewModels;
 public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
 {
     private readonly BrushStrokeController _strokes = new();
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
     private Mat? _paintedMask;
 
     public override string ToolBadge => "▦ Mosaic";
@@ -80,11 +78,9 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-        _paintedMask = new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, Scalar.All(0));
-        SourceBitmap = _sourceImage.FullBgr.ToBitmapSource(_workingAlpha);
+        InitSourceAlpha();
+        _paintedMask = new Mat(_sourceImage!.FullBgr.Size(), MatType.CV_8UC1, Scalar.All(0));
+        SourceBitmap = _sourceImage.FullBgr.ToBitmapSource(_workingAlpha!);
         RefreshResult();
         StatusMessage = "Choose mosaic or blur, then paint or select a region.";
     }
@@ -229,8 +225,7 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
+        base.Dispose();
         _paintedMask?.Dispose();
     }
 }

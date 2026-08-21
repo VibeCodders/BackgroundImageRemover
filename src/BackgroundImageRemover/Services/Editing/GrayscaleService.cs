@@ -8,13 +8,13 @@ public static class GrayscaleService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input.Clone();
+            return input!.Clone();
         }
 
         using var gray = new Mat();
         Cv2.CvtColor(input, gray, ColorConversionCodes.BGR2GRAY);
 
-        using var grayBgr = new Mat();
+        var grayBgr = new Mat();
         Cv2.CvtColor(gray, grayBgr, ColorConversionCodes.GRAY2BGR);
 
         if (strength >= 1)

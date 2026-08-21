@@ -11,9 +11,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for four-point perspective correction (keystone/straighten).</summary>
 public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
-
     public override string ToolBadge => "🔲 Perspective";
     public override string AccentColor => "#0F766E";
 
@@ -52,23 +49,14 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
     public PerspectiveToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
-        InitFromParent();
-    }
-
-    private void InitFromParent()
-    {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-
-        var quad = PerspectiveService.DefaultQuad(_sourceImage.FullBgr.Size());
+        InitSourceAlpha();
+        var quad = PerspectiveService.DefaultQuad(_sourceImage!.FullBgr.Size());
         TopLeftX = (int)quad.TopLeft.X; TopLeftY = (int)quad.TopLeft.Y;
         TopRightX = (int)quad.TopRight.X; TopRightY = (int)quad.TopRight.Y;
         BottomRightX = (int)quad.BottomRight.X; BottomRightY = (int)quad.BottomRight.Y;
         BottomLeftX = (int)quad.BottomLeft.X; BottomLeftY = (int)quad.BottomLeft.Y;
         OutputWidth = _sourceImage.FullBgr.Width;
         OutputHeight = _sourceImage.FullBgr.Height;
-
         RefreshResult();
         StatusMessage = "Adjust the four corners and output size.";
     }
@@ -168,11 +156,5 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
         }
         _shell.CloseTabDirect(this);
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
     }
 }

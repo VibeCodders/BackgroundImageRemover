@@ -21,9 +21,7 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
 {
     private readonly IDialogService _dialogs;
     private readonly IImageLoaderService _imageLoader;
-    private LoadedImage? _sourceImage;
     private Mat? _workingBgr;
-    private Mat? _workingAlpha;
 
     // Decoded background image, cached so dragging a slider re-composites without re-reading
     // the whole file from disk on every preview tick.
@@ -131,10 +129,8 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingBgr = _sourceImage.FullBgr.Clone();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_workingBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
+        _workingBgr = _sourceImage!.FullBgr.Clone();
         RefreshPreview();
         StatusMessage = "Choose a background for the cutout.";
     }
@@ -363,9 +359,8 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
         _workingBgr?.Dispose();
-        _workingAlpha?.Dispose();
         _backgroundBgr?.Dispose();
+        base.Dispose();
     }
 }

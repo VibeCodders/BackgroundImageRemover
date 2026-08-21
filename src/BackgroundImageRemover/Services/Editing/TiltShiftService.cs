@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -32,7 +33,7 @@ public static class TiltShiftService
                 Cv2.GaussianBlur(current, blurred, new Size(kernel, kernel), blurRadius, blurRadius);
                 using var mask = BuildFocusMask(current.Size(), focusCenter, focusWidth, vertical);
                 // Blend blurred image in where the mask is white, keep original where black.
-                var blended = BlendByMask(current, blurred, mask);
+                var blended = current.BlendByMask(blurred, mask);
                 current.Dispose();
                 current = blended;
             }
@@ -90,29 +91,5 @@ public static class TiltShiftService
         }
 
         return mask;
-    }
-
-    /// <summary>result = a * (1 - mask) + b * mask, in 0..255 space.</summary>
-    private static Mat BlendByMask(Mat a, Mat b, Mat mask)
-    {
-        using var maskF = new Mat();
-        mask.ConvertTo(maskF, MatType.CV_32FC1, 1.0 / 255.0);
-        using var mask3 = new Mat();
-        Cv2.CvtColor(maskF, mask3, ColorConversionCodes.GRAY2BGR);
-
-        using var aF = new Mat();
-        a.ConvertTo(aF, MatType.CV_32FC3);
-        using var bF = new Mat();
-        b.ConvertTo(bF, MatType.CV_32FC3);
-
-        using var inv = new Mat();
-        Cv2.Subtract(new Mat(mask3.Size(), mask3.Type(), Scalar.All(1.0)), mask3, inv);
-        using var aWeighted = aF.Mul(inv).ToMat();
-        using var bWeighted = bF.Mul(mask3).ToMat();
-        using var blended = (aWeighted + bWeighted).ToMat();
-
-        var result = new Mat();
-        blended.ConvertTo(result, MatType.CV_8UC3);
-        return result;
     }
 }

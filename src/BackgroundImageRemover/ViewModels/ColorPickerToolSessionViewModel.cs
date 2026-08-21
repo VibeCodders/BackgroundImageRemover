@@ -13,11 +13,9 @@ using WpfPoint = System.Windows.Point;
 
 namespace BackgroundImageRemover.ViewModels;
 
-/// <summary>Dedicated Tool Tab for sampling pixel colors from the image under the cursor.</summary>
-public partial class ColorPickerToolSessionViewModel : ToolSessionViewModelBase
-{
-    private LoadedImage? _sourceImage;
-
+    /// <summary>Dedicated Tool Tab for sampling pixel colors from the image under the cursor.</summary>
+    public partial class ColorPickerToolSessionViewModel : ToolSessionViewModelBase
+    {
     public override string ToolBadge => "🎨 Color Picker";
     public override string AccentColor => "#0EA5E9";
 
@@ -65,9 +63,8 @@ public partial class ColorPickerToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        PreviewBitmap = _sourceImage.FullBgr.ToBitmapSource(
-            _sourceImage.FullAlpha ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255)));
+        InitSourceAlpha();
+        PreviewBitmap = _sourceImage!.FullBgr.ToBitmapSource(_workingAlpha!);
         StatusMessage = "Click on the image to sample a color.";
     }
 
@@ -119,10 +116,5 @@ public partial class ColorPickerToolSessionViewModel : ToolSessionViewModelBase
         // ColorPicker doesn't modify the image; just close the tab.
         _shell.CloseTabDirect(this);
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceImage?.Dispose();
     }
 }

@@ -11,9 +11,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for levels adjustment (black point, white point, gamma).</summary>
 public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
-
     public override string ToolBadge => "📊 Levels";
     public override string AccentColor => "#B45309";
 
@@ -56,14 +53,7 @@ public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
     public LevelsToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
-        InitFromParent();
-    }
-
-    private void InitFromParent()
-    {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
         RefreshResult();
         StatusMessage = "Adjust black point, white point and gamma.";
     }
@@ -154,22 +144,12 @@ public partial class LevelsToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
-        if (_sourceImage is null || _workingAlpha is null)
+        Mat? bgr = null;
+        if (_sourceImage is not null && _workingAlpha is not null)
         {
-            _shell.CloseTabDirect(this);
-            return Task.CompletedTask;
+            bgr = BuildResult(_sourceImage.FullBgr);
         }
-
-        var bgr = BuildResult(_sourceImage.FullBgr);
-        _parentDocument.ApplyToolResult(bgr, _workingAlpha.Clone(), "Levels");
-
-        _shell.CloseTabDirect(this);
+        ApplyAndClose(bgr, "Levels");
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
     }
 }

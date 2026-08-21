@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Models;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
 
@@ -160,5 +161,65 @@ public static class MatExtensions
         var resized = new Mat();
         Cv2.Resize(scribble, resized, targetSize, interpolation: InterpolationFlags.Nearest);
         return resized;
+    }
+
+    /// <summary>
+    /// Linearly interpolates (blends) between <paramref name="original"/> and <paramref name="modified"/>
+    /// using a single-channel grayscale <paramref name="mask"/>. White pixels in the mask yield
+    /// <paramref name="modified"/>, black pixels yield <paramref name="original"/>, and intermediate
+    /// values produce a proportional blend. Byte masks are normalized 0..255 → 0..1; float masks
+    /// are assumed to already be in the 0..1 range. Both inputs are expected to be 3-channel BGR
+    /// at the same size.
+    /// </summary>
+    public static Mat BlendByMask(this Mat original, Mat modified, Mat mask)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+        ArgumentNullException.ThrowIfNull(modified);
+        ArgumentNullException.ThrowIfNull(mask);
+
+        using var maskF = new Mat();
+        if (mask.Type() == MatType.CV_8UC1)
+        {
+            mask.ConvertTo(maskF, MatType.CV_32FC1, 1.0 / 255.0);
+        }
+        else
+        {
+            mask.ConvertTo(maskF, MatType.CV_32FC1);
+        }
+
+        using var mask3 = new Mat();
+        Cv2.CvtColor(maskF, mask3, ColorConversionCodes.GRAY2BGR);
+
+        using var inv = new Mat();
+        Cv2.Subtract(new Mat(mask3.Size(), mask3.Type(), Scalar.All(1.0)), mask3, inv);
+
+        using var aF = new Mat();
+        original.ConvertTo(aF, MatType.CV_32FC3);
+        using var bF = new Mat();
+        modified.ConvertTo(bF, MatType.CV_32FC3);
+
+        using var aWeighted = aF.Mul(inv).ToMat();
+        using var bWeighted = bF.Mul(mask3).ToMat();
+        using var blended = (aWeighted + bWeighted).ToMat();
+
+        var result = new Mat();
+        blended.ConvertTo(result, MatType.CV_8UC3);
+        return result;
+    }
+
+    /// <summary>
+    /// Returns the alpha channel from a <see cref="LoadedImage"/> as an independent, full-resolution
+    /// <see cref="Mat"/>. When the image has no alpha, a fully-opaque (255) single-channel Mat of the
+    /// same size as <see cref="LoadedImage.FullBgr"/> is created instead.
+    /// </summary>
+    public static Mat GetWorkingAlpha(this LoadedImage? image)
+    {
+        if (image is null)
+        {
+            return new Mat();
+        }
+
+        return image.FullAlpha?.Clone()
+            ?? new Mat(image.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
     }
 }

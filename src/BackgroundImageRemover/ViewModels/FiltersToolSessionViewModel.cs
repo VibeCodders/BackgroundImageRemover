@@ -11,9 +11,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for artistic color filters (grayscale, sepia, invert, posterize, emboss, sketch).</summary>
 public partial class FiltersToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
-
     public override string ToolBadge => "🎨 Filters";
     public override string AccentColor => "#D946EF";
 
@@ -39,14 +36,7 @@ public partial class FiltersToolSessionViewModel : ToolSessionViewModelBase
     public FiltersToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
-        InitFromParent();
-    }
-
-    private void InitFromParent()
-    {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
         RefreshPreview();
         StatusMessage = "Choose a filter and adjust its intensity.";
     }
@@ -75,18 +65,12 @@ public partial class FiltersToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
+        Mat? filtered = null;
         if (_sourceImage is not null && _workingAlpha is not null)
         {
-            var filtered = FilterService.Apply(_sourceImage.FullBgr, SelectedFilter, Intensity, PosterizeLevels);
-            _parentDocument.ApplyToolResult(filtered, _workingAlpha.Clone(), "Filters");
+            filtered = FilterService.Apply(_sourceImage.FullBgr, SelectedFilter, Intensity, PosterizeLevels);
         }
-        _shell.CloseTabDirect(this);
+        ApplyAndClose(filtered, "Filters");
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
     }
 }

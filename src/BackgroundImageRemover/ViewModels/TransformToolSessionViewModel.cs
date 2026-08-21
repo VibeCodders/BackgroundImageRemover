@@ -13,7 +13,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for geometric transforms (flip, rotate, resize).</summary>
 public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
     private Mat? _workingBgra;
 
     public override string ToolBadge => "↻ Transform";
@@ -84,10 +83,8 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        using var alpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-        _workingBgra = _sourceImage.FullBgr.ToBgra(alpha);
+        InitSourceAlpha();
+        _workingBgra = _sourceImage!.FullBgr.ToBgra(_workingAlpha!);
         ExactWidth = _workingBgra.Width;
         ExactHeight = _workingBgra.Height;
         FitWidth = 1024;
@@ -160,9 +157,7 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
     {
         if (_sourceImage is null) return;
         _workingBgra?.Dispose();
-        using var alpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-        _workingBgra = _sourceImage.FullBgr.ToBgra(alpha);
+        _workingBgra = _sourceImage.FullBgr.ToBgra(_workingAlpha!);
         Angle = 0.0;
         ScalePercent = 100.0;
         SkewX = 0.0;
@@ -203,7 +198,7 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
         _workingBgra?.Dispose();
+        base.Dispose();
     }
 }

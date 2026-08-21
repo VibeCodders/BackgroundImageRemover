@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.IO;
+using BackgroundImageRemover.Helpers;
+using BackgroundImageRemover.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
@@ -13,6 +15,10 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
 {
     protected readonly ShellViewModel _shell;
     protected readonly DocumentViewModel _parentDocument;
+
+    // Shared snapshot and working-alpha state used by most tool session view models.
+    protected LoadedImage? _sourceImage;
+    protected Mat? _workingAlpha;
 
     public DocumentViewModel ParentDocument => _parentDocument;
 
@@ -66,5 +72,34 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
         _shell.CloseTabDirect(this);
     }
 
-    public abstract void Dispose();
+    /// <summary>
+    /// Captures the current document state into <see cref="_sourceImage"/> and initialises
+    /// <see cref="_workingAlpha"/> from it (cloned alpha, or a fully-opaque Mat if the source
+    /// has no alpha channel). Eliminates the duplicated snapshot + alpha boilerplate in subclasses.
+    /// </summary>
+    protected void InitSourceAlpha()
+    {
+        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
+        _workingAlpha = _sourceImage.GetWorkingAlpha();
+    }
+
+    /// <summary>
+    /// Applies <paramref name="bgr"/> to the parent document together with a cloned working alpha,
+    /// then closes the tool tab. If <paramref name="bgr"/> or the working alpha is null the tab
+    /// is closed without applying. Eliminates the duplicated ApplyAsync + CloseTab boilerplate.
+    /// </summary>
+    protected void ApplyAndClose(Mat? bgr, string operationName)
+    {
+        if (bgr is not null && _workingAlpha is not null)
+        {
+            _parentDocument.ApplyToolResult(bgr, _workingAlpha.Clone(), operationName);
+        }
+        _shell.CloseTabDirect(this);
+    }
+
+    public virtual void Dispose()
+    {
+        _sourceImage?.Dispose();
+        _workingAlpha?.Dispose();
+    }
 }

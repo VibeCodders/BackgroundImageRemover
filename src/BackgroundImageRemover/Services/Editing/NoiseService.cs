@@ -8,7 +8,7 @@ public static class NoiseService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input.Clone();
+            return input!.Clone();
         }
 
         using var noise = new Mat(input.Size(), input.Type());
@@ -28,7 +28,7 @@ public static class NoiseService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input.Clone();
+            return input!.Clone();
         }
 
         var result = input.Clone();

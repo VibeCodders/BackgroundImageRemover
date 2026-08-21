@@ -8,7 +8,7 @@ public static class InvertService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input.Clone();
+            return input!.Clone();
         }
 
         if (strength >= 1)

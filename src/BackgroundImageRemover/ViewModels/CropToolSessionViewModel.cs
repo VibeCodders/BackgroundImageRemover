@@ -13,7 +13,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for cropping (rectangle, aspect presets, margins, auto-trim, straighten).</summary>
 public partial class CropToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
     private Mat? _sourceBgra;
 
     public override string ToolBadge => "✂ Crop";
@@ -65,10 +64,8 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        using var alpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-        _sourceBgra = _sourceImage.FullBgr.ToBgra(alpha);
+        InitSourceAlpha();
+        _sourceBgra = _sourceImage!.FullBgr.ToBgra(_workingAlpha!);
         SourceBitmap = _sourceBgra.ToBitmapSource();
         SelectedRect = new Rect(0, 0, _sourceBgra.Width, _sourceBgra.Height);
         RefreshResult();
@@ -208,7 +205,7 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
         _sourceBgra?.Dispose();
+        base.Dispose();
     }
 }

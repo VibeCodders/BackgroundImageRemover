@@ -8,7 +8,7 @@ public static class EmbossService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input.Clone();
+            return input!.Clone();
         }
 
         using var kernel = new Mat(3, 3, MatType.CV_64F);

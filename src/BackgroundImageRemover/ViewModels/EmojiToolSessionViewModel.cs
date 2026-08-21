@@ -12,9 +12,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for placing emoji-style decorative marks (stars, hearts, sparkles, etc.) on the image.</summary>
 public partial class EmojiToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
-
     public override string ToolBadge => "🎉 Emoji";
     public override string AccentColor => "#F59E0B";
 
@@ -63,14 +60,7 @@ public partial class EmojiToolSessionViewModel : ToolSessionViewModelBase
     public EmojiToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
-        InitFromParent();
-    }
-
-    private void InitFromParent()
-    {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
         RefreshResult();
         StatusMessage = "Choose an emoji, size and color, then apply.";
     }
@@ -151,9 +141,9 @@ public partial class EmojiToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
-        if (_sourceImage is not null && _workingAlpha is not null)
+        Mat? result = null;
+        if (_sourceImage is not null)
         {
-            Mat result;
             if (ScatterMode)
             {
                 result = EmojiOverlayService.RenderScatter(
@@ -167,16 +157,8 @@ public partial class EmojiToolSessionViewModel : ToolSessionViewModelBase
                     _sourceImage.FullBgr, SelectedEmoji, new Point((int)pos.X, (int)pos.Y), EmojiSize,
                     new Vec3b(EmojiColor.B, EmojiColor.G, EmojiColor.R), Opacity);
             }
-
-            _parentDocument.ApplyToolResult(result, _workingAlpha.Clone(), "Emoji");
         }
-        _shell.CloseTabDirect(this);
+        ApplyAndClose(result, "Emoji");
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
     }
 }

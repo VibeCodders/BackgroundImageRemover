@@ -15,8 +15,6 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
 {
     private readonly IDialogService _dialogs;
     private readonly IImageLoaderService _imageLoader;
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
     private Mat? _overlayBgra;
 
     public override string ToolBadge => "🔲 Overlay";
@@ -90,9 +88,7 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
         RefreshResult();
         StatusMessage = "Choose an overlay image (logo or sticker).";
     }
@@ -180,8 +176,7 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
+        base.Dispose();
         _overlayBgra?.Dispose();
     }
 }

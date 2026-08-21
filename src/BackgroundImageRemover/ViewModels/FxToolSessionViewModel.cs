@@ -11,9 +11,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for cinematic/optical effects.</summary>
 public partial class FxToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
-
     public override string ToolBadge => "✨ FX";
     public override string AccentColor => "#C026D3";
 
@@ -44,14 +41,7 @@ public partial class FxToolSessionViewModel : ToolSessionViewModelBase
     public FxToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
-        InitFromParent();
-    }
-
-    private void InitFromParent()
-    {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
         RefreshResult();
         StatusMessage = "Add glow, bloom, light leaks, aberration or bokeh.";
     }
@@ -126,18 +116,12 @@ public partial class FxToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
+        Mat? result = null;
         if (_sourceImage is not null && _workingAlpha is not null)
         {
-            var result = BuildResult();
-            _parentDocument.ApplyToolResult(result, _workingAlpha.Clone(), "FX");
+            result = BuildResult();
         }
-        _shell.CloseTabDirect(this);
+        ApplyAndClose(result, "FX");
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
     }
 }

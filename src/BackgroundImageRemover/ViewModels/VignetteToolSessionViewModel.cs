@@ -11,9 +11,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for adding vignette (darken/lighten edges) effects.</summary>
 public partial class VignetteToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
-
     public override string ToolBadge => "🔳 Vignette";
     public override string AccentColor => "#A78BFA";
 
@@ -38,14 +35,7 @@ public partial class VignetteToolSessionViewModel : ToolSessionViewModelBase
     public VignetteToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
-        InitFromParent();
-    }
-
-    private void InitFromParent()
-    {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
         RefreshResult();
         StatusMessage = "Adjust vignette strength, roundness and feather.";
     }
@@ -76,18 +66,12 @@ public partial class VignetteToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
+        Mat? result = null;
         if (_sourceImage is not null && _workingAlpha is not null)
         {
-            var result = VignetteService.Apply(_sourceImage.FullBgr, Strength, Roundness, Feather, Invert);
-            _parentDocument.ApplyToolResult(result, _workingAlpha.Clone(), "Vignette");
+            result = VignetteService.Apply(_sourceImage.FullBgr, Strength, Roundness, Feather, Invert);
         }
-        _shell.CloseTabDirect(this);
+        ApplyAndClose(result, "Vignette");
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
     }
 }

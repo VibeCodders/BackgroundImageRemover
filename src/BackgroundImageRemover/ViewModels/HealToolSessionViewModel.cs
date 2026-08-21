@@ -13,9 +13,7 @@ namespace BackgroundImageRemover.ViewModels;
 public partial class HealToolSessionViewModel : ToolSessionViewModelBase
 {
     private readonly BrushStrokeController _strokes = new();
-    private LoadedImage? _sourceImage;
     private Mat? _workingBgr;
-    private Mat? _workingAlpha;
     private Mat? _healMask;
 
     public override string ToolBadge => "🩹 Heal";
@@ -62,12 +60,10 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingBgr = _sourceImage.FullBgr.Clone();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_workingBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
+        _workingBgr = _sourceImage!.FullBgr.Clone();
         _healMask = new Mat(_workingBgr.Size(), MatType.CV_8UC1, Scalar.All(0));
-        SourceBitmap = _workingBgr.ToBitmapSource(_workingAlpha);
+        SourceBitmap = _workingBgr.ToBitmapSource(_workingAlpha!);
         RefreshResult();
         StatusMessage = "Paint over blemishes, then apply the heal.";
     }
@@ -171,9 +167,8 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
         _workingBgr?.Dispose();
-        _workingAlpha?.Dispose();
         _healMask?.Dispose();
+        base.Dispose();
     }
 }

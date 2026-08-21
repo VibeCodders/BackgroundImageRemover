@@ -11,10 +11,9 @@ using WpfColor = System.Windows.Media.Color;
 
 namespace BackgroundImageRemover.ViewModels;
 
-/// <summary>Dedicated Tool Tab for borders, rounded corners, mats, inner accents and outer shadows.</summary>
-public partial class FrameToolSessionViewModel : ToolSessionViewModelBase
-{
-    private LoadedImage? _sourceImage;
+    /// <summary>Dedicated Tool Tab for borders, rounded corners, mats, inner accents and outer shadows.</summary>
+    public partial class FrameToolSessionViewModel : ToolSessionViewModelBase
+    {
 
     public override string ToolBadge => "▣ Frame";
     public override string AccentColor => "#7C3AED";
@@ -153,7 +152,7 @@ public partial class FrameToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
+        InitSourceAlpha();
         RefreshPreview();
         StatusMessage = "Add borders, mats, rounded corners, inner accents and shadows.";
     }
@@ -337,6 +336,4 @@ public partial class FrameToolSessionViewModel : ToolSessionViewModelBase
         _shell.CloseTabDirect(this);
         return Task.CompletedTask;
     }
-
-    public override void Dispose() => _sourceImage?.Dispose();
 }

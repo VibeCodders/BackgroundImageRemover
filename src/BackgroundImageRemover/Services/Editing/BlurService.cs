@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -18,26 +19,7 @@ public static class BlurService
         using var blurred = new Mat();
         Cv2.GaussianBlur(bgr, blurred, new Size(ksize, ksize), radius, radius);
 
-        using var maskF = new Mat();
-        mask.ConvertTo(maskF, MatType.CV_32FC1, 1.0 / 255.0);
-        using var mask3 = new Mat();
-        Cv2.CvtColor(maskF, mask3, ColorConversionCodes.GRAY2BGR);
-
-        using var inv = new Mat();
-        Cv2.Subtract(new Mat(mask3.Size(), mask3.Type(), Scalar.All(1.0)), mask3, inv);
-
-        using var aF = new Mat();
-        bgr.ConvertTo(aF, MatType.CV_32FC3);
-        using var bF = new Mat();
-        blurred.ConvertTo(bF, MatType.CV_32FC3);
-
-        using var aWeighted = aF.Mul(inv).ToMat();
-        using var bWeighted = bF.Mul(mask3).ToMat();
-        using var blended = (aWeighted + bWeighted).ToMat();
-
-        var result = new Mat();
-        blended.ConvertTo(result, MatType.CV_8UC3);
-        return result;
+        return bgr.BlendByMask(blurred, mask);
     }
 
     /// <summary>Blurs the entire image with a Gaussian blur of <paramref name="radius"/> pixels.</summary>

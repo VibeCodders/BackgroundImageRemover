@@ -11,9 +11,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for the tilt-shift / miniature effect.</summary>
 public partial class TiltShiftToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
-
     public override string ToolBadge => "📐 Tilt-Shift";
     public override string AccentColor => "#4F46E5";
 
@@ -41,14 +38,7 @@ public partial class TiltShiftToolSessionViewModel : ToolSessionViewModelBase
     public TiltShiftToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
-        InitFromParent();
-    }
-
-    private void InitFromParent()
-    {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
         RefreshResult();
         StatusMessage = "Adjust the focus band, blur and saturation.";
     }
@@ -81,19 +71,12 @@ public partial class TiltShiftToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
+        Mat? result = null;
         if (_sourceImage is not null && _workingAlpha is not null)
         {
-            var result = TiltShiftService.Apply(
-                _sourceImage.FullBgr, FocusCenter, FocusWidth, BlurRadius, Vertical, SaturationBoost);
-            _parentDocument.ApplyToolResult(result, _workingAlpha.Clone(), "Tilt-Shift");
+            result = TiltShiftService.Apply(_sourceImage.FullBgr, FocusCenter, FocusWidth, BlurRadius, Vertical, SaturationBoost);
         }
-        _shell.CloseTabDirect(this);
+        ApplyAndClose(result, "Tilt-Shift");
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
     }
 }

@@ -18,10 +18,8 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     private readonly MatEditSession _editSession = new();
     private readonly DispatcherTimer _brushRefreshTimer;
     private readonly BrushStrokeController _strokes = new();
-    private LoadedImage? _sourceImage;
 
     private Mat? _workingBgr;
-    private Mat? _workingAlpha;
 
     public override string ToolBadge => "🖌 Retouch";
     public override string AccentColor => "#8E24AA";
@@ -103,9 +101,8 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingBgr = _sourceImage.FullBgr.Clone();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone() ?? new Mat(_workingBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
+        _workingBgr = _sourceImage!.FullBgr.Clone();
         RefreshResultBitmap();
         StatusMessage = "Use Brush or Magic Wand to refine foreground & edges.";
     }
@@ -328,9 +325,8 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     public override void Dispose()
     {
         _brushRefreshTimer.Stop();
-        _sourceImage?.Dispose();
         _workingBgr?.Dispose();
-        _workingAlpha?.Dispose();
         _editSession.Dispose();
+        base.Dispose();
     }
 }

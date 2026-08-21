@@ -14,10 +14,7 @@ namespace BackgroundImageRemover.ViewModels;
 public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
 {
     private readonly IFileLogService _log;
-    private LoadedImage? _sourceImage;
-
     private Mat? _workingBgr;
-    private Mat? _workingAlpha;
 
     public override string ToolBadge => "✨ Adjustments";
     public override string AccentColor => "#D97706";
@@ -124,11 +121,10 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingBgr = _sourceImage.FullBgr.Clone();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone() ?? new Mat(_workingBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
+        _workingBgr = _sourceImage!.FullBgr.Clone();
 
-        OriginalBitmap = _workingBgr.ToBitmapSource(_workingAlpha);
+        OriginalBitmap = _workingBgr.ToBitmapSource(_workingAlpha!);
         ResultBitmap = OriginalBitmap;
 
         StatusMessage = "Adjust sliders to preview visual changes.";
@@ -289,8 +285,7 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
         _workingBgr?.Dispose();
-        _workingAlpha?.Dispose();
+        base.Dispose();
     }
 }

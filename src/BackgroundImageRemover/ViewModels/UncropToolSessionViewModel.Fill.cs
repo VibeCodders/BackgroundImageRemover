@@ -166,7 +166,7 @@ public partial class UncropToolSessionViewModel
     {
         _fillCts?.Cancel();
         _fillCts?.Dispose();
-        _sourceImage?.Dispose();
         _resultSession.Dispose();
+        base.Dispose();
     }
 }

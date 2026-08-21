@@ -21,9 +21,6 @@ public partial class UncropToolSessionViewModel : ToolSessionViewModelBase
     private readonly IFileLogService _log;
     private readonly UncropResultSession _resultSession;
     private CancellationTokenSource? _fillCts;
-
-    private LoadedImage? _sourceImage;
-
     public override string ToolBadge => "⤢ Uncrop";
     public override string AccentColor => "#0078D7";
 

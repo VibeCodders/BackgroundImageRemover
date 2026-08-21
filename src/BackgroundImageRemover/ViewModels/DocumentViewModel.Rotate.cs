@@ -41,8 +41,8 @@ public partial class DocumentViewModel
         {
             var newBgr = RotateQuarterTurns(_workingBgr!, clockwise);
             var newAlpha = RotateQuarterTurns(_workingAlpha!, clockwise);
-            _workingBgr.Dispose();
-            _workingAlpha.Dispose();
+            _workingBgr!.Dispose();
+            _workingAlpha!.Dispose();
             _workingBgr = newBgr;
             _workingAlpha = newAlpha;
             _workingResultIsLoadedCutout = false;

@@ -8,7 +8,7 @@ public static class PixelateService
     {
         if (input is null || input.Empty() || blockSize <= 1)
         {
-            return input.Clone();
+            return input!.Clone();
         }
 
         int width = input.Cols;

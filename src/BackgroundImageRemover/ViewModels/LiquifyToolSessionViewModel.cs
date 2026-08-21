@@ -13,7 +13,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for local warps (pinch, bloat, twirl, push).</summary>
 public partial class LiquifyToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
     private Mat? _workingBgra;
 
     public override string ToolBadge => "✋ Liquify";
@@ -48,10 +47,8 @@ public partial class LiquifyToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        using var alpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-        _workingBgra = _sourceImage.FullBgr.ToBgra(alpha);
+        InitSourceAlpha();
+        _workingBgra = _sourceImage!.FullBgr.ToBgra(_workingAlpha!);
         CenterX = _workingBgra.Width / 2;
         CenterY = _workingBgra.Height / 2;
         RefreshResult();
@@ -74,9 +71,7 @@ public partial class LiquifyToolSessionViewModel : ToolSessionViewModelBase
     {
         if (_sourceImage is null) return;
         _workingBgra?.Dispose();
-        using var alpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-        _workingBgra = _sourceImage.FullBgr.ToBgra(alpha);
+        _workingBgra = _sourceImage.FullBgr.ToBgra(_workingAlpha!);
         CenterX = _workingBgra.Width / 2;
         CenterY = _workingBgra.Height / 2;
         Radius = 60;
@@ -105,7 +100,7 @@ public partial class LiquifyToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
         _workingBgra?.Dispose();
+        base.Dispose();
     }
 }

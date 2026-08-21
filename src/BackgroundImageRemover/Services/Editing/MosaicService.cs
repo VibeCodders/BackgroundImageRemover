@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -138,27 +139,7 @@ public static class MosaicService
     /// mask (255 = modified, 0 = original), producing a soft-edged composite.
     /// </summary>
     public static Mat BlendByMask(Mat original, Mat modified, Mat mask)
-    {
-        var result = original.Clone();
-
-        using var maskF = new Mat();
-        mask.ConvertTo(maskF, MatType.CV_32FC1, 1.0 / 255.0);
-        using var mask3 = new Mat();
-        Cv2.CvtColor(maskF, mask3, ColorConversionCodes.GRAY2BGR);
-
-        using var origF = new Mat();
-        original.ConvertTo(origF, MatType.CV_32FC3);
-        using var modF = new Mat();
-        modified.ConvertTo(modF, MatType.CV_32FC3);
-
-        using var inv = new Mat();
-        Cv2.Subtract(new Mat(mask3.Size(), mask3.Type(), Scalar.All(1.0)), mask3, inv);
-        using var origWeighted = origF.Mul(inv).ToMat();
-        using var modWeighted = modF.Mul(mask3).ToMat();
-        using var blended = (origWeighted + modWeighted).ToMat();
-        blended.ConvertTo(result, MatType.CV_8UC3);
-        return result;
-    }
+        => original.BlendByMask(modified, mask);
 
     /// <summary>Clamps a region to the image bounds.</summary>
     public static Rect ClampRegion(Size size, Rect rect)

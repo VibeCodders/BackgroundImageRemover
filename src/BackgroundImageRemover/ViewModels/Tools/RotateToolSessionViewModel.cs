@@ -19,8 +19,6 @@ namespace BackgroundImageRemover.ViewModels.Tools;
 /// </summary>
 public partial class RotateToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
     private Mat? _workingBgra;
 
     public override string ToolBadge => "↺ Rotate";
@@ -49,10 +47,9 @@ public partial class RotateToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-        _workingBgra = _sourceImage.FullBgr.ToBgra(_workingAlpha);
+        InitSourceAlpha();
+        _workingBgra = _sourceImage!.FullBgr.ToBgra(_workingAlpha!);
+        SourceBitmap = _workingBgra.ToBitmapSource();
         SourceBitmap = _workingBgra.ToBitmapSource();
         RefreshPreview();
         StatusMessage = "Rotate by an arbitrary angle. Expand keeps the full image; un-tick to keep the original canvas size.";
@@ -105,8 +102,7 @@ public partial class RotateToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
         _workingBgra?.Dispose();
+        base.Dispose();
     }
 }

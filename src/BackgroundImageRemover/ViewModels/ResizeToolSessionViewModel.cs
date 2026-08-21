@@ -11,8 +11,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for resizing (exact size, aspect lock, percent, interpolation).</summary>
 public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
 {
-    private LoadedImage? _sourceImage;
-    private Mat? _workingAlpha;
     private bool _updatingSize;
 
     public override string ToolBadge => "⤡ Resize";
@@ -62,11 +60,9 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
-        _workingAlpha = _sourceImage.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        InitSourceAlpha();
         _updatingSize = true;
-        Width = _sourceImage.FullBgr.Width;
+        Width = _sourceImage!.FullBgr.Width;
         Height = _sourceImage.FullBgr.Height;
         _updatingSize = false;
         RefreshResult();
@@ -148,15 +144,12 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
-        if (_sourceImage is null || _workingAlpha is null)
+        if (_sourceImage is not null && _workingAlpha is not null)
         {
-            _shell.CloseTabDirect(this);
-            return Task.CompletedTask;
+            var bgr = BuildResult(_sourceImage.FullBgr);
+            var alpha = BuildAlphaFor(bgr.Size());
+            _parentDocument.ApplyToolResult(bgr, alpha, "Resize");
         }
-
-        var bgr = BuildResult(_sourceImage.FullBgr);
-        var alpha = BuildAlphaFor(bgr.Size());
-        _parentDocument.ApplyToolResult(bgr, alpha, "Resize");
 
         _shell.CloseTabDirect(this);
         return Task.CompletedTask;
@@ -164,7 +157,6 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _sourceImage?.Dispose();
-        _workingAlpha?.Dispose();
+        base.Dispose();
     }
 }

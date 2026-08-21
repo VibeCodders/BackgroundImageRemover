@@ -47,15 +47,12 @@ public static class VignetteService
 
         try
         {
-            using var aF = new Mat();
-            bgr.ConvertTo(aF, MatType.CV_32FC3);
-
             // Build the overlay: white (lighten) or 60% dark (darken).
             using var overlay = invert
-                ? new Mat(aF.Size(), aF.Type(), new Scalar(255.0, 255.0, 255.0))
-                : (Mat)(aF * 0.6);
+                ? new Mat(bgr.Size(), MatType.CV_32FC3, new Scalar(255.0, 255.0, 255.0))
+                : (Mat)((Mat)bgr * 0.6);
 
-            return bgr.BlendByMask(overlay, mask);
+            return bgr.BlendByMaskFloat(overlay, mask);
         }
         catch
         {

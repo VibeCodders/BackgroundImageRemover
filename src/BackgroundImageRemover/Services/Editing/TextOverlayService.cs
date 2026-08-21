@@ -246,23 +246,7 @@ public static class TextOverlayService
     }
 
     private static Point ComputeBlockOrigin(Size image, Size block, TextAnchor anchor, int margin)
-    {
-        int x = anchor switch
-        {
-            TextAnchor.TopLeft or TextAnchor.MiddleLeft or TextAnchor.BottomLeft => margin,
-            TextAnchor.TopCenter or TextAnchor.Center or TextAnchor.BottomCenter => (image.Width - block.Width) / 2,
-            _ => image.Width - block.Width - margin
-        };
-
-        int y = anchor switch
-        {
-            TextAnchor.TopLeft or TextAnchor.TopCenter or TextAnchor.TopRight => margin,
-            TextAnchor.MiddleLeft or TextAnchor.Center or TextAnchor.MiddleRight => (image.Height - block.Height) / 2,
-            _ => image.Height - block.Height - margin
-        };
-
-        return new Point(x, y);
-    }
+        => AnchorPositionHelper.ComputeOrigin(image, block, anchor, margin);
 
     /// <summary>Composites a BGRA text block onto a BGR image at the given offset, scaled by opacity.</summary>
     private static Mat CompositeTextBlock(Mat bgr, Mat blockBgra, Point position, double opacity)

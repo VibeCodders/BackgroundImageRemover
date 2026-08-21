@@ -46,7 +46,7 @@ public static class ImageProcessingHelper
             // 1.5 Exposure (gamma curve).
             if (Math.Abs(adjustments.Exposure - 1.0) > 1e-4)
             {
-                using var lut = BuildLut(i => 255.0 * Math.Pow(i / 255.0, 1.0 / adjustments.Exposure));
+                using var lut = ImageProcessingUtility.BuildLut(i => 255.0 * Math.Pow(i / 255.0, 1.0 / adjustments.Exposure));
                 var adjusted = new Mat();
                 Cv2.LUT(current, lut, adjusted);
                 current.Dispose();
@@ -58,7 +58,7 @@ public static class ImageProcessingHelper
             {
                 double shadows = adjustments.Shadows;
                 double highlights = adjustments.Highlights;
-                using var lut = BuildLut(i =>
+                using var lut = ImageProcessingUtility.BuildLut(i =>
                 {
                     double v = i;
                     v += shadows * 0.5 * (1.0 - v / 255.0);
@@ -191,13 +191,13 @@ public static class ImageProcessingHelper
                 var channels = Cv2.Split(hsv);
                 try
                 {
-                    double v = adjustments.Vibrance;
-                    using var satLut = BuildLut(s =>
-                    {
-                        double t = s / 255.0;
-                        double k = v >= 0 ? 1.0 + v * (1.0 - t) : 1.0 + v;
-                        return 255.0 * t * k;
-                    });
+                double v = adjustments.Vibrance;
+                using var satLut = ImageProcessingUtility.BuildLut(s =>
+                {
+                    double t = s / 255.0;
+                    double k = v >= 0 ? 1.0 + v * (1.0 - t) : 1.0 + v;
+                    return 255.0 * t * k;
+                });
                     Cv2.LUT(channels[1], satLut, channels[1]);
                     Cv2.Merge(channels, hsv);
                     var vibrant = new Mat();
@@ -243,7 +243,7 @@ public static class ImageProcessingHelper
             // 5.8 Fade: lift blacks toward mid-gray for a matte film look.
             if (adjustments.Fade > 1e-4)
             {
-                using var lut = BuildLut(i => i + adjustments.Fade * (128.0 - i));
+                using var lut = ImageProcessingUtility.BuildLut(i => i + adjustments.Fade * (128.0 - i));
                 var faded = new Mat();
                 Cv2.LUT(current, lut, faded);
                 current.Dispose();
@@ -364,7 +364,7 @@ public static class ImageProcessingHelper
             if (adjustments.PosterizeLevels > 0)
             {
                 int bucket = Math.Max(1, 256 / Math.Max(1, adjustments.PosterizeLevels));
-                using var lut = BuildLut(i => (i / bucket) * bucket);
+                using var lut = ImageProcessingUtility.BuildLut(i => (i / bucket) * bucket);
                 var posterized = new Mat();
                 Cv2.LUT(current, lut, posterized);
                 current.Dispose();
@@ -432,20 +432,6 @@ public static class ImageProcessingHelper
         }
 
         return mask;
-    }
-
-    /// <summary>Builds a 1x256 CV_8UC1 lookup table from a per-level mapping function.</summary>
-    private static Mat BuildLut(Func<int, double> map)
-    {
-        var lut = new byte[256];
-        for (int i = 0; i < lut.Length; i++)
-        {
-            lut[i] = (byte)Math.Round(Math.Clamp(map(i), 0.0, 255.0));
-        }
-
-        var lutMat = new Mat(1, 256, MatType.CV_8UC1);
-        lutMat.SetArray(lut);
-        return lutMat;
     }
 
     /// <summary>Applies gray-world white balance followed by CLAHE contrast equalization.</summary>

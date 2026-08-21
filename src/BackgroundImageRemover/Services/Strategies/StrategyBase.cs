@@ -128,16 +128,16 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
 
         if (Math.Abs(context.MaskGamma - 1.0) > 1e-4)
         {
-            ApplyAlphaLut(mask, i => 255.0 * Math.Pow(i / 255.0, Math.Clamp(context.MaskGamma, 0.1, 10.0)));
+            mask.ApplyLut(i => 255.0 * Math.Pow(i / 255.0, Math.Clamp(context.MaskGamma, 0.1, 10.0)));
         }
 
         if (context.MaskHardness > 1e-4)
         {
             double h = Math.Clamp(context.MaskHardness, 0.0, 1.0);
-            ApplyAlphaLut(mask, i =>
+            mask.ApplyLut(i =>
             {
                 double t = i / 255.0;
-                double hardened = t * t * (3.0 - 2.0 * t); // smoothstep
+                double hardened = t * t * (3.0 - 2.0 * t);
                 return 255.0 * ((1.0 - h) * t + h * hardened);
             });
         }
@@ -145,7 +145,7 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
         if (context.MaskThreshold > 0)
         {
             int threshold = Math.Clamp(context.MaskThreshold, 1, 255);
-            ApplyAlphaLut(mask, i => i < threshold ? 0.0 : i);
+            mask.ApplyLut(i => i < threshold ? 0.0 : i);
         }
 
         if (context.MaskMedianKernel > 0)
@@ -210,20 +210,6 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
         }
 
         Cv2.BitwiseAnd(mask, keep, mask);
-    }
-
-    /// <summary>Applies a per-level mapping to the mask through a 256-entry lookup table.</summary>
-    private static void ApplyAlphaLut(Mat mask, Func<int, double> map)
-    {
-        var lut = new byte[256];
-        for (int i = 0; i < lut.Length; i++)
-        {
-            lut[i] = (byte)Math.Round(Math.Clamp(map(i), 0.0, 255.0));
-        }
-
-        using var lutMat = new Mat(1, 256, MatType.CV_8UC1);
-        lutMat.SetArray(lut);
-        Cv2.LUT(mask, lutMat, mask);
     }
 
     /// <summary>Keeps only the largest connected foreground region (by area) in the mask.</summary>

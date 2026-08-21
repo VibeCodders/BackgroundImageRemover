@@ -176,4 +176,23 @@ public static class ImageProcessingUtility
             return adjusted;
         });
     }
+
+    public static Mat BuildLut(Func<int, double> map)
+    {
+        var lut = new byte[256];
+        for (int i = 0; i < lut.Length; i++)
+        {
+            lut[i] = (byte)Math.Round(Math.Clamp(map(i), 0.0, 255.0));
+        }
+
+        var lutMat = new Mat(1, 256, MatType.CV_8UC1);
+        lutMat.SetArray(lut);
+        return lutMat;
+    }
+
+    public static void ApplyLut(this Mat mat, Func<int, double> map)
+    {
+        using var lutMat = BuildLut(map);
+        Cv2.LUT(mat, lutMat, mat);
+    }
 }

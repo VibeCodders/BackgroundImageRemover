@@ -69,6 +69,14 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         SelectedStrategy = strategy;
     }
 
+    partial void OnSelectedStrategyChanging(StrategyKind value)
+    {
+        // Keep the left toolbar's per-strategy tool highlight in sync with whichever
+        // strategy sub-tool is active inside this session (picked via combo, keyboard 1-8,
+        // or the initial strategy the toolbar icon was opened with).
+        ParentDocument.SelectedStrategy = value;
+    }
+
     [ObservableProperty]
     private BitmapSource? _previewBitmap;
 
@@ -160,7 +168,8 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         IEnumerable<IBackgroundRemovalStrategy> strategies,
         OnnxStrategy onnxStrategy,
         GrabCutStrategy grabCutStrategy,
-        SamStrategy samStrategy)
+        SamStrategy samStrategy,
+        StrategyKind initialStrategy = StrategyKind.ChromaKey)
         : base(shell, parentDocument)
     {
         _downscaler = downscaler;
@@ -250,6 +259,15 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         };
 
         InitFromParent();
+
+        // Set (and fully apply) the strategy the user picked from the left toolbar. This
+        // bypasses the generated property setter's equality check so the strategy-specific
+        // setup (Onnx/Sam readiness, interaction mode, preview) always runs, even when
+        // initialStrategy matches the ChromaKey default.
+        _selectedStrategy = initialStrategy;
+        ParentDocument.SelectedStrategy = initialStrategy;
+        OnPropertyChanged(nameof(SelectedStrategy));
+        OnSelectedStrategyChanged(initialStrategy);
     }
 
     private void InitFromParent()

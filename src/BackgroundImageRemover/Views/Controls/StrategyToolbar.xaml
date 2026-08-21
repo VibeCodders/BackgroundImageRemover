@@ -51,25 +51,174 @@
                            HorizontalAlignment="Center" 
                            Margin="0,8,0,12" FontSize="10" />
 
-                <!-- SELECTION TOOLS -->
-                <TextBlock Text="Selection" FontWeight="SemiBold" 
-                           Foreground="{DynamicResource Theme.MutedForegroundBrush}" 
-                           HorizontalAlignment="Center" 
+                <!-- BACKGROUND REMOVAL STRATEGIES (each strategy is its own tool) -->
+                <TextBlock Text="Background Removal" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
+                           HorizontalAlignment="Center"
                            Margin="0,4,0,6" FontSize="9" />
-                
-                <RadioButton GroupName="EditorTools" 
+
+                <RadioButton GroupName="EditorTools"
                              Style="{StaticResource StrategyToolButton}"
-                             Command="{Binding OpenToolTabCommand}" 
-                             CommandParameter="{x:Static models:EditorTool.RemoveBackground}"
-                             ToolTip="Background Remover (R)"
-                             IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=RemoveBackground}">
-                    <Path Data="{StaticResource OnnxIcon}" 
+                             Command="{Binding OpenBackgroundRemovalToolCommand}"
+                             CommandParameter="{x:Static models:StrategyKind.Onnx}"
+                             ToolTip="AI Background Removal (ONNX)">
+                    <RadioButton.IsChecked>
+                        <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="Onnx">
+                            <Binding Path="ActiveTool" />
+                            <Binding Path="SelectedStrategy" />
+                        </MultiBinding>
+                    </RadioButton.IsChecked>
+                    <Path Data="{StaticResource OnnxIcon}"
                           Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                          Stretch="Uniform" 
+                          Stretch="Uniform"
                           Width="24" Height="24" />
                 </RadioButton>
 
-                <RadioButton GroupName="EditorTools" 
+                <RadioButton GroupName="EditorTools"
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenBackgroundRemovalToolCommand}"
+                             CommandParameter="{x:Static models:StrategyKind.Sam}"
+                             ToolTip="Segment Anything (click to select)">
+                    <RadioButton.IsChecked>
+                        <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="Sam">
+                            <Binding Path="ActiveTool" />
+                            <Binding Path="SelectedStrategy" />
+                        </MultiBinding>
+                    </RadioButton.IsChecked>
+                    <Path Data="{StaticResource SamIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform"
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools"
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenBackgroundRemovalToolCommand}"
+                             CommandParameter="{x:Static models:StrategyKind.GrabCut}"
+                             ToolTip="GrabCut (rectangle + scribbles)">
+                    <RadioButton.IsChecked>
+                        <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="GrabCut">
+                            <Binding Path="ActiveTool" />
+                            <Binding Path="SelectedStrategy" />
+                        </MultiBinding>
+                    </RadioButton.IsChecked>
+                    <Path Data="{StaticResource GrabCutIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform"
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools"
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenBackgroundRemovalToolCommand}"
+                             CommandParameter="{x:Static models:StrategyKind.ChromaKey}"
+                             ToolTip="Chroma Key (solid color backdrop)">
+                    <RadioButton.IsChecked>
+                        <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="ChromaKey">
+                            <Binding Path="ActiveTool" />
+                            <Binding Path="SelectedStrategy" />
+                        </MultiBinding>
+                    </RadioButton.IsChecked>
+                    <Path Data="{StaticResource ChromaKeyIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform"
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools"
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenBackgroundRemovalToolCommand}"
+                             CommandParameter="{x:Static models:StrategyKind.MagicWand}"
+                             ToolTip="Magic Wand (click background)">
+                    <RadioButton.IsChecked>
+                        <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="MagicWand">
+                            <Binding Path="ActiveTool" />
+                            <Binding Path="SelectedStrategy" />
+                        </MultiBinding>
+                    </RadioButton.IsChecked>
+                    <Path Data="{StaticResource MagicWandIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform"
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools"
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenBackgroundRemovalToolCommand}"
+                             CommandParameter="{x:Static models:StrategyKind.FloodFill}"
+                             ToolTip="Flood Fill (from border)">
+                    <RadioButton.IsChecked>
+                        <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="FloodFill">
+                            <Binding Path="ActiveTool" />
+                            <Binding Path="SelectedStrategy" />
+                        </MultiBinding>
+                    </RadioButton.IsChecked>
+                    <Path Data="{StaticResource FloodFillIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform"
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools"
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenBackgroundRemovalToolCommand}"
+                             CommandParameter="{x:Static models:StrategyKind.KMeans}"
+                             ToolTip="K-Means (multi-color backdrop)">
+                    <RadioButton.IsChecked>
+                        <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="KMeans">
+                            <Binding Path="ActiveTool" />
+                            <Binding Path="SelectedStrategy" />
+                        </MultiBinding>
+                    </RadioButton.IsChecked>
+                    <Path Data="{StaticResource KMeansIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform"
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools"
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenBackgroundRemovalToolCommand}"
+                             CommandParameter="{x:Static models:StrategyKind.Otsu}"
+                             ToolTip="Otsu Threshold (high contrast)">
+                    <RadioButton.IsChecked>
+                        <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="Otsu">
+                            <Binding Path="ActiveTool" />
+                            <Binding Path="SelectedStrategy" />
+                        </MultiBinding>
+                    </RadioButton.IsChecked>
+                    <Path Data="{StaticResource OtsuIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform"
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <RadioButton GroupName="EditorTools"
+                             Style="{StaticResource StrategyToolButton}"
+                             Command="{Binding OpenBackgroundRemovalToolCommand}"
+                             CommandParameter="{x:Static models:StrategyKind.Inpaint}"
+                             ToolTip="Inpaint (flood + fill background)">
+                    <RadioButton.IsChecked>
+                        <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="Inpaint">
+                            <Binding Path="ActiveTool" />
+                            <Binding Path="SelectedStrategy" />
+                        </MultiBinding>
+                    </RadioButton.IsChecked>
+                    <Path Data="{StaticResource InpaintIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                          Stretch="Uniform"
+                          Width="24" Height="24" />
+                </RadioButton>
+
+                <Separator Background="{DynamicResource Theme.BorderBrush}" Margin="0,4" />
+
+                <!-- SELECTION TOOLS -->
+                <TextBlock Text="Selection" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="0,4,0,6" FontSize="9" />
+
+                <RadioButton GroupName="EditorTools"
                              Style="{StaticResource StrategyToolButton}"
                              Command="{Binding OpenToolTabCommand}" 
                              CommandParameter="{x:Static models:EditorTool.Crop}"

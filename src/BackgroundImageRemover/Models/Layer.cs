@@ -1,4 +1,5 @@
 using System.Windows.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BackgroundImageRemover.Models;
 

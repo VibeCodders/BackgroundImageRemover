@@ -75,18 +75,23 @@ public partial class ShellViewModel : ObservableObject
     /// Opens a modal tool session tab for the specified tool.
     /// If a session is already active for this document, focuses it.
     /// </summary>
-    public void OpenToolSession(DocumentViewModel doc, EditorTool tool)
+    public void OpenToolSession(DocumentViewModel doc, EditorTool tool, StrategyKind? initialStrategy = null)
     {
         if (doc.ActiveToolSession is { } existingTab)
         {
             SelectedDocument = existingTab;
+            if (initialStrategy is { } strategy && existingTab is BackgroundRemoverToolSessionViewModel bgTab)
+            {
+                bgTab.SelectedStrategy = strategy;
+            }
             return;
         }
 
         IToolSessionTab? toolTab = tool switch
         {
             EditorTool.RemoveBackground => new BackgroundRemoverToolSessionViewModel(
-                this, doc, _downscaler, _dialogs, _log, _strategies, _onnxStrategy, _grabCutStrategy, _samStrategy),
+                this, doc, _downscaler, _dialogs, _log, _strategies, _onnxStrategy, _grabCutStrategy, _samStrategy,
+                initialStrategy ?? StrategyKind.ChromaKey),
             EditorTool.Uncrop => new UncropToolSessionViewModel(
                 this, doc, _uncropFillService, _dialogs, _imageLoader, _imageExporter, _log),
             EditorTool.Retouch => new RetouchToolSessionViewModel(this, doc),

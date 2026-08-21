@@ -16,6 +16,7 @@
         <conv:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
         <conv:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter" />
         <conv:EnumToBoolConverter x:Key="EnumToBoolConverter" />
+        <conv:ActiveStrategyToBoolConverter x:Key="ActiveStrategyToBoolConverter" />
         <conv:ColorToBrushConverter x:Key="ColorToBrushConverter" />
         </ResourceDictionary>
     </Application.Resources>

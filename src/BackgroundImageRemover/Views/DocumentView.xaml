@@ -185,9 +185,9 @@
         </Border>
 
         <!-- Left Panel Stack: History, Layers, Channels, Paths -->
-        <DockPanel DockPanel.Dock="Left" Width="220" Background="{DynamicResource Theme.PanelBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0"
-                   Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
-            
+        <Border DockPanel.Dock="Left" Width="220" Background="{DynamicResource Theme.PanelBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0"
+                Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
+        <DockPanel>
             <!-- History Panel -->
             <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
                 <DockPanel>
@@ -231,6 +231,7 @@
                 <panels:PathsPanel DataContext="{Binding}" />
             </Border>
         </DockPanel>
+        </Border>
 
         <!-- Active Tool Session Modal Banner (when a tool tab is currently open for this doc) -->
         <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.InfoBannerBackground}" BorderBrush="{DynamicResource Theme.InfoBannerBorderBrush}" BorderThickness="0,0,0,1" Padding="12,6"

@@ -108,6 +108,17 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     }
 
     /// <summary>
+    /// Opens the Background Remover tool session pre-selected to the given strategy. Each
+    /// background-removal strategy has its own icon in the left toolbar, GIMP-style.
+    /// </summary>
+    [RelayCommand]
+    public void OpenBackgroundRemovalTool(StrategyKind strategy)
+    {
+        if (!IsImageLoaded || _shell is null) return;
+        _shell.OpenToolSession(this, EditorTool.RemoveBackground, strategy);
+    }
+
+    /// <summary>
     /// Creates a self-contained LoadedImage snapshot of the current state of this document
     /// (the working result if available, or the source image).
     /// </summary>

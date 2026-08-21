@@ -12,11 +12,11 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for healing blemishes (inpaint brush) and repairing dust/scratches.</summary>
 public partial class HealToolSessionViewModel : ToolSessionViewModelBase
 {
+    private readonly BrushStrokeController _strokes = new();
     private LoadedImage? _sourceImage;
     private Mat? _workingBgr;
     private Mat? _workingAlpha;
     private Mat? _healMask;
-    private WpfPoint? _brushLastPoint;
 
     public override string ToolBadge => "🩹 Heal";
     public override string AccentColor => "#DC2626";
@@ -80,24 +80,14 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase
     partial void OnInpaintMethodChanged(InpaintMethod value) => RefreshResult();
 
     public void OnResultStrokeStart(WpfPoint imagePoint, double pixelRadius)
-    {
-        _brushLastPoint = imagePoint;
-        StampMask(imagePoint, imagePoint, pixelRadius);
-    }
+        => _strokes.Begin(imagePoint, pixelRadius, StampMask);
 
     public void OnResultStrokeMove(WpfPoint imagePoint, double pixelRadius)
-    {
-        // Connect to the previous point so fast strokes paint continuously.
-        if (_brushLastPoint is { } last)
-        {
-            StampMask(last, imagePoint, pixelRadius);
-        }
-        _brushLastPoint = imagePoint;
-    }
+        => _strokes.Extend(imagePoint, pixelRadius, StampMask);
 
     public void OnResultStrokeEnd()
     {
-        _brushLastPoint = null;
+        _strokes.End();
         IsDirty = Cv2.CountNonZero(_healMask!) > 0;
         RefreshResult();
     }

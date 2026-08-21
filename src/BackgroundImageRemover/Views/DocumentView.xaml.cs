@@ -6,7 +6,6 @@ using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Strategies;
 using BackgroundImageRemover.ViewModels;
-using BackgroundImageRemover.Views.Controls;
 
 namespace BackgroundImageRemover.Views;
 
@@ -140,20 +139,17 @@ public partial class DocumentView : UserControl
     private void ResultEditPreview_StrokeStart(object? sender, Point e)
     {
         if (ViewModel is null) return;
-        ViewModel.OnResultStrokeStart(e, BrushPixelRadius(sender, ViewModel.BrushRadius));
+        ViewModel.OnResultStrokeStart(e, ViewInteractionHelper.BrushPixelRadius(sender, ViewModel.BrushRadius));
     }
 
     private void ResultEditPreview_StrokeMove(object? sender, Point e)
     {
         if (ViewModel is null) return;
-        ViewModel.OnResultStrokeMove(e, BrushPixelRadius(sender, ViewModel.BrushRadius));
+        ViewModel.OnResultStrokeMove(e, ViewInteractionHelper.BrushPixelRadius(sender, ViewModel.BrushRadius));
     }
 
     private void ResultEditPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel?.OnResultStrokeEnd();
     private void ResultEditPreview_WandClicked(object? sender, OpenCvSharp.Point e) => ViewModel?.OnResultWandClicked(e);
-
-    private static double BrushPixelRadius(object? sender, double fallback)
-        => sender is ImagePreviewControl preview ? preview.BrushRadius * preview.ImagePixelScale : fallback;
 
     private void ToolsMenuButton_Click(object sender, RoutedEventArgs e)
     {

@@ -123,25 +123,23 @@ public partial class DocumentViewModel
         _workingResultHandEdited = true;
         IsDirty = true;
         RefreshUndoRedoState();
-        _brushLastPoint = imagePoint;
-        StampBrush(imagePoint, imagePoint, pixelRadius);
+        _strokes.Begin(imagePoint, pixelRadius, StampBrush);
     }
 
     public void OnResultStrokeMove(WpfPoint imagePoint, double pixelRadius)
     {
-        if (_workingAlpha is null || _brushLastPoint is not { } last)
+        if (_workingAlpha is null)
         {
             return;
         }
-        StampBrush(last, imagePoint, pixelRadius);
-        _brushLastPoint = imagePoint;
+        _strokes.Extend(imagePoint, pixelRadius, StampBrush);
     }
 
     public void OnResultStrokeEnd()
     {
         _brushRefreshTimer?.Stop();
         RefreshResultBitmapFromWorking();
-        _brushLastPoint = null;
+        _strokes.End();
     }
 
     private void StampBrush(WpfPoint from, WpfPoint to, double pixelRadius)

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
+using BackgroundImageRemover.Views.Controls;
 
 namespace BackgroundImageRemover.Helpers;
 
@@ -141,6 +142,17 @@ public static class ViewInteractionHelper
             return false;
         }
     }
+
+    /// <summary>
+    /// Converts a brush radius expressed in display units into a radius in source-image
+    /// pixels, using the <see cref="ImagePreviewControl"/> that raised the stroke event. When
+    /// <paramref name="sender"/> is not a preview control, returns <paramref name="fallback"/>
+    /// unchanged.
+    /// </summary>
+    public static double BrushPixelRadius(object? sender, double fallback)
+        => sender is ImagePreviewControl preview
+            ? preview.BrushRadius * preview.ImagePixelScale
+            : fallback;
 
     /// <summary>
     /// Checks clipboard for an image (BitmapSource or image file) and returns it, or null if none present.

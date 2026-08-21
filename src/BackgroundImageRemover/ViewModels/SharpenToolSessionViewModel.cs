@@ -12,10 +12,10 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for selective and whole-image sharpening.</summary>
 public partial class SharpenToolSessionViewModel : ToolSessionViewModelBase
 {
+    private readonly BrushStrokeController _strokes = new();
     private LoadedImage? _sourceImage;
     private Mat? _workingAlpha;
     private Mat? _paintedMask;
-    private WpfPoint? _brushLastPoint;
 
     public override string ToolBadge => "🔪 Sharpen";
     public override string AccentColor => "#7C3AED";
@@ -64,23 +64,14 @@ public partial class SharpenToolSessionViewModel : ToolSessionViewModelBase
     partial void OnPaintModeChanged(bool value) => RefreshResult();
 
     public void OnBrushStrokeStart(WpfPoint imagePoint, double pixelRadius)
-    {
-        _brushLastPoint = imagePoint;
-        StampMask(imagePoint, imagePoint, pixelRadius);
-    }
+        => _strokes.Begin(imagePoint, pixelRadius, StampMask);
 
     public void OnBrushStrokeMove(WpfPoint imagePoint, double pixelRadius)
-    {
-        if (_brushLastPoint is { } last)
-        {
-            StampMask(last, imagePoint, pixelRadius);
-        }
-        _brushLastPoint = imagePoint;
-    }
+        => _strokes.Extend(imagePoint, pixelRadius, StampMask);
 
     public void OnBrushStrokeEnd()
     {
-        _brushLastPoint = null;
+        _strokes.End();
         RefreshResult();
     }
 

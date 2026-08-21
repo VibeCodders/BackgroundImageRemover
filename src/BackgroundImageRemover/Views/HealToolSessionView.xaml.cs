@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.ViewModels;
-using BackgroundImageRemover.Views.Controls;
 
 namespace BackgroundImageRemover.Views;
 
@@ -15,13 +15,10 @@ public partial class HealToolSessionView : UserControl
     }
 
     private void HealPreview_StrokeStart(object? sender, Point e)
-        => ViewModel?.OnResultStrokeStart(e, BrushPixelRadius(sender, ViewModel.BrushRadius));
+        => ViewModel?.OnResultStrokeStart(e, ViewInteractionHelper.BrushPixelRadius(sender, ViewModel.BrushRadius));
 
     private void HealPreview_StrokeMove(object? sender, Point e)
-        => ViewModel?.OnResultStrokeMove(e, BrushPixelRadius(sender, ViewModel.BrushRadius));
+        => ViewModel?.OnResultStrokeMove(e, ViewInteractionHelper.BrushPixelRadius(sender, ViewModel.BrushRadius));
 
     private void HealPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel?.OnResultStrokeEnd();
-
-    private static double BrushPixelRadius(object? sender, double fallback)
-        => sender is ImagePreviewControl preview ? preview.BrushRadius * preview.ImagePixelScale : fallback;
 }

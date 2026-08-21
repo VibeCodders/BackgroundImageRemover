@@ -1,8 +1,8 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.ViewModels;
-using BackgroundImageRemover.Views.Controls;
 
 namespace BackgroundImageRemover.Views;
 
@@ -17,13 +17,10 @@ public partial class SharpenToolSessionView : UserControl
     }
 
     private void SharpenPreview_StrokeStart(object? sender, Point e)
-        => ViewModel?.OnBrushStrokeStart(e, BrushPixelRadius(sender, ViewModel.BrushRadius));
+        => ViewModel?.OnBrushStrokeStart(e, ViewInteractionHelper.BrushPixelRadius(sender, ViewModel.BrushRadius));
 
     private void SharpenPreview_StrokeMove(object? sender, Point e)
-        => ViewModel?.OnBrushStrokeMove(e, BrushPixelRadius(sender, ViewModel.BrushRadius));
+        => ViewModel?.OnBrushStrokeMove(e, ViewInteractionHelper.BrushPixelRadius(sender, ViewModel.BrushRadius));
 
     private void SharpenPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel?.OnBrushStrokeEnd();
-
-    private static double BrushPixelRadius(object? sender, double fallback)
-        => sender is ImagePreviewControl preview ? preview.BrushRadius * preview.ImagePixelScale : fallback;
 }

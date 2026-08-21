@@ -17,11 +17,11 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
 {
     private readonly MatEditSession _editSession = new();
     private readonly DispatcherTimer _brushRefreshTimer;
+    private readonly BrushStrokeController _strokes = new();
     private LoadedImage? _sourceImage;
 
     private Mat? _workingBgr;
     private Mat? _workingAlpha;
-    private WpfPoint? _brushLastPoint;
 
     public override string ToolBadge => "🖌 Retouch";
     public override string AccentColor => "#8E24AA";
@@ -119,22 +119,20 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         _editSession.Record(_workingAlpha);
         IsDirty = true;
         RefreshUndoRedoState();
-        _brushLastPoint = imagePoint;
-        StampBrush(imagePoint, imagePoint, pixelRadius);
+        _strokes.Begin(imagePoint, pixelRadius, StampBrush);
     }
 
     public void OnResultStrokeMove(WpfPoint imagePoint, double pixelRadius)
     {
-        if (_workingAlpha is null || _brushLastPoint is not { } last) return;
-        StampBrush(last, imagePoint, pixelRadius);
-        _brushLastPoint = imagePoint;
+        if (_workingAlpha is null) return;
+        _strokes.Extend(imagePoint, pixelRadius, StampBrush);
     }
 
     public void OnResultStrokeEnd()
     {
         _brushRefreshTimer.Stop();
         RefreshResultBitmap();
-        _brushLastPoint = null;
+        _strokes.End();
     }
 
     private void StampBrush(WpfPoint from, WpfPoint to, double pixelRadius)

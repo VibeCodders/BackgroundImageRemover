@@ -13,10 +13,10 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>Dedicated Tool Tab for pixelating or blurring a region (or the whole image).</summary>
 public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
 {
+    private readonly BrushStrokeController _strokes = new();
     private LoadedImage? _sourceImage;
     private Mat? _workingAlpha;
     private Mat? _paintedMask;
-    private WpfPoint? _brushLastPoint;
 
     public override string ToolBadge => "▦ Mosaic";
     public override string AccentColor => "#EA580C";
@@ -107,24 +107,14 @@ public partial class MosaicToolSessionViewModel : ToolSessionViewModelBase
     }
 
     public void OnBrushStrokeStart(WpfPoint imagePoint, double pixelRadius)
-    {
-        _brushLastPoint = imagePoint;
-        StampMask(imagePoint, imagePoint, pixelRadius);
-    }
+        => _strokes.Begin(imagePoint, pixelRadius, StampMask);
 
     public void OnBrushStrokeMove(WpfPoint imagePoint, double pixelRadius)
-    {
-        // Connect to the previous point so fast strokes paint continuously.
-        if (_brushLastPoint is { } last)
-        {
-            StampMask(last, imagePoint, pixelRadius);
-        }
-        _brushLastPoint = imagePoint;
-    }
+        => _strokes.Extend(imagePoint, pixelRadius, StampMask);
 
     public void OnBrushStrokeEnd()
     {
-        _brushLastPoint = null;
+        _strokes.End();
         HasPaintedMask = _paintedMask is not null && Cv2.CountNonZero(_paintedMask) > 0;
         RefreshResult();
     }

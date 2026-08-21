@@ -68,7 +68,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
     private readonly ScribbleManager _scribbleManager = new();
     internal ScribbleManager ScribbleManager => _scribbleManager; // Expose for partial classes
-    private WpfPoint? _brushLastPoint;
+    private readonly BrushStrokeController _strokes = new();
 
     private SamEmbedding? _samEmbedding;
     private WpfPoint? _samPromptPointPreview;

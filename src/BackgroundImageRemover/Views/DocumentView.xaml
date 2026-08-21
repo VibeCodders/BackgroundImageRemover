@@ -184,34 +184,53 @@
             <controls:StrategyToolbar DataContext="{Binding}" />
         </Border>
 
-        <!-- Undo/Redo History Panel -->
-        <Border DockPanel.Dock="Left" Width="220" Background="{DynamicResource Theme.PanelBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0"
-                Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
-            <DockPanel>
-                <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.PanelHeaderBackground}" Padding="10,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
-                    <TextBlock Text="History" FontWeight="Bold" Foreground="{DynamicResource Theme.ForegroundBrush}" />
-                </Border>
-                <TextBlock DockPanel.Dock="Top" Text="No edits yet" Foreground="{DynamicResource Theme.MutedForegroundBrush}" FontStyle="Italic" Margin="10,8"
-                           Visibility="{Binding HasEditSteps, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
-                <ListBox ItemsSource="{Binding EditSteps}" SelectedItem="{Binding SelectedEditStep}"
-                         BorderThickness="0" Background="Transparent"
-                         ToolTip="Click a step to jump the document back/forward to that state"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock x:Name="StepText" Text="{Binding Name}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontSize="12"
-                                       Margin="2,3" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
-                            <DataTemplate.Triggers>
-                                <DataTrigger Binding="{Binding IsUndone}" Value="True">
-                                    <Setter TargetName="StepText" Property="Foreground" Value="{DynamicResource Theme.MutedForegroundBrush}" />
-                                    <Setter TargetName="StepText" Property="FontStyle" Value="Italic" />
-                                </DataTrigger>
-                            </DataTemplate.Triggers>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </DockPanel>
-        </Border>
+        <!-- Left Panel Stack: History, Layers, Channels, Paths -->
+        <DockPanel DockPanel.Dock="Left" Width="220" Background="{DynamicResource Theme.PanelBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,1,0"
+                   Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
+            
+            <!-- History Panel -->
+            <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
+                <DockPanel>
+                    <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.PanelHeaderBackground}" Padding="10,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="History" FontWeight="Bold" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+                    </Border>
+                    <TextBlock DockPanel.Dock="Top" Text="No edits yet" Foreground="{DynamicResource Theme.MutedForegroundBrush}" FontStyle="Italic" Margin="10,8"
+                               Visibility="{Binding HasEditSteps, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                    <ListBox ItemsSource="{Binding EditSteps}" SelectedItem="{Binding SelectedEditStep}"
+                             BorderThickness="0" Background="Transparent"
+                             ToolTip="Click a step to jump the document back/forward to that state"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" MaxHeight="150">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock x:Name="StepText" Text="{Binding Name}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontSize="12"
+                                           Margin="2,3" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsUndone}" Value="True">
+                                        <Setter TargetName="StepText" Property="Foreground" Value="{DynamicResource Theme.MutedForegroundBrush}" />
+                                        <Setter TargetName="StepText" Property="FontStyle" Value="Italic" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <!-- Layers Panel -->
+            <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
+                <panels:LayersPanel DataContext="{Binding}" />
+            </Border>
+
+            <!-- Channels Panel -->
+            <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
+                <panels:ChannelsPanel DataContext="{Binding}" />
+            </Border>
+
+            <!-- Paths Panel -->
+            <Border DockPanel.Dock="Top">
+                <panels:PathsPanel DataContext="{Binding}" />
+            </Border>
+        </DockPanel>
 
         <!-- Active Tool Session Modal Banner (when a tool tab is currently open for this doc) -->
         <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.InfoBannerBackground}" BorderBrush="{DynamicResource Theme.InfoBannerBorderBrush}" BorderThickness="0,0,0,1" Padding="12,6"

@@ -23,6 +23,9 @@ using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
 using WpfPoint = System.Windows.Point;
+using ImageLayer = BackgroundImageRemover.Models.ImageLayer;
+using Channel = BackgroundImageRemover.Models.Channel;
+using PathObject = BackgroundImageRemover.Models.PathObject;
 
 namespace BackgroundImageRemover.ViewModels;
 
@@ -407,6 +410,15 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     public ObservableCollection<EditHistoryStep> EditSteps { get; } = new();
 
     public bool HasEditSteps => EditSteps.Count > 0;
+
+    /// <summary>Layers collection for the Layers panel (GIMP-style).</summary>
+    public ObservableCollection<ImageLayer> Layers { get; } = new();
+
+    /// <summary>Channels collection for the Channels panel (GIMP-style).</summary>
+    public ObservableCollection<Channel> Channels { get; } = new();
+
+    /// <summary>Paths collection for the Paths panel (GIMP-style).</summary>
+    public ObservableCollection<PathObject> Paths { get; } = new();
 
     /// <summary>Step clicked in the history panel; restored immediately then reset to null.</summary>
     [ObservableProperty]

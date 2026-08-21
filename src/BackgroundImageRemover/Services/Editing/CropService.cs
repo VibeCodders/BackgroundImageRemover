@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -8,7 +9,7 @@ public static class CropService
     /// <summary>Crops to the given rectangle, clamped to the image bounds. Returns a clone.</summary>
     public static Mat CropRect(Mat src, Rect rect)
     {
-        var clamped = Clamp(src.Size(), rect);
+        var clamped = GeometryHelper.ClampToSize(src.Size(), rect);
         using var roi = new Mat(src, clamped);
         return roi.Clone();
     }
@@ -150,13 +151,4 @@ public static class CropService
     /// <summary>Trims a border of the given color off the image.</summary>
     public static Mat TrimContent(Mat src, Vec3b borderColor, int tolerance = 12)
         => CropRect(src, TrimContentBounds(src, borderColor, tolerance));
-
-    private static Rect Clamp(Size size, Rect rect)
-    {
-        int x = Math.Clamp(rect.X, 0, size.Width - 1);
-        int y = Math.Clamp(rect.Y, 0, size.Height - 1);
-        int width = Math.Clamp(rect.Width, 1, size.Width - x);
-        int height = Math.Clamp(rect.Height, 1, size.Height - y);
-        return new Rect(x, y, width, height);
-    }
 }

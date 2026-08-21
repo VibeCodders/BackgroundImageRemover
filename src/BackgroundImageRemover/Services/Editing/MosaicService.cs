@@ -10,7 +10,7 @@ public static class MosaicService
     public static Mat Pixelate(Mat src, Rect? region, int cellSize)
     {
         var result = src.Clone();
-        var bounds = region is { } r ? Clamp(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
+        var bounds = region is { } r ? GeometryHelper.ClampToSize(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
         cellSize = Math.Max(1, cellSize);
 
         int smallW = Math.Max(1, bounds.Width / cellSize);
@@ -27,7 +27,7 @@ public static class MosaicService
     public static Mat Blur(Mat src, Rect? region, int radius)
     {
         var result = src.Clone();
-        var bounds = region is { } r ? Clamp(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
+        var bounds = region is { } r ? GeometryHelper.ClampToSize(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
         radius = Math.Max(1, radius);
 
         using var roi = new Mat(result, bounds);
@@ -39,7 +39,7 @@ public static class MosaicService
     public static Mat MedianBlur(Mat src, Rect? region, int radius)
     {
         var result = src.Clone();
-        var bounds = region is { } r ? Clamp(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
+        var bounds = region is { } r ? GeometryHelper.ClampToSize(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
         radius = Math.Max(1, radius);
         int k = radius % 2 == 0 ? radius + 1 : radius;
 
@@ -52,7 +52,7 @@ public static class MosaicService
     public static Mat SolidFill(Mat src, Rect? region, Vec3b color)
     {
         var result = src.Clone();
-        var bounds = region is { } r ? Clamp(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
+        var bounds = region is { } r ? GeometryHelper.ClampToSize(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
 
         using var roi = new Mat(result, bounds);
         roi.SetTo(new Scalar(color.Item0, color.Item1, color.Item2));
@@ -68,7 +68,7 @@ public static class MosaicService
             return result;
         }
 
-        var bounds = Clamp(src.Size(), r);
+        var bounds = GeometryHelper.ClampToSize(src.Size(), r);
         using var original = new Mat(src, bounds);
         using var dest = new Mat(result, bounds);
         original.CopyTo(dest);
@@ -79,7 +79,7 @@ public static class MosaicService
     public static Mat Crystallize(Mat src, Rect? region, int cellSize, int jitter)
     {
         var result = src.Clone();
-        var bounds = region is { } r ? Clamp(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
+        var bounds = region is { } r ? GeometryHelper.ClampToSize(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
         cellSize = Math.Max(1, cellSize);
         jitter = Math.Clamp(jitter, 0, cellSize - 1);
 
@@ -111,7 +111,7 @@ public static class MosaicService
     public static Mat BlurSoft(Mat src, Rect? region, int radius, double strength)
     {
         var result = src.Clone();
-        var bounds = region is { } r ? Clamp(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
+        var bounds = region is { } r ? GeometryHelper.ClampToSize(src.Size(), r) : new Rect(0, 0, src.Width, src.Height);
         radius = Math.Max(1, radius);
         strength = Math.Clamp(strength, 0.0, 1.0);
 
@@ -140,17 +140,4 @@ public static class MosaicService
     /// </summary>
     public static Mat BlendByMask(Mat original, Mat modified, Mat mask)
         => original.BlendByMask(modified, mask);
-
-    /// <summary>Clamps a region to the image bounds.</summary>
-    public static Rect ClampRegion(Size size, Rect rect)
-        => Clamp(size, rect);
-
-    private static Rect Clamp(Size size, Rect rect)
-    {
-        int x = Math.Clamp(rect.X, 0, size.Width - 1);
-        int y = Math.Clamp(rect.Y, 0, size.Height - 1);
-        int width = Math.Clamp(rect.Width, 1, size.Width - x);
-        int height = Math.Clamp(rect.Height, 1, size.Height - y);
-        return new Rect(x, y, width, height);
-    }
 }

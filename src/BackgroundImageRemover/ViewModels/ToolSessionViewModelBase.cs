@@ -11,7 +11,7 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>
 /// Abstract base class for temporary tool workspace tabs opened from a parent <see cref="DocumentViewModel"/>.
 /// </summary>
-public abstract partial class ToolSessionViewModelBase : ObservableObject, IToolSessionTab
+public abstract partial class ToolSessionViewModelBase : ObservableObject, IToolSessionTab, ITool
 {
     protected readonly ShellViewModel _shell;
     protected readonly DocumentViewModel _parentDocument;

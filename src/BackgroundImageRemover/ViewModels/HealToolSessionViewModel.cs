@@ -10,7 +10,7 @@ using WpfPoint = System.Windows.Point;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for healing blemishes (inpaint brush) and repairing dust/scratches.</summary>
-public partial class HealToolSessionViewModel : ToolSessionViewModelBase
+public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool
 {
     private readonly BrushStrokeController _strokes = new();
     private Mat? _workingBgr;

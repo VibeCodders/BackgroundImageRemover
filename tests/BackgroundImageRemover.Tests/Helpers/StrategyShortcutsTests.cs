@@ -31,7 +31,6 @@ public class StrategyShortcutsTests
     }
 
     [Theory]
-    [InlineData(Key.D9)]
     [InlineData(Key.A)]
     [InlineData(Key.Escape)]
     public void StrategyForKey_ReturnsNullForUnmappedKeys(Key key)

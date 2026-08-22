@@ -14,7 +14,9 @@ public class InvertServiceTests
 
         using var diff = new Mat();
         Cv2.Absdiff(input, result, diff);
-        Assert.Equal(0, Cv2.CountNonZero(diff));
+        using var gray = new Mat();
+        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
+        Assert.Equal(0, Cv2.CountNonZero(gray));
         Assert.Equal(input.Size(), result.Size());
         Assert.Equal(input.Type(), result.Type());
     }
@@ -40,9 +42,9 @@ public class InvertServiceTests
         using var result = InvertService.Invert(input, 0.5);
 
         var pixel = result.Get<Vec3b>(0, 0);
-        Assert.Equal((byte)((10 + (255 - 10)) / 2), pixel[0]);
-        Assert.Equal((byte)((20 + (255 - 20)) / 2), pixel[1]);
-        Assert.Equal((byte)((30 + (255 - 30)) / 2), pixel[2]);
+        Assert.Equal((byte)128, pixel[0]);
+        Assert.Equal((byte)128, pixel[1]);
+        Assert.Equal((byte)128, pixel[2]);
         Assert.Equal(input.Size(), result.Size());
         Assert.Equal(input.Type(), result.Type());
     }

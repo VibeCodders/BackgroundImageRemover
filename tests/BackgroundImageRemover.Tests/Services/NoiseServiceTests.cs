@@ -14,7 +14,9 @@ public class NoiseServiceTests
 
         using var diff = new Mat();
         Cv2.Absdiff(input, result, diff);
-        Assert.Equal(0, Cv2.CountNonZero(diff));
+        using var gray = new Mat();
+        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
+        Assert.Equal(0, Cv2.CountNonZero(gray));
         Assert.Equal(input.Size(), result.Size());
         Assert.Equal(input.Type(), result.Type());
     }
@@ -27,7 +29,9 @@ public class NoiseServiceTests
 
         using var diff = new Mat();
         Cv2.Absdiff(input, result, diff);
-        Assert.True(Cv2.CountNonZero(diff) > 0);
+        using var gray = new Mat();
+        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
+        Assert.True(Cv2.CountNonZero(gray) > 0);
         Assert.Equal(input.Size(), result.Size());
         Assert.Equal(input.Type(), result.Type());
     }
@@ -40,7 +44,9 @@ public class NoiseServiceTests
 
         using var diff = new Mat();
         Cv2.Absdiff(input, result, diff);
-        Assert.Equal(0, Cv2.CountNonZero(diff));
+        using var gray = new Mat();
+        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
+        Assert.Equal(0, Cv2.CountNonZero(gray));
         Assert.Equal(input.Size(), result.Size());
         Assert.Equal(input.Type(), result.Type());
     }
@@ -53,7 +59,9 @@ public class NoiseServiceTests
 
         using var diff = new Mat();
         Cv2.Absdiff(input, result, diff);
-        Assert.True(Cv2.CountNonZero(diff) > 0);
+        using var gray = new Mat();
+        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
+        Assert.True(Cv2.CountNonZero(gray) > 0);
         Assert.Equal(input.Size(), result.Size());
         Assert.Equal(input.Type(), result.Type());
     }

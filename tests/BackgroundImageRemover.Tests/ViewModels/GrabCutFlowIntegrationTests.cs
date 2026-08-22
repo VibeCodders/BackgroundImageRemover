@@ -119,6 +119,7 @@ public class GrabCutFlowIntegrationTests
 
             await previewTask;
 
+            PumpUntil(() => session.ResultBitmap is not null, TimeSpan.FromSeconds(10));
             Assert.NotNull(session.ResultBitmap);
             Assert.DoesNotContain("failed", session.StatusMessage ?? "", StringComparison.OrdinalIgnoreCase);
 

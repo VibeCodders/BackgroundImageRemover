@@ -19,5 +19,7 @@ public enum FilterKind
     Vintage,
     Cool,
     Warm,
-    Noir
+    Noir,
+    Duotone,
+    Solarize
 }

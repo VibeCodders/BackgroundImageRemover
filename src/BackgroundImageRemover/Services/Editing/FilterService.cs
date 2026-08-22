@@ -32,6 +32,8 @@ public static class FilterService
             FilterKind.Cool => Cool(inputBgr),
             FilterKind.Warm => Warm(inputBgr),
             FilterKind.Noir => Noir(inputBgr),
+            FilterKind.Duotone => Duotone(inputBgr),
+            FilterKind.Solarize => Solarize(inputBgr),
             _ => inputBgr.Clone()
         };
 
@@ -214,6 +216,49 @@ public static class FilterService
         using var grayBgr = input.ToGrayBgr();
         var result = new Mat();
         grayBgr.ConvertTo(result, MatType.CV_8UC3, 1.5, -30);
+        return result;
+    }
+
+    /// <summary>Duotone: maps luminance onto a two-color gradient (deep indigo shadows to warm
+    /// amber highlights), a classic poster/print look.</summary>
+    private static Mat Duotone(Mat input)
+    {
+        using var gray = new Mat();
+        Cv2.CvtColor(input, gray, ColorConversionCodes.BGR2GRAY);
+        using var grayF = new Mat();
+        gray.ConvertTo(grayF, MatType.CV_32FC1, 1.0 / 255.0);
+        using var grayBgrF = new Mat();
+        Cv2.CvtColor(grayF, grayBgrF, ColorConversionCodes.GRAY2BGR);
+
+        var shadow = new Scalar(80, 20, 10);
+        var highlight = new Scalar(60, 200, 255);
+        var diff = new Scalar(highlight.Val0 - shadow.Val0, highlight.Val1 - shadow.Val1, highlight.Val2 - shadow.Val2);
+
+        using var diffMat = new Mat(grayBgrF.Size(), MatType.CV_32FC3, diff);
+        using var scaled = new Mat();
+        Cv2.Multiply(grayBgrF, diffMat, scaled);
+        using var shadowMat = new Mat(grayBgrF.Size(), MatType.CV_32FC3, shadow);
+        using var sumF = new Mat();
+        Cv2.Add(scaled, shadowMat, sumF);
+
+        var result = new Mat();
+        sumF.ConvertTo(result, MatType.CV_8UC3);
+        return result;
+    }
+
+    /// <summary>Solarize: partial tone inversion above the midpoint (the classic darkroom effect).</summary>
+    private static Mat Solarize(Mat input)
+    {
+        using var lut = new Mat(1, 256, MatType.CV_8UC1);
+        var values = new byte[256];
+        for (int i = 0; i < 256; i++)
+        {
+            values[i] = i > 128 ? (byte)(255 - i) : (byte)i;
+        }
+        lut.SetArray(values);
+
+        var result = new Mat();
+        Cv2.LUT(input, lut, result);
         return result;
     }
 

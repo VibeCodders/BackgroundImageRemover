@@ -105,6 +105,7 @@ public partial class ShellViewModel : ObservableObject
         yield return new KMeansToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
         yield return new OtsuToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
         yield return new InpaintToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new EdgeContourToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
         yield return new UncropToolDefinition(uncropFillService, dialogs, imageLoader, imageExporter, log);
         yield return new RetouchToolDefinition();
         yield return new HealToolDefinition();

@@ -29,7 +29,9 @@ public static class StrategyShortcuts
         [Key.D8] = StrategyKind.MagicWand,
         [Key.NumPad8] = StrategyKind.MagicWand,
         [Key.D9] = StrategyKind.Inpaint,
-        [Key.NumPad9] = StrategyKind.Inpaint
+        [Key.NumPad9] = StrategyKind.Inpaint,
+        [Key.D0] = StrategyKind.EdgeContour,
+        [Key.NumPad0] = StrategyKind.EdgeContour
     };
 
     /// <summary>Returns the strategy mapped to the key, or null when the key switches nothing.</summary>

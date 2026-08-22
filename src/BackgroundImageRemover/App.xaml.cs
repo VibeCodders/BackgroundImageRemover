@@ -139,6 +139,8 @@ public partial class App : Application
         services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<MagicWandRemovalStrategy>());
         services.AddSingleton<InpaintStrategy>();
         services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<InpaintStrategy>());
+        services.AddSingleton<EdgeContourStrategy>();
+        services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<EdgeContourStrategy>());
 
         // Tool palette: one independent IToolDefinition per tool/strategy. Adding a tool means
         // adding one class under ViewModels/Tools/Definitions and one line here -- both the
@@ -154,6 +156,7 @@ public partial class App : Application
         services.AddSingleton<IToolDefinition, KMeansToolDefinition>();
         services.AddSingleton<IToolDefinition, OtsuToolDefinition>();
         services.AddSingleton<IToolDefinition, InpaintToolDefinition>();
+        services.AddSingleton<IToolDefinition, EdgeContourToolDefinition>();
         services.AddSingleton<IToolDefinition, UncropToolDefinition>();
         services.AddSingleton<IToolDefinition, RetouchToolDefinition>();
         services.AddSingleton<IToolDefinition, HealToolDefinition>();

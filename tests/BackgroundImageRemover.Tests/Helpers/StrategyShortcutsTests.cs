@@ -15,6 +15,7 @@ public class StrategyShortcutsTests
     [InlineData(Key.D6, StrategyKind.KMeans)]
     [InlineData(Key.D7, StrategyKind.Otsu)]
     [InlineData(Key.D8, StrategyKind.MagicWand)]
+    [InlineData(Key.D0, StrategyKind.EdgeContour)]
     public void StrategyForKey_MapsEachDigitToItsStrategy(Key key, StrategyKind expected)
     {
         Assert.Equal(expected, StrategyShortcuts.StrategyForKey(key));
@@ -30,7 +31,6 @@ public class StrategyShortcutsTests
     }
 
     [Theory]
-    [InlineData(Key.D0)]
     [InlineData(Key.D9)]
     [InlineData(Key.A)]
     [InlineData(Key.Escape)]

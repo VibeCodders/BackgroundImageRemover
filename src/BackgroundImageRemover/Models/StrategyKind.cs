@@ -10,5 +10,6 @@ public enum StrategyKind
     KMeans,
     Otsu,
     MagicWand,
-    Inpaint
+    Inpaint,
+    EdgeContour
 }

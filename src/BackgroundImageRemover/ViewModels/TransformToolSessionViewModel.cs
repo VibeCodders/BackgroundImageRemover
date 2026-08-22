@@ -1,25 +1,18 @@
 using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
-using OpenCvSharp.WpfExtensions;
 
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for geometric transforms (flip, rotate, resize).</summary>
-public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
+public partial class TransformToolSessionViewModel : BgraToolSessionViewModelBase
 {
-    private Mat? _workingBgra;
-
     public override string ToolBadge => "↻ Transform";
     public override string AccentColor => "#2563EB";
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     private double _angle = 0.0;
@@ -72,9 +65,6 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private int _tileHeight;
 
-    [ObservableProperty]
-    private string? _statusMessage;
-
     public TransformToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
@@ -83,24 +73,22 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        InitSourceAlpha();
-        _workingBgra = _sourceImage!.FullBgr.ToBgra(_workingAlpha!);
-        ExactWidth = _workingBgra.Width;
-        ExactHeight = _workingBgra.Height;
+        InitWorkingBgra();
+        ExactWidth = WorkingBgra!.Width;
+        ExactHeight = WorkingBgra.Height;
         FitWidth = 1024;
         FitHeight = 1024;
-        CenterCropWidth = _workingBgra.Width;
-        CenterCropHeight = _workingBgra.Height;
-        TileWidth = _workingBgra.Width;
-        TileHeight = _workingBgra.Height;
+        CenterCropWidth = WorkingBgra.Width;
+        CenterCropHeight = WorkingBgra.Height;
+        TileWidth = WorkingBgra.Width;
+        TileHeight = WorkingBgra.Height;
         RefreshPreview();
         StatusMessage = "Apply flips, rotations, scaling, skew, crop, trim, padding, fit, tile and auto-straighten.";
     }
 
     private void RefreshPreview()
     {
-        if (_workingBgra is null) return;
-        ResultBitmap = _workingBgra.ToBitmapSource();
+        RefreshBgraPreview();
         IsDirty = true;
     }
 
@@ -156,49 +144,34 @@ public partial class TransformToolSessionViewModel : ToolSessionViewModelBase
     private void Reset()
     {
         if (_sourceImage is null) return;
-        _workingBgra?.Dispose();
-        _workingBgra = _sourceImage.FullBgr.ToBgra(_workingAlpha!);
+        WorkingBgra?.Dispose();
+        WorkingBgra = _sourceImage.FullBgr.ToBgra(_workingAlpha!);
         Angle = 0.0;
         ScalePercent = 100.0;
         SkewX = 0.0;
         SkewY = 0.0;
-        ExactWidth = _workingBgra.Width;
-        ExactHeight = _workingBgra.Height;
+        ExactWidth = WorkingBgra.Width;
+        ExactHeight = WorkingBgra.Height;
         CropAspectRatio = 1.0;
         PadLeft = 0;
         PadTop = 0;
         PadRight = 0;
         PadBottom = 0;
-        CenterCropWidth = _workingBgra.Width;
-        CenterCropHeight = _workingBgra.Height;
-        TileWidth = _workingBgra.Width;
-        TileHeight = _workingBgra.Height;
+        CenterCropWidth = WorkingBgra.Width;
+        CenterCropHeight = WorkingBgra.Height;
+        TileWidth = WorkingBgra.Width;
+        TileHeight = WorkingBgra.Height;
         RefreshPreview();
     }
 
     private void ApplyTransform(Func<Mat, Mat> transform)
     {
-        if (_workingBgra is null) return;
-        using var transformed = transform(_workingBgra);
-        _workingBgra.Dispose();
-        _workingBgra = transformed.Clone();
+        if (WorkingBgra is null) return;
+        using var transformed = transform(WorkingBgra);
+        WorkingBgra.Dispose();
+        WorkingBgra = transformed.Clone();
         RefreshPreview();
     }
 
-    public override Task ApplyAsync()
-    {
-        if (_workingBgra is not null)
-        {
-            var (bgr, alpha) = BackgroundCompositingService.SplitBgra(_workingBgra);
-            _parentDocument.ApplyToolResult(bgr, alpha, "Transform");
-        }
-        _shell.CloseTabDirect(this);
-        return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _workingBgra?.Dispose();
-        base.Dispose();
-    }
+    public override Task ApplyAsync() => ApplyWorkingBgraAsync("Transform");
 }

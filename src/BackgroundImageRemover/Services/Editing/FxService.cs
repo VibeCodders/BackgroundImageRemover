@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -11,7 +12,7 @@ public static class FxService
         strength = Math.Clamp(strength, 0.0, 1.0);
         if (strength <= 1e-4)
         {
-            return bgr.Clone();
+            return EditingGuard.ReturnCloneIfNull(bgr);
         }
 
         using var blurred = new Mat();
@@ -25,7 +26,7 @@ public static class FxService
         strength = Math.Clamp(strength, 0.0, 1.0);
         if (strength <= 1e-4)
         {
-            return bgr.Clone();
+            return EditingGuard.ReturnCloneIfNull(bgr);
         }
 
         using var gray = new Mat();
@@ -46,7 +47,7 @@ public static class FxService
         strength = Math.Clamp(strength, 0.0, 1.0);
         if (strength <= 1e-4)
         {
-            return bgr.Clone();
+            return EditingGuard.ReturnCloneIfNull(bgr);
         }
 
         var c = color ?? new Vec3b(80, 120, 255); // warm orange-red in BGR
@@ -75,7 +76,7 @@ public static class FxService
         strength = Math.Clamp(strength, 0.0, 2.0);
         if (Math.Abs(strength) < 1e-4)
         {
-            return bgr.Clone();
+            return EditingGuard.ReturnCloneIfNull(bgr);
         }
 
         var channels = Cv2.Split(bgr); // B, G, R
@@ -112,7 +113,7 @@ public static class FxService
         size = Math.Max(1, size);
         if (count == 0)
         {
-            return bgr.Clone();
+            return EditingGuard.ReturnCloneIfNull(bgr);
         }
 
         using var overlay = new Mat(bgr.Size(), bgr.Type(), Scalar.All(0));

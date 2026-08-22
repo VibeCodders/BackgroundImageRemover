@@ -9,7 +9,7 @@ public static class InvertService
     {
         if (input is null || input.Empty())
         {
-            return input.CloneOrEmpty();
+            return EditingGuard.ReturnCloneIfNullOrEmpty(input);
         }
 
         using var inverted = new Mat();

@@ -195,4 +195,62 @@ public static class ImageProcessingUtility
         using var lutMat = BuildLut(map);
         Cv2.LUT(mat, lutMat, mat);
     }
+
+    public static Mat AdjustChannel(Mat bgr, int channelIndex, double gain, double offset)
+    {
+        using var split = ChannelSplit.Of(bgr);
+        using var adjusted = new Mat();
+        split[channelIndex].ConvertTo(adjusted, MatType.CV_8UC1, gain, offset);
+        adjusted.CopyTo(split[channelIndex]);
+        var result = new Mat();
+        Cv2.Merge(split.Channels, result);
+        return result;
+    }
+
+    public static Mat ColorBalance(Mat bgr, double temperature, double tint)
+    {
+        if (Math.Abs(temperature) < Epsilon && Math.Abs(tint) < Epsilon)
+        {
+            return bgr.Clone();
+        }
+
+        using var split = ChannelSplit.Of(bgr);
+        try
+        {
+            if (Math.Abs(temperature) > Epsilon)
+            {
+                double tempShift = temperature * 0.5;
+                Cv2.Add(split[0], Scalar.All(-tempShift), split[0]);
+                Cv2.Add(split[2], Scalar.All(tempShift), split[2]);
+            }
+
+            if (Math.Abs(tint) > Epsilon)
+            {
+                double tintShift = tint * 0.5;
+                Cv2.Add(split[1], Scalar.All(-tintShift), split[1]);
+            }
+
+            var result = new Mat();
+            Cv2.Merge(split.Channels, result);
+            return result;
+        }
+        finally
+        {
+            foreach (var ch in split.Channels) ch.Dispose();
+        }
+    }
+
+    public static Mat ApplySepia(Mat input)
+    {
+        using var sepia = new Mat(3, 3, MatType.CV_32FC1);
+        sepia.SetArray(new[]
+        {
+            0.131f, 0.534f, 0.272f,
+            0.168f, 0.686f, 0.349f,
+            0.189f, 0.769f, 0.393f
+        });
+        var result = new Mat();
+        Cv2.Transform(input, result, sepia);
+        return result;
+    }
 }

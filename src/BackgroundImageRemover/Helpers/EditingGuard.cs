@@ -76,4 +76,44 @@ public static class EditingGuard
     {
         return region is { } r ? GeometryHelper.ClampToSize(imageSize, r) : new Rect(0, 0, imageSize.Width, imageSize.Height);
     }
+
+    public static Mat ReturnCloneIfNull(Mat? mat)
+    {
+        if (mat is null)
+        {
+            return new Mat();
+        }
+
+        return mat.Clone();
+    }
+
+    public static Mat ReturnCloneIfEmpty(Mat mat)
+    {
+        if (mat.Empty())
+        {
+            return new Mat();
+        }
+
+        return mat.Clone();
+    }
+
+    public static Mat ReturnCloneIfNullOrEmpty(Mat? mat)
+    {
+        if (mat is null || mat.Empty())
+        {
+            return new Mat();
+        }
+
+        return mat.Clone();
+    }
+
+    public static Mat ReturnIfInsignificant(Mat input, double strength)
+    {
+        if (!IsEffectSignificant(strength))
+        {
+            return input.Clone();
+        }
+
+        return input;
+    }
 }

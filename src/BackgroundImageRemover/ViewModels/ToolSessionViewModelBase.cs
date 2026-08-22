@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.IO;
+using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -35,6 +36,9 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
     [NotifyPropertyChangedFor(nameof(TabTitle))]
     private bool _isDirty;
+
+    [ObservableProperty]
+    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     private string? _statusMessage;
@@ -85,6 +89,22 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
         _sourceImage = _parentDocument.CreateCurrentStateSnapshot();
         _workingAlpha = _sourceImage.GetWorkingAlpha();
     }
+
+    protected bool EnsureSourceAlpha()
+    {
+        if (_sourceImage is null || _workingAlpha is null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Clones the full-resolution BGR source into an independent mutable working copy.
+    /// Callers must own and dispose the returned Mat.
+    /// </summary>
+    protected Mat CloneWorkingBgr() => _sourceImage!.FullBgr.Clone();
 
     /// <summary>
     /// Applies <paramref name="bgr"/> to the parent document together with a cloned working alpha,

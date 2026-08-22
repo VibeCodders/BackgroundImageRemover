@@ -17,7 +17,7 @@ public static class VignetteService
         strength = Math.Clamp(strength, 0.0, 1.0);
         if (strength <= 1e-4)
         {
-            return bgr.Clone();
+            return EditingGuard.ReturnCloneIfNull(bgr);
         }
 
         int w = bgr.Width;

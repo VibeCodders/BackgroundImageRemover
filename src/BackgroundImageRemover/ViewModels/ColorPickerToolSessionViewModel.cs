@@ -49,9 +49,6 @@ namespace BackgroundImageRemover.ViewModels;
     [ObservableProperty]
     private double _value;
 
-    [ObservableProperty]
-    private string? _statusMessage;
-
     /// <summary>Formatted RGB string for display in the UI.</summary>
     public string RgbString => $"RGB({Red}, {Green}, {Blue})";
 

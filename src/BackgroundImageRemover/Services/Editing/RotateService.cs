@@ -20,7 +20,7 @@ public static class RotateService
     {
         if (input is null || input.Empty())
         {
-            return input.CloneOrEmpty();
+            return EditingGuard.ReturnCloneIfNullOrEmpty(input);
         }
 
         if (Math.Abs(angle) < 1e-6)

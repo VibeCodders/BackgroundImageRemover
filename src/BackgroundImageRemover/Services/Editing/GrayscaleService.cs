@@ -9,7 +9,7 @@ public static class GrayscaleService
     {
         if (input is null || input.Empty())
         {
-            return input.CloneOrEmpty();
+            return EditingGuard.ReturnCloneIfNullOrEmpty(input);
         }
 
         using var gray = new Mat();

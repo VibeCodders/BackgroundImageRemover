@@ -80,9 +80,9 @@ public partial class MosaicToolSessionViewModel : MaskToolSessionViewModelBase
 
     protected override void RefreshResult()
     {
-        if (_sourceImage is null || _workingAlpha is null) return;
-        using var result = BuildResult(_sourceImage.FullBgr);
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
+        if (!EnsureSourceAlpha()) return;
+        using var result = BuildResult(_sourceImage!.FullBgr);
+        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
         IsDirty = !WholeImage
             || HasPaintedMask
             || CellSize > 1

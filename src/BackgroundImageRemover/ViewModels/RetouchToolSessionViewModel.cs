@@ -25,9 +25,6 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     public override string AccentColor => "#8E24AA";
 
     [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
-    [ObservableProperty]
     private InteractionMode _resultMode = InteractionMode.Brush;
 
     [ObservableProperty]
@@ -81,9 +78,6 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private bool _canRedo;
 
-    [ObservableProperty]
-    private string? _statusMessage;
-
     public RetouchToolSessionViewModel(
         ShellViewModel shell,
         DocumentViewModel parentDocument)
@@ -102,7 +96,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     private void InitFromParent()
     {
         InitSourceAlpha();
-        _workingBgr = _sourceImage!.FullBgr.Clone();
+        _workingBgr = CloneWorkingBgr();
         RefreshResultBitmap();
         StatusMessage = "Use Brush or Magic Wand to refine foreground & edges.";
     }
@@ -259,9 +253,12 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         if (_workingBgr is not null && _workingAlpha is not null)
         {
             using var resultBgr = BuildResultBgr();
-            _parentDocument.ApplyToolResult(resultBgr.Clone(), _workingAlpha.Clone(), "Retouch & Brush");
+            ApplyAndClose(resultBgr.Clone(), "Retouch & Brush");
         }
-        _shell.CloseTabDirect(this);
+        else
+        {
+            _shell.CloseTabDirect(this);
+        }
         return Task.CompletedTask;
     }
 

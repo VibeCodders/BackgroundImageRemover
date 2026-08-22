@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -265,26 +266,5 @@ public static class TransformService
     }
 
     private static Mat ToGray(Mat img)
-    {
-        if (img.Channels() == 4)
-        {
-            var channels = Cv2.Split(img);
-            try
-            {
-                using var bgr = new Mat();
-                Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, bgr);
-                var gray = new Mat();
-                Cv2.CvtColor(bgr, gray, ColorConversionCodes.BGR2GRAY);
-                return gray;
-            }
-            finally
-            {
-                foreach (var ch in channels) ch.Dispose();
-            }
-        }
-
-        var result = new Mat();
-        Cv2.CvtColor(img, result, ColorConversionCodes.BGR2GRAY);
-        return result;
-    }
+        => img.ToGrayBgr();
 }

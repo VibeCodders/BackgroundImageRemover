@@ -17,9 +17,6 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
     public override string AccentColor => "#0891B2";
 
     [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
-    [ObservableProperty]
     private int _width;
 
     [ObservableProperty]
@@ -48,9 +45,6 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
 
     [ObservableProperty]
     private double _megapixels = 1.0;
-
-    [ObservableProperty]
-    private string? _statusMessage;
 
     public ResizeToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
@@ -109,8 +103,8 @@ public partial class ResizeToolSessionViewModel : ToolSessionViewModelBase
 
     private void RefreshResult()
     {
-        if (_sourceImage is null || _workingAlpha is null) return;
-        using var resized = BuildResult(_sourceImage.FullBgr);
+        if (!EnsureSourceAlpha()) return;
+        using var resized = BuildResult(_sourceImage!.FullBgr);
         using var alpha = BuildAlphaFor(resized.Size());
         ResultBitmap = resized.ToBitmapSource(alpha);
         IsDirty = true;

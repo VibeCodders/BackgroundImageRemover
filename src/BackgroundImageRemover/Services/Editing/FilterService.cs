@@ -41,19 +41,7 @@ public static class FilterService
     }
 
     private static Mat ToSepia(Mat input)
-    {
-        // Row-major matrix mapping the BGR input vector to a sepia BGR output vector.
-        using var sepia = new Mat(3, 3, MatType.CV_32FC1);
-        sepia.SetArray(new[]
-        {
-            0.131f, 0.534f, 0.272f,
-            0.168f, 0.686f, 0.349f,
-            0.189f, 0.769f, 0.393f
-        });
-        var result = new Mat();
-        Cv2.Transform(input, result, sepia);
-        return result;
-    }
+        => ImageProcessingUtility.ApplySepia(input);
 
     private static Mat Posterize(Mat input, int levels)
     {
@@ -174,43 +162,12 @@ public static class FilterService
         return result;
     }
 
-    /// <summary>Cool: blue-shifted color balance.</summary>
     private static Mat Cool(Mat input)
-    {
-        var result = input.Clone();
-        var channels = Cv2.Split(result);
-        try
-        {
-            Cv2.Add(channels[0], Scalar.All(20), channels[0]);  // blue up
-            Cv2.Subtract(channels[2], Scalar.All(20), channels[2]); // red down
-            Cv2.Merge(channels, result);
-            return result;
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
-    }
+        => ImageProcessingUtility.ColorBalance(input, temperature: -20, tint: 0);
 
-    /// <summary>Warm: amber-shifted color balance.</summary>
     private static Mat Warm(Mat input)
-    {
-        var result = input.Clone();
-        var channels = Cv2.Split(result);
-        try
-        {
-            Cv2.Add(channels[2], Scalar.All(20), channels[2]);  // red up
-            Cv2.Subtract(channels[0], Scalar.All(20), channels[0]); // blue down
-            Cv2.Merge(channels, result);
-            return result;
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
-    }
+        => ImageProcessingUtility.ColorBalance(input, temperature: 20, tint: 0);
 
-    /// <summary>Noir: high-contrast black and white.</summary>
     private static Mat Noir(Mat input)
     {
         using var grayBgr = input.ToGrayBgr();

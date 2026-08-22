@@ -32,9 +32,6 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     public override string AccentColor => "#0E7490";
 
     [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
-    [ObservableProperty]
     private ExportBackgroundMode _backgroundMode = ExportBackgroundMode.SolidColor;
 
     [ObservableProperty]
@@ -112,9 +109,6 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private bool _isGradientBottomColorPickerOpen;
 
-    [ObservableProperty]
-    private string? _statusMessage;
-
     public ComposeToolSessionViewModel(
         ShellViewModel shell,
         DocumentViewModel parentDocument,
@@ -130,7 +124,7 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     private void InitFromParent()
     {
         InitSourceAlpha();
-        _workingBgr = _sourceImage!.FullBgr.Clone();
+        _workingBgr = CloneWorkingBgr();
         RefreshPreview();
         StatusMessage = "Choose a background for the cutout.";
     }

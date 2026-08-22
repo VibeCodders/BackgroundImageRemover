@@ -9,7 +9,7 @@ public static class NoiseService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input.CloneOrEmpty();
+            return EditingGuard.ReturnCloneIfNullOrEmpty(input);
         }
 
         using var noise = new Mat(input.Size(), input.Type());
@@ -29,7 +29,7 @@ public static class NoiseService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input.CloneOrEmpty();
+            return EditingGuard.ReturnCloneIfNullOrEmpty(input);
         }
 
         var result = input.Clone();

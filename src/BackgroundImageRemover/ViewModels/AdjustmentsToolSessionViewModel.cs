@@ -23,9 +23,6 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     private BitmapSource? _originalBitmap;
 
     [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
-    [ObservableProperty]
     private double _adjBrightness = 0.0;
 
     [ObservableProperty]
@@ -106,9 +103,6 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private bool _isBusy;
 
-    [ObservableProperty]
-    private string? _statusMessage;
-
     public AdjustmentsToolSessionViewModel(
         ShellViewModel shell,
         DocumentViewModel parentDocument,
@@ -122,7 +116,7 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     private void InitFromParent()
     {
         InitSourceAlpha();
-        _workingBgr = _sourceImage!.FullBgr.Clone();
+        _workingBgr = CloneWorkingBgr();
 
         OriginalBitmap = _workingBgr.ToBitmapSource(_workingAlpha!);
         ResultBitmap = OriginalBitmap;
@@ -155,37 +149,39 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     partial void OnAdjInvertAmountChanged(double value) => UpdateLivePreview();
     partial void OnAdjPosterizeLevelsChanged(int value) => UpdateLivePreview();
 
+    private ImageAdjustments BuildAdjustments() => new()
+    {
+        Brightness = AdjBrightness,
+        Contrast = AdjContrast,
+        Saturation = AdjSaturation,
+        HueShift = AdjHueShift,
+        Temperature = AdjTemperature,
+        Tint = AdjTint,
+        Vignette = AdjVignette,
+        BlurRadius = AdjBlurRadius,
+        SharpenStrength = AdjSharpenStrength,
+        Exposure = AdjExposure,
+        Highlights = AdjHighlights,
+        Shadows = AdjShadows,
+        Denoise = AdjDenoise,
+        AutoEnhance = AdjAutoEnhance,
+        Vibrance = AdjVibrance,
+        Clarity = AdjClarity,
+        Fade = AdjFade,
+        Grain = AdjGrain,
+        Monochrome = AdjMonochrome,
+        Dehaze = AdjDehaze,
+        Soften = AdjSoften,
+        SepiaTone = AdjSepiaTone,
+        InvertAmount = AdjInvertAmount,
+        PosterizeLevels = AdjPosterizeLevels
+    };
+
     private void UpdateLivePreview()
     {
-        if (_sourceImage is null || _workingAlpha is null) return;
+        if (!EnsureSourceAlpha()) return;
 
-        var adjustments = new ImageAdjustments
-        {
-            Brightness = AdjBrightness,
-            Contrast = AdjContrast,
-            Saturation = AdjSaturation,
-            HueShift = AdjHueShift,
-            Temperature = AdjTemperature,
-            Tint = AdjTint,
-            Vignette = AdjVignette,
-            BlurRadius = AdjBlurRadius,
-            SharpenStrength = AdjSharpenStrength,
-            Exposure = AdjExposure,
-            Highlights = AdjHighlights,
-            Shadows = AdjShadows,
-            Denoise = AdjDenoise,
-            AutoEnhance = AdjAutoEnhance,
-            Vibrance = AdjVibrance,
-            Clarity = AdjClarity,
-            Fade = AdjFade,
-            Grain = AdjGrain,
-            Monochrome = AdjMonochrome,
-            Dehaze = AdjDehaze,
-            Soften = AdjSoften,
-            SepiaTone = AdjSepiaTone,
-            InvertAmount = AdjInvertAmount,
-            PosterizeLevels = AdjPosterizeLevels
-        };
+        var adjustments = BuildAdjustments();
 
         if (adjustments.IsIdentity)
         {
@@ -196,8 +192,8 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
 
         try
         {
-            using var adjustedBgr = ImageProcessingHelper.ApplyAdjustments(_sourceImage.FullBgr, adjustments);
-            ResultBitmap = adjustedBgr.ToBitmapSource(_workingAlpha);
+            using var adjustedBgr = ImageProcessingHelper.ApplyAdjustments(_sourceImage!.FullBgr, adjustments);
+            ResultBitmap = adjustedBgr.ToBitmapSource(_workingAlpha!);
             IsDirty = true;
         }
         catch (Exception ex)
@@ -244,33 +240,7 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
             return Task.CompletedTask;
         }
 
-        var adjustments = new ImageAdjustments
-        {
-            Brightness = AdjBrightness,
-            Contrast = AdjContrast,
-            Saturation = AdjSaturation,
-            HueShift = AdjHueShift,
-            Temperature = AdjTemperature,
-            Tint = AdjTint,
-            Vignette = AdjVignette,
-            BlurRadius = AdjBlurRadius,
-            SharpenStrength = AdjSharpenStrength,
-            Exposure = AdjExposure,
-            Highlights = AdjHighlights,
-            Shadows = AdjShadows,
-            Denoise = AdjDenoise,
-            AutoEnhance = AdjAutoEnhance,
-            Vibrance = AdjVibrance,
-            Clarity = AdjClarity,
-            Fade = AdjFade,
-            Grain = AdjGrain,
-            Monochrome = AdjMonochrome,
-            Dehaze = AdjDehaze,
-            Soften = AdjSoften,
-            SepiaTone = AdjSepiaTone,
-            InvertAmount = AdjInvertAmount,
-            PosterizeLevels = AdjPosterizeLevels
-        };
+        var adjustments = BuildAdjustments();
 
         if (!adjustments.IsIdentity)
         {

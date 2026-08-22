@@ -30,25 +30,25 @@ public partial class SharpenToolSessionViewModel : MaskToolSessionViewModelBase
 
     protected override void RefreshResult()
     {
-        if (_sourceImage is null || _workingAlpha is null) return;
+        if (!EnsureSourceAlpha()) return;
 
         Mat result;
         if (WholeImage)
         {
-            result = SharpenService.SharpenAll(_sourceImage.FullBgr, Strength);
+            result = SharpenService.SharpenAll(_sourceImage!.FullBgr, Strength);
         }
         else if (PaintMode && HasPaintedMask)
         {
-            result = SharpenService.SharpenRegion(_sourceImage.FullBgr, _paintedMask!, Strength);
+            result = SharpenService.SharpenRegion(_sourceImage!.FullBgr, _paintedMask!, Strength);
         }
         else
         {
-            result = _sourceImage.FullBgr.Clone();
+            result = _sourceImage!.FullBgr.Clone();
         }
 
         using var _ = result;
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
-        IsDirty = WholeImage || (PaintMode && HasPaintedMask);
+        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
+        IsDirty = IsEffectActive;
     }
 
     protected override Mat BuildResult(Mat src)

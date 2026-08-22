@@ -1,7 +1,6 @@
 using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,15 +10,10 @@ using OpenCvSharp.WpfExtensions;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for local warps (pinch, bloat, twirl, push).</summary>
-public partial class LiquifyToolSessionViewModel : ToolSessionViewModelBase
+public partial class LiquifyToolSessionViewModel : BgraToolSessionViewModelBase
 {
-    private Mat? _workingBgra;
-
     public override string ToolBadge => "✋ Liquify";
     public override string AccentColor => "#9333EA";
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     private int _centerX;
@@ -36,9 +30,6 @@ public partial class LiquifyToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private LiquifyMode _mode = LiquifyMode.Pinch;
 
-    [ObservableProperty]
-    private string? _statusMessage;
-
     public LiquifyToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
@@ -47,10 +38,9 @@ public partial class LiquifyToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        InitSourceAlpha();
-        _workingBgra = _sourceImage!.FullBgr.ToBgra(_workingAlpha!);
-        CenterX = _workingBgra.Width / 2;
-        CenterY = _workingBgra.Height / 2;
+        InitWorkingBgra();
+        CenterX = WorkingBgra!.Width / 2;
+        CenterY = WorkingBgra.Height / 2;
         RefreshResult();
         StatusMessage = "Choose a warp, set center/radius/strength, then apply.";
     }
@@ -58,10 +48,10 @@ public partial class LiquifyToolSessionViewModel : ToolSessionViewModelBase
     [RelayCommand]
     private void ApplyWarp()
     {
-        if (_workingBgra is null) return;
-        using var warped = LiquifyService.Warp(_workingBgra, new Point(CenterX, CenterY), Radius, Strength, Mode);
-        _workingBgra.Dispose();
-        _workingBgra = warped.Clone();
+        if (WorkingBgra is null) return;
+        using var warped = LiquifyService.Warp(WorkingBgra, new Point(CenterX, CenterY), Radius, Strength, Mode);
+        WorkingBgra.Dispose();
+        WorkingBgra = warped.Clone();
         IsDirty = true;
         RefreshResult();
     }
@@ -70,10 +60,10 @@ public partial class LiquifyToolSessionViewModel : ToolSessionViewModelBase
     private void Reset()
     {
         if (_sourceImage is null) return;
-        _workingBgra?.Dispose();
-        _workingBgra = _sourceImage.FullBgr.ToBgra(_workingAlpha!);
-        CenterX = _workingBgra.Width / 2;
-        CenterY = _workingBgra.Height / 2;
+        WorkingBgra?.Dispose();
+        WorkingBgra = _sourceImage.FullBgr.ToBgra(_workingAlpha!);
+        CenterX = WorkingBgra.Width / 2;
+        CenterY = WorkingBgra.Height / 2;
         Radius = 60;
         Strength = 0.5;
         Mode = LiquifyMode.Pinch;
@@ -81,26 +71,7 @@ public partial class LiquifyToolSessionViewModel : ToolSessionViewModelBase
         RefreshResult();
     }
 
-    private void RefreshResult()
-    {
-        if (_workingBgra is null) return;
-        ResultBitmap = _workingBgra.ToBitmapSource();
-    }
+    private void RefreshResult() => RefreshBgraPreview();
 
-    public override Task ApplyAsync()
-    {
-        if (_workingBgra is not null)
-        {
-            var (bgr, alpha) = BackgroundCompositingService.SplitBgra(_workingBgra);
-            _parentDocument.ApplyToolResult(bgr, alpha, "Liquify");
-        }
-        _shell.CloseTabDirect(this);
-        return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _workingBgra?.Dispose();
-        base.Dispose();
-    }
+    public override Task ApplyAsync() => ApplyWorkingBgraAsync("Liquify");
 }

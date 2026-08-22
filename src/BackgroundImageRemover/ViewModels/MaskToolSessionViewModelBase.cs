@@ -22,9 +22,6 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
     private BitmapSource? _sourceBitmap;
 
     [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
-    [ObservableProperty]
     private double _brushRadius = 40;
 
     [ObservableProperty]
@@ -49,6 +46,8 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
 
     /// <summary>True when the painted mask has any non-zero pixels.</summary>
     protected bool HasPaintedMask => _paintedMask is not null && Cv2.CountNonZero(_paintedMask) > 0;
+
+    protected bool IsEffectActive => WholeImage || (PaintMode && HasPaintedMask);
 
     /// <summary>Gets the painted mask, or null if none exists.</summary>
     protected Mat? PaintedMask => _paintedMask;
@@ -97,12 +96,7 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
 
     public override Task ApplyAsync()
     {
-        if (_sourceImage is not null && _workingAlpha is not null)
-        {
-            var bgr = BuildResult(_sourceImage.FullBgr);
-            _parentDocument.ApplyToolResult(bgr, _workingAlpha.Clone(), OperationName);
-        }
-        _shell.CloseTabDirect(this);
+        ApplyAndClose(_sourceImage is not null && _workingAlpha is not null ? BuildResult(_sourceImage.FullBgr) : null, OperationName);
         return Task.CompletedTask;
     }
 

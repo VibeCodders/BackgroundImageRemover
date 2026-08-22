@@ -17,7 +17,7 @@ public static class DuplicateService
     {
         if (input is null || input.Empty())
         {
-            return input.CloneOrEmpty();
+            return EditingGuard.ReturnCloneIfNullOrEmpty(input);
         }
 
         return input.Clone();

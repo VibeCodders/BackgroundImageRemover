@@ -9,7 +9,7 @@ public static class EmbossService
     {
         if (input is null || input.Empty() || strength <= 0)
         {
-            return input.CloneOrEmpty();
+            return EditingGuard.ReturnCloneIfNullOrEmpty(input);
         }
 
         using var kernel = new Mat(3, 3, MatType.CV_64F);

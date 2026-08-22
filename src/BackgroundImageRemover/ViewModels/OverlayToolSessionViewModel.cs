@@ -21,9 +21,6 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
     public override string AccentColor => "#059669";
 
     [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
-    [ObservableProperty]
     private string? _overlayPath;
 
     [ObservableProperty]
@@ -70,9 +67,6 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
 
     [ObservableProperty]
     private OverlayBlendMode _blend = OverlayBlendMode.Normal;
-
-    [ObservableProperty]
-    private string? _statusMessage;
 
     public OverlayToolSessionViewModel(
         ShellViewModel shell,
@@ -132,17 +126,17 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
 
     private void RefreshResult()
     {
-        if (_sourceImage is null || _workingAlpha is null) return;
+        if (!EnsureSourceAlpha()) return;
 
         if (_overlayBgra is null)
         {
-            ResultBitmap = _sourceImage.FullBgr.ToBitmapSource(_workingAlpha);
+            ResultBitmap = _sourceImage!.FullBgr.ToBitmapSource(_workingAlpha!);
             IsDirty = false;
             return;
         }
 
         using var composited = CompositeOverlay();
-        ResultBitmap = composited.ToBitmapSource(_workingAlpha);
+        ResultBitmap = composited.ToBitmapSource(_workingAlpha!);
         IsDirty = true;
     }
 

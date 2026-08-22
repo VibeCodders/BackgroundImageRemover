@@ -13,19 +13,12 @@ namespace BackgroundImageRemover.ViewModels;
 /// (or, inverted, drop) everything inside it. The outline is closed and filled into a mask on
 /// mouse-up (<see cref="OnStrokeEnd"/>); each new drag redefines the selection from scratch.
 /// </summary>
-public partial class LassoSelectToolSessionViewModel : ToolSessionViewModelBase
+public partial class LassoSelectToolSessionViewModel : BgraToolSessionViewModelBase
 {
-    private Mat? _sourceBgra;
     private readonly List<Point> _points = new();
 
     public override string ToolBadge => "◈ Lasso";
     public override string AccentColor => "#0EA5E9";
-
-    [ObservableProperty]
-    private BitmapSource? _sourceBitmap;
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     private bool _invertSelection;
@@ -39,9 +32,7 @@ public partial class LassoSelectToolSessionViewModel : ToolSessionViewModelBase
     public LassoSelectToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
-        InitSourceAlpha();
-        _sourceBgra = _sourceImage!.FullBgr.ToBgra(_workingAlpha!);
-        SourceBitmap = _sourceBgra.ToBitmapSource();
+        InitWorkingBgra();
         ResultBitmap = SourceBitmap;
         StatusMessage = "Drag on the left to draw a freehand selection outline.";
     }
@@ -69,7 +60,7 @@ public partial class LassoSelectToolSessionViewModel : ToolSessionViewModelBase
 
     public void OnStrokeEnd()
     {
-        if (_sourceBgra is null || _points.Count < 3)
+        if (WorkingBgra is null || _points.Count < 3)
         {
             StatusMessage = "Drag a longer outline to select a region.";
             return;
@@ -96,12 +87,12 @@ public partial class LassoSelectToolSessionViewModel : ToolSessionViewModelBase
 
     private Mat? BuildMask()
     {
-        if (_sourceBgra is null || _points.Count < 3)
+        if (WorkingBgra is null || _points.Count < 3)
         {
             return null;
         }
 
-        var mask = new Mat(_sourceBgra.Size(), MatType.CV_8UC1, Scalar.All(0));
+        var mask = new Mat(WorkingBgra.Size(), MatType.CV_8UC1, Scalar.All(0));
         Cv2.FillPoly(mask, new[] { _points.ToArray() }, Scalar.All(255));
 
         if (FeatherPixels > 0)
@@ -120,7 +111,7 @@ public partial class LassoSelectToolSessionViewModel : ToolSessionViewModelBase
 
     private void RefreshResult()
     {
-        if (_sourceBgra is null)
+        if (WorkingBgra is null)
         {
             return;
         }
@@ -133,7 +124,7 @@ public partial class LassoSelectToolSessionViewModel : ToolSessionViewModelBase
         }
 
         using var bgr = new Mat();
-        Cv2.CvtColor(_sourceBgra, bgr, ColorConversionCodes.BGRA2BGR);
+        Cv2.CvtColor(WorkingBgra, bgr, ColorConversionCodes.BGRA2BGR);
         using var resultBgra = bgr.ToBgra(mask);
         ResultBitmap = resultBgra.ToBitmapSource();
     }
@@ -142,7 +133,7 @@ public partial class LassoSelectToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
-        if (_sourceBgra is null)
+        if (WorkingBgra is null)
         {
             _shell.CloseTabDirect(this);
             return Task.CompletedTask;
@@ -156,16 +147,10 @@ public partial class LassoSelectToolSessionViewModel : ToolSessionViewModelBase
         }
 
         using var bgr = new Mat();
-        Cv2.CvtColor(_sourceBgra, bgr, ColorConversionCodes.BGRA2BGR);
+        Cv2.CvtColor(WorkingBgra, bgr, ColorConversionCodes.BGRA2BGR);
         _parentDocument.ApplyToolResult(bgr, mask.Clone(), "Lasso Select");
 
         _shell.CloseTabDirect(this);
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceBgra?.Dispose();
-        base.Dispose();
     }
 }

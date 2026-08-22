@@ -38,27 +38,27 @@ public partial class BlurToolSessionViewModel : MaskToolSessionViewModelBase
 
     protected override void RefreshResult()
     {
-        if (_sourceImage is null || _workingAlpha is null) return;
+        if (!EnsureSourceAlpha()) return;
 
         Mat result;
         if (WholeImage)
         {
             result = MotionBlur
-                ? BlurService.MotionBlur(_sourceImage.FullBgr, BlurRadius, MotionAngle)
-                : BlurService.BlurAll(_sourceImage.FullBgr, BlurRadius);
+                ? BlurService.MotionBlur(_sourceImage!.FullBgr, BlurRadius, MotionAngle)
+                : BlurService.BlurAll(_sourceImage!.FullBgr, BlurRadius);
         }
         else if (PaintMode && HasPaintedMask)
         {
-            result = BlurService.BlurRegion(_sourceImage.FullBgr, _paintedMask!, BlurRadius);
+            result = BlurService.BlurRegion(_sourceImage!.FullBgr, _paintedMask!, BlurRadius);
         }
         else
         {
-            result = _sourceImage.FullBgr.Clone();
+            result = _sourceImage!.FullBgr.Clone();
         }
 
         using var _ = result;
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
-        IsDirty = WholeImage || (PaintMode && HasPaintedMask);
+        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
+        IsDirty = IsEffectActive;
     }
 
     protected override Mat BuildResult(Mat src)

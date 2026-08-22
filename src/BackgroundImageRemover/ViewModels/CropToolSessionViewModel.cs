@@ -1,7 +1,6 @@
 using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,20 +10,12 @@ using OpenCvSharp.WpfExtensions;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for cropping (rectangle, aspect presets, margins, auto-trim, straighten).</summary>
-public partial class CropToolSessionViewModel : ToolSessionViewModelBase
+public partial class CropToolSessionViewModel : BgraToolSessionViewModelBase
 {
-    private Mat? _sourceBgra;
-
     public override string ToolBadge => "✂ Crop";
     public override string AccentColor => "#16A34A";
 
     public IReadOnlyList<UncropAspectPreset> AspectPresets { get; } = UncropAspectPresets.All;
-
-    [ObservableProperty]
-    private BitmapSource? _sourceBitmap;
-
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
 
     [ObservableProperty]
     private UncropAspectPreset _selectedAspect = UncropAspectPresets.Free;
@@ -53,9 +44,6 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private int _targetHeight;
 
-    [ObservableProperty]
-    private string? _statusMessage;
-
     public CropToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
@@ -64,22 +52,20 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        InitSourceAlpha();
-        _sourceBgra = _sourceImage!.FullBgr.ToBgra(_workingAlpha!);
-        SourceBitmap = _sourceBgra.ToBitmapSource();
-        SelectedRect = new Rect(0, 0, _sourceBgra.Width, _sourceBgra.Height);
+        InitWorkingBgra();
+        SelectedRect = new Rect(0, 0, WorkingBgra!.Width, WorkingBgra.Height);
         RefreshResult();
         StatusMessage = "Drag a rectangle on the left, or use the presets and margins.";
     }
 
     partial void OnSelectedAspectChanged(UncropAspectPreset value)
     {
-        if (_sourceBgra is null) return;
+        if (WorkingBgra is null) return;
         if (value.Ratio is not { } ratio)
         {
             return;
         }
-        SelectedRect = CropService.CenteredRectForAspect(_sourceBgra.Size(), ratio);
+        SelectedRect = CropService.CenteredRectForAspect(WorkingBgra.Size(), ratio);
         RefreshResult();
     }
 
@@ -94,8 +80,8 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
     [RelayCommand]
     private void AutoTrim()
     {
-        if (_sourceBgra is null) return;
-        SelectedRect = CropService.TrimContentBounds(_sourceBgra);
+        if (WorkingBgra is null) return;
+        SelectedRect = CropService.TrimContentBounds(WorkingBgra);
         RefreshResult();
     }
 
@@ -108,8 +94,8 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
     [RelayCommand]
     private void AutoStraighten()
     {
-        if (_sourceBgra is null) return;
-        double skew = TransformService.EstimateSkewAngle(_sourceBgra);
+        if (WorkingBgra is null) return;
+        double skew = TransformService.EstimateSkewAngle(WorkingBgra);
         Angle = Math.Clamp(-skew, -45, 45);
         StatusMessage = Math.Abs(skew) < 0.05 ? "No skew detected." : $"Detected {skew:0.0}° skew.";
     }
@@ -117,10 +103,10 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
     [RelayCommand]
     private void ApplySize()
     {
-        if (_sourceBgra is null) return;
-        int width = Math.Clamp(TargetWidth, 1, _sourceBgra.Width);
-        int height = Math.Clamp(TargetHeight, 1, _sourceBgra.Height);
-        SelectedRect = CropService.CenteredRectForSize(_sourceBgra.Size(), width, height);
+        if (WorkingBgra is null) return;
+        int width = Math.Clamp(TargetWidth, 1, WorkingBgra.Width);
+        int height = Math.Clamp(TargetHeight, 1, WorkingBgra.Height);
+        SelectedRect = CropService.CenteredRectForSize(WorkingBgra.Size(), width, height);
         RefreshResult();
     }
 
@@ -132,35 +118,35 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
 
     private void Rotate90(bool clockwise)
     {
-        if (_sourceBgra is null) return;
+        if (WorkingBgra is null) return;
         var rotated = clockwise
-            ? TransformService.Rotate90Clockwise(_sourceBgra)
-            : TransformService.Rotate90CounterClockwise(_sourceBgra);
-        _sourceBgra.Dispose();
-        _sourceBgra = rotated;
-        SourceBitmap = _sourceBgra.ToBitmapSource();
+            ? TransformService.Rotate90Clockwise(WorkingBgra)
+            : TransformService.Rotate90CounterClockwise(WorkingBgra);
+        WorkingBgra.Dispose();
+        WorkingBgra = rotated;
+        SourceBitmap = WorkingBgra.ToBitmapSource();
         SelectedAspect = UncropAspectPresets.Free;
         Angle = 0.0;
-        SelectedRect = new Rect(0, 0, _sourceBgra.Width, _sourceBgra.Height);
+        SelectedRect = new Rect(0, 0, WorkingBgra.Width, WorkingBgra.Height);
         RefreshResult();
     }
 
     private void TrimToColor(Vec3b color)
     {
-        if (_sourceBgra is null) return;
-        SelectedRect = CropService.TrimContentBounds(_sourceBgra, color, 12);
+        if (WorkingBgra is null) return;
+        SelectedRect = CropService.TrimContentBounds(WorkingBgra, color, 12);
         RefreshResult();
     }
 
     [RelayCommand]
     private void ApplyMargins()
     {
-        if (_sourceBgra is null) return;
-        int width = Math.Max(1, _sourceBgra.Width - MarginLeft - MarginRight);
-        int height = Math.Max(1, _sourceBgra.Height - MarginTop - MarginBottom);
+        if (WorkingBgra is null) return;
+        int width = Math.Max(1, WorkingBgra.Width - MarginLeft - MarginRight);
+        int height = Math.Max(1, WorkingBgra.Height - MarginTop - MarginBottom);
         SelectedRect = new Rect(
-            Math.Clamp(MarginLeft, 0, _sourceBgra.Width - 1),
-            Math.Clamp(MarginTop, 0, _sourceBgra.Height - 1),
+            Math.Clamp(MarginLeft, 0, WorkingBgra.Width - 1),
+            Math.Clamp(MarginTop, 0, WorkingBgra.Height - 1),
             width, height);
         RefreshResult();
     }
@@ -168,19 +154,19 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
     [RelayCommand]
     private void Reset()
     {
-        if (_sourceBgra is null) return;
+        if (WorkingBgra is null) return;
         SelectedAspect = UncropAspectPresets.Free;
         Angle = 0.0;
         MarginLeft = MarginTop = MarginRight = MarginBottom = 0;
         TargetWidth = TargetHeight = 0;
-        SelectedRect = new Rect(0, 0, _sourceBgra.Width, _sourceBgra.Height);
+        SelectedRect = new Rect(0, 0, WorkingBgra.Width, WorkingBgra.Height);
         RefreshResult();
     }
 
     private void RefreshResult()
     {
-        if (_sourceBgra is null) return;
-        using var cropped = CropService.CropRect(_sourceBgra, SelectedRect ?? new Rect(0, 0, _sourceBgra.Width, _sourceBgra.Height));
+        if (WorkingBgra is null) return;
+        using var cropped = CropService.CropRect(WorkingBgra, SelectedRect ?? new Rect(0, 0, WorkingBgra.Width, WorkingBgra.Height));
         using var rotated = Math.Abs(Angle) > 1e-6 ? TransformService.Rotate(cropped, Angle) : cropped.Clone();
         ResultBitmap = rotated.ToBitmapSource();
         IsDirty = true;
@@ -188,24 +174,15 @@ public partial class CropToolSessionViewModel : ToolSessionViewModelBase
 
     public override Task ApplyAsync()
     {
-        if (_sourceBgra is null)
+        if (WorkingBgra is null)
         {
             _shell.CloseTabDirect(this);
             return Task.CompletedTask;
         }
 
-        using var cropped = CropService.CropRect(_sourceBgra, SelectedRect ?? new Rect(0, 0, _sourceBgra.Width, _sourceBgra.Height));
+        using var cropped = CropService.CropRect(WorkingBgra, SelectedRect ?? new Rect(0, 0, WorkingBgra.Width, WorkingBgra.Height));
         using var rotated = Math.Abs(Angle) > 1e-6 ? TransformService.Rotate(cropped, Angle) : cropped.Clone();
-        var (bgr, alpha) = BackgroundCompositingService.SplitBgra(rotated);
-        _parentDocument.ApplyToolResult(bgr, alpha, "Crop");
-
-        _shell.CloseTabDirect(this);
+        ApplyBgraResult(rotated, "Crop");
         return Task.CompletedTask;
-    }
-
-    public override void Dispose()
-    {
-        _sourceBgra?.Dispose();
-        base.Dispose();
     }
 }

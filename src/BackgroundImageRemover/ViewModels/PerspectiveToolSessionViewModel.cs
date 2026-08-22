@@ -15,9 +15,6 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
     public override string AccentColor => "#0F766E";
 
     [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
-    [ObservableProperty]
     private int _topLeftX;
     [ObservableProperty]
     private int _topLeftY;
@@ -42,9 +39,6 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
 
     [ObservableProperty]
     private ResampleMethod _method = ResampleMethod.Lanczos;
-
-    [ObservableProperty]
-    private string? _statusMessage;
 
     public PerspectiveToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
@@ -96,11 +90,11 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
 
     private void RefreshResult()
     {
-        if (_sourceImage is null || _workingAlpha is null) return;
+        if (!EnsureSourceAlpha()) return;
         try
         {
             using var corrected = PerspectiveService.Correct(
-                _sourceImage.FullBgr,
+                _sourceImage!.FullBgr,
                 new Point2f(TopLeftX, TopLeftY),
                 new Point2f(TopRightX, TopRightY),
                 new Point2f(BottomRightX, BottomRightY),
@@ -108,11 +102,8 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
                 Math.Max(1, OutputWidth),
                 Math.Max(1, OutputHeight),
                 ToInterpolation(Method));
-            // The alpha channel must go through the same warp as the pixels, otherwise the
-            // preview (and the Apply below) would replace a cutout's transparency with an
-            // opaque rectangle.
             using var correctedAlpha = PerspectiveService.Correct(
-                _workingAlpha,
+                _workingAlpha!,
                 new Point2f(TopLeftX, TopLeftY),
                 new Point2f(TopRightX, TopRightY),
                 new Point2f(BottomRightX, BottomRightY),

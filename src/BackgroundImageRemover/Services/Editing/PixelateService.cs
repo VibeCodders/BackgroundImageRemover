@@ -9,7 +9,7 @@ public static class PixelateService
     {
         if (input is null || input.Empty() || blockSize <= 1)
         {
-            return input.CloneOrEmpty();
+            return EditingGuard.ReturnCloneIfNullOrEmpty(input);
         }
 
         int width = input.Cols;

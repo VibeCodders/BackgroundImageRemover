@@ -47,9 +47,6 @@ public partial class UncropToolSessionViewModel : ToolSessionViewModelBase
     private BitmapSource? _previewResult;
 
     [ObservableProperty]
-    private string? _statusMessage;
-
-    [ObservableProperty]
     private bool _canUndo;
 
     [ObservableProperty]

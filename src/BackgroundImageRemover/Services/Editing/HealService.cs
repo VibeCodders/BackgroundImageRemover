@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -32,7 +33,7 @@ public static class HealService
         strength = Math.Clamp(strength, 0.0, 1.0);
         if (strength <= 1e-4)
         {
-            return bgr.Clone();
+            return EditingGuard.ReturnCloneIfNull(bgr);
         }
 
         float h = (float)(3.0 + strength * 10.0);
@@ -47,7 +48,7 @@ public static class HealService
         strength = Math.Clamp(strength, 0.0, 1.0);
         if (strength <= 1e-4)
         {
-            return bgr.Clone();
+            return EditingGuard.ReturnCloneIfNull(bgr);
         }
 
         var result = new Mat();
@@ -61,7 +62,7 @@ public static class HealService
         strength = Math.Clamp(strength, 0.0, 1.0);
         if (strength <= 1e-4)
         {
-            return bgr.Clone();
+            return EditingGuard.ReturnCloneIfNull(bgr);
         }
 
         var result = new Mat();

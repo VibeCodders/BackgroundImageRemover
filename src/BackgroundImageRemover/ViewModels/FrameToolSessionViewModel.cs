@@ -19,9 +19,6 @@ namespace BackgroundImageRemover.ViewModels;
     public override string AccentColor => "#7C3AED";
 
     [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
-    [ObservableProperty]
     private int _borderThickness;
 
     [ObservableProperty]
@@ -140,9 +137,6 @@ namespace BackgroundImageRemover.ViewModels;
 
     [ObservableProperty]
     private bool _isVignetteColorPickerOpen;
-
-    [ObservableProperty]
-    private string? _statusMessage;
 
     public FrameToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)

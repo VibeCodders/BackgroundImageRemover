@@ -17,7 +17,7 @@ public static class FlipService
     {
         if (input is null || input.Empty())
         {
-            return input.CloneOrEmpty();
+            return EditingGuard.ReturnCloneIfNullOrEmpty(input);
         }
 
         var flipCode = mode switch

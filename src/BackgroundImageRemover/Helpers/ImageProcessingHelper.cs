@@ -74,33 +74,7 @@ public static class ImageProcessingHelper
             // 2. Temperature & Tint (RGB color balance shift)
             if (Math.Abs(adjustments.Temperature) > 1e-4 || Math.Abs(adjustments.Tint) > 1e-4)
             {
-                var channels = Cv2.Split(current);
-                try
-                {
-                    // Temperature: warm adds Red/decreases Blue, cool adds Blue/decreases Red
-                    if (Math.Abs(adjustments.Temperature) > 1e-4)
-                    {
-                        double tempShift = adjustments.Temperature * 0.5; // [-50, 50]
-                        Cv2.Add(channels[0], Scalar.All(-tempShift), channels[0]); // Blue channel
-                        Cv2.Add(channels[2], Scalar.All(tempShift), channels[2]);  // Red channel
-                    }
-
-                    // Tint: positive adds Magenta (decreases Green), negative adds Green
-                    if (Math.Abs(adjustments.Tint) > 1e-4)
-                    {
-                        double tintShift = adjustments.Tint * 0.5; // [-50, 50]
-                        Cv2.Add(channels[1], Scalar.All(-tintShift), channels[1]); // Green channel
-                    }
-
-                    var balanced = new Mat();
-                    Cv2.Merge(channels, balanced);
-                    current.Dispose();
-                    current = balanced;
-                }
-                finally
-                {
-                    foreach (var ch in channels) ch.Dispose();
-                }
+                current = ImageProcessingUtility.ColorBalance(current, adjustments.Temperature, adjustments.Tint);
             }
 
             // 3. Saturation and Hue shift (in HSV space)
@@ -253,10 +227,7 @@ public static class ImageProcessingHelper
             // 5.9 Monochrome: blend toward a grayscale rendition.
             if (adjustments.Monochrome > 1e-4)
             {
-                using var gray = new Mat();
-                Cv2.CvtColor(current, gray, ColorConversionCodes.BGR2GRAY);
-                using var grayBgr = new Mat();
-                Cv2.CvtColor(gray, grayBgr, ColorConversionCodes.GRAY2BGR);
+                using var grayBgr = current.ToGrayBgr();
                 var mono = new Mat();
                 Cv2.AddWeighted(current, 1.0 - adjustments.Monochrome, grayBgr, adjustments.Monochrome, 0, mono);
                 current.Dispose();
@@ -334,17 +305,9 @@ public static class ImageProcessingHelper
             // 5.98 Sepia tone blend.
             if (adjustments.SepiaTone > 1e-4)
             {
-                using var sepia = new Mat(3, 3, MatType.CV_32FC1);
-                sepia.SetArray(new[]
-                {
-                    0.131f, 0.534f, 0.272f,
-                    0.168f, 0.686f, 0.349f,
-                    0.189f, 0.769f, 0.393f
-                });
-                using var sepiaImg = new Mat();
-                Cv2.Transform(current, sepiaImg, sepia);
+                using var sepia = ImageProcessingUtility.ApplySepia(current);
                 var blended = new Mat();
-                Cv2.AddWeighted(current, 1.0 - adjustments.SepiaTone, sepiaImg, adjustments.SepiaTone, 0, blended);
+                Cv2.AddWeighted(current, 1.0 - adjustments.SepiaTone, sepia, adjustments.SepiaTone, 0, blended);
                 current.Dispose();
                 current = blended;
             }

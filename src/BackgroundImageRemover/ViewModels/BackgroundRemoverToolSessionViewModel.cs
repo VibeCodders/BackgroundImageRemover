@@ -81,9 +81,6 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     private BitmapSource? _previewBitmap;
 
     [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
-    [ObservableProperty]
     private BitmapSource? _scribbleOverlay;
 
     [ObservableProperty]
@@ -149,9 +146,6 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     [ObservableProperty]
     private string? _busyMessage;
-
-    [ObservableProperty]
-    private string? _statusMessage;
 
     [ObservableProperty]
     private InteractionMode _originalMode = InteractionMode.None;

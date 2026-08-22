@@ -23,9 +23,6 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool
     private BitmapSource? _sourceBitmap;
 
     [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
-    [ObservableProperty]
     private InteractionMode _resultMode = InteractionMode.Brush;
 
     [ObservableProperty]
@@ -49,9 +46,6 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool
     [ObservableProperty]
     private double _detailEnhanceStrength;
 
-    [ObservableProperty]
-    private string? _statusMessage;
-
     public HealToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)
     {
@@ -61,7 +55,7 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool
     private void InitFromParent()
     {
         InitSourceAlpha();
-        _workingBgr = _sourceImage!.FullBgr.Clone();
+        _workingBgr = CloneWorkingBgr();
         _healMask = new Mat(_workingBgr.Size(), MatType.CV_8UC1, Scalar.All(0));
         SourceBitmap = _workingBgr.ToBitmapSource(_workingAlpha!);
         RefreshResult();
@@ -117,19 +111,14 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool
 
     private void RefreshResult()
     {
-        if (_workingBgr is null || _workingAlpha is null) return;
+        if (!EnsureSourceAlpha()) return;
         using var result = BuildResult();
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
+        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
     }
 
     public override Task ApplyAsync()
     {
-        if (_workingBgr is not null && _workingAlpha is not null)
-        {
-            var result = BuildResult();
-            _parentDocument.ApplyToolResult(result, _workingAlpha.Clone(), "Heal");
-        }
-        _shell.CloseTabDirect(this);
+        ApplyAndClose(_workingBgr is not null && _workingAlpha is not null ? BuildResult() : null, "Heal");
         return Task.CompletedTask;
     }
 

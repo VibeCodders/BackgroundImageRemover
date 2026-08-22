@@ -12,9 +12,6 @@ namespace BackgroundImageRemover.ViewModels;
 /// </summary>
 public abstract partial class PreviewToolSessionViewModelBase : ToolSessionViewModelBase
 {
-    [ObservableProperty]
-    private BitmapSource? _resultBitmap;
-
     protected PreviewToolSessionViewModelBase(ShellViewModel shell, DocumentViewModel parentDocument, string statusMessage)
         : base(shell, parentDocument)
     {

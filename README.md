@@ -24,6 +24,13 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 - SAM prompt points are saved/restored in `.ibrproj` project files
 - Additional points count displayed in the UI
 
+#### New drawing & color tools (new)
+- **Shape**: draw a rectangle, ellipse, line or arrow with stroke color/width and a semi-transparent fill, positioned/sized as a percentage of the image
+- **Gradient**: overlay a linear (angle-selectable) or radial two-color gradient onto the image
+- **Color Replace**: replace a target color (and close hues via tolerance/softness) with another color, optionally preserving the original luminance
+- **Duotone**: map image brightness onto a two-color palette with adjustable midpoint and strength
+- New tools follow the existing `IToolDefinition` convention: one definition class, a session view model, a data-templated view, an icon, DI registration and unit tests — the palette and tab dispatch pick them up automatically
+
 #### Logging improvements (new)
 - `FileLogService` now supports severity levels: `Debug`, `Info`, `Warning`, `Error`
 - Log files are pruned automatically after 30 days

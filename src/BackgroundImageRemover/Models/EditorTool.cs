@@ -99,5 +99,17 @@ public enum EditorTool
     CloneStamp,
 
     /// <summary>Automatic red-eye removal by clicking on eyes.</summary>
-    RedEye
+    RedEye,
+
+    /// <summary>Draws vector shapes (rectangle, ellipse, line, arrow) with stroke and fill.</summary>
+    Shape,
+
+    /// <summary>Overlays a linear or radial color gradient onto the image.</summary>
+    Gradient,
+
+    /// <summary>Replaces pixels matching a target color with a new color.</summary>
+    ColorReplace,
+
+    /// <summary>Maps image luminance to a two-color (duotone) palette.</summary>
+    Duotone
 }

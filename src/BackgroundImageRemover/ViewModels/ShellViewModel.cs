@@ -39,7 +39,7 @@ public partial class ShellViewModel : ObservableObject
     /// <summary>Fixed left-to-right/top-to-bottom category order for the palette (not alphabetical).</summary>
     private static readonly string[] CategoryDisplayOrder =
     [
-        "Background Removal", "Selection", "Paint & Retouch", "Transform",
+        "Background Removal", "Selection", "Drawing", "Paint & Retouch", "Transform",
         "Color & Adjust", "Filters & FX", "Composite", "Text & Decor"
     ];
 
@@ -131,6 +131,10 @@ public partial class ShellViewModel : ObservableObject
         yield return new FrameToolDefinition();
         yield return new TextToolDefinition();
         yield return new EmojiToolDefinition();
+        yield return new ShapeToolDefinition();
+        yield return new GradientToolDefinition();
+        yield return new ColorReplaceToolDefinition();
+        yield return new DuotoneToolDefinition();
     }
 
     /// <summary>

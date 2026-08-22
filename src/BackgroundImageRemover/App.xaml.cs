@@ -187,6 +187,10 @@ public partial class App : Application
         services.AddSingleton<IToolDefinition, HueSatToolDefinition>();
         services.AddSingleton<IToolDefinition, CloneStampToolDefinition>();
         services.AddSingleton<IToolDefinition, RedEyeToolDefinition>();
+        services.AddSingleton<IToolDefinition, ShapeToolDefinition>();
+        services.AddSingleton<IToolDefinition, GradientToolDefinition>();
+        services.AddSingleton<IToolDefinition, ColorReplaceToolDefinition>();
+        services.AddSingleton<IToolDefinition, DuotoneToolDefinition>();
 
         services.AddTransient<DocumentViewModel>();
         services.AddSingleton<Func<DocumentViewModel>>(sp => sp.GetRequiredService<DocumentViewModel>);

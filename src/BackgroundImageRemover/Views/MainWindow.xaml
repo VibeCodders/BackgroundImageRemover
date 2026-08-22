@@ -132,6 +132,18 @@
         <DataTemplate DataType="{x:Type vm:RedEyeToolSessionViewModel}">
             <views:RedEyeToolSessionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ShapeToolSessionViewModel}">
+            <views:ShapeToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:GradientToolSessionViewModel}">
+            <views:GradientToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ColorReplaceToolSessionViewModel}">
+            <views:ColorReplaceToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DuotoneToolSessionViewModel}">
+            <views:DuotoneToolSessionView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">

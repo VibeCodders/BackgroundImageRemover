@@ -14,6 +14,8 @@ using BackgroundImageRemover.Services.Sam;
 using BackgroundImageRemover.Services.Settings;
 using BackgroundImageRemover.Services.Strategies;
 using BackgroundImageRemover.ViewModels;
+using BackgroundImageRemover.ViewModels.Tools;
+using BackgroundImageRemover.ViewModels.Tools.Definitions;
 using BackgroundImageRemover.Views;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -137,6 +139,45 @@ public partial class App : Application
         services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<MagicWandRemovalStrategy>());
         services.AddSingleton<InpaintStrategy>();
         services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<InpaintStrategy>());
+
+        // Tool palette: one independent IToolDefinition per tool/strategy. Adding a tool means
+        // adding one class under ViewModels/Tools/Definitions and one line here -- both the
+        // palette (StrategyToolbar) and the tab-opening dispatch (ShellViewModel.OpenToolSession)
+        // are built purely from this registered set.
+        services.AddSingleton<IToolDefinition, RemoveBackgroundToolDefinition>();
+        services.AddSingleton<IToolDefinition, OnnxToolDefinition>();
+        services.AddSingleton<IToolDefinition, SamToolDefinition>();
+        services.AddSingleton<IToolDefinition, GrabCutToolDefinition>();
+        services.AddSingleton<IToolDefinition, ChromaKeyToolDefinition>();
+        services.AddSingleton<IToolDefinition, MagicWandToolDefinition>();
+        services.AddSingleton<IToolDefinition, FloodFillToolDefinition>();
+        services.AddSingleton<IToolDefinition, KMeansToolDefinition>();
+        services.AddSingleton<IToolDefinition, OtsuToolDefinition>();
+        services.AddSingleton<IToolDefinition, InpaintToolDefinition>();
+        services.AddSingleton<IToolDefinition, UncropToolDefinition>();
+        services.AddSingleton<IToolDefinition, RetouchToolDefinition>();
+        services.AddSingleton<IToolDefinition, HealToolDefinition>();
+        services.AddSingleton<IToolDefinition, LiquifyToolDefinition>();
+        services.AddSingleton<IToolDefinition, MosaicToolDefinition>();
+        services.AddSingleton<IToolDefinition, CropToolDefinition>();
+        services.AddSingleton<IToolDefinition, TransformToolDefinition>();
+        services.AddSingleton<IToolDefinition, ResizeToolDefinition>();
+        services.AddSingleton<IToolDefinition, RotateToolDefinition>();
+        services.AddSingleton<IToolDefinition, PerspectiveToolDefinition>();
+        services.AddSingleton<IToolDefinition, AdjustmentsToolDefinition>();
+        services.AddSingleton<IToolDefinition, LevelsToolDefinition>();
+        services.AddSingleton<IToolDefinition, ColorPickerToolDefinition>();
+        services.AddSingleton<IToolDefinition, BlurToolDefinition>();
+        services.AddSingleton<IToolDefinition, SharpenToolDefinition>();
+        services.AddSingleton<IToolDefinition, VignetteToolDefinition>();
+        services.AddSingleton<IToolDefinition, FiltersToolDefinition>();
+        services.AddSingleton<IToolDefinition, FxToolDefinition>();
+        services.AddSingleton<IToolDefinition, TiltShiftToolDefinition>();
+        services.AddSingleton<IToolDefinition, ComposeToolDefinition>();
+        services.AddSingleton<IToolDefinition, OverlayToolDefinition>();
+        services.AddSingleton<IToolDefinition, FrameToolDefinition>();
+        services.AddSingleton<IToolDefinition, TextToolDefinition>();
+        services.AddSingleton<IToolDefinition, EmojiToolDefinition>();
 
         services.AddTransient<DocumentViewModel>();
         services.AddSingleton<Func<DocumentViewModel>>(sp => sp.GetRequiredService<DocumentViewModel>);

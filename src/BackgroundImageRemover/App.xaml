@@ -18,6 +18,8 @@
         <conv:EnumToBoolConverter x:Key="EnumToBoolConverter" />
         <conv:ActiveStrategyToBoolConverter x:Key="ActiveStrategyToBoolConverter" />
         <conv:ColorToBrushConverter x:Key="ColorToBrushConverter" />
+        <conv:ResourceKeyToGeometryConverter x:Key="ResourceKeyToGeometryConverter" />
+        <conv:ToolDefinitionCheckedConverter x:Key="ToolDefinitionCheckedConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

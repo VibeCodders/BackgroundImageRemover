@@ -23,7 +23,7 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>
 /// Dedicated Tool Tab for AI and algorithmic Background Removal (ONNX, SAM, GrabCut, ChromaKey).
 /// </summary>
-public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewModelBase
+public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewModelBase, IStrategyParameterSource
 {
     private readonly IDownscaleService _downscaler;
     private readonly IDialogService _dialogs;

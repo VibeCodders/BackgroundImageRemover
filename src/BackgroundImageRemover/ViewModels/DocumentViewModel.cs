@@ -33,7 +33,7 @@ namespace BackgroundImageRemover.ViewModels;
 /// State and core lifecycle logic for a single open image ("document"): one per tab.
 /// Owns collections and coordinates tool operations.
 /// </summary>
-public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDisposable
+public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDisposable, IStrategyParameterSource
 {
     private readonly IImageLoaderService _imageLoader;
     private readonly IImageExportService _imageExporter;
@@ -94,6 +94,10 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private IToolSessionTab? _activeToolSession;
 
     public bool HasActiveToolSession => ActiveToolSession is not null;
+
+    /// <summary>The tool palette, grouped for display -- <see cref="Views.Controls.StrategyToolbar"/>
+    /// binds to this instead of hand-listing every tool/strategy icon.</summary>
+    public IReadOnlyList<Tools.ToolCategory> ToolCategories => _shell?.ToolCategories ?? Array.Empty<Tools.ToolCategory>();
 
     public void SetShell(ShellViewModel shell) => _shell = shell;
 
@@ -302,6 +306,15 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
     [ObservableProperty]
     private bool _maskClahe;
+
+    // The inline canvas preview (GIMP-style, single-click-select) has no UI for these extra
+    // cleanup passes -- only the dedicated Background Remover tool tab does. Reporting the
+    // StrategyContext record's own no-op defaults here keeps IStrategyParameterSource honest
+    // without adding controls this view doesn't have.
+    int IStrategyParameterSource.DespeckleKernelSize => 0;
+    int IStrategyParameterSource.FillHolesKernelSize => 0;
+    int IStrategyParameterSource.SmoothEdgesKernelSize => 0;
+    bool IStrategyParameterSource.KeepLargestComponent => false;
 
     /// <summary>
     /// The active display bitmap: shows the processed ResultBitmap if available,

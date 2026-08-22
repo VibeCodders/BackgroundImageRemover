@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.ImageIo;
@@ -11,6 +12,7 @@ using BackgroundImageRemover.Services.Settings;
 using BackgroundImageRemover.Services.Strategies;
 using CommunityToolkit.Mvvm.ComponentModel;
 using BackgroundImageRemover.ViewModels.Tools;
+using BackgroundImageRemover.ViewModels.Tools.Definitions;
 
 namespace BackgroundImageRemover.ViewModels;
 
@@ -21,19 +23,25 @@ public partial class ShellViewModel : ObservableObject
     private readonly Func<UncropViewModel> _uncropFactory;
     private readonly IDialogService _dialogs;
     private readonly ISettingsService _settings;
-    private readonly IDownscaleService _downscaler;
-    private readonly IFileLogService _log;
-    private readonly IEnumerable<IBackgroundRemovalStrategy> _strategies;
-    private readonly OnnxStrategy _onnxStrategy;
-    private readonly GrabCutStrategy _grabCutStrategy;
-    private readonly SamStrategy _samStrategy;
-    private readonly IUncropFillService _uncropFillService;
-    private readonly IImageLoaderService _imageLoader;
-    private readonly IImageExportService _imageExporter;
+    private readonly Dictionary<string, IToolDefinition> _toolsById;
 
     public ObservableCollection<IDocumentTab> Documents { get; } = new();
     public ObservableCollection<string> RecentFiles { get; } = new();
     public ObservableCollection<string> RecentProjects { get; } = new();
+
+    /// <summary>The full tool/strategy palette, sorted for display.</summary>
+    public IReadOnlyList<IToolDefinition> ToolDefinitions { get; }
+
+    /// <summary>The palette grouped by category, in the toolbar's display order -- <see cref="Views.Controls.StrategyToolbar"/>
+    /// binds to this to render its groups instead of hand-listing every tool.</summary>
+    public IReadOnlyList<ToolCategory> ToolCategories { get; }
+
+    /// <summary>Fixed left-to-right/top-to-bottom category order for the palette (not alphabetical).</summary>
+    private static readonly string[] CategoryDisplayOrder =
+    [
+        "Background Removal", "Selection", "Paint & Retouch", "Transform",
+        "Color & Adjust", "Filters & FX", "Composite", "Text & Decor"
+    ];
 
     [ObservableProperty]
     private IDocumentTab? _selectedDocument;
@@ -51,24 +59,76 @@ public partial class ShellViewModel : ObservableObject
         SamStrategy samStrategy,
         IUncropFillService uncropFillService,
         IImageLoaderService imageLoader,
-        IImageExportService imageExporter)
+        IImageExportService imageExporter,
+        IEnumerable<IToolDefinition>? toolDefinitions = null)
     {
         _documentFactory = documentFactory;
         _uncropFactory = uncropFactory;
         _dialogs = dialogs;
         _settings = settings;
-        _downscaler = downscaler;
-        _log = log;
-        _strategies = strategies;
-        _onnxStrategy = onnxStrategy;
-        _grabCutStrategy = grabCutStrategy;
-        _samStrategy = samStrategy;
-        _uncropFillService = uncropFillService;
-        _imageLoader = imageLoader;
-        _imageExporter = imageExporter;
+
+        // Production wiring resolves the full registered IToolDefinition set from DI (see
+        // App.xaml.cs). Callers that construct ShellViewModel directly (tests) don't have a
+        // container to pull that from, so fall back to building the same set from the plain
+        // services they already pass in -- no test call site needs to change.
+        var tools = (toolDefinitions ?? BuildDefaultToolDefinitions(
+            downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy,
+            uncropFillService, imageLoader, imageExporter)).ToList();
+        _toolsById = tools.ToDictionary(t => t.Id);
+        ToolDefinitions = tools
+            .Where(t => t.ShowInPalette)
+            .OrderBy(t => Array.IndexOf(CategoryDisplayOrder, t.Category))
+            .ThenBy(t => t.Order)
+            .ToList();
+        ToolCategories = ToolDefinitions
+            .GroupBy(t => t.Category)
+            .Select(g => new ToolCategory(g.Key, g.ToList()))
+            .ToList();
 
         SyncFrom(RecentFiles, _settings.Current.RecentFiles);
         SyncFrom(RecentProjects, _settings.Current.RecentProjects);
+    }
+
+    private static IEnumerable<IToolDefinition> BuildDefaultToolDefinitions(
+        IDownscaleService downscaler, IDialogService dialogs, IFileLogService log,
+        IEnumerable<IBackgroundRemovalStrategy> strategies, OnnxStrategy onnxStrategy,
+        GrabCutStrategy grabCutStrategy, SamStrategy samStrategy, IUncropFillService uncropFillService,
+        IImageLoaderService imageLoader, IImageExportService imageExporter)
+    {
+        yield return new RemoveBackgroundToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new OnnxToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new SamToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new GrabCutToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new ChromaKeyToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new MagicWandToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new FloodFillToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new KMeansToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new OtsuToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new InpaintToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new UncropToolDefinition(uncropFillService, dialogs, imageLoader, imageExporter, log);
+        yield return new RetouchToolDefinition();
+        yield return new HealToolDefinition();
+        yield return new LiquifyToolDefinition();
+        yield return new MosaicToolDefinition();
+        yield return new CropToolDefinition();
+        yield return new TransformToolDefinition();
+        yield return new ResizeToolDefinition();
+        yield return new RotateToolDefinition();
+        yield return new PerspectiveToolDefinition();
+        yield return new AdjustmentsToolDefinition(log);
+        yield return new LevelsToolDefinition();
+        yield return new ColorPickerToolDefinition();
+        yield return new BlurToolDefinition();
+        yield return new SharpenToolDefinition();
+        yield return new VignetteToolDefinition();
+        yield return new FiltersToolDefinition();
+        yield return new FxToolDefinition();
+        yield return new TiltShiftToolDefinition();
+        yield return new ComposeToolDefinition(dialogs, imageLoader);
+        yield return new OverlayToolDefinition(dialogs, imageLoader);
+        yield return new FrameToolDefinition();
+        yield return new TextToolDefinition();
+        yield return new EmojiToolDefinition();
     }
 
     /// <summary>
@@ -80,47 +140,22 @@ public partial class ShellViewModel : ObservableObject
         if (doc.ActiveToolSession is { } existingTab)
         {
             SelectedDocument = existingTab;
-            if (initialStrategy is { } strategy && existingTab is BackgroundRemoverToolSessionViewModel bgTab)
+            if (initialStrategy is { } activeStrategy && existingTab is BackgroundRemoverToolSessionViewModel bgTab)
             {
-                bgTab.SelectedStrategy = strategy;
+                bgTab.SelectedStrategy = activeStrategy;
             }
             return;
         }
 
-        IToolSessionTab? toolTab = tool switch
+        // initialStrategy picks one of the per-strategy palette entries (e.g. clicking the
+        // Onnx icon); otherwise fall back to the plain EditorTool dispatch target.
+        string id = initialStrategy is { } initialStrategyKind ? $"Strategy.{initialStrategyKind}" : $"Tool.{tool}";
+        if (!_toolsById.TryGetValue(id, out var definition))
         {
-            EditorTool.RemoveBackground => new BackgroundRemoverToolSessionViewModel(
-                this, doc, _downscaler, _dialogs, _log, _strategies, _onnxStrategy, _grabCutStrategy, _samStrategy,
-                initialStrategy ?? StrategyKind.ChromaKey),
-            EditorTool.Uncrop => new UncropToolSessionViewModel(
-                this, doc, _uncropFillService, _dialogs, _imageLoader, _imageExporter, _log),
-            EditorTool.Retouch => new RetouchToolSessionViewModel(this, doc),
-            EditorTool.Adjustments => new AdjustmentsToolSessionViewModel(this, doc, _log),
-            EditorTool.Filters => new FiltersToolSessionViewModel(this, doc),
-            EditorTool.Transform => new TransformToolSessionViewModel(this, doc),
-            EditorTool.Compose => new ComposeToolSessionViewModel(this, doc, _dialogs, _imageLoader),
-            EditorTool.Frame => new FrameToolSessionViewModel(this, doc),
-            EditorTool.Text => new TextToolSessionViewModel(this, doc),
-            EditorTool.Crop => new CropToolSessionViewModel(this, doc),
-            EditorTool.Resize => new ResizeToolSessionViewModel(this, doc),
-            EditorTool.Mosaic => new MosaicToolSessionViewModel(this, doc),
-            EditorTool.Overlay => new OverlayToolSessionViewModel(this, doc, _dialogs, _imageLoader),
-            EditorTool.Levels => new LevelsToolSessionViewModel(this, doc),
-            EditorTool.Heal => new HealToolSessionViewModel(this, doc),
-            EditorTool.Liquify => new LiquifyToolSessionViewModel(this, doc),
-            EditorTool.Perspective => new PerspectiveToolSessionViewModel(this, doc),
-            EditorTool.Fx => new FxToolSessionViewModel(this, doc),
-            EditorTool.TiltShift => new TiltShiftToolSessionViewModel(this, doc),
-            EditorTool.ColorPicker => new ColorPickerToolSessionViewModel(this, doc),
-            EditorTool.Blur => new BlurToolSessionViewModel(this, doc),
-            EditorTool.Sharpen => new SharpenToolSessionViewModel(this, doc),
-            EditorTool.Vignette => new VignetteToolSessionViewModel(this, doc),
-            EditorTool.Emoji => new EmojiToolSessionViewModel(this, doc),
-            EditorTool.Rotate => new RotateToolSessionViewModel(this, doc),
-            _ => null
-        };
+            return;
+        }
 
-        if (toolTab is null) return;
+        IToolSessionTab toolTab = definition.OpenSession(this, doc);
 
         doc.ActiveToolSession = toolTab;
 

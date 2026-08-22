@@ -71,91 +71,9 @@ public partial class BackgroundRemoverToolSessionViewModel
     }
 
     private StrategyContext BuildContext(double scaleToFull = 1.0, Mat? grabCutFg = null, Mat? grabCutBg = null)
-    {
-        var strategyContext = SelectedStrategy switch
-        {
-            StrategyKind.ChromaKey => new StrategyContext
-            {
-                ChromaKeyColor = ChromaKey.DetectedColorBgr,
-                ChromaKeyTolerance = ChromaKey.Tolerance,
-                DecontaminateEdges = ChromaKey.SpillSuppression
-            },
-            StrategyKind.GrabCut => new StrategyContext
-            {
-                GrabCutRect = GrabCut.SelectedRect is { } r
-                    ? new Rect(
-                        (int)Math.Round(r.X * scaleToFull),
-                        (int)Math.Round(r.Y * scaleToFull),
-                        (int)Math.Round(r.Width * scaleToFull),
-                        (int)Math.Round(r.Height * scaleToFull))
-                    : (Rect?)null,
-                // The caller passes ownership-transferred snapshots (preview) or full-res
-                // resized copies (apply) that stay valid for the whole background run -- never
-                // the manager's live Mats, which the UI thread may dispose mid-run.
-                GrabCutForegroundScribble = grabCutFg,
-                GrabCutBackgroundScribble = grabCutBg,
-                GrabCutIterations = 3,
-                GrabCutFeatherPixels = Math.Max(1, (int)Math.Round(2 * scaleToFull))
-            },
-            StrategyKind.Onnx => new StrategyContext
-            {
-                OnnxModel = Onnx.SelectedModel,
-                OnnxFeatherPixels = (int)Math.Round(Onnx.FeatherPixels * scaleToFull),
-                EnableAlphaMatting = Onnx.EnableAlphaMatting
-            },
-            StrategyKind.Sam => new StrategyContext
-            {
-                SamPromptPoint = _samPromptPointPreview is { } p
-                    ? new Point((int)Math.Round(p.X * scaleToFull), (int)Math.Round(p.Y * scaleToFull))
-                    : (Point?)null,
-                SamPromptPoints = _samPromptPointsPreview?.Select(p =>
-                    new Point((int)Math.Round(p.X * scaleToFull), (int)Math.Round(p.Y * scaleToFull))).ToArray(),
-                SamEmbedding = _samEmbedding
-            },
-            StrategyKind.FloodFill => new StrategyContext
-            {
-                FloodFillTolerance = FloodFill.Tolerance
-            },
-            StrategyKind.KMeans => new StrategyContext
-            {
-                KMeansClusters = KMeans.ClusterCount
-            },
-            StrategyKind.MagicWand => new StrategyContext
-            {
-                MagicWandSeed = _magicWandSeedPreview is { } p
-                    ? new Point((int)Math.Round(p.X * scaleToFull), (int)Math.Round(p.Y * scaleToFull))
-                    : (Point?)null,
-                MagicWandTolerance = MagicWand.Tolerance
-            },
-            StrategyKind.Otsu => new StrategyContext(),
-            StrategyKind.Inpaint => new StrategyContext
-            {
-                InpaintTolerance = Inpaint.Tolerance,
-                InpaintRadius = Inpaint.Radius
-            },
-            _ => new StrategyContext()
-        };
-
-        return strategyContext with
-        {
-            InvertMask = InvertMask,
-            MaskFeatherPixels = (int)Math.Round(MaskFeatherPixels * scaleToFull),
-            DespeckleKernelSize = (int)Math.Round(DespeckleKernelSize * scaleToFull),
-            FillHolesKernelSize = (int)Math.Round(FillHolesKernelSize * scaleToFull),
-            SmoothEdgesKernelSize = (int)Math.Round(SmoothEdgesKernelSize * scaleToFull),
-            KeepLargestComponent = KeepLargestComponent,
-            MaskExpandPixels = (int)Math.Round(MaskExpandPixels * scaleToFull),
-            MaskBlurPixels = MaskBlurPixels * scaleToFull,
-            MinComponentAreaPixels = (int)Math.Round(MinComponentAreaPixels * scaleToFull * scaleToFull),
-            MaskGamma = MaskGamma,
-            MaskHardness = MaskHardness,
-            MaskThreshold = MaskThreshold,
-            DespillStrength = DespillStrength,
-            MaskMedianKernel = (int)Math.Round(MaskMedianKernel * scaleToFull),
-            MaskBilateralKernel = (int)Math.Round(MaskBilateralKernel * scaleToFull),
-            MaskClahe = MaskClahe
-        };
-    }
+        => StrategyContextBuilder.Build(
+            this, scaleToFull, grabCutFg, grabCutBg,
+            _samPromptPointPreview, _samPromptPointsPreview, _samEmbedding, _magicWandSeedPreview);
 
     public void OnOriginalWandClicked(Point imagePoint)
     {

@@ -1,7 +1,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
-using BackgroundImageRemover.Models;
 using BackgroundImageRemover.ViewModels;
+using BackgroundImageRemover.ViewModels.Tools;
 
 namespace BackgroundImageRemover.Views.Controls;
 
@@ -13,26 +13,26 @@ public partial class StrategyToolbar : UserControl
     }
 
     /// <summary>
-    /// GIMP-style tool selection: left click only selects/highlights the tool (via the
-    /// RadioButton's own IsChecked-&gt;ActiveTool two-way binding). Middle click actually opens
-    /// the tool's dedicated tab, so a session is only spun up when the user asks for it.
+    /// GIMP-style tool selection: left click only selects/highlights the tool (IToolDefinition.Select
+    /// -- no session opened). Middle click actually opens the tool's dedicated tab
+    /// (IToolDefinition.RequestOpen), so a session is only spun up when the user asks for it.
     /// </summary>
     private void ToolButton_PreviewMouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Middle) return;
-        if (sender is not RadioButton { Tag: not null } button) return;
+        if (sender is not RadioButton { Tag: IToolDefinition definition } button) return;
         if (DataContext is not DocumentViewModel vm) return;
 
-        button.IsChecked = true;
-
-        switch (button.Tag)
+        switch (e.ChangedButton)
         {
-            case EditorTool tool:
-                vm.OpenToolTabCommand.Execute(tool);
+            case MouseButton.Left:
+                definition.Select(vm);
                 break;
-            case StrategyKind strategy:
-                vm.OpenBackgroundRemovalToolCommand.Execute(strategy);
+            case MouseButton.Middle:
+                button.IsChecked = true;
+                definition.RequestOpen(vm);
                 break;
+            default:
+                return;
         }
 
         e.Handled = true;

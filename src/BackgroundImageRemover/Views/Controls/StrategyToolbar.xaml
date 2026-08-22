@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:models="clr-namespace:BackgroundImageRemover.Models"
+             xmlns:tools="clr-namespace:BackgroundImageRemover.ViewModels.Tools"
              mc:Ignorable="d"
              d:DesignHeight="400" d:DesignWidth="60">
     <UserControl.Resources>
@@ -39,6 +39,46 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- One row per tool/strategy: icon resolved from IconResourceKey, IsChecked driven by
+             IToolDefinition.IsActive via the shared converter (see ToolButton_PreviewMouseUp in
+             the code-behind for how a click actually changes the active tool/strategy). -->
+        <DataTemplate x:Key="ToolButtonTemplate" DataType="{x:Type tools:IToolDefinition}">
+            <RadioButton GroupName="EditorTools"
+                         Style="{StaticResource StrategyToolButton}"
+                         Tag="{Binding}"
+                         ToolTip="{Binding ToolTip}">
+                <RadioButton.IsChecked>
+                    <MultiBinding Converter="{StaticResource ToolDefinitionCheckedConverter}" Mode="OneWay">
+                        <Binding />
+                        <Binding Path="DataContext.ActiveTool" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                        <Binding Path="DataContext.SelectedStrategy" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                    </MultiBinding>
+                </RadioButton.IsChecked>
+                <Path Data="{Binding IconResourceKey, Converter={StaticResource ResourceKeyToGeometryConverter}}"
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                      Stretch="Uniform"
+                      Width="24" Height="24" />
+            </RadioButton>
+        </DataTemplate>
+
+        <!-- One category: header label + the wrapping row of tool icons. -->
+        <DataTemplate x:Key="ToolCategoryTemplate" DataType="{x:Type tools:ToolCategory}">
+            <StackPanel>
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="0,4,0,6" FontSize="9" />
+                <ItemsControl ItemsSource="{Binding Tools}" ItemTemplate="{StaticResource ToolButtonTemplate}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+                <Separator Background="{DynamicResource Theme.BorderBrush}" Margin="0,4" />
+            </StackPanel>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Border Background="{DynamicResource Theme.BarBackground}"
@@ -56,491 +96,9 @@
                            HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
                            Margin="4,0,4,12" FontSize="8" />
 
-                <!-- BACKGROUND REMOVAL STRATEGIES (each strategy is its own tool) -->
-                <TextBlock Text="Background Removal" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,4,0,6" FontSize="9" />
-
-                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:StrategyKind.Onnx}"
-                                 ToolTip="AI Background Removal (ONNX)">
-                        <RadioButton.IsChecked>
-                            <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="Onnx">
-                                <Binding Path="ActiveTool" />
-                                <Binding Path="SelectedStrategy" />
-                            </MultiBinding>
-                        </RadioButton.IsChecked>
-                        <Path Data="{StaticResource OnnxIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:StrategyKind.Sam}"
-                                 ToolTip="Segment Anything (click to select)">
-                        <RadioButton.IsChecked>
-                            <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="Sam">
-                                <Binding Path="ActiveTool" />
-                                <Binding Path="SelectedStrategy" />
-                            </MultiBinding>
-                        </RadioButton.IsChecked>
-                        <Path Data="{StaticResource SamIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:StrategyKind.GrabCut}"
-                                 ToolTip="GrabCut (rectangle + scribbles)">
-                        <RadioButton.IsChecked>
-                            <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="GrabCut">
-                                <Binding Path="ActiveTool" />
-                                <Binding Path="SelectedStrategy" />
-                            </MultiBinding>
-                        </RadioButton.IsChecked>
-                        <Path Data="{StaticResource GrabCutIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:StrategyKind.ChromaKey}"
-                                 ToolTip="Chroma Key (solid color backdrop)">
-                        <RadioButton.IsChecked>
-                            <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="ChromaKey">
-                                <Binding Path="ActiveTool" />
-                                <Binding Path="SelectedStrategy" />
-                            </MultiBinding>
-                        </RadioButton.IsChecked>
-                        <Path Data="{StaticResource ChromaKeyIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:StrategyKind.MagicWand}"
-                                 ToolTip="Magic Wand (click background)">
-                        <RadioButton.IsChecked>
-                            <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="MagicWand">
-                                <Binding Path="ActiveTool" />
-                                <Binding Path="SelectedStrategy" />
-                            </MultiBinding>
-                        </RadioButton.IsChecked>
-                        <Path Data="{StaticResource MagicWandIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:StrategyKind.FloodFill}"
-                                 ToolTip="Flood Fill (from border)">
-                        <RadioButton.IsChecked>
-                            <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="FloodFill">
-                                <Binding Path="ActiveTool" />
-                                <Binding Path="SelectedStrategy" />
-                            </MultiBinding>
-                        </RadioButton.IsChecked>
-                        <Path Data="{StaticResource FloodFillIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:StrategyKind.KMeans}"
-                                 ToolTip="K-Means (multi-color backdrop)">
-                        <RadioButton.IsChecked>
-                            <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="KMeans">
-                                <Binding Path="ActiveTool" />
-                                <Binding Path="SelectedStrategy" />
-                            </MultiBinding>
-                        </RadioButton.IsChecked>
-                        <Path Data="{StaticResource KMeansIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:StrategyKind.Otsu}"
-                                 ToolTip="Otsu Threshold (high contrast)">
-                        <RadioButton.IsChecked>
-                            <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="Otsu">
-                                <Binding Path="ActiveTool" />
-                                <Binding Path="SelectedStrategy" />
-                            </MultiBinding>
-                        </RadioButton.IsChecked>
-                        <Path Data="{StaticResource OtsuIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:StrategyKind.Inpaint}"
-                                 ToolTip="Inpaint (flood + fill background)">
-                        <RadioButton.IsChecked>
-                            <MultiBinding Converter="{StaticResource ActiveStrategyToBoolConverter}" ConverterParameter="Inpaint">
-                                <Binding Path="ActiveTool" />
-                                <Binding Path="SelectedStrategy" />
-                            </MultiBinding>
-                        </RadioButton.IsChecked>
-                        <Path Data="{StaticResource InpaintIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-                </WrapPanel>
-
-                <Separator Background="{DynamicResource Theme.BorderBrush}" Margin="0,4" />
-
-                <!-- SELECTION TOOLS -->
-                <TextBlock Text="Selection" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,4,0,6" FontSize="9" />
-
-                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Crop}"
-                                 ToolTip="Crop (E)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Crop}">
-                        <Path Data="{StaticResource CropIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-                </WrapPanel>
-
-                <Separator Background="{DynamicResource Theme.BorderBrush}" Margin="0,4" />
-
-                <!-- PAINT & RETOUCH TOOLS -->
-                <TextBlock Text="Paint &amp; Retouch" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,4,0,6" FontSize="9" />
-
-                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Retouch}"
-                                 ToolTip="Retouch &amp; Brush (B)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Retouch}">
-                        <Path Data="{StaticResource RetouchIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Heal}"
-                                 ToolTip="Heal (H)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Heal}">
-                        <Path Data="{StaticResource HealIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Liquify}"
-                                 ToolTip="Liquify (J)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Liquify}">
-                        <Path Data="{StaticResource LiquifyIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Mosaic}"
-                                 ToolTip="Mosaic (M)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Mosaic}">
-                        <Path Data="{StaticResource MosaicIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-                </WrapPanel>
-
-                <Separator Background="{DynamicResource Theme.BorderBrush}" Margin="0,4" />
-
-                <!-- TRANSFORM TOOLS -->
-                <TextBlock Text="Transform" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,4,0,6" FontSize="9" />
-
-                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Transform}"
-                                 ToolTip="Transform (T)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Transform}">
-                        <Path Data="{StaticResource TransformIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Resize}"
-                                 ToolTip="Resize (S)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Resize}">
-                        <Path Data="{StaticResource ResizeIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Rotate}"
-                                 ToolTip="Rotate"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Rotate}">
-                        <Path Data="{StaticResource RotateIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Perspective}"
-                                 ToolTip="Perspective (P)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Perspective}">
-                        <Path Data="{StaticResource PerspectiveIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Uncrop}"
-                                 ToolTip="Uncrop / Expand (U)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Uncrop}">
-                        <Path Data="{StaticResource UncropIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-                </WrapPanel>
-
-                <Separator Background="{DynamicResource Theme.BorderBrush}" Margin="0,4" />
-
-                <!-- COLOR & ADJUSTMENT TOOLS -->
-                <TextBlock Text="Color &amp; Adjust" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,4,0,6" FontSize="9" />
-
-                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Adjustments}"
-                                 ToolTip="Adjustments (A)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Adjustments}">
-                        <Path Data="{StaticResource AdjustmentsIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Levels}"
-                                 ToolTip="Levels (L)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Levels}">
-                        <Path Data="{StaticResource LevelsIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.ColorPicker}"
-                                 ToolTip="Color Picker (Q)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ColorPicker}">
-                        <Path Data="{StaticResource ColorPickerIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Blur}"
-                                 ToolTip="Blur (W)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Blur}">
-                        <Path Data="{StaticResource BlurIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Sharpen}"
-                                 ToolTip="Sharpen (Z)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Sharpen}">
-                        <Path Data="{StaticResource SharpenIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Vignette}"
-                                 ToolTip="Vignette (V)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Vignette}">
-                        <Path Data="{StaticResource VignetteIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-                </WrapPanel>
-
-                <Separator Background="{DynamicResource Theme.BorderBrush}" Margin="0,4" />
-
-                <!-- FILTERS & EFFECTS TOOLS -->
-                <TextBlock Text="Filters &amp; FX" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,4,0,6" FontSize="9" />
-
-                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Filters}"
-                                 ToolTip="Filters (F)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Filters}">
-                        <Path Data="{StaticResource FiltersIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Fx}"
-                                 ToolTip="FX (K)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Fx}">
-                        <Path Data="{StaticResource FxIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.TiltShift}"
-                                 ToolTip="Tilt-Shift (I)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=TiltShift}">
-                        <Path Data="{StaticResource TiltShiftIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-                </WrapPanel>
-
-                <Separator Background="{DynamicResource Theme.BorderBrush}" Margin="0,4" />
-
-                <!-- COMPOSITE & LAYER TOOLS -->
-                <TextBlock Text="Composite" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,4,0,6" FontSize="9" />
-
-                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Compose}"
-                                 ToolTip="Compose (C)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Compose}">
-                        <Path Data="{StaticResource ComposeIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Overlay}"
-                                 ToolTip="Overlay (O)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Overlay}">
-                        <Path Data="{StaticResource OverlayIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Frame}"
-                                 ToolTip="Frame (G)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Frame}">
-                        <Path Data="{StaticResource FrameIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-                </WrapPanel>
-
-                <Separator Background="{DynamicResource Theme.BorderBrush}" Margin="0,4" />
-
-                <!-- TEXT & DECORATION TOOLS -->
-                <TextBlock Text="Text &amp; Decor" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Theme.MutedForegroundBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,4,0,6" FontSize="9" />
-
-                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Text}"
-                                 ToolTip="Text (X)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Text}">
-                        <Path Data="{StaticResource TextIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-
-                    <RadioButton GroupName="EditorTools"
-                                 Style="{StaticResource StrategyToolButton}"
-                                 Tag="{x:Static models:EditorTool.Emoji}"
-                                 ToolTip="Emoji (Y)"
-                                 IsChecked="{Binding ActiveTool, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Emoji}">
-                        <Path Data="{StaticResource EmojiIcon}"
-                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                              Stretch="Uniform"
-                              Width="24" Height="24" />
-                    </RadioButton>
-                </WrapPanel>
+                <!-- The whole palette: grow it by registering another IToolDefinition in
+                     App.xaml.cs, nothing here needs to change. -->
+                <ItemsControl ItemsSource="{Binding ToolCategories}" ItemTemplate="{StaticResource ToolCategoryTemplate}" />
             </StackPanel>
         </ScrollViewer>
     </Border>

@@ -84,5 +84,20 @@ public enum EditorTool
     Emoji,
 
     /// <summary>Arbitrary-angle rotation of the document (with optional canvas expansion).</summary>
-    Rotate
+    Rotate,
+
+    /// <summary>Adds Gaussian or salt-and-pepper noise to the image.</summary>
+    Noise,
+
+    /// <summary>Dodge (lighten) or burn (darken) a painted region.</summary>
+    DodgeBurn,
+
+    /// <summary>Adjust hue and saturation of the whole image or a painted region.</summary>
+    HueSat,
+
+    /// <summary>Clone stamp: paint pixels copied from a source point.</summary>
+    CloneStamp,
+
+    /// <summary>Automatic red-eye removal by clicking on eyes.</summary>
+    RedEye
 }

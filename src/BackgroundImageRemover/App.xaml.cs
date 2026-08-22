@@ -182,6 +182,11 @@ public partial class App : Application
         services.AddSingleton<IToolDefinition, FrameToolDefinition>();
         services.AddSingleton<IToolDefinition, TextToolDefinition>();
         services.AddSingleton<IToolDefinition, EmojiToolDefinition>();
+        services.AddSingleton<IToolDefinition, NoiseToolDefinition>();
+        services.AddSingleton<IToolDefinition, DodgeBurnToolDefinition>();
+        services.AddSingleton<IToolDefinition, HueSatToolDefinition>();
+        services.AddSingleton<IToolDefinition, CloneStampToolDefinition>();
+        services.AddSingleton<IToolDefinition, RedEyeToolDefinition>();
 
         services.AddTransient<DocumentViewModel>();
         services.AddSingleton<Func<DocumentViewModel>>(sp => sp.GetRequiredService<DocumentViewModel>);

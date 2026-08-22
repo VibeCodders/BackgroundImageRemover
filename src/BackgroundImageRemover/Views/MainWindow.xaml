@@ -117,6 +117,21 @@
         <DataTemplate DataType="{x:Type vm:EmojiToolSessionViewModel}">
             <views:EmojiToolSessionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:NoiseToolSessionViewModel}">
+            <views:NoiseToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DodgeBurnToolSessionViewModel}">
+            <views:DodgeBurnToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HueSatToolSessionViewModel}">
+            <views:HueSatToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CloneStampToolSessionViewModel}">
+            <views:CloneStampToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RedEyeToolSessionViewModel}">
+            <views:RedEyeToolSessionView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">

@@ -112,6 +112,7 @@ public partial class ShellViewModel : ObservableObject
         yield return new LiquifyToolDefinition();
         yield return new MosaicToolDefinition();
         yield return new CropToolDefinition();
+        yield return new LassoSelectToolDefinition();
         yield return new TransformToolDefinition();
         yield return new ResizeToolDefinition();
         yield return new RotateToolDefinition();

@@ -163,6 +163,7 @@ public partial class App : Application
         services.AddSingleton<IToolDefinition, LiquifyToolDefinition>();
         services.AddSingleton<IToolDefinition, MosaicToolDefinition>();
         services.AddSingleton<IToolDefinition, CropToolDefinition>();
+        services.AddSingleton<IToolDefinition, LassoSelectToolDefinition>();
         services.AddSingleton<IToolDefinition, TransformToolDefinition>();
         services.AddSingleton<IToolDefinition, ResizeToolDefinition>();
         services.AddSingleton<IToolDefinition, RotateToolDefinition>();

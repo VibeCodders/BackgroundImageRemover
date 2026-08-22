@@ -72,6 +72,9 @@
         <DataTemplate DataType="{x:Type vm:CropToolSessionViewModel}">
             <views:CropToolSessionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LassoSelectToolSessionViewModel}">
+            <views:LassoSelectToolSessionView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ResizeToolSessionViewModel}">
             <views:ResizeToolSessionView />
         </DataTemplate>

@@ -61,6 +61,7 @@ public partial class ImagePreviewControl
             case InteractionMode.EraseForeground:
             case InteractionMode.EraseBackground:
             case InteractionMode.Brush:
+            case InteractionMode.Lasso:
                 StartStroke(e);
                 break;
             case InteractionMode.MagicWand:
@@ -117,6 +118,7 @@ public partial class ImagePreviewControl
             case InteractionMode.EraseForeground:
             case InteractionMode.EraseBackground:
             case InteractionMode.Brush:
+            case InteractionMode.Lasso:
                 if (_dragStart is not null)
                 {
                     ContinueStroke(e);
@@ -213,6 +215,7 @@ public partial class ImagePreviewControl
             case InteractionMode.EraseForeground:
             case InteractionMode.EraseBackground:
             case InteractionMode.Brush:
+            case InteractionMode.Lasso:
                 FinishStroke();
                 break;
         }
@@ -302,6 +305,20 @@ public partial class ImagePreviewControl
                 StrokeStartLineCap = PenLineCap.Round,
                 StrokeLineJoin = PenLineJoin.Round,
                 Opacity = 0.35
+            };
+            _activeStrokeVisual.Points.Add(_dragStart.Value);
+            OverlayCanvas.Children.Add(_activeStrokeVisual);
+        }
+        else if (Mode == InteractionMode.Lasso)
+        {
+            // A thin traced outline, not a filled brush stroke -- the ViewModel closes the
+            // polygon and fills it once the drag ends, so this is only a drawing guide.
+            _activeStrokeVisual = new Polyline
+            {
+                Stroke = Brushes.DeepSkyBlue,
+                StrokeThickness = 2,
+                StrokeDashArray = new DoubleCollection { 4, 2 },
+                StrokeLineJoin = PenLineJoin.Round
             };
             _activeStrokeVisual.Points.Add(_dragStart.Value);
             OverlayCanvas.Children.Add(_activeStrokeVisual);

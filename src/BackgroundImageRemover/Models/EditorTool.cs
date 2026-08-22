@@ -38,6 +38,9 @@ public enum EditorTool
     /// <summary>Crop with aspect presets, margins, auto-trim and straighten.</summary>
     Crop,
 
+    /// <summary>Freehand selection: draw an outline, keep (or drop) everything inside it.</summary>
+    LassoSelect,
+
     /// <summary>Resize with aspect lock, percent and interpolation.</summary>
     Resize,
 

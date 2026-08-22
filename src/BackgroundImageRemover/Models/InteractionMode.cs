@@ -10,6 +10,7 @@ public enum InteractionMode
     EraseForeground,
     EraseBackground,
     Brush,
+    Lasso,
     MagicWand,
     SamClick
 }

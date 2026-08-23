@@ -3,21 +3,23 @@ using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Strategies;
 using OpenCvSharp;
-using OpenCvSharp.WpfExtensions;
 
 namespace BackgroundImageRemover.ViewModels;
 
 public partial class DocumentViewModel
 {
-    private void RequestPreviewDebounced()
+    private void RequestPreviewDebounced() => _previews.RequestPreviewDebounced();
+
+    private Task RunPreviewAsync() => _previews.RunPreviewAsync();
+
+    /// <summary>True when the selected strategy has everything a preview run needs.</summary>
+    private bool IsPreviewReady(StrategyKind kind) => kind switch
     {
-        if (!IsImageLoaded || ResultMode != InteractionMode.None)
-        {
-            return;
-        }
-        _debounceTimer.Stop();
-        _debounceTimer.Start();
-    }
+        StrategyKind.Onnx => Onnx.IsModelReady,
+        StrategyKind.Sam => Sam.IsModelReady && _samEmbedding is not null && _samPromptPointPreview is not null,
+        StrategyKind.MagicWand => _magicWandSeedPreview is not null,
+        _ => true
+    };
 
     private StrategyContext BuildContext(double scaleToFull = 1.0, Mat? grabCutFg = null, Mat? grabCutBg = null)
         => StrategyContextBuilder.Build(
@@ -38,72 +40,10 @@ public partial class DocumentViewModel
         _workingResultHandEdited = false;
 
         _history.Clear();
-        RefreshUndoRedoState();
-        OnPropertyChanged(nameof(HasWorkingResult));
-        UndoCommand.NotifyCanExecuteChanged();
-        RedoCommand.NotifyCanExecuteChanged();
-        ExportCommand.NotifyCanExecuteChanged();
-        IsDirty = false; // the loaded cutout matches the file on disk until it is edited
-        RefreshResultBitmapFromWorking();
-
-        StatusMessage = $"Loaded cutout ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})";
-    }
-
-    private async Task RunPreviewAsync()
-    {
-        if (_preview is null || !_strategies.TryGetValue(SelectedStrategy, out var strategy))
-        {
-            return;
-        }
-
-        if (SelectedStrategy == StrategyKind.Onnx && !Onnx.IsModelReady)
-        {
-            return;
-        }
-        if (SelectedStrategy == StrategyKind.Sam && (!Sam.IsModelReady || _samEmbedding is null || _samPromptPointPreview is null))
-        {
-            return;
-        }
-        if (SelectedStrategy == StrategyKind.MagicWand && _magicWandSeedPreview is null)
-        {
-            return;
-        }
-
-        _previewCts?.Cancel();
-        var cts = new CancellationTokenSource();
-        _previewCts = cts;
-
-        try
-        {
-            // Snapshot the scribble masks on the UI thread: background preview threads must
-            // never touch the manager's live Mats, which the UI disposes on stroke/undo/clear.
-            using var fgScribble = ScribbleManager.SnapshotForegroundScribble();
-            using var bgScribble = ScribbleManager.SnapshotBackgroundScribble();
-            var context = BuildContext(grabCutFg: fgScribble, grabCutBg: bgScribble);
-
-            // Snapshot the (small) preview Mat on the UI thread: loading another image or
-            // closing the tab disposes _preview while a run may still be in flight.
-            using var previewBgr = _preview.Bgr.Clone();
-            var result = await strategy.RunPreviewAsync(previewBgr, context, cts.Token);
-
-            if (cts.IsCancellationRequested)
-            {
-                result.Dispose();
-                return;
-            }
-
-            _lastPreviewResult?.Dispose();
-            _lastPreviewResult = result;
-            ResultBitmap = result.Bgra.ToBitmapSource();
-        }
-        catch (OperationCanceledException)
-        {
-            // superseded by a newer preview request
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Preview failed: {ex.Message}";
-        }
+        FinalizeWorkingState(
+            markDirty: false, // the loaded cutout matches the file on disk until it is edited
+            notifyCommandAvailability: true,
+            status: $"Loaded cutout ({_loadedImage.FullBgr.Width}x{_loadedImage.FullBgr.Height})");
     }
 
     /// <summary>
@@ -196,13 +136,8 @@ public partial class DocumentViewModel
         result.Dispose();
 
         _history.Clear();
-        RefreshUndoRedoState();
-        OnPropertyChanged(nameof(HasWorkingResult));
-        UndoCommand.NotifyCanExecuteChanged();
-        RedoCommand.NotifyCanExecuteChanged();
-        ExportCommand.NotifyCanExecuteChanged();
-        IsDirty = true; // freshly computed, not yet saved as a work file
-        RefreshResultBitmapFromWorking();
+        // Freshly computed, not yet saved as a work file.
+        FinalizeWorkingState(markDirty: true, notifyCommandAvailability: true);
     }
 
     private void RefreshResultBitmapFromWorking()

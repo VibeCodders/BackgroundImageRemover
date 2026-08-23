@@ -120,7 +120,7 @@ public class SamMultiPointTests
     {
         var log = new FakeFileLogService();
         return new DocumentViewModel(
-            new SubjectImageLoader(),
+            new TestImageLoader(150, 200, new Scalar(20, 20, 20)),
             new FakeImageExportService(),
             new FakeDownscaleService(),
             new FakeDialogService(),
@@ -150,20 +150,9 @@ public class SamMultiPointTests
             new GrabCutStrategy(),
             new SamStrategy(new SamInferenceEngine(new FakeModelCacheService())),
             new FakeUncropFillService(),
-            new SubjectImageLoader(),
+            new TestImageLoader(150, 200, new Scalar(20, 20, 20)),
             new FakeImageExportService());
     }
 
-    private sealed class SubjectImageLoader : IImageLoaderService
-    {
-        public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(path, new Mat(200, 150, MatType.CV_8UC3, new Scalar(20, 20, 20))));
-
-        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(1, 1, MatType.CV_8UC3)));
-
-        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(1, 1, MatType.CV_8UC3)));
-    }
-
 }
+

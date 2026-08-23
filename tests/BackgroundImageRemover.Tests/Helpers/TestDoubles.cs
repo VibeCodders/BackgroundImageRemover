@@ -77,22 +77,16 @@ public sealed class TestImageLoader : IImageLoaderService
     private readonly byte? _alphaValue;
     private readonly Action<Mat>? _draw;
 
-    /// <summary>Solid BGR(10,20,30) image without alpha, for the common "plain photo" case.</summary>
-    public TestImageLoader(int width, int height)
-        : this(width, height, new Scalar(10, 20, 30))
-    {
-    }
-
-    /// <param name="background">Solid BGR fill color of the image.</param>
+    /// <param name="background">Solid BGR fill color of the image; null uses the default BGR(10,20,30).</param>
     /// <param name="alphaValue">When set, the image carries a single-channel alpha filled with this
     /// value (0 = fully transparent cutout); when null, the image has no alpha channel.</param>
     /// <param name="draw">Optional callback that paints shapes (subject rectangle, blur, ...) into the
     /// BGR Mat right after creation. Invoked on a fresh Mat for every load.</param>
-    public TestImageLoader(int width, int height, Scalar background, byte? alphaValue = null, Action<Mat>? draw = null)
+    public TestImageLoader(int width, int height, Scalar? background = null, byte? alphaValue = null, Action<Mat>? draw = null)
     {
         _width = width;
         _height = height;
-        _background = background;
+        _background = background ?? new Scalar(10, 20, 30);
         _alphaValue = alphaValue;
         _draw = draw;
     }

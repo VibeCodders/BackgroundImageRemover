@@ -50,14 +50,12 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private readonly IUncropFillService _uncropFillService;
     private readonly DocumentEditHistory _history = new();
 
-    private readonly DispatcherTimer _debounceTimer;
-    private CancellationTokenSource? _previewCts;
+    private readonly PreviewRunner _previews;
     private CancellationTokenSource? _processCts;
     private CancellationTokenSource? _uncropCts;
 
     private LoadedImage? _loadedImage;
     private PreviewImage? _preview;
-    private RemovalResult? _lastPreviewResult;
 
     // The "working" composited result: BGR color (may include chroma-key spill correction) and
     // alpha kept apart so Undo/Redo, Brush and Magic Wand can mutate just the alpha cheaply.
@@ -199,11 +197,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
         EnsureLoadedImageMatchesWorkingSize();
 
-        IsDirty = true;
-        IsCutout = BackgroundCompositingService.HasMeaningfulTransparency(_workingAlpha);
-        RefreshUndoRedoState();
-        RefreshResultBitmapFromWorking();
-        OnPropertyChanged(nameof(DisplayBitmap));
+        FinalizeWorkingState(markDirty: true);
     }
 
     /// <summary>Rebuilds the loaded image (and preview) from the working result when its size differs.</summary>
@@ -240,12 +234,32 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _workingResultIsLoadedCutout = false;
         _workingResultHandEdited = true;
         EnsureLoadedImageMatchesWorkingSize();
-        IsDirty = true;
+        FinalizeWorkingState(markDirty: true, status: status);
+    }
+
+    /// <summary>
+    /// Shared "working state changed" ceremony: recomputes the cutout flag, refreshes the
+    /// observable undo/redo availability, re-renders the result bitmap and notifies the display.
+    /// Callers differ only in the dirty flag, whether the export/has-result command availability
+    /// must be re-notified (strategy results and adopted cutouts re-enable Export; plain edits and
+    /// history restores re-evaluate it through RefreshUndoRedoState only) and an optional status line.
+    /// </summary>
+    private void FinalizeWorkingState(bool markDirty, bool notifyCommandAvailability = false, string? status = null)
+    {
+        IsDirty = markDirty;
         IsCutout = BackgroundCompositingService.HasMeaningfulTransparency(_workingAlpha);
         RefreshUndoRedoState();
+        if (notifyCommandAvailability)
+        {
+            OnPropertyChanged(nameof(HasWorkingResult));
+            ExportCommand.NotifyCanExecuteChanged();
+        }
         RefreshResultBitmapFromWorking();
         OnPropertyChanged(nameof(DisplayBitmap));
-        StatusMessage = status;
+        if (status is not null)
+        {
+            StatusMessage = status;
+        }
     }
 
     [ObservableProperty]
@@ -515,7 +529,9 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
             _log,
             () => _loadedImage?.FullBgr,
             error => StatusMessage = $"SAM embedding failed: {error}",
-            RequestPreviewDebounced);
+            RequestPreviewDebounced,
+            () => _samEmbedding is not null,
+            () => StatusMessage = "SAM is still preparing this image, try again in a moment.");
 
         _useGpuForOnnx = settings.Current.UseGpuForOnnx;
         _onnxStrategy.SetUseGpu(_useGpuForOnnx);
@@ -533,12 +549,17 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         // busy flip (their CanExecute is "busy AND something") without being gated.
         _busyGate.Track(CancelUncropCommand);
 
-        _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
-        _debounceTimer.Tick += (_, _) =>
-        {
-            _debounceTimer.Stop();
-            _ = RunPreviewAsync();
-        };
+        _previews = new PreviewRunner(
+            () => _preview,
+            _strategies,
+            () => SelectedStrategy,
+            IsPreviewReady,
+            () => ScribbleManager,
+            (fg, bg) => BuildContext(grabCutFg: fg, grabCutBg: bg),
+            bitmap => ResultBitmap = bitmap,
+            message => StatusMessage = message,
+            () => { },
+            () => IsImageLoaded && ResultMode == InteractionMode.None);
 
         // Subscribe to scribble manager events so the overlay stays in sync with the masks.
         _scribbleManager.StrokeUndone += (_, _) => RefreshScribbleOverlay();
@@ -734,9 +755,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     public void Dispose()
     {
         // Stop pending work so no background task keeps touching Mats after the tab closes.
-        _debounceTimer.Stop();
-        _previewCts?.Cancel();
-        _previewCts?.Dispose();
+        _previews.Dispose();
         _processCts?.Cancel();
         _processCts?.Dispose();
         _brushRefreshTimer?.Stop();
@@ -744,7 +763,6 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _uncropCts?.Dispose();
         _loadedImage?.Dispose();
         _preview?.Dispose();
-        _lastPreviewResult?.Dispose();
         DisposeWorkingResult();
         ScribbleManager.Dispose();
         _history.Dispose();

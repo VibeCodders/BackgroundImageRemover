@@ -278,7 +278,17 @@ public class GrabCutExportConsistencyTests
     {
         var log = new FakeFileLogService();
         return new DocumentViewModel(
-            new SubjectImageLoader(),
+            new TestImageLoader(FullWidth, FullHeight, new Scalar(20, 20, 20), draw: bgr =>
+            {
+                using var roi = new Mat(bgr, new Rect(300, 200, 600, 450));
+                roi.SetTo(new Scalar(220, 210, 200));
+                // Soft (anti-aliased) subject edge: at preview resolution the ramp is sampled
+                // coarsely, at full resolution finely -- exactly the case where a from-scratch
+                // re-segmentation settles on a visibly different boundary than the preview (the
+                // seed exists precisely so the export is a refinement of what the user saw, not a
+                // fresh guess).
+                Cv2.GaussianBlur(bgr, bgr, new Size(31, 31), 0);
+            }),
             exporter,
             new DownscaleService(), // the real downscaler: 1200x900 -> 800x600 preview, ScaleFactor 1.5
             dialogs,
@@ -291,32 +301,6 @@ public class GrabCutExportConsistencyTests
             new GrabCutStrategy(),
             new SamStrategy(new SamInferenceEngine(new FakeModelCacheService())),
             new FakeUncropFillService());
-    }
-
-    private sealed class SubjectImageLoader : IImageLoaderService
-    {
-        private static Mat MakeSubjectImage()
-        {
-            var bgr = new Mat(FullHeight, FullWidth, MatType.CV_8UC3, Scalar.All(20));
-            using var roi = new Mat(bgr, new Rect(300, 200, 600, 450));
-            roi.SetTo(new Scalar(220, 210, 200));
-            // Soft (anti-aliased) subject edge: at preview resolution the ramp is sampled
-            // coarsely, at full resolution finely -- exactly the case where a from-scratch
-            // re-segmentation settles on a visibly different boundary than the preview (the
-            // seed exists precisely so the export is a refinement of what the user saw, not a
-            // fresh guess).
-            Cv2.GaussianBlur(bgr, bgr, new Size(31, 31), 0);
-            return bgr;
-        }
-
-        public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(path, MakeSubjectImage()));
-
-        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(1, 1, MatType.CV_8UC3)));
-
-        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(1, 1, MatType.CV_8UC3)));
     }
 
     private sealed class PngPathDialogService : IDialogService

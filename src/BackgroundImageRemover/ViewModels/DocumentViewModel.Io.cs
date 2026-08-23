@@ -189,7 +189,7 @@ public partial class DocumentViewModel
         BusyMessage = "Duplicating tab...";
         try
         {
-            _previewCts?.Cancel();
+            _previews.CancelInFlight();
 
             _loadedImage?.Dispose();
             _preview?.Dispose();
@@ -247,7 +247,7 @@ public partial class DocumentViewModel
 
     private async Task InitializeLoadedImageAsync(LoadedImage loaded, string sourceName)
     {
-        _previewCts?.Cancel();
+        _previews.CancelInFlight();
 
         _loadedImage?.Dispose();
         _preview?.Dispose();

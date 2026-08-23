@@ -3,6 +3,7 @@ using BackgroundImageRemover.Services.Sam;
 using BackgroundImageRemover.Services.Strategies;
 using BackgroundImageRemover.ViewModels.StrategyViewModels;
 using OpenCvSharp;
+using WpfPoint = System.Windows.Point;
 
 namespace BackgroundImageRemover.Helpers;
 
@@ -23,6 +24,8 @@ public sealed class ModelManager
     private readonly Func<Mat?> _imageProvider;
     private readonly Action<string> _embeddingError;
     private readonly Action _requestPreview;
+    private readonly Func<bool> _canHandleSamClick;
+    private readonly Action _onSamClickRejected;
 
     public ModelManager(
         OnnxStrategy onnxStrategy,
@@ -30,7 +33,9 @@ public sealed class ModelManager
         IFileLogService log,
         Func<Mat?> imageProvider,
         Action<string> embeddingError,
-        Action requestPreview)
+        Action requestPreview,
+        Func<bool>? canHandleSamClick = null,
+        Action? onSamClickRejected = null)
     {
         _onnxStrategy = onnxStrategy;
         _samStrategy = samStrategy;
@@ -38,6 +43,8 @@ public sealed class ModelManager
         _imageProvider = imageProvider;
         _embeddingError = embeddingError;
         _requestPreview = requestPreview;
+        _canHandleSamClick = canHandleSamClick ?? (() => true);
+        _onSamClickRejected = onSamClickRejected ?? (() => { });
     }
 
     /// <summary>
@@ -116,6 +123,43 @@ public sealed class ModelManager
         clearPromptPoints();
         sam.AdditionalPointCount = 0;
         sam.HasClickedPoint = false;
+        _requestPreview();
+    }
+
+    /// <summary>
+    /// Records a primary SAM foreground point after the host's click guard passes. The point
+    /// itself stays on the host (it feeds context building and project serialization); the
+    /// strategy view model's clicked flag and the preview refresh are handled here.
+    /// </summary>
+    /// <param name="sam">The SAM strategy view model whose clicked flag is raised.</param>
+    /// <param name="point">The preview-space point to record.</param>
+    /// <param name="setPrimaryPoint">Stores the point on the host (replaces the primary prompt point).</param>
+    public void OnSamPrimaryPointClicked(SamStrategyViewModel sam, WpfPoint point, Action<WpfPoint> setPrimaryPoint)
+    {
+        if (!_canHandleSamClick())
+        {
+            _onSamClickRejected();
+            return;
+        }
+        setPrimaryPoint(point);
+        sam.HasClickedPoint = true;
+        _requestPreview();
+    }
+
+    /// <summary>
+    /// Adds an additional SAM foreground point (beyond the primary click) after the host's click
+    /// guard passes. <paramref name="addPoint"/> records the point and updates the strategy view
+    /// model's additional-point count on the host.
+    /// </summary>
+    public void OnSamAdditionalPointClicked(SamStrategyViewModel sam, Action addPoint)
+    {
+        if (!_canHandleSamClick())
+        {
+            _onSamClickRejected();
+            return;
+        }
+        addPoint();
+        sam.HasClickedPoint = true;
         _requestPreview();
     }
 }

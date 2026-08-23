@@ -32,16 +32,7 @@ public partial class DocumentViewModel
     }
 
     public void OnOriginalSamPointClicked(OpenCvSharp.Point previewPoint)
-    {
-        if (_samEmbedding is null)
-        {
-            StatusMessage = "SAM is still preparing this image, try again in a moment.";
-            return;
-        }
-        _samPromptPointPreview = new WpfPoint(previewPoint.X, previewPoint.Y);
-        Sam.HasClickedPoint = true;
-        RequestPreviewDebounced();
-    }
+        => _models.OnSamPrimaryPointClicked(Sam, new WpfPoint(previewPoint.X, previewPoint.Y), p => _samPromptPointPreview = p);
 
     /// <summary>
     /// Adds an additional foreground point for SAM segmentation in the main editor.
@@ -49,18 +40,12 @@ public partial class DocumentViewModel
     /// all feed the decoder together.
     /// </summary>
     public void OnOriginalSamAdditionalPointClicked(OpenCvSharp.Point previewPoint)
-    {
-        if (_samEmbedding is null)
+        => _models.OnSamAdditionalPointClicked(Sam, () =>
         {
-            StatusMessage = "SAM is still preparing this image, try again in a moment.";
-            return;
-        }
-        _samPromptPointsPreview ??= new List<WpfPoint>();
-        _samPromptPointsPreview.Add(new WpfPoint(previewPoint.X, previewPoint.Y));
-        Sam.AdditionalPointCount = _samPromptPointsPreview.Count;
-        Sam.HasClickedPoint = true;
-        RequestPreviewDebounced();
-    }
+            _samPromptPointsPreview ??= new List<WpfPoint>();
+            _samPromptPointsPreview.Add(new WpfPoint(previewPoint.X, previewPoint.Y));
+            Sam.AdditionalPointCount = _samPromptPointsPreview.Count;
+        });
 
     /// <summary>Clears all SAM prompt points (both primary and additional).</summary>
     public void ClearSamPromptPoints()

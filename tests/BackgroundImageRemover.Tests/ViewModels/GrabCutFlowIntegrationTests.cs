@@ -607,7 +607,11 @@ public class GrabCutFlowIntegrationTests
         var grabCut = strategy as GrabCutStrategy ?? new GrabCutStrategy();
         log ??= new FakeFileLogService();
         return new DocumentViewModel(
-            new SubjectImageLoader(),
+            new TestImageLoader(ImageWidth, ImageHeight, new Scalar(20, 20, 20), draw: bgr =>
+            {
+                using var roi = new Mat(bgr, new Rect(40, 30, 120, 90));
+                roi.SetTo(new Scalar(220, 210, 200));
+            }),
             new FakeImageExportService(),
             new FakeDownscaleService(),
             new FakeDialogService(),
@@ -638,28 +642,13 @@ public class GrabCutFlowIntegrationTests
             grabCut,
             new SamStrategy(new SamInferenceEngine(new FakeModelCacheService())),
             new FakeUncropFillService(),
-            new SubjectImageLoader(),
+            new TestImageLoader(ImageWidth, ImageHeight, new Scalar(20, 20, 20), draw: bgr =>
+            {
+                using var roi = new Mat(bgr, new Rect(40, 30, 120, 90));
+                roi.SetTo(new Scalar(220, 210, 200));
+            }),
             new FakeImageExportService());
     }
 
-    private sealed class SubjectImageLoader : IImageLoaderService
-    {
-        private static Mat MakeSubjectImage()
-        {
-            var bgr = new Mat(ImageHeight, ImageWidth, MatType.CV_8UC3, Scalar.All(20));
-            using var roi = new Mat(bgr, new Rect(40, 30, 120, 90));
-            roi.SetTo(new Scalar(220, 210, 200));
-            return bgr;
-        }
-
-        public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(path, MakeSubjectImage()));
-
-        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(1, 1, MatType.CV_8UC3)));
-
-        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(1, 1, MatType.CV_8UC3)));
-    }
-
 }
+

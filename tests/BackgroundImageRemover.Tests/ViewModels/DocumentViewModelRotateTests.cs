@@ -78,7 +78,7 @@ public class DocumentViewModelRotateTests
     [Fact]
     public async Task Rotate_PreservesSourceAlphaChannel()
     {
-        var doc = CreateDocument(loader: new AlphaImageLoader());
+        var doc = CreateDocument(loader: new TestImageLoader(Width, Height, alphaValue: 0));
         await doc.LoadImageAsync("cutout.png");
         Assert.NotNull(doc.LoadedImageForUncrop!.FullAlpha);
 
@@ -205,7 +205,7 @@ public class DocumentViewModelRotateTests
     {
         var log = new FakeFileLogService();
         return new DocumentViewModel(
-            loader ?? new PlainImageLoader(),
+            loader ?? new TestImageLoader(Width, Height),
             new FakeImageExportService(),
             new FakeDownscaleService(),
             new FakeDialogService(),
@@ -218,44 +218,6 @@ public class DocumentViewModelRotateTests
             new GrabCutStrategy(),
             new SamStrategy(new SamInferenceEngine(new FakeModelCacheService())),
             uncrop ?? new FakeUncropFillService());
-    }
-
-    /// <summary>Returns a 6×4 opaque image, so 90° rotation visibly swaps the dimensions.</summary>
-    private sealed class PlainImageLoader : IImageLoaderService
-    {
-        public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(path, new Mat(Height, Width, MatType.CV_8UC3, new Scalar(10, 20, 30))));
-
-        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(Height, Width, MatType.CV_8UC3, new Scalar(10, 20, 30))));
-
-        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(Height, Width, MatType.CV_8UC3, new Scalar(10, 20, 30))));
-    }
-
-    /// <summary>Returns a 6×4 cutout with a fully transparent alpha channel.</summary>
-    private sealed class AlphaImageLoader : IImageLoaderService
-    {
-        public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
-        {
-            var bgr = new Mat(Height, Width, MatType.CV_8UC3, new Scalar(10, 20, 30));
-            var alpha = new Mat(Height, Width, MatType.CV_8UC1, new Scalar(0));
-            return Task.FromResult(new LoadedImage(path, bgr, alpha));
-        }
-
-        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-        {
-            var bgr = new Mat(Height, Width, MatType.CV_8UC3, new Scalar(10, 20, 30));
-            var alpha = new Mat(Height, Width, MatType.CV_8UC1, new Scalar(0));
-            return Task.FromResult(new LoadedImage(sourceName, bgr, alpha));
-        }
-
-        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-        {
-            var bgr = new Mat(Height, Width, MatType.CV_8UC3, new Scalar(10, 20, 30));
-            var alpha = new Mat(Height, Width, MatType.CV_8UC1, new Scalar(0));
-            return Task.FromResult(new LoadedImage(sourceName, bgr, alpha));
-        }
     }
 
     /// <summary>Mirror fill returns a mat of the exact padded size, so the test can assert the

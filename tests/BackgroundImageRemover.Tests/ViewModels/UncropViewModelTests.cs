@@ -6,6 +6,7 @@ using BackgroundImageRemover.Services.Outpaint;
 using BackgroundImageRemover.ViewModels;
 using OpenCvSharp;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.ViewModels;
 
 public class UncropViewModelTests
@@ -84,18 +85,6 @@ public class UncropViewModelTests
             => Task.CompletedTask;
     }
 
-    private sealed class DummyImageLoaderService : IImageLoaderService
-    {
-        public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(path, new Mat(100, 100, MatType.CV_8UC3, Scalar.All(128))));
-
-        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(100, 100, MatType.CV_8UC3, Scalar.All(128))));
-
-        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(100, 100, MatType.CV_8UC3, Scalar.All(128))));
-    }
-
     private sealed class DummyImageExportService : IImageExportService
     {
         public Task ExportPngAsync(Mat imageBgra, string destinationPath, CancellationToken ct = default)
@@ -119,7 +108,7 @@ public class UncropViewModelTests
     private static UncropViewModel CreateViewModel() =>
         new(new DummyUncropFillService(),
             new DummyDialogService(),
-            new DummyImageLoaderService(),
+            new TestImageLoader(100, 100, new Scalar(128, 128, 128)),
             new DummyImageExportService(),
             new DummyFileLogService());
 
@@ -137,7 +126,7 @@ public class UncropViewModelTests
         using var vm = new UncropViewModel(
             new DummyUncropFillService(),
             new SaveDialogService("out.png"),
-            new DummyImageLoaderService(),
+            new TestImageLoader(100, 100, new Scalar(128, 128, 128)),
             exporter,
             new DummyFileLogService());
         await MakeDirty(vm);
@@ -157,7 +146,7 @@ public class UncropViewModelTests
         using var vm = new UncropViewModel(
             new DummyUncropFillService(),
             new SaveDialogService(null),
-            new DummyImageLoaderService(),
+            new TestImageLoader(100, 100, new Scalar(128, 128, 128)),
             exporter,
             new DummyFileLogService());
         await MakeDirty(vm);
@@ -176,7 +165,7 @@ public class UncropViewModelTests
         using var vm = new UncropViewModel(
             new DummyUncropFillService(),
             new SaveDialogService("out.png"),
-            new DummyImageLoaderService(),
+            new TestImageLoader(100, 100, new Scalar(128, 128, 128)),
             exporter,
             new DummyFileLogService());
         await vm.LoadAsync("test_photo.jpg");
@@ -269,7 +258,7 @@ public class UncropViewModelTests
         using var vm = new UncropViewModel(
             delayFillService,
             new DummyDialogService(),
-            new DummyImageLoaderService(),
+            new TestImageLoader(100, 100, new Scalar(128, 128, 128)),
             new DummyImageExportService(),
             new DummyFileLogService());
 

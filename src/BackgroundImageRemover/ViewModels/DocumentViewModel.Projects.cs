@@ -268,7 +268,7 @@ public partial class DocumentViewModel
         {
             IsBusy = true;
             BusyMessage = "Loading project...";
-            _previewCts?.Cancel();
+            _previews.CancelInFlight();
 
             _loadedImage?.Dispose();
             _preview?.Dispose();

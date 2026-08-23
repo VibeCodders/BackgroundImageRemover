@@ -1,6 +1,5 @@
 using System.IO;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Dialogs;
@@ -30,12 +29,10 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     private readonly GrabCutStrategy _grabCutStrategy;
     private readonly SamStrategy _samStrategy;
 
-    private readonly DispatcherTimer _debounceTimer;
-    private CancellationTokenSource? _previewCts;
+    private readonly PreviewRunner _previews;
     private CancellationTokenSource? _processCts;
 
     private PreviewImage? _preview;
-    private RemovalResult? _lastPreviewResult;
 
     private readonly ScribbleManager _scribbleManager = new();
     internal ScribbleManager ScribbleManager => _scribbleManager; // Expose for partial classes
@@ -178,19 +175,25 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
             _log,
             () => _sourceImage?.FullBgr,
             error => Sam.ErrorMessage = error,
-            RequestPreviewDebounced);
+            RequestPreviewDebounced,
+            () => SelectedStrategy == StrategyKind.Sam,
+            () => { });
 
         // The busy overlay binds IsBusy, and Apply is tracked so its (re)evaluation follows
         // the busy flag like the generated NotifyCanExecuteChangedFor used to.
         _busyGate.BusyChanged += value => OnPropertyChanged(nameof(IsBusy));
         _busyGate.Track(ApplyCommand);
 
-        _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
-        _debounceTimer.Tick += async (_, _) =>
-        {
-            _debounceTimer.Stop();
-            await RunPreviewAsync();
-        };
+        _previews = new PreviewRunner(
+            () => _preview,
+            _strategies,
+            () => SelectedStrategy,
+            IsPreviewReady,
+            () => ScribbleManager,
+            (fg, bg) => BuildContext(grabCutFg: fg, grabCutBg: bg),
+            bitmap => ResultBitmap = bitmap,
+            message => StatusMessage = message,
+            () => IsDirty = true);
 
         // Subscribe to scribble manager events so the overlay stays in sync with the masks.
         ScribbleManager.StrokeUndone += (_, _) => RefreshScribbleOverlay();
@@ -373,13 +376,10 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     public override void Dispose()
     {
-        _debounceTimer.Stop();
-        _previewCts?.Cancel();
-        _previewCts?.Dispose();
+        _previews.Dispose();
         _processCts?.Cancel();
         _processCts?.Dispose();
         _preview?.Dispose();
-        _lastPreviewResult?.Dispose();
         _samEmbedding = null;
         ScribbleManager.Dispose();
         base.Dispose();

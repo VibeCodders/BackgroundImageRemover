@@ -10,14 +10,8 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="✂ CROP" Accent="#FF16A34A" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Crop" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+<controls:ToolSessionPanel Title="Crop" >
+        <controls:ToolSessionPanel.Panel>
 
                     <TextBlock Text="Aspect ratio" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding AspectPresets}" DisplayMemberPath="Label" SelectedItem="{Binding SelectedAspect}" Margin="0,0,0,12" />
@@ -65,10 +59,10 @@
                         <Button Content="↻ 90°" Command="{Binding Rotate90ClockwiseCommand}" Margin="4,0,0,0" />
                     </UniformGrid>
 
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+</controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid>
             <Grid.ColumnDefinitions>
@@ -88,5 +82,8 @@
                 </Border>
             </DockPanel>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

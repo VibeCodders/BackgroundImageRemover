@@ -10,14 +10,8 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="🔪 SHARPEN" Accent="#FF7C3AED" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Sharpen" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+<controls:ToolSessionPanel Title="Sharpen"  ResetLabel="↺ Reset All">
+        <controls:ToolSessionPanel.Panel>
 
                     <CheckBox Content="Whole image" IsChecked="{Binding WholeImage}" Margin="0,0,0,8" />
                     <CheckBox Content="Paint mode" IsChecked="{Binding PaintMode}" Margin="0,0,0,8" />
@@ -30,10 +24,10 @@
                         <Button Content="↺ Reset" Command="{Binding ResetCommand}" Padding="8,4" />
                     </StackPanel>
 
-                    <Button Content="↺ Reset All" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+</controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
@@ -46,5 +40,8 @@
                                                StrokeEnd="SharpenPreview_StrokeEnd" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

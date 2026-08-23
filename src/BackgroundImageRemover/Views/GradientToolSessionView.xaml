@@ -9,14 +9,8 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="◮ GRADIENT" Accent="#FFF59E0B" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Gradient" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+<controls:ToolSessionPanel Title="Gradient" >
+        <controls:ToolSessionPanel.Panel>
 
                     <TextBlock Text="Shape" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding GradientKinds}" SelectedItem="{Binding Kind}" Margin="0,0,0,12" />
@@ -30,15 +24,18 @@
 </StackPanel>
 
                     <controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
-<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+</controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
                 <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

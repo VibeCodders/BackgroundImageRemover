@@ -1,0 +1,53 @@
+<UserControl x:Class="BackgroundImageRemover.Views.Controls.ToolSessionPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="1200">
+    <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
+        <!-- Shared bottom status bar (hide via ShowStatusBar for tools with custom status bars). -->
+        <StatusBar DockPanel.Dock="Bottom"
+                   Background="{DynamicResource Theme.BarBackground}"
+                   TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}"
+                   Visibility="{Binding ShowStatusBar, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusMessage}" />
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Shared right-side tool panel: title, optional description, content and reset button. -->
+        <Border DockPanel.Dock="Right"
+                Width="{Binding PanelWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Padding="14"
+                BorderBrush="{DynamicResource Theme.BorderBrush}"
+                BorderThickness="1,0,0,0"
+                Background="{DynamicResource Theme.PanelBackground}"
+                TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                               FontSize="15" FontWeight="Bold" Margin="0,0,0,8"
+                               Foreground="{DynamicResource Theme.ForegroundBrush}" />
+                    <TextBlock Text="{Binding Description, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                               Margin="0,0,0,12"
+                               Foreground="{DynamicResource Theme.MutedForegroundBrush}"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding Description, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource StringToVisibilityConverter}}" />
+                    <ContentPresenter Content="{Binding Panel, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                    <Button Content="{Binding ResetLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Command="{Binding ResetCommand}"
+                            Height="30" Margin="0,8,0,0"
+                            Background="{DynamicResource Theme.PanelHeaderBackground}"
+                            Foreground="{DynamicResource Theme.ForegroundBrush}"
+                            BorderBrush="{DynamicResource Theme.BorderBrush}"
+                            BorderThickness="1"
+                            Visibility="{Binding ShowReset, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Preview area supplied by the tool view. -->
+        <ContentPresenter Content="{Binding Preview, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+    </DockPanel>
+</UserControl>

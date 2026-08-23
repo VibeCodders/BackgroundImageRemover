@@ -10,24 +10,17 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="◈ LASSO" Accent="#FF0EA5E9" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="280" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Lasso Select" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
-                    <TextBlock Text="Draw a freehand outline on the left. The area inside becomes the cutout -- toggle Invert to keep the outside instead."
-                               FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" Margin="0,0,0,12" />
+<controls:ToolSessionPanel Title="Lasso Select" PanelWidth="280" Description="Draw a freehand outline on the left. The area inside becomes the cutout -- toggle Invert to keep the outside instead."  ShowReset="False">
+        <controls:ToolSessionPanel.Panel>
 
                     <CheckBox Content="Invert (keep outside)" IsChecked="{Binding InvertSelection}" Margin="0,0,0,12" />
 
                     <controls:SliderField Header="Edge feather" Value="{Binding FeatherPixels}" Minimum="0" Maximum="40"  />
 <Button Content="Clear selection" Command="{Binding ClearSelectionCommand}" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+                </controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid>
             <Grid.ColumnDefinitions>
@@ -49,5 +42,8 @@
                 </Border>
             </DockPanel>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

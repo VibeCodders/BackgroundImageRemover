@@ -25,14 +25,8 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="📊 LEVELS" Accent="#FFB45309" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Levels" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+<controls:ToolSessionPanel Title="Levels" >
+        <controls:ToolSessionPanel.Panel>
 
                     <TextBlock Text="Channel" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource LevelsChannelValues}}" SelectedItem="{Binding Channel}" Margin="0,0,0,12" />
@@ -58,15 +52,18 @@
                     <CheckBox Content="Equalize (CLAHE)" IsChecked="{Binding EqualizeEnabled}" Margin="0,0,0,4" />
                     <CheckBox Content="Invert (negative)" IsChecked="{Binding InvertEnabled}" Margin="0,0,0,12" />
 
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+</controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
                 <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

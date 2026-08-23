@@ -9,30 +9,24 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="↺ ROTATE" Accent="#FF7C3AED" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Rotate" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
-
-                    <TextBlock Text="Rotate by an arbitrary angle around the image center." Margin="0,0,0,12"
-                               Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
+<controls:ToolSessionPanel Title="Rotate" Description="Rotate by an arbitrary angle around the image center." >
+        <controls:ToolSessionPanel.Panel>
 
                     <controls:SliderField Header="Angle" Value="{Binding Angle}" Minimum="-360" Maximum="360" SmallChange="1" ValueFormat="{}{0:0}°"  />
 <CheckBox Content="Expand canvas to fit the rotated image" IsChecked="{Binding Expand}" Margin="0,0,0,16" />
 
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+</controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
                 <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

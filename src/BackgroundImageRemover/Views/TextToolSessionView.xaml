@@ -25,14 +25,8 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="✎ TEXT" Accent="#FFDB2777" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Text Watermark" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+<controls:ToolSessionPanel Title="Text Watermark"  ShowReset="False">
+        <controls:ToolSessionPanel.Panel>
 
                     <TextBlock Text="Text" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
@@ -70,14 +64,18 @@
 </StackPanel>
 
                     <Button Content="✕ Clear text" Command="{Binding ClearTextCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+                </controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
                 <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

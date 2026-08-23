@@ -9,17 +9,8 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="🎨 COLOR REPLACE" Accent="#FFEC4899" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Color Replace" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
-
-                    <TextBlock Text="Click the image to pick the target color, or choose it below." Margin="0,0,0,12"
-                               Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
+<controls:ToolSessionPanel Title="Color Replace" Description="Click the image to pick the target color, or choose it below." >
+        <controls:ToolSessionPanel.Panel>
 
                     <controls:ColorPickerField Header="Target color" SelectedColor="{Binding TargetColor}" />
 
@@ -29,10 +20,10 @@
 <controls:SliderField Header="Softness" Value="{Binding Softness}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
 <CheckBox Content="Preserve luminance" IsChecked="{Binding PreserveLuminance}" Margin="0,0,0,16" />
 
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+</controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
@@ -41,5 +32,8 @@
                                                MouseLeftButtonDown="Preview_MouseLeftButtonDown" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

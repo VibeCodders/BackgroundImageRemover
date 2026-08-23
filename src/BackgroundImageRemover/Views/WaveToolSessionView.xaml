@@ -9,30 +9,24 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="〰 WAVE" Accent="#FF0284C7" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Wave" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
-
-                    <TextBlock Text="Displaces the pixels with a sine wave; the angle rotates the direction of the ridges." Margin="0,0,0,12"
-                               Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
+<controls:ToolSessionPanel Title="Wave" Description="Displaces the pixels with a sine wave; the angle rotates the direction of the ridges." >
+        <controls:ToolSessionPanel.Panel>
 
                     <controls:SliderField Header="Amplitude" Value="{Binding Amplitude}" Minimum="0" Maximum="60" SmallChange="1" ValueFormat="{}{0:0}px"  />
 <controls:SliderField Header="Wavelength" Value="{Binding Wavelength}" Minimum="10" Maximum="400" SmallChange="5" ValueFormat="{}{0:0}px"  />
 <controls:SliderField Header="Angle" Value="{Binding Angle}" Minimum="0" Maximum="360" TickFrequency="5" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}°"  />
-<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+</controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
                 <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

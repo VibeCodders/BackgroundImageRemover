@@ -40,10 +40,8 @@
         </StatusBar>
 
         <!-- Side Controls Panel -->
-        <Border DockPanel.Dock="Right" Width="330" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Removal Strategy" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+        <controls:ToolSessionPanel Title="Removal Strategy" PanelWidth="330" ShowStatusBar="False">
+        <controls:ToolSessionPanel.Panel>
                     <ComboBox ItemsSource="{Binding Source={StaticResource StrategyKindValues}}"
                               SelectedItem="{Binding SelectedStrategy}"
                               Margin="0,0,0,4" />
@@ -281,9 +279,10 @@
                         <TextBlock Text="Opacity" />
                         <Slider Minimum="0" Maximum="1" Value="{Binding ParentDocument.ExportShadowOpacity}" TickFrequency="0.05" />
                     </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+                </controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <!-- Image Panes -->
         <Grid>
@@ -314,5 +313,8 @@
                 </Border>
             </DockPanel>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

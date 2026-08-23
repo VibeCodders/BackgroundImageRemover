@@ -10,17 +10,8 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="🎨 COLOR PICKER" Accent="#FF0EA5E9" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Color Picker" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
-
-                    <TextBlock Text="Click on the image to sample a color." Margin="0,0,0,12"
-                               Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
+<controls:ToolSessionPanel Title="Color Picker" Description="Click on the image to sample a color."  ShowReset="False">
+        <controls:ToolSessionPanel.Panel>
 
                     <CheckBox Content="Average sample" IsChecked="{Binding AverageSample}" Margin="0,0,0,8" />
                     <controls:SliderField Header="Brush size" Value="{Binding BrushRadius}" Minimum="1" Maximum="50" ValueFormat="{}{0:0}px"  />
@@ -36,9 +27,10 @@
                         <Button Content="Copy Hex" Command="{Binding CopyHexCommand}" Padding="8,4" Margin="0,0,8,0" />
                         <Button Content="Copy RGB" Command="{Binding CopyRgbCommand}" Padding="8,4" />
                     </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+                </controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
@@ -47,5 +39,8 @@
                                                MouseLeftButtonDown="ColorPickerPreview_MouseLeftButtonDown" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

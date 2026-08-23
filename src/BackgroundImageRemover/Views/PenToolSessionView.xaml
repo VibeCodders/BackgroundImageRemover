@@ -10,25 +10,17 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="✏️ PEN" Accent="#FF0EA5E9" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Pen" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
-
-                    <TextBlock Text="Drag on the image to draw freehand." Margin="0,0,0,12"
-                               Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
+<controls:ToolSessionPanel Title="Pen" Description="Drag on the image to draw freehand."  ShowReset="False">
+        <controls:ToolSessionPanel.Panel>
 
                     <controls:SliderField Header="Size" Value="{Binding PenWidth}" Minimum="1" Maximum="100" SmallChange="1" ValueFormat="{}{0:0}px"  />
 <controls:ColorPickerField Header="Color" SelectedColor="{Binding Color}" />
 
                     <Button Content="✕ Clear all strokes" Command="{Binding ClearCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+                </controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <controls:ImagePreviewControl x:Name="PenPreview"
@@ -39,5 +31,8 @@
                                           StrokeMove="PenPreview_StrokeMove"
                                           StrokeEnd="PenPreview_StrokeEnd" />
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

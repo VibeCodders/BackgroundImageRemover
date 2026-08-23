@@ -17,14 +17,8 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="📐 TILT-SHIFT" Accent="#FF4F46E5" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Miniature Effect" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+<controls:ToolSessionPanel Title="Miniature Effect" >
+        <controls:ToolSessionPanel.Panel>
 
                     <controls:SliderField Header="Focus center" Value="{Binding FocusCenter}" Minimum="0" Maximum="1" SmallChange="0.01" ValueFormat="{}{0:P0}"  />
 <controls:SliderField Header="Focus width" Value="{Binding FocusWidth}" Minimum="0" Maximum="1" SmallChange="0.01" ValueFormat="{}{0:P0}"  />
@@ -32,15 +26,18 @@
 <controls:SliderField Header="Saturation boost" Value="{Binding SaturationBoost}" Minimum="-1" Maximum="2" SmallChange="0.05" ValueFormat="{}{0:0.00}"  />
 <CheckBox Content="Vertical band" IsChecked="{Binding Vertical}" FontWeight="SemiBold" Margin="0,0,0,16" />
 
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+</controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
                 <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

@@ -10,14 +10,8 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="🖼 CLONE STAMP" Accent="#FF059669" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Clone Stamp" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+<controls:ToolSessionPanel Title="Clone Stamp" >
+        <controls:ToolSessionPanel.Panel>
 
                     <TextBlock Text="Source point:" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
@@ -30,10 +24,10 @@
                     <controls:SliderField Header="Brush size" Value="{Binding BrushRadius}" Minimum="2" Maximum="150" ValueFormat="{}{0:0}px"  />
 <controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0.05" Maximum="1" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
 <controls:SliderField Header="Hardness" Value="{Binding Hardness}" Minimum="0" Maximum="0.95" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
-<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Margin="0,8,0,0" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+</controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
@@ -46,5 +40,8 @@
                                                StrokeEnd="CloneStampPreview_StrokeEnd" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

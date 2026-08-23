@@ -10,20 +10,8 @@
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="⬜ SHAPE" Accent="#FF10B981" />
 
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
-            <StatusBarItem HorizontalAlignment="Right">
-                <TextBlock x:Name="CursorPositionLabel" FontFamily="Consolas" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
-            </StatusBarItem>
-        </StatusBar>
-
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Shape" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
-
-                    <TextBlock Text="Drag on the left image to place the shape; drag inside it to move, drag its corners to resize, drag the handle above it to rotate (hold Shift to snap to 5° steps). The controls below let you fine-tune." Margin="0,0,0,12"
-                               Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
+<controls:ToolSessionPanel Title="Shape" Description="Drag on the left image to place the shape; drag inside it to move, drag its corners to resize, drag the handle above it to rotate (hold Shift to snap to 5° steps). The controls below let you fine-tune." >
+        <controls:ToolSessionPanel.Panel>
 
                     <TextBlock Text="Shape type" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding ShapeKinds}" SelectedItem="{Binding ShapeKind}" Margin="0,0,0,8" />
@@ -45,10 +33,10 @@
                                                Visibility="{Binding FillEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <controls:SliderField Header="Fill opacity" Value="{Binding FillOpacity}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
-<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+</controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <Grid>
             <Grid.ColumnDefinitions>
@@ -68,5 +56,8 @@
                 </Border>
             </DockPanel>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

@@ -18,17 +18,9 @@
         <controls:ToolSessionHeader Badge="✨ COLOR &amp; ADJUSTMENTS" Accent="#FFD97706" />
 
         <!-- Status bar -->
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <StatusBarItem>
-                <TextBlock Text="{Binding StatusMessage}" />
-            </StatusBarItem>
-        </StatusBar>
-
-        <!-- Side Adjustments Panel -->
-        <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock Text="Color &amp; Visual Filters" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
+<!-- Side Adjustments Panel -->
+        <controls:ToolSessionPanel Title="Color &amp; Visual Filters"  ShowReset="False">
+        <controls:ToolSessionPanel.Panel>
 
                     <!-- Brightness -->
                     <controls:SliderField Header="Brightness" Value="{Binding AdjBrightness}" Minimum="-100" Maximum="100" SmallChange="1" LargeChange="10" ValueFormat="{}{0:0}"  />
@@ -82,9 +74,10 @@
 
                     <Button Content="↺ Reset to Default" Command="{Binding ResetAdjustmentsCommand}"
                             Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
+                </controls:ToolSessionPanel.Panel>
+
+        <controls:ToolSessionPanel.Preview>
+
 
         <!-- Canvas -->
         <Grid Margin="8">
@@ -96,5 +89,8 @@
                 <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
             </Border>
         </Grid>
-    </DockPanel>
+    
+        </controls:ToolSessionPanel.Preview>
+    </controls:ToolSessionPanel>
+</DockPanel>
 </UserControl>

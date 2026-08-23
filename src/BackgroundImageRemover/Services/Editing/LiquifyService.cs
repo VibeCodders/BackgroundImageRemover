@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -21,10 +22,8 @@ public static class LiquifyService
         using var mapX = new Mat(bgr.Size(), MatType.CV_32FC1);
         using var mapY = new Mat(bgr.Size(), MatType.CV_32FC1);
 
-        for (int y = 0; y < bgr.Height; y++)
+        PixelLoop.ForEach(bgr, (y, x) =>
         {
-            for (int x = 0; x < bgr.Width; x++)
-            {
                 float dx = x - center.X;
                 float dy = y - center.Y;
                 float dist = MathF.Sqrt(dx * dx + dy * dy);
@@ -71,8 +70,7 @@ public static class LiquifyService
 
                 mapX.Set(y, x, sx);
                 mapY.Set(y, x, sy);
-            }
-        }
+        });
 
         var result = new Mat();
         Cv2.Remap(bgr, result, mapX, mapY, InterpolationFlags.Linear, BorderTypes.Constant, Scalar.All(0));

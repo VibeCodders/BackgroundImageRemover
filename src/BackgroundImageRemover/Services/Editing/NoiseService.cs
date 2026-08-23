@@ -43,39 +43,33 @@ public static class NoiseService
 
         if (channels == 1)
         {
-            for (int y = 0; y < rows; y++)
+            PixelLoop.ForEach(rows, cols, (y, x) =>
             {
-                for (int x = 0; x < cols; x++)
+                double r = rng.NextDouble();
+                if (r < saltProb)
                 {
-                    double r = rng.NextDouble();
-                    if (r < saltProb)
-                    {
-                        result.Set<byte>(y, x, 255);
-                    }
-                    else if (r < saltProb + pepperProb)
-                    {
-                        result.Set<byte>(y, x, 0);
-                    }
+                    result.Set<byte>(y, x, 255);
                 }
-            }
+                else if (r < saltProb + pepperProb)
+                {
+                    result.Set<byte>(y, x, 0);
+                }
+            });
         }
         else
         {
-            for (int y = 0; y < rows; y++)
+            PixelLoop.ForEach(rows, cols, (y, x) =>
             {
-                for (int x = 0; x < cols; x++)
+                double r = rng.NextDouble();
+                if (r < saltProb)
                 {
-                    double r = rng.NextDouble();
-                    if (r < saltProb)
-                    {
-                        result.Set<Vec3b>(y, x, new Vec3b(255, 255, 255));
-                    }
-                    else if (r < saltProb + pepperProb)
-                    {
-                        result.Set<Vec3b>(y, x, new Vec3b(0, 0, 0));
-                    }
+                    result.Set<Vec3b>(y, x, new Vec3b(255, 255, 255));
                 }
-            }
+                else if (r < saltProb + pepperProb)
+                {
+                    result.Set<Vec3b>(y, x, new Vec3b(0, 0, 0));
+                }
+            });
         }
 
         return result;

@@ -53,20 +53,17 @@ public static class FxService
         var c = color ?? new Vec3b(80, 120, 255); // warm orange-red in BGR
         var result = bgr.Clone();
         float maxDist = MathF.Sqrt(bgr.Width * bgr.Width + bgr.Height * bgr.Height);
-        for (int y = 0; y < bgr.Height; y++)
+        PixelLoop.ForEach(bgr, (y, x) =>
         {
-            for (int x = 0; x < bgr.Width; x++)
-            {
-                float d = MathF.Sqrt(x * x + y * y) / maxDist;
-                float falloff = MathF.Pow(1.0f - d, 2.0f);
-                float amount = (float)strength * falloff;
-                var px = result.At<Vec3b>(y, x);
-                px.Item0 = (byte)Math.Min(255, px.Item0 + c.Item0 * amount);
-                px.Item1 = (byte)Math.Min(255, px.Item1 + c.Item1 * amount);
-                px.Item2 = (byte)Math.Min(255, px.Item2 + c.Item2 * amount);
-                result.Set(y, x, px);
-            }
-        }
+            float d = MathF.Sqrt(x * x + y * y) / maxDist;
+            float falloff = MathF.Pow(1.0f - d, 2.0f);
+            float amount = (float)strength * falloff;
+            var px = result.At<Vec3b>(y, x);
+            px.Item0 = (byte)Math.Min(255, px.Item0 + c.Item0 * amount);
+            px.Item1 = (byte)Math.Min(255, px.Item1 + c.Item1 * amount);
+            px.Item2 = (byte)Math.Min(255, px.Item2 + c.Item2 * amount);
+            result.Set(y, x, px);
+        });
         return result;
     }
 
@@ -136,18 +133,15 @@ public static class FxService
     {
         using var mapX = new Mat(channel.Size(), MatType.CV_32FC1);
         using var mapY = new Mat(channel.Size(), MatType.CV_32FC1);
-        for (int y = 0; y < channel.Height; y++)
+        PixelLoop.ForEach(channel, (y, x) =>
         {
-            for (int x = 0; x < channel.Width; x++)
-            {
-                float dx = x - cx;
-                float dy = y - cy;
-                float norm = maxR > 0 ? MathF.Sqrt(dx * dx + dy * dy) / maxR : 0;
-                float scale = 1.0f + strength * 0.06f * norm;
-                mapX.Set(y, x, cx + dx * scale);
-                mapY.Set(y, x, cy + dy * scale);
-            }
-        }
+            float dx = x - cx;
+            float dy = y - cy;
+            float norm = maxR > 0 ? MathF.Sqrt(dx * dx + dy * dy) / maxR : 0;
+            float scale = 1.0f + strength * 0.06f * norm;
+            mapX.Set(y, x, cx + dx * scale);
+            mapY.Set(y, x, cy + dy * scale);
+        });
 
         var result = new Mat();
         Cv2.Remap(channel, result, mapX, mapY, InterpolationFlags.Linear, BorderTypes.Constant, Scalar.All(0));

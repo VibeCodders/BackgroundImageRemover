@@ -165,18 +165,15 @@ public static class FrameService
         var result = new Mat(h, w, MatType.CV_8UC4, Scalar.All(0));
 
         double denom = Math.Max(1, w + h - 2);
-        for (int y = 0; y < h; y++)
+        PixelLoop.ForEach(h, w, (y, x) =>
         {
-            for (int x = 0; x < w; x++)
-            {
-                double t = (double)(x + y) / denom;
-                result.Set(y, x, new Vec4b(
-                    (byte)Math.Round(colorA.Item0 + (colorB.Item0 - colorA.Item0) * t),
-                    (byte)Math.Round(colorA.Item1 + (colorB.Item1 - colorA.Item1) * t),
-                    (byte)Math.Round(colorA.Item2 + (colorB.Item2 - colorA.Item2) * t),
-                    a));
-            }
-        }
+            double t = (double)(x + y) / denom;
+            result.Set(y, x, new Vec4b(
+                (byte)Math.Round(colorA.Item0 + (colorB.Item0 - colorA.Item0) * t),
+                (byte)Math.Round(colorA.Item1 + (colorB.Item1 - colorA.Item1) * t),
+                (byte)Math.Round(colorA.Item2 + (colorB.Item2 - colorA.Item2) * t),
+                a));
+        });
 
         using var inner = new Mat(result, new Rect(thickness, thickness, bgra.Width, bgra.Height));
         bgra.CopyTo(inner);
@@ -239,15 +236,12 @@ public static class FrameService
         double cx = (bgra.Width - 1) / 2.0;
         double cy = (bgra.Height - 1) / 2.0;
         double maxDist = Math.Max(1e-6, Math.Sqrt(cx * cx + cy * cy));
-        for (int y = 0; y < bgra.Height; y++)
+        PixelLoop.ForEach(bgra, (y, x) =>
         {
-            for (int x = 0; x < bgra.Width; x++)
-            {
-                double d = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / maxDist;
-                double falloff = Math.Clamp((d - 0.35) / 0.65, 0.0, 1.0);
-                factor.Set(y, x, (float)(strength * falloff * falloff));
-            }
-        }
+            double d = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / maxDist;
+            double falloff = Math.Clamp((d - 0.35) / 0.65, 0.0, 1.0);
+            factor.Set(y, x, (float)(strength * falloff * falloff));
+        });
 
         using var split = ChannelSplit.Of(bgra);
         var colorValues = new[] { color.Item0 / 255.0, color.Item1 / 255.0, color.Item2 / 255.0 };

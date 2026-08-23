@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -27,17 +28,14 @@ public static class WaveService
 
         using var mapX = new Mat(h, w, MatType.CV_32FC1);
         using var mapY = new Mat(h, w, MatType.CV_32FC1);
-        for (int y = 0; y < h; y++)
+        PixelLoop.ForEach(h, w, (y, x) =>
         {
-            for (int x = 0; x < w; x++)
-            {
-                // Coordinate along the wave direction.
-                double u = x * cosA + y * sinA;
-                double offset = amplitude * Math.Sin(2.0 * Math.PI * u / wl);
-                mapX.Set<float>(y, x, (float)(x - offset * sinA));
-                mapY.Set<float>(y, x, (float)(y + offset * cosA));
-            }
-        }
+            // Coordinate along the wave direction.
+            double u = x * cosA + y * sinA;
+            double offset = amplitude * Math.Sin(2.0 * Math.PI * u / wl);
+            mapX.Set<float>(y, x, (float)(x - offset * sinA));
+            mapY.Set<float>(y, x, (float)(y + offset * cosA));
+        });
 
         var result = new Mat();
         Cv2.Remap(bgr, result, mapX, mapY, InterpolationFlags.Linear, BorderTypes.Replicate);

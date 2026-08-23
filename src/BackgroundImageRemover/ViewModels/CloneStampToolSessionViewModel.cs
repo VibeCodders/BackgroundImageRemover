@@ -69,7 +69,7 @@ public partial class CloneStampToolSessionViewModel : ToolSessionViewModelBase, 
 
         var offset = new Point((int)(SourceX - destPoint.X), (int)(SourceY - destPoint.Y));
         var mask = CreateBrushMaskAt(destPoint, BrushRadius);
-        var result = CloneStampService.CloneStamp(_sourceImage!.FullBgr, mask, offset, Opacity, Hardness);
+        var result = CloneStampService.CloneStamp(_sourceImage!.FullBgr, mask, offset, Opacity);
         _sourceImage.FullBgr.Dispose();
         _sourceImage = new LoadedImage(_sourceImage.FilePath, result, _workingAlpha!);
         ResultBitmap = result.ToBitmapSource(_workingAlpha!);

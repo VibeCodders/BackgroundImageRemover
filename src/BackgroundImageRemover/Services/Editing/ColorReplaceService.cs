@@ -47,49 +47,43 @@ public static class ColorReplaceService
 
         try
         {
-            for (int y = 0; y < h; y++)
+            PixelLoop.ForEach(h, w, (y, x) =>
             {
-                for (int x = 0; x < w; x++)
+                Vec3b px = hsv.Get<Vec3b>(y, x);
+                double hueDist = Math.Abs(px[0] - tHue);
+                hueDist = Math.Min(hueDist, 180 - hueDist);
+                double sd = Math.Abs(px[1] - tSat) / 255.0;
+                double vd = Math.Abs(px[2] - tVal) / 255.0;
+                double d = Math.Sqrt((hueDist / 180.0) * (hueDist / 180.0) + sd * sd + vd * vd) / Math.Sqrt(3.0);
+
+                double factor;
+                if (d <= edgeStart)
                 {
-                    Vec3b px = hsv.Get<Vec3b>(y, x);
-                    double hueDist = Math.Abs(px[0] - tHue);
-                    hueDist = Math.Min(hueDist, 180 - hueDist);
-                    double sd = Math.Abs(px[1] - tSat) / 255.0;
-                    double vd = Math.Abs(px[2] - tVal) / 255.0;
-                    double d = Math.Sqrt((hueDist / 180.0) * (hueDist / 180.0) + sd * sd + vd * vd) / Math.Sqrt(3.0);
-
-                    double factor;
-                    if (d <= edgeStart)
-                    {
-                        factor = 1.0;
-                    }
-                    else if (d >= tolerance)
-                    {
-                        factor = 0.0;
-                    }
-                    else
-                    {
-                        factor = softness <= EditingGuard.Epsilon ? 1.0 : (tolerance - d) / (tolerance - edgeStart);
-                    }
-
-                    Vec3b original = bgr.Get<Vec3b>(y, x);
-                    Vec3b replacement = newColor;
-                    if (preserveLuminance && newV > 0)
-                    {
-                        double originalV = Math.Max(original[0], Math.Max(original[1], original[2]));
-                        double scale = originalV / newV;
-                        replacement = new Vec3b(
-                            ClampByte(newColor[0] * scale),
-                            ClampByte(newColor[1] * scale),
-                            ClampByte(newColor[2] * scale));
-                    }
-
-                    result.Set(y, x, new Vec3b(
-                        (byte)Math.Round(original[0] + (replacement[0] - original[0]) * factor),
-                        (byte)Math.Round(original[1] + (replacement[1] - original[1]) * factor),
-                        (byte)Math.Round(original[2] + (replacement[2] - original[2]) * factor)));
+                    factor = 1.0;
                 }
-            }
+                else if (d >= tolerance)
+                {
+                    factor = 0.0;
+                }
+                else
+                {
+                    factor = softness <= EditingGuard.Epsilon ? 1.0 : (tolerance - d) / (tolerance - edgeStart);
+                }
+
+                Vec3b original = bgr.Get<Vec3b>(y, x);
+                Vec3b replacement = newColor;
+                if (preserveLuminance && newV > 0)
+                {
+                    double originalV = Math.Max(original[0], Math.Max(original[1], original[2]));
+                    double scale = originalV / newV;
+                    replacement = new Vec3b(
+                        ClampByte(newColor[0] * scale),
+                        ClampByte(newColor[1] * scale),
+                        ClampByte(newColor[2] * scale));
+                }
+
+                result.Set(y, x, PixelColor.Blend(original, replacement, factor));
+            });
 
             return result;
         }
@@ -100,8 +94,5 @@ public static class ColorReplaceService
         }
     }
 
-    private static byte ClampByte(double value)
-    {
-        return (byte)Math.Clamp(Math.Round(value), 0, 255);
-    }
+    private static byte ClampByte(double value) => PixelColor.ClampByte(value);
 }

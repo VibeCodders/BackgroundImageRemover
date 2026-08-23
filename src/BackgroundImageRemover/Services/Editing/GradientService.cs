@@ -65,15 +65,12 @@ public static class GradientService
                     maxProj = 1;
                 }
 
-                for (int y = 0; y < h; y++)
+                PixelLoop.ForEach(h, w, (y, x) =>
                 {
-                    for (int x = 0; x < w; x++)
-                    {
-                        double proj = (x - cx) * dirX + (y - cy) * dirY;
-                        double t = (proj / maxProj + 1.0) * 0.5;
-                        WriteGradient(mask, overlay, x, y, Math.Clamp(t, 0.0, 1.0), opacity, colorA, colorB);
-                    }
-                }
+                    double proj = (x - cx) * dirX + (y - cy) * dirY;
+                    double t = (proj / maxProj + 1.0) * 0.5;
+                    WriteGradient(mask, overlay, x, y, Math.Clamp(t, 0.0, 1.0), opacity, colorA, colorB);
+                });
             }
             else
             {
@@ -83,14 +80,11 @@ public static class GradientService
                     maxR = 1;
                 }
 
-                for (int y = 0; y < h; y++)
+                PixelLoop.ForEach(h, w, (y, x) =>
                 {
-                    for (int x = 0; x < w; x++)
-                    {
-                        double dist = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
-                        WriteGradient(mask, overlay, x, y, Math.Clamp(dist / maxR, 0.0, 1.0), opacity, colorA, colorB);
-                    }
-                }
+                    double dist = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                    WriteGradient(mask, overlay, x, y, Math.Clamp(dist / maxR, 0.0, 1.0), opacity, colorA, colorB);
+                });
             }
 
             // Gravity-fill never fails below: BlendByMask builds a fresh Mat.

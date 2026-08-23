@@ -13,13 +13,8 @@ public static class HueSatService
         }
 
         using var hsv = HsvHelper.BgrToHsv(bgr);
-        for (int y = 0; y < hsv.Rows; y++)
-        {
-            for (int x = 0; x < hsv.Cols; x++)
-            {
-                HsvPixelAdjuster.AdjustPixelInMat(hsv, y, x, hueShift, satMult, valMult);
-            }
-        }
+        PixelLoop.ForEach(hsv, (y, x) =>
+            HsvPixelAdjuster.AdjustPixelInMat(hsv, y, x, hueShift, satMult, valMult));
 
         return HsvHelper.HsvToBgr(hsv);
     }
@@ -27,18 +22,15 @@ public static class HueSatService
     public static Mat AdjustHueSatRegion(Mat bgr, Mat mask, double hueShift, double satMult, double valMult)
     {
         using var hsv = HsvHelper.BgrToHsv(bgr);
-        for (int y = 0; y < hsv.Rows; y++)
+        PixelLoop.ForEach(hsv, (y, x) =>
         {
-            for (int x = 0; x < hsv.Cols; x++)
+            if (mask.Get<byte>(y, x) == 0)
             {
-                if (mask.Get<byte>(y, x) == 0)
-                {
-                    continue;
-                }
-
-                HsvPixelAdjuster.AdjustPixelInMat(hsv, y, x, hueShift, satMult, valMult);
+                return;
             }
-        }
+
+            HsvPixelAdjuster.AdjustPixelInMat(hsv, y, x, hueShift, satMult, valMult);
+        });
 
         return HsvHelper.HsvToBgr(hsv);
     }

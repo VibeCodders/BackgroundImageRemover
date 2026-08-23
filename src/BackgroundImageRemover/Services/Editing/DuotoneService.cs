@@ -42,25 +42,18 @@ public static class DuotoneService
         var result = new Mat(h, w, MatType.CV_8UC3);
         try
         {
-            for (int y = 0; y < h; y++)
+            var dark = new Vec3b(darkColor[0], darkColor[1], darkColor[2]);
+            var light = new Vec3b(lightColor[0], lightColor[1], lightColor[2]);
+            PixelLoop.ForEach(h, w, (y, x) =>
             {
-                for (int x = 0; x < w; x++)
-                {
-                    double lum = gray.Get<byte>(y, x) / 255.0;
-                    double z = (lum - midpoint) / transition;
-                    double f = SmoothStep(-0.5, 0.5, z);
+                double lum = gray.Get<byte>(y, x) / 255.0;
+                double z = (lum - midpoint) / transition;
+                double f = SmoothStep(-0.5, 0.5, z);
 
-                    byte b = (byte)Math.Round(darkColor[0] + (lightColor[0] - darkColor[0]) * f);
-                    byte g = (byte)Math.Round(darkColor[1] + (lightColor[1] - darkColor[1]) * f);
-                    byte r = (byte)Math.Round(darkColor[2] + (lightColor[2] - darkColor[2]) * f);
-
-                    Vec3b original = bgr.Get<Vec3b>(y, x);
-                    result.Set(y, x, new Vec3b(
-                        (byte)Math.Round(original[0] + (b - original[0]) * strength),
-                        (byte)Math.Round(original[1] + (g - original[1]) * strength),
-                        (byte)Math.Round(original[2] + (r - original[2]) * strength)));
-                }
-            }
+                var target = PixelColor.Blend(dark, light, f);
+                var original = bgr.Get<Vec3b>(y, x);
+                result.Set(y, x, PixelColor.Blend(original, target, strength));
+            });
 
             return result;
         }

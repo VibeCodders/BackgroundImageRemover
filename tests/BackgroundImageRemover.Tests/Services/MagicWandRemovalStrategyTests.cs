@@ -67,6 +67,55 @@ public class MagicWandRemovalStrategyTests
             foreach (var ch in split) ch.Dispose();
         }
     }
+
+    [Fact]
+    public async Task OutOfBoundsSeed_DoesNotCrash_KeepsWholeImageOpaque()
+    {
+        var strategy = new MagicWandRemovalStrategy();
+        using var bgr = MakeSubjectImage();
+        var context = new StrategyContext
+        {
+            MagicWandSeed = new Point(-50, -50),
+            MagicWandTolerance = 40,
+            DecontaminateEdges = false
+        };
+
+        using var result = await strategy.RunFullAsync(bgr, context, CancellationToken.None);
+
+        // The guard bails out with the untouched all-255 mask: nothing is removed.
+        Assert.InRange(result.Bgra.At<Vec4b>(5, 5).Item3, 128, byte.MaxValue);
+        Assert.InRange(result.Bgra.At<Vec4b>(100, 100).Item3, 128, byte.MaxValue);
+    }
+
+    [Fact]
+    public async Task SeedBeyondImageBounds_DoesNotCrash_KeepsWholeImageOpaque()
+    {
+        var strategy = new MagicWandRemovalStrategy();
+        using var bgr = MakeSubjectImage();
+        var context = new StrategyContext
+        {
+            MagicWandSeed = new Point(5000, 5000),
+            MagicWandTolerance = 40,
+            DecontaminateEdges = false
+        };
+
+        using var result = await strategy.RunFullAsync(bgr, context, CancellationToken.None);
+
+        Assert.InRange(result.Bgra.At<Vec4b>(5, 5).Item3, 128, byte.MaxValue);
+        Assert.InRange(result.Bgra.At<Vec4b>(100, 100).Item3, 128, byte.MaxValue);
+    }
+
+    [Fact]
+    public async Task NoSeed_DoesNotCrash_KeepsWholeImageOpaque()
+    {
+        var strategy = new MagicWandRemovalStrategy();
+        using var bgr = MakeSubjectImage();
+        var context = new StrategyContext { MagicWandSeed = null, DecontaminateEdges = false };
+
+        using var result = await strategy.RunFullAsync(bgr, context, CancellationToken.None);
+
+        Assert.InRange(result.Bgra.At<Vec4b>(5, 5).Item3, 128, byte.MaxValue);
+    }
 }
 
 public class StrategyBasePostProcessingTests

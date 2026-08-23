@@ -6,6 +6,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services.Editing;
 
 public class FlipServiceTests
@@ -23,8 +24,7 @@ public class FlipServiceTests
 
         using var result = FlipService.Flip(input, ImageFlipMode.Horizontal);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
         var px = result.Get<Vec3b>(0, Width - 1);
         Assert.Equal(255, px.Item2); // red moved to the right edge
     }
@@ -65,8 +65,7 @@ public class FlipServiceTests
 
         using var result = FlipService.Flip(input, mode);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -78,11 +77,7 @@ public class FlipServiceTests
         using var once = FlipService.Flip(input, ImageFlipMode.Horizontal);
         using var twice = FlipService.Flip(once, ImageFlipMode.Horizontal);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, twice, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(gray));
+        ServiceTestHelper.AssertNoChange(input, twice);
     }
 
     [Fact]

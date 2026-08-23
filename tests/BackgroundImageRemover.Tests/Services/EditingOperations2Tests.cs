@@ -2,6 +2,7 @@ using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class EditingOperations2Tests
@@ -386,8 +387,7 @@ public class EditingOperations2Tests
 
         using var result = MosaicService.Crystallize(src, null, cellSize: 4, jitter: 2);
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }
 
     [Fact]
@@ -511,8 +511,7 @@ public class EditingOperations2Tests
 
         using var result = LevelsService.Equalize(src);
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }
 
     [Fact]

@@ -2,6 +2,7 @@ using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class EditingOperationsTests
@@ -289,11 +290,7 @@ public class EditingOperationsTests
         Assert.Equal(input.Size(), result.Size());
 
         // Some pixels in the bottom-right were painted white.
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(gray) > 0);
+        ServiceTestHelper.AssertChangesPixels(input, result);
 
         // The top-left corner (far from the watermark) is untouched.
         var corner = result.At<Vec3b>(0, 0);
@@ -511,8 +508,7 @@ public class EditingOperationsTests
 
         using var result = FilterService.Apply(input, FilterKind.Hdr, intensity: 1.0);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -522,8 +518,7 @@ public class EditingOperationsTests
 
         using var result = FilterService.Apply(input, FilterKind.Pencil, intensity: 1.0);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -533,8 +528,7 @@ public class EditingOperationsTests
 
         using var result = FilterService.Apply(input, FilterKind.Dreamy, intensity: 1.0);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -544,8 +538,7 @@ public class EditingOperationsTests
 
         using var result = FilterService.Apply(input, FilterKind.Cartoon, intensity: 1.0);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -600,7 +593,6 @@ public class EditingOperationsTests
 
         using var result = FilterService.Apply(input, FilterKind.Vintage, intensity: 1.0);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 }

@@ -3,6 +3,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services.Editing;
 
 public class DuplicateServiceTests
@@ -15,8 +16,7 @@ public class DuplicateServiceTests
         using var result = DuplicateService.Duplicate(input);
 
         Assert.False(result.Empty());
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]

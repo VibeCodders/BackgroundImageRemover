@@ -2,6 +2,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class BokehServiceTests
@@ -12,13 +13,8 @@ public class BokehServiceTests
         using var input = new Mat(32, 32, MatType.CV_8UC3, new Scalar(10, 20, 30));
         using var result = BokehService.Apply(input, new Vec3b(255, 255, 255), 10, 0, 0.9, 4);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(diffGray));
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertNoChange(input, result);
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -27,11 +23,7 @@ public class BokehServiceTests
         using var input = new Mat(32, 32, MatType.CV_8UC3, new Scalar(10, 20, 30));
         using var result = BokehService.Apply(input, new Vec3b(255, 255, 255), 10, 50, 0, 4);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(diffGray));
+        ServiceTestHelper.AssertNoChange(input, result);
     }
 
     [Fact]
@@ -40,11 +32,7 @@ public class BokehServiceTests
         using var input = new Mat(64, 64, MatType.CV_8UC3, new Scalar(10, 20, 30));
         using var result = BokehService.Apply(input, new Vec3b(255, 255, 255), 12, 80, 1.0, 4);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(input, result);
     }
 
     [Fact]
@@ -54,10 +42,6 @@ public class BokehServiceTests
         using var sharp = BokehService.Apply(input, new Vec3b(255, 255, 255), 12, 60, 1.0, 0);
         using var soft = BokehService.Apply(input, new Vec3b(255, 255, 255), 12, 60, 1.0, 12);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(sharp, soft, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(sharp, soft);
     }
 }

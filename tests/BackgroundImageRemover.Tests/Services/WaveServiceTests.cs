@@ -2,6 +2,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class WaveServiceTests
@@ -12,8 +13,7 @@ public class WaveServiceTests
         using var input = new Mat(10, 12, MatType.CV_8UC3, new Scalar(40, 90, 140));
         using var result = WaveService.Apply(input, 4, 24, 0);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -24,11 +24,7 @@ public class WaveServiceTests
 
         using var result = WaveService.Apply(input, 0, 24, 0);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(diffGray));
+        ServiceTestHelper.AssertNoChange(input, result);
     }
 
     [Fact]
@@ -39,11 +35,7 @@ public class WaveServiceTests
 
         using var result = WaveService.Apply(input, 4, 16, 0);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(input, result);
     }
 
     [Fact]
@@ -55,11 +47,7 @@ public class WaveServiceTests
         using var horizontal = WaveService.Apply(input, 4, 16, 0);
         using var vertical = WaveService.Apply(input, 4, 16, 90);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(horizontal, vertical, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(horizontal, vertical);
     }
 
     [Fact]
@@ -73,10 +61,6 @@ public class WaveServiceTests
         using var tight = WaveService.Apply(input, 4, 8, 0);
         using var wide = WaveService.Apply(input, 4, 200, 0);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(tight, wide, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(tight, wide);
     }
 }

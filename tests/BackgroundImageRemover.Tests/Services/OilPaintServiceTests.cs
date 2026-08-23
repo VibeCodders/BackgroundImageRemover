@@ -2,6 +2,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class OilPaintServiceTests
@@ -12,8 +13,7 @@ public class OilPaintServiceTests
         using var input = new Mat(10, 12, MatType.CV_8UC3, new Scalar(40, 90, 140));
         using var result = OilPaintService.Apply(input, 3, 8);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -24,11 +24,7 @@ public class OilPaintServiceTests
 
         using var result = OilPaintService.Apply(input, 3, 8);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(input, result);
     }
 
     [Fact]
@@ -40,11 +36,7 @@ public class OilPaintServiceTests
         using var small = OilPaintService.Apply(input, 1, 8);
         using var large = OilPaintService.Apply(input, 6, 8);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(small, large, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(small, large);
     }
 
     [Fact]
@@ -72,10 +64,6 @@ public class OilPaintServiceTests
         using var flat = OilPaintService.Apply(input, 3, 2);
         using var fine = OilPaintService.Apply(input, 3, 32);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(flat, fine, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(flat, fine);
     }
 }

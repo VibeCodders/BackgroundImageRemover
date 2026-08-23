@@ -2,6 +2,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class HalftoneServiceTests
@@ -12,8 +13,7 @@ public class HalftoneServiceTests
         using var input = new Mat(16, 16, MatType.CV_8UC3, new Scalar(40, 90, 140));
         using var result = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), false);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -24,11 +24,7 @@ public class HalftoneServiceTests
 
         using var result = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), false);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(input, result);
     }
 
     [Fact]
@@ -56,11 +52,7 @@ public class HalftoneServiceTests
         using var normal = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), false);
         using var inverted = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), true);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(normal, inverted, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(normal, inverted);
     }
 
     [Fact]
@@ -72,10 +64,6 @@ public class HalftoneServiceTests
         using var black = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), false);
         using var red = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 220), false);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(black, red, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(black, red);
     }
 }

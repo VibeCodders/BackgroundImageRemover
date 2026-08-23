@@ -3,6 +3,7 @@ using BackgroundImageRemover.Models;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Helpers;
 
 public sealed class ImageProcessingHelperTests
@@ -13,8 +14,7 @@ public sealed class ImageProcessingHelperTests
         using var src = new Mat(10, 10, MatType.CV_8UC3, new Scalar(100, 150, 200));
         using var result = ImageProcessingHelper.ApplyAdjustments(src, ImageAdjustments.Default);
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
         Assert.Equal(src.At<Vec3b>(0, 0), result.At<Vec3b>(0, 0));
     }
 
@@ -187,8 +187,7 @@ public sealed class ImageProcessingHelperTests
 
         using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }
 
     [Fact]
@@ -270,8 +269,7 @@ public sealed class ImageProcessingHelperTests
 
         using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }
 
     [Fact]
@@ -285,8 +283,7 @@ public sealed class ImageProcessingHelperTests
 
         using var result = ImageProcessingHelper.ApplyAdjustments(src, new ImageAdjustments { Dehaze = 0.8 });
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }
 
     [Fact]
@@ -300,8 +297,7 @@ public sealed class ImageProcessingHelperTests
 
         using var result = ImageProcessingHelper.ApplyAdjustments(src, new ImageAdjustments { Soften = 0.7 });
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }
 
     [Fact]
@@ -369,7 +365,6 @@ public sealed class ImageProcessingHelperTests
 
         using var result = ImageProcessingHelper.ApplyAdjustments(src, adj);
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }
 }

@@ -2,6 +2,7 @@ using OpenCvSharp;
 using BackgroundImageRemover.Services.Editing;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class InvertServiceTests
@@ -12,13 +13,8 @@ public class InvertServiceTests
         using var input = new Mat(1, 1, MatType.CV_8UC3, new Scalar(10, 20, 30));
         using var result = InvertService.Invert(input, 0);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(gray));
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertNoChange(input, result);
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -31,8 +27,7 @@ public class InvertServiceTests
         Assert.Equal((byte)(255 - 10), pixel[0]);
         Assert.Equal((byte)(255 - 20), pixel[1]);
         Assert.Equal((byte)(255 - 30), pixel[2]);
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -45,7 +40,6 @@ public class InvertServiceTests
         Assert.Equal((byte)128, pixel[0]);
         Assert.Equal((byte)128, pixel[1]);
         Assert.Equal((byte)128, pixel[2]);
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 }

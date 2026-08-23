@@ -2,6 +2,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class GradientServiceTests
@@ -13,13 +14,8 @@ public class GradientServiceTests
         using var result = GradientService.Apply(input, GradientKind.Linear,
             new Vec3b(255, 0, 0), new Vec3b(0, 0, 255), 90, 0);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(diffGray));
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertNoChange(input, result);
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -29,8 +25,7 @@ public class GradientServiceTests
         using var result = GradientService.Apply(input, GradientKind.Linear,
             new Vec3b(255, 0, 0), new Vec3b(0, 0, 255), 90, 1);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -40,8 +35,7 @@ public class GradientServiceTests
         using var result = GradientService.Apply(input, GradientKind.Radial,
             new Vec3b(255, 0, 0), new Vec3b(0, 0, 255), 0, 1);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -51,10 +45,6 @@ public class GradientServiceTests
         using var result = GradientService.Apply(input, GradientKind.Linear,
             new Vec3b(255, 255, 255), new Vec3b(0, 0, 0), 90, 1);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(input, result);
     }
 }

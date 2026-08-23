@@ -2,6 +2,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class ThermalServiceTests
@@ -12,8 +13,7 @@ public class ThermalServiceTests
         using var input = new Mat(10, 12, MatType.CV_8UC3, new Scalar(40, 90, 140));
         using var result = ThermalService.Apply(input, 1.0, false);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -40,11 +40,7 @@ public class ThermalServiceTests
         using var input = new Mat(8, 8, MatType.CV_8UC3, new Scalar(60, 120, 200));
         using var result = ThermalService.Apply(input, 1.0, false);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(input, result);
     }
 
     [Fact]
@@ -54,11 +50,7 @@ public class ThermalServiceTests
         using var normal = ThermalService.Apply(input, 1.0, false);
         using var inverted = ThermalService.Apply(input, 1.0, true);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(normal, inverted, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(normal, inverted);
     }
 
     [Fact]

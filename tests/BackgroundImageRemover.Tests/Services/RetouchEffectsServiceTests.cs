@@ -1,6 +1,7 @@
 using BackgroundImageRemover.Services.Refinement;
 using OpenCvSharp;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class RetouchEffectsServiceTests
@@ -16,8 +17,7 @@ public class RetouchEffectsServiceTests
 
         using var result = RetouchEffectsService.Dehaze(src, 0.8);
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }
 
     [Fact]
@@ -28,8 +28,7 @@ public class RetouchEffectsServiceTests
 
         using var result = RetouchEffectsService.Defringe(bgr, alpha);
 
-        Assert.Equal(bgr.Size(), result.Size());
-        Assert.Equal(bgr.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(bgr, result);
     }
 
     [Fact]
@@ -112,8 +111,7 @@ public class RetouchEffectsServiceTests
 
         using var result = RetouchEffectsService.AutoContrast(bgr);
 
-        Assert.Equal(bgr.Size(), result.Size());
-        Assert.Equal(bgr.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(bgr, result);
     }
 
     [Fact]

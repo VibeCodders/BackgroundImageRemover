@@ -2,6 +2,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class ColorReplaceServiceTests
@@ -13,11 +14,7 @@ public class ColorReplaceServiceTests
         using var result = ColorReplaceService.Apply(input,
             new Vec3b(10, 20, 30), new Vec3b(200, 100, 50), 0, 0.5, true);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(diffGray));
+        ServiceTestHelper.AssertNoChange(input, result);
         Assert.Equal(input.Size(), result.Size());
     }
 
@@ -28,8 +25,7 @@ public class ColorReplaceServiceTests
         using var result = ColorReplaceService.Apply(input,
             new Vec3b(30, 200, 90), new Vec3b(200, 100, 50), 1, 0, false);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
 
         var pixel = result.Get<Vec3b>(0, 0);
         Assert.Equal(new Vec3b(200, 100, 50), pixel);

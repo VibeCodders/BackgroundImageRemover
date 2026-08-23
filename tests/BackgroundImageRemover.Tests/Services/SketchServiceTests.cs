@@ -2,6 +2,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class SketchServiceTests
@@ -12,8 +13,7 @@ public class SketchServiceTests
         using var input = new Mat(8, 10, MatType.CV_8UC3, new Scalar(40, 90, 140));
         using var result = SketchService.Apply(input, 7, false);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -42,11 +42,7 @@ public class SketchServiceTests
         using var normal = SketchService.Apply(input, 7, false);
         using var inverted = SketchService.Apply(input, 7, true);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(normal, inverted, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(normal, inverted);
     }
 
     [Fact]
@@ -58,10 +54,6 @@ public class SketchServiceTests
         using var soft = SketchService.Apply(input, 3, false);
         using var hard = SketchService.Apply(input, 25, false);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(soft, hard, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(soft, hard);
     }
 }

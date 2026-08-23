@@ -1,6 +1,7 @@
 using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class NewToolsServicesTests2
@@ -12,8 +13,7 @@ public class NewToolsServicesTests2
 
         using var result = BlurService.BlurAll(src, 5);
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }
 
     [Fact]

@@ -3,6 +3,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services.Editing;
 
 public class TransposeServiceTests
@@ -50,11 +51,7 @@ public class TransposeServiceTests
         using var twice = TransposeService.Transpose(once);
 
         Assert.Equal(input.Size(), twice.Size());
-        using var diff = new Mat();
-        Cv2.Absdiff(input, twice, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(gray));
+        ServiceTestHelper.AssertNoChange(input, twice);
     }
 
     [Fact]

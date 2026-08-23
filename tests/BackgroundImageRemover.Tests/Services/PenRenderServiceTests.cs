@@ -2,6 +2,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class PenRenderServiceTests
@@ -29,14 +30,9 @@ public class PenRenderServiceTests
 
         using var result = PenRenderService.Draw(input, new List<PenStroke> { stroke }, new Vec3b(255, 255, 255));
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(input, result);
     }
 
     [Fact]
@@ -53,10 +49,6 @@ public class PenRenderServiceTests
 
     private static void AssertMatches(Mat a, Mat b)
     {
-        using var diff = new Mat();
-        Cv2.Absdiff(a, b, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(diffGray));
+        ServiceTestHelper.AssertNoChange(a, b);
     }
 }

@@ -3,6 +3,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services.Editing;
 
 public class RotateServiceTests
@@ -18,13 +19,8 @@ public class RotateServiceTests
 
         using var result = RotateService.Rotate(input, 0, expand: true);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(gray));
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
+        ServiceTestHelper.AssertNoChange(input, result);
     }
 
     [Theory]

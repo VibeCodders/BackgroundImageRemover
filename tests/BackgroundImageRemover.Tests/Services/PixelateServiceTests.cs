@@ -2,6 +2,7 @@ using OpenCvSharp;
 using BackgroundImageRemover.Services.Editing;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class PixelateServiceTests
@@ -21,8 +22,7 @@ public class PixelateServiceTests
         using var result = PixelateService.Pixelate(input, 1);
 
         Assert.Equal(0, Cv2.Norm(input, result, NormTypes.L1));
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -48,7 +48,6 @@ public class PixelateServiceTests
             }
         }
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 }

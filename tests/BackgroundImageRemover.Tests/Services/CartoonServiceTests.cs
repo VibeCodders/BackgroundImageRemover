@@ -2,6 +2,7 @@ using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class CartoonServiceTests
@@ -12,8 +13,7 @@ public class CartoonServiceTests
         using var input = new Mat(10, 12, MatType.CV_8UC3, new Scalar(40, 90, 140));
         using var result = CartoonService.Apply(input, 3, 8, 5);
 
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -24,11 +24,7 @@ public class CartoonServiceTests
 
         using var result = CartoonService.Apply(input, 3, 8, 5);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(input, result);
     }
 
     [Fact]
@@ -40,11 +36,7 @@ public class CartoonServiceTests
         using var withEdges = CartoonService.Apply(input, 3, 8, 5);
         using var noEdges = CartoonService.Apply(input, 3, 8, 0);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(withEdges, noEdges, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(withEdges, noEdges);
     }
 
     [Fact]
@@ -55,11 +47,7 @@ public class CartoonServiceTests
         using var coarse = CartoonService.Apply(input, 3, 2, 0);
         using var fine = CartoonService.Apply(input, 3, 32, 0);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(coarse, fine, diff);
-        using var diffGray = new Mat();
-        Cv2.CvtColor(diff, diffGray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(diffGray) > 0);
+        ServiceTestHelper.AssertChangesPixels(coarse, fine);
     }
 
     [Fact]

@@ -3,6 +3,7 @@ using BackgroundImageRemover.Models;
 using BackgroundImageRemover.ViewModels;
 using OpenCvSharp;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Helpers;
 
 public class UncropFinishingTests
@@ -15,11 +16,7 @@ public class UncropFinishingTests
         using var result = UncropOperationHelper.AddGrain(src, 0.5);
 
         Assert.Equal(src.Size(), result.Size());
-        using var diff = new Mat();
-        Cv2.Absdiff(src, result, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(gray) > 0);
+        ServiceTestHelper.AssertChangesPixels(src, result);
     }
 
     [Fact]

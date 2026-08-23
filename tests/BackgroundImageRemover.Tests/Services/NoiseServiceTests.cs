@@ -2,6 +2,7 @@ using OpenCvSharp;
 using BackgroundImageRemover.Services.Editing;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class NoiseServiceTests
@@ -12,13 +13,8 @@ public class NoiseServiceTests
         using var input = new Mat(100, 100, MatType.CV_8UC3, new Scalar(100, 100, 100));
         using var result = NoiseService.AddGaussianNoise(input, 0);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(gray));
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertNoChange(input, result);
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -27,13 +23,8 @@ public class NoiseServiceTests
         using var input = new Mat(100, 100, MatType.CV_8UC3, new Scalar(100, 100, 100));
         using var result = NoiseService.AddGaussianNoise(input, 0.5);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(gray) > 0);
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertChangesPixels(input, result);
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -42,13 +33,8 @@ public class NoiseServiceTests
         using var input = new Mat(100, 100, MatType.CV_8UC3, new Scalar(100, 100, 100));
         using var result = NoiseService.AddSaltPepperNoise(input, 0);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(gray));
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertNoChange(input, result);
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -57,12 +43,7 @@ public class NoiseServiceTests
         using var input = new Mat(100, 100, MatType.CV_8UC3, new Scalar(100, 100, 100));
         using var result = NoiseService.AddSaltPepperNoise(input, 0.5);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(gray) > 0);
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertChangesPixels(input, result);
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 }

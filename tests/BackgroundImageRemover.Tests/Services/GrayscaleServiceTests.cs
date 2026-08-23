@@ -2,6 +2,7 @@ using OpenCvSharp;
 using BackgroundImageRemover.Services.Editing;
 using Xunit;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class GrayscaleServiceTests
@@ -12,13 +13,8 @@ public class GrayscaleServiceTests
         using var input = new Mat(1, 1, MatType.CV_8UC3, new Scalar(10, 20, 30));
         using var result = GrayscaleService.ToGrayscale(input, 0);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(input, result, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.Equal(0, Cv2.CountNonZero(gray));
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertNoChange(input, result);
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -35,8 +31,7 @@ public class GrayscaleServiceTests
         var expected = grayBgr.Get<Vec3b>(0, 0);
         var pixel = result.Get<Vec3b>(0, 0);
         Assert.Equal(expected, pixel);
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
@@ -55,7 +50,6 @@ public class GrayscaleServiceTests
         Assert.Equal((byte)((10 + expected[0]) / 2), pixel[0]);
         Assert.Equal((byte)((20 + expected[1]) / 2), pixel[1]);
         Assert.Equal((byte)((30 + expected[2]) / 2), pixel[2]);
-        Assert.Equal(input.Size(), result.Size());
-        Assert.Equal(input.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
     }
 }

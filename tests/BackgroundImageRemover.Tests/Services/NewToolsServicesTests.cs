@@ -2,6 +2,7 @@ using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
 using OpenCvSharp;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class NewToolsServicesTests
@@ -15,8 +16,7 @@ public class NewToolsServicesTests
 
         using var result = HealService.HealRegion(src, mask, 3, InpaintMethod.Telea);
 
-        Assert.Equal(src.Size(), result.Size());
-        Assert.Equal(src.Type(), result.Type());
+        ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }
 
     [Fact]
@@ -80,11 +80,7 @@ public class NewToolsServicesTests
 
         using var result = LiquifyService.Warp(src, new Point(10, 10), 8, 1.0, LiquifyMode.Pinch);
 
-        using var diff = new Mat();
-        Cv2.Absdiff(src, result, diff);
-        using var gray = new Mat();
-        Cv2.CvtColor(diff, gray, ColorConversionCodes.BGR2GRAY);
-        Assert.True(Cv2.CountNonZero(gray) > 0);
+        ServiceTestHelper.AssertChangesPixels(src, result);
     }
 
     [Fact]

@@ -9,6 +9,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <!-- Implicit control styles shared by both themes (colors resolved with DynamicResource). -->
                 <ResourceDictionary Source="Themes/ControlStyles.xaml" />
+                <!-- Keyed view-level styles and brushes shared across the views. -->
+                <ResourceDictionary Source="Themes/ViewStyles.xaml" />
                 <!-- Strategy icon resources -->
                 <ResourceDictionary Source="Themes/StrategyIcons.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -82,7 +84,7 @@
                                                     <Setter.Value>
                                                         <DataTemplate>
                                                             <Grid Margin="8">
-                                                                <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
+                                                                <Border Style="{StaticResource PreviewBorder}">
                                                                     <controls:ZoomableImageControl ImageSource="{Binding}" />
                                                                 </Border>
                                                             </Grid>

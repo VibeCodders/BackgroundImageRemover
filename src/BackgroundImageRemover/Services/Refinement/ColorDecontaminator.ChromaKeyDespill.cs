@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Refinement;
@@ -32,8 +33,7 @@ internal static class ChromaKeyDespill
             using var edgeView = new Mat(edgeMask, band.Value);
             using var dominantView = new Mat(channels[dominant], band.Value);
 
-            using var alphaF = new Mat();
-            alphaView.ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
+            using var alphaF = ImageProcessingUtility.Gray8ToFloat01(alphaView);
 
             using var c0 = new Mat();
             using var c1 = new Mat();

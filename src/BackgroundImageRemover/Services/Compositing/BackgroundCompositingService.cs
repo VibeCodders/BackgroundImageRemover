@@ -178,8 +178,7 @@ public static class BackgroundCompositingService
     {
         opacity = Math.Clamp(opacity, 0.0, 1.0);
         using var split = ChannelSplit.Of(bgra);
-        using var alphaF = new Mat();
-        split[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
+        using var alphaF = ImageProcessingUtility.Gray8ToFloat01(split[3]);
         if (Math.Abs(opacity - 1.0) > 1e-6)
         {
             Cv2.Multiply(alphaF, Scalar.All(opacity), alphaF);
@@ -262,8 +261,7 @@ public static class BackgroundCompositingService
 
         // Subject silhouette as a float alpha (0..1).
         using var split = ChannelSplit.Of(bgra);
-        using var alphaF = new Mat();
-        split[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
+        using var alphaF = ImageProcessingUtility.Gray8ToFloat01(split[3]);
 
         // Shadow alpha: the silhouette translated by the offset and softened.
         using var shadowA = new Mat(outSize, MatType.CV_32FC1, Scalar.All(0));

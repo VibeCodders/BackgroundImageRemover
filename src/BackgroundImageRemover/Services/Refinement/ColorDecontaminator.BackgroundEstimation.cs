@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Refinement;
@@ -21,8 +22,7 @@ internal static class BackgroundEstimation
         // Fully transparent (alpha == 0) pixels are known background; everything else is excluded.
         using var bgMask = new Mat();
         Cv2.Threshold(alphaView, bgMask, 0, 255, ThresholdTypes.BinaryInv);
-        using var maskF = new Mat();
-        bgMask.ConvertTo(maskF, MatType.CV_32FC1, 1.0 / 255.0);
+        using var maskF = ImageProcessingUtility.Gray8ToFloat01(bgMask);
 
         int kernelSize = Math.Max(3, estimateRadius * 2 + 1);
 

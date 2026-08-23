@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Refinement;
@@ -11,7 +12,7 @@ public static class AlphaRefinementService
     /// <summary>Softens jagged edges with a median filter.</summary>
     public static Mat Smooth(Mat alpha, int kernelSize = 5)
     {
-        int k = Math.Max(1, kernelSize) | 1; // force odd
+        int k = EditingGuard.EnsureOdd(kernelSize);
         var result = new Mat();
         Cv2.MedianBlur(alpha, result, k);
         return result;
@@ -29,7 +30,7 @@ public static class AlphaRefinementService
     /// <summary>Removes small foreground specks and small background holes via open + close.</summary>
     public static Mat RemoveSpecks(Mat alpha, int kernelSize = 3)
     {
-        int k = Math.Max(1, kernelSize) | 1; // force odd
+        int k = EditingGuard.EnsureOdd(kernelSize);
         using var kernel = Cv2.GetStructuringElement(MorphShapes.Ellipse, new Size(k, k));
         using var opened = new Mat();
         Cv2.MorphologyEx(alpha, opened, MorphTypes.Open, kernel);

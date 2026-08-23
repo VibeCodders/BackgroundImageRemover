@@ -1,5 +1,5 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
-using BackgroundImageRemover.Services.Compositing;
 
 namespace BackgroundImageRemover.Services.Editing;
 
@@ -54,30 +54,9 @@ public static class EmojiOverlayService
         using var imgRoi = new Mat(result, new Rect(x0, y0, x1 - x0, y1 - y0));
 
         // The glyph's alpha channel already has `opacity` baked in (see DrawEmoji's brush
-        // alpha = 255 * opacity), so only normalize to 0..1 here. Multiplying by `opacity`
-        // again would apply it twice (effectively opacity^2), making a 0.5 opacity render
-        // roughly as faint as 0.25.
-        using var eSplit = ChannelSplit.Of(emojiRoi);
-        using var alpha = new Mat();
-        eSplit[3].ConvertTo(alpha, MatType.CV_32FC1, 1.0 / 255.0);
-        using var alpha3 = new Mat();
-        Cv2.CvtColor(alpha, alpha3, ColorConversionCodes.GRAY2BGR);
-
-        using var eBgr = new Mat();
-        Cv2.Merge(new[] { eSplit[0], eSplit[1], eSplit[2] }, eBgr);
-        using var imgF = new Mat();
-        imgRoi.ConvertTo(imgF, MatType.CV_32FC3);
-        using var eF = new Mat();
-        eBgr.ConvertTo(eF, MatType.CV_32FC3);
-
-        using var inv = new Mat();
-        Cv2.Subtract(new Mat(alpha3.Size(), alpha3.Type(), Scalar.All(1.0)), alpha3, inv);
-        using var imgWeighted = imgF.Mul(inv).ToMat();
-        using var eWeighted = eF.Mul(alpha3).ToMat();
-        using var blended = (imgWeighted + eWeighted).ToMat();
-        using var outRoi = new Mat();
-        blended.ConvertTo(outRoi, MatType.CV_8UC3);
-        outRoi.CopyTo(imgRoi);
+        // alpha = 255 * opacity), so the shared AlphaComposite runs at full opacity: applying
+        // it again would square the opacity, making a 0.5 opacity render roughly as faint as 0.25.
+        ImageProcessingUtility.AlphaComposite(imgRoi, emojiRoi, 1.0);
 
         return result;
     }

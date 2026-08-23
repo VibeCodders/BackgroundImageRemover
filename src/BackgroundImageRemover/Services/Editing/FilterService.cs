@@ -182,8 +182,7 @@ public static class FilterService
     {
         using var gray = new Mat();
         Cv2.CvtColor(input, gray, ColorConversionCodes.BGR2GRAY);
-        using var grayF = new Mat();
-        gray.ConvertTo(grayF, MatType.CV_32FC1, 1.0 / 255.0);
+        using var grayF = ImageProcessingUtility.Gray8ToFloat01(gray);
         using var grayBgrF = new Mat();
         Cv2.CvtColor(grayF, grayBgrF, ColorConversionCodes.GRAY2BGR);
 

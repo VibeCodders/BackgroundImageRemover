@@ -239,6 +239,19 @@ public static class ImageProcessingUtility
     public static byte OpacityToAlphaByte(double opacity)
         => (byte)Math.Round(255 * Math.Clamp(opacity, 0.0, 1.0));
 
+    /// <summary>
+    /// Converts an 8-bit single-channel Mat (alpha mask, grayscale, …) to CV_32FC1 with values in
+    /// 0..1, ready to be used as a multiplicative weight. Replaces the copy-pasted
+    /// <c>ConvertTo(…, MatType.CV_32FC1, 1.0 / 255.0)</c> normalization in the decontamination,
+    /// compositing and overlay services.
+    /// </summary>
+    public static Mat Gray8ToFloat01(Mat gray8)
+    {
+        var result = new Mat();
+        gray8.ConvertTo(result, MatType.CV_32FC1, 1.0 / 255.0);
+        return result;
+    }
+
     public static int GaussianKernelSize(double radius)
     {
         return Math.Max(1, (int)Math.Round(radius * 2) | 1);

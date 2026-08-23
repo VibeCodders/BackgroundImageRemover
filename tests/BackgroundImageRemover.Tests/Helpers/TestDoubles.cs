@@ -120,8 +120,9 @@ public sealed class TestImageLoader : IImageLoaderService
     public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png") => Task.FromResult(Create(sourceName));
 }
 
-/// <summary>Shell with a no-op <c>CloseTabDirect</c> for tool-session tests.</summary>
-public sealed class FakeShell : ShellViewModel
+/// <summary>Shell with a no-op <c>CloseTabDirect</c> for tool-session tests. Non-sealed so tests
+/// can derive a recording variant (see the tool-session helper tests).</summary>
+public class FakeShell : ShellViewModel
 {
     public FakeShell(
         IImageLoaderService imageLoader,

@@ -35,7 +35,7 @@
 
 
         <Grid Margin="8">
-            <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
+            <Border Style="{StaticResource PreviewBorder}">
                 <controls:ZoomableImageControl x:Name="ColorPickerPreview"
                                                ImageSource="{Binding PreviewBitmap}"
                                                MouseLeftButtonDown="ColorPickerPreview_MouseLeftButtonDown" />

@@ -33,7 +33,7 @@
 
 
         <Grid Margin="8">
-            <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
+            <Border Style="{StaticResource PreviewBorder}">
                 <controls:ImagePreviewControl x:Name="CloneStampPreview"
                                                ImageSource="{Binding ResultBitmap}"
                                                Mode="{Binding Source={x:Static models:InteractionMode.Brush}}"

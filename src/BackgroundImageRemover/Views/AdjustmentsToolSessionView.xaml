@@ -86,7 +86,7 @@
             <controls:CompareImageControl BeforeSource="{Binding OriginalBitmap}" AfterSource="{Binding ResultBitmap}"
                                            DividerPosition="{Binding CompareDividerPosition}"
                                            Visibility="{Binding IsCompareMode, Converter={StaticResource BoolToVisibilityConverter}}" />
-            <Border BorderBrush="#FF3A3A3A" BorderThickness="1"
+            <Border Style="{StaticResource PreviewBorder}"
                     Visibility="{Binding IsCompareMode, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                 <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
             </Border>

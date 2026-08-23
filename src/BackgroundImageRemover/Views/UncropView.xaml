@@ -124,7 +124,7 @@
                                     Visibility="{Binding Options.SelectedColorSource, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=CustomColor}">
                             <Button x:Name="UncropColorPickerButton" Padding="4,2" Click="UncropColorPickerButton_Click">
                                 <StackPanel Orientation="Horizontal">
-                                    <Rectangle Width="18" Height="18" Fill="{Binding Options.CustomSolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="#FF888888" Margin="0,0,6,0" />
+                                    <Rectangle Style="{StaticResource ColorSwatch}" Fill="{Binding Options.CustomSolidColor, Converter={StaticResource ColorToBrushConverter}}" />
                                     <TextBlock Text="Choose color..." VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
@@ -228,7 +228,7 @@
 
             <DockPanel Grid.Column="1" Margin="8">
                 <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
-                <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
+                <Border Style="{StaticResource PreviewBorder}">
                     <controls:ZoomableImageControl ImageSource="{Binding PreviewResult}" />
                 </Border>
             </DockPanel>

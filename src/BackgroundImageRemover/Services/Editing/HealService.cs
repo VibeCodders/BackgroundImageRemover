@@ -21,7 +21,7 @@ public static class HealService
     /// <summary>Removes dust specks via a median filter (larger kernel removes bigger specks).</summary>
     public static Mat RemoveDust(Mat bgr, int kernelSize)
     {
-        int k = Math.Max(1, kernelSize) | 1;
+        int k = EditingGuard.EnsureOdd(kernelSize);
         var result = new Mat();
         Cv2.MedianBlur(bgr, result, k);
         return result;

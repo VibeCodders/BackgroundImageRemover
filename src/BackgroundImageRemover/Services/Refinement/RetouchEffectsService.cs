@@ -52,7 +52,7 @@ public static class RetouchEffectsService
         int kernel = Math.Max(1, (int)Math.Round(radius * 2) | 1);
         using var blurred = new Mat();
         Cv2.GaussianBlur(bgr, blurred, new Size(kernel, kernel), radius, radius);
-        return BlendByAlpha(blurred, bgr, alpha); // keep original where alpha is high, blurred where low
+        return blurred.BlendByMask(bgr, alpha); // keep original where alpha is high, blurred where low
     }
 
     /// <summary>Sharpens only the foreground pixels (high alpha) via unsharp masking.</summary>
@@ -68,13 +68,13 @@ public static class RetouchEffectsService
         Cv2.GaussianBlur(bgr, blurred, new Size(0, 0), 3);
         using var sharpened = new Mat();
         Cv2.AddWeighted(bgr, 1.0 + strength, blurred, -strength, 0, sharpened);
-        return BlendByAlpha(bgr, sharpened, alpha); // keep background untouched, sharpen the subject
+        return bgr.BlendByMask(sharpened, alpha); // keep background untouched, sharpen the subject
     }
 
     /// <summary>Removes dust specks via a median filter.</summary>
     public static Mat RemoveDust(Mat bgr, int kernelSize)
     {
-        int k = Math.Max(1, kernelSize) | 1;
+        int k = EditingGuard.EnsureOdd(kernelSize);
         var result = new Mat();
         Cv2.MedianBlur(bgr, result, k);
         return result;
@@ -121,31 +121,6 @@ public static class RetouchEffectsService
             Cv2.CvtColor(hsv, boosted, ColorConversionCodes.HSV2BGR);
         }
 
-        return BlendByAlpha(bgr, boosted, alpha);
-    }
-
-    /// <summary>Composites <paramref name="inside"/> where alpha is high over <paramref name="outside"/> where alpha is low.</summary>
-    private static Mat BlendByAlpha(Mat outside, Mat inside, Mat alpha)
-    {
-        using var alphaF = new Mat();
-        alpha.ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
-        using var alpha3 = new Mat();
-        Cv2.CvtColor(alphaF, alpha3, ColorConversionCodes.GRAY2BGR);
-
-        using var outsideF = new Mat();
-        outside.ConvertTo(outsideF, MatType.CV_32FC3);
-        using var insideF = new Mat();
-        inside.ConvertTo(insideF, MatType.CV_32FC3);
-
-        using var inv = new Mat();
-        Cv2.Subtract(new Mat(alpha3.Size(), alpha3.Type(), Scalar.All(1.0)), alpha3, inv);
-
-        using var outsideW = outsideF.Mul(inv).ToMat();
-        using var insideW = insideF.Mul(alpha3).ToMat();
-        using var blended = (outsideW + insideW).ToMat();
-
-        var result = new Mat();
-        blended.ConvertTo(result, MatType.CV_8UC3);
-        return result;
+        return bgr.BlendByMask(boosted, alpha);
     }
 }

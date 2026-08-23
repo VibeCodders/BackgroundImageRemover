@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Refinement;
@@ -12,12 +13,11 @@ public static class AlphaMattingRefiner
 {
     public static Mat Refine(Mat bgr, Mat roughAlpha, int radius = 8, double eps = 1e-3)
     {
-        using var guide = new Mat();
-        Cv2.CvtColor(bgr, guide, ColorConversionCodes.BGR2GRAY);
-        guide.ConvertTo(guide, MatType.CV_32F, 1.0 / 255.0);
+        using var gray = new Mat();
+        Cv2.CvtColor(bgr, gray, ColorConversionCodes.BGR2GRAY);
+        using var guide = ImageProcessingUtility.Gray8ToFloat01(gray);
 
-        using var p = new Mat();
-        roughAlpha.ConvertTo(p, MatType.CV_32F, 1.0 / 255.0);
+        using var p = ImageProcessingUtility.Gray8ToFloat01(roughAlpha);
 
         var kernel = new Size(radius * 2 + 1, radius * 2 + 1);
 

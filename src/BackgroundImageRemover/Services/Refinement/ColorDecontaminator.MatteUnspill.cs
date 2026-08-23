@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Refinement;
@@ -28,8 +29,7 @@ internal static class MatteUnspill
 
             using var alphaView = new Mat(channels[3], roi);
             using var edgeView = new Mat(edgeMask, roi);
-            using var alphaF = new Mat();
-            alphaView.ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
+            using var alphaF = ImageProcessingUtility.Gray8ToFloat01(alphaView);
 
             var views = new Mat[3];
             for (int c = 0; c < 3; c++)

@@ -218,8 +218,7 @@ public static class TextOverlayService
     {
         using var bsplit = ChannelSplit.Of(bottom);
         using var tsplit = ChannelSplit.Of(top);
-        using var ta = new Mat();
-        tsplit[3].ConvertTo(ta, MatType.CV_32FC1, 1.0 / 255.0);
+        using var ta = ImageProcessingUtility.Gray8ToFloat01(tsplit[3]);
         using var ones = new Mat(ta.Size(), ta.Type(), Scalar.All(1.0));
         using var inv = new Mat();
         Cv2.Subtract(ones, ta, inv);
@@ -236,8 +235,7 @@ public static class TextOverlayService
             sum.ConvertTo(bsplit[i], MatType.CV_8UC1);
         }
 
-        using var ba = new Mat();
-        bsplit[3].ConvertTo(ba, MatType.CV_32FC1, 1.0 / 255.0);
+        using var ba = ImageProcessingUtility.Gray8ToFloat01(bsplit[3]);
         using var baWeighted = ba.Mul(inv).ToMat();
         using var outA = (ta + baWeighted).ToMat();
         outA.ConvertTo(bsplit[3], MatType.CV_8UC1, 255.0);

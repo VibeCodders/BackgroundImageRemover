@@ -13,7 +13,7 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>
 /// Dedicated Tool Tab for Brush and Magic Wand retouching on alpha / pixels.
 /// </summary>
-public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
+public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBrushStrokeSession
 {
     private readonly MatEditSession _editSession = new();
     private readonly DispatcherTimer _brushRefreshTimer;
@@ -104,7 +104,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
     [RelayCommand]
     private void SetResultMode(InteractionMode mode) => ResultMode = ResultMode == mode ? InteractionMode.None : mode;
 
-    public void OnResultStrokeStart(WpfPoint imagePoint, double pixelRadius)
+    public void OnStrokeStart(WpfPoint imagePoint, double pixelRadius)
     {
         if (_workingAlpha is null) return;
         _editSession.Record(_workingAlpha);
@@ -113,13 +113,13 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase
         _strokes.Begin(imagePoint, pixelRadius, StampBrush);
     }
 
-    public void OnResultStrokeMove(WpfPoint imagePoint, double pixelRadius)
+    public void OnStrokeMove(WpfPoint imagePoint, double pixelRadius)
     {
         if (_workingAlpha is null) return;
         _strokes.Extend(imagePoint, pixelRadius, StampBrush);
     }
 
-    public void OnResultStrokeEnd()
+    public void OnStrokeEnd()
     {
         _brushRefreshTimer.Stop();
         RefreshResultBitmap();

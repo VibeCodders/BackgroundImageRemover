@@ -1,8 +1,9 @@
-<UserControl x:Class="BackgroundImageRemover.Views.LassoSelectToolSessionView"
+<views:BrushStrokeSessionViewBase x:Class="BackgroundImageRemover.Views.LassoSelectToolSessionView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:BackgroundImageRemover.Views"
              xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
              xmlns:models="clr-namespace:BackgroundImageRemover.Models"
              mc:Ignorable="d"
@@ -33,9 +34,9 @@
                 <controls:ImagePreviewControl x:Name="LassoPreview"
                                                ImageSource="{Binding SourceBitmap}"
                                                Mode="{x:Static models:InteractionMode.Lasso}"
-                                               StrokeStart="LassoPreview_StrokeStart"
-                                               StrokeMove="LassoPreview_StrokeMove"
-                                               StrokeEnd="LassoPreview_StrokeEnd" />
+                                               StrokeStart="OnStrokeStart"
+                                               StrokeMove="OnStrokeMove"
+                                               StrokeEnd="OnStrokeEnd" />
             </DockPanel>
             <DockPanel Grid.Column="1" Margin="8">
                 <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
@@ -48,4 +49,4 @@
         </controls:ToolSessionPanel.Preview>
     </controls:ToolSessionPanel>
 </DockPanel>
-</UserControl>
+</views:BrushStrokeSessionViewBase>

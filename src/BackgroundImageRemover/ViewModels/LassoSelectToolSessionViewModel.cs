@@ -13,7 +13,7 @@ namespace BackgroundImageRemover.ViewModels;
 /// (or, inverted, drop) everything inside it. The outline is closed and filled into a mask on
 /// mouse-up (<see cref="OnStrokeEnd"/>); each new drag redefines the selection from scratch.
 /// </summary>
-public partial class LassoSelectToolSessionViewModel : BgraToolSessionViewModelBase
+public partial class LassoSelectToolSessionViewModel : BgraToolSessionViewModelBase, IBrushStrokeSession
 {
     private readonly List<Point> _points = new();
 
@@ -37,13 +37,16 @@ public partial class LassoSelectToolSessionViewModel : BgraToolSessionViewModelB
         StatusMessage = "Drag on the left to draw a freehand selection outline.";
     }
 
-    public void OnStrokeStart(WpfPoint p)
+    // Lasso has no brush radius; the shared handlers still pass one, which is ignored here.
+    double IBrushStrokeSession.BrushRadius => 0;
+
+    public void OnStrokeStart(WpfPoint p, double pixelRadius)
     {
         _points.Clear();
         _points.Add(ToCvPoint(p));
     }
 
-    public void OnStrokeMove(WpfPoint p)
+    public void OnStrokeMove(WpfPoint p, double pixelRadius)
     {
         var next = ToCvPoint(p);
         if (_points.Count > 0)

@@ -15,7 +15,7 @@ namespace BackgroundImageRemover.ViewModels;
 /// Dedicated Tool Tab for freehand drawing (pen/brush): the user drags on the image to draw
 /// strokes in a chosen color and width. Strokes accumulate until Apply bakes them into the document.
 /// </summary>
-public partial class PenToolSessionViewModel : ToolSessionViewModelBase
+public partial class PenToolSessionViewModel : ToolSessionViewModelBase, IBrushStrokeSession
 {
     public override string ToolBadge => "✏️ Pen";
     public override string AccentColor => "#0EA5E9";
@@ -47,6 +47,9 @@ public partial class PenToolSessionViewModel : ToolSessionViewModelBase
 
     partial void OnPenWidthChanged(double value) => RefreshPenPreview();
     partial void OnColorChanged(WpfColor value) => RefreshPenPreview();
+
+    // Pen exposes its display radius as PenWidth; the shared stroke handlers read it via the interface.
+    double IBrushStrokeSession.BrushRadius => PenWidth;
 
     public void OnStrokeStart(WpfPoint imagePoint, double radiusPx)
     {

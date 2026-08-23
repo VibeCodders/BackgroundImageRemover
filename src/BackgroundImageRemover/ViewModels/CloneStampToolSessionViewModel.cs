@@ -8,7 +8,7 @@ using WpfPoint = System.Windows.Point;
 
 namespace BackgroundImageRemover.ViewModels;
 
-public partial class CloneStampToolSessionViewModel : ToolSessionViewModelBase
+public partial class CloneStampToolSessionViewModel : ToolSessionViewModelBase, IBrushStrokeSession
 {
     public override string ToolBadge => "🖼 Clone Stamp";
     public override string AccentColor => "#059669";
@@ -42,7 +42,7 @@ public partial class CloneStampToolSessionViewModel : ToolSessionViewModelBase
         StatusMessage = "Set source point, then paint to clone.";
     }
 
-    public void OnBrushStrokeStart(WpfPoint imagePoint, double pixelRadius)
+    public void OnStrokeStart(WpfPoint imagePoint, double pixelRadius)
     {
         if (!_hasSource) return;
         _isPainting = true;
@@ -50,14 +50,14 @@ public partial class CloneStampToolSessionViewModel : ToolSessionViewModelBase
         ApplyClone(imagePoint);
     }
 
-    public void OnBrushStrokeMove(WpfPoint imagePoint, double pixelRadius)
+    public void OnStrokeMove(WpfPoint imagePoint, double pixelRadius)
     {
         if (!_isPainting) return;
         ApplyClone(imagePoint);
         _lastPoint = imagePoint;
     }
 
-    public void OnBrushStrokeEnd()
+    public void OnStrokeEnd()
     {
         _isPainting = false;
         ResultBitmap = _sourceImage?.FullBgr.ToBitmapSource(_workingAlpha!);

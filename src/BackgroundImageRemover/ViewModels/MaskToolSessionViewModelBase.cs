@@ -12,7 +12,7 @@ namespace BackgroundImageRemover.ViewModels;
 /// Abstract base for tools that apply an effect either to the whole image or to a painted mask region.
 /// Encapsulates the common pattern: mask painting, preview refresh, apply/cancel lifecycle.
 /// </summary>
-public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewModelBase, ITool
+public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewModelBase, ITool, IBrushStrokeSession
 {
     private readonly BrushStrokeController _strokes = new();
 
@@ -52,13 +52,13 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
     /// <summary>Gets the painted mask, or null if none exists.</summary>
     protected Mat? PaintedMask => _paintedMask;
 
-    public void OnBrushStrokeStart(WpfPoint imagePoint, double pixelRadius)
+    public void OnStrokeStart(WpfPoint imagePoint, double pixelRadius)
         => _strokes.Begin(imagePoint, pixelRadius, StampMask);
 
-    public void OnBrushStrokeMove(WpfPoint imagePoint, double pixelRadius)
+    public void OnStrokeMove(WpfPoint imagePoint, double pixelRadius)
         => _strokes.Extend(imagePoint, pixelRadius, StampMask);
 
-    public virtual void OnBrushStrokeEnd()
+    public virtual void OnStrokeEnd()
     {
         _strokes.End();
         OnPropertyChanged(nameof(HasPaintedMask));

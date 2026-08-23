@@ -10,7 +10,7 @@ using WpfPoint = System.Windows.Point;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for healing blemishes (inpaint brush) and repairing dust/scratches.</summary>
-public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool
+public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool, IBrushStrokeSession
 {
     private readonly BrushStrokeController _strokes = new();
     private Mat? _workingBgr;
@@ -69,13 +69,13 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool
     partial void OnHealRadiusChanged(double value) => RefreshResult();
     partial void OnInpaintMethodChanged(InpaintMethod value) => RefreshResult();
 
-    public void OnResultStrokeStart(WpfPoint imagePoint, double pixelRadius)
+    public void OnStrokeStart(WpfPoint imagePoint, double pixelRadius)
         => _strokes.Begin(imagePoint, pixelRadius, StampMask);
 
-    public void OnResultStrokeMove(WpfPoint imagePoint, double pixelRadius)
+    public void OnStrokeMove(WpfPoint imagePoint, double pixelRadius)
         => _strokes.Extend(imagePoint, pixelRadius, StampMask);
 
-    public void OnResultStrokeEnd()
+    public void OnStrokeEnd()
     {
         _strokes.End();
         IsDirty = Cv2.CountNonZero(_healMask!) > 0;

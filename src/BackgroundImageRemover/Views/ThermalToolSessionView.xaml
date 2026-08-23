@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🌡 THERMAL" Accent="#FFDC2626" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🌡 THERMAL" Accent="#FFDC2626" />
 
 <controls:ToolSessionPanel Title="Thermal" Description="Maps image brightness onto a blue-to-red heat palette, like an infrared camera view." >
         <controls:ToolSessionPanel.Panel>

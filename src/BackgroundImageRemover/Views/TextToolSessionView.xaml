@@ -23,7 +23,7 @@
     </UserControl.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="✎ TEXT" Accent="#FFDB2777" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="✎ TEXT" Accent="#FFDB2777" />
 
 <controls:ToolSessionPanel Title="Text Watermark"  ShowReset="False">
         <controls:ToolSessionPanel.Panel>

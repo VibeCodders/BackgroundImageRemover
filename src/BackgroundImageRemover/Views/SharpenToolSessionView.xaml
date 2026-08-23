@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🔪 SHARPEN" Accent="#FF7C3AED" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🔪 SHARPEN" Accent="#FF7C3AED" />
 
 <controls:ToolSessionPanel Title="Sharpen"  ResetLabel="↺ Reset All">
         <controls:ToolSessionPanel.Panel>

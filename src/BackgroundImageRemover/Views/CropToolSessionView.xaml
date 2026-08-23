@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="✂ CROP" Accent="#FF16A34A" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="✂ CROP" Accent="#FF16A34A" />
 
 <controls:ToolSessionPanel Title="Crop" >
         <controls:ToolSessionPanel.Panel>

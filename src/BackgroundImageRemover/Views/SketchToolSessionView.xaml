@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="✏️ SKETCH" Accent="#FF6B7280" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="✏️ SKETCH" Accent="#FF6B7280" />
 
 <controls:ToolSessionPanel Title="Sketch" Description="Converts the image into a pencil sketch (luminance divided by its own blur)." >
         <controls:ToolSessionPanel.Panel>

@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🌫 BLUR" Accent="#FF0E7490" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🌫 BLUR" Accent="#FF0E7490" />
 
 <controls:ToolSessionPanel Title="Blur"  ResetLabel="↺ Reset All">
         <controls:ToolSessionPanel.Panel>

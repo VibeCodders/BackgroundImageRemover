@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="◈ LASSO" Accent="#FF0EA5E9" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="◈ LASSO" Accent="#FF0EA5E9" />
 
 <controls:ToolSessionPanel Title="Lasso Select" PanelWidth="280" Description="Draw a freehand outline on the left. The area inside becomes the cutout -- toggle Invert to keep the outside instead."  ShowReset="False">
         <controls:ToolSessionPanel.Panel>

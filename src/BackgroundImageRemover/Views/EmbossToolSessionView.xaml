@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🗻 EMBOSS" Accent="#FF92400E" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🗻 EMBOSS" Accent="#FF92400E" />
 
 <controls:ToolSessionPanel Title="Emboss" Description="Raises edges into a relief. The angle sets the direction the light comes from." >
         <controls:ToolSessionPanel.Panel>

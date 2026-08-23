@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="⬜ SHAPE" Accent="#FF10B981" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="⬜ SHAPE" Accent="#FF10B981" />
 
 <controls:ToolSessionPanel Title="Shape" Description="Drag on the left image to place the shape; drag inside it to move, drag its corners to resize, drag the handle above it to rotate (hold Shift to snap to 5° steps). The controls below let you fine-tune." >
         <controls:ToolSessionPanel.Panel>

@@ -50,6 +50,7 @@ public abstract class StrategyToolDefinitionBase : IToolDefinition
     public abstract string DisplayName { get; }
     public virtual char? Shortcut => null;
     public bool ShowInPalette => true;
+    public bool OpensInlineOnSelect => false;
 
     public bool IsActive(EditorTool activeTool, StrategyKind selectedStrategy)
         => activeTool == EditorTool.RemoveBackground && selectedStrategy == Strategy;

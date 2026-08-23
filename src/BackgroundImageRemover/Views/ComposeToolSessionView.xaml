@@ -15,7 +15,7 @@
         </Style>
     </UserControl.Resources>
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🖼 COMPOSE" Accent="#FF0E7490" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🖼 COMPOSE" Accent="#FF0E7490" />
 
 <controls:ToolSessionPanel Title="Background" PanelWidth="320"  ShowReset="False">
         <controls:ToolSessionPanel.Panel>

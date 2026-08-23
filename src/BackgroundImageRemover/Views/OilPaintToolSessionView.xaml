@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🖌 OIL PAINT" Accent="#FFB45309" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🖌 OIL PAINT" Accent="#FFB45309" />
 
 <controls:ToolSessionPanel Title="Oil Paint" Description="Replaces each area with the dominant colour of its neighbourhood, like thick brush strokes." >
         <controls:ToolSessionPanel.Panel>

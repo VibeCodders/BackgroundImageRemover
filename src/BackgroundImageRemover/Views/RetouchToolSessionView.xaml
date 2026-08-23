@@ -17,7 +17,7 @@
         </Style>
     </views:BrushStrokeSessionViewBase.Resources>
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🖌 RETOUCH &amp; BRUSH" Accent="#FF8E24AA" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🖌 RETOUCH &amp; BRUSH" Accent="#FF8E24AA" />
 
         <!-- Status bar -->
 <!-- Side Controls Panel -->

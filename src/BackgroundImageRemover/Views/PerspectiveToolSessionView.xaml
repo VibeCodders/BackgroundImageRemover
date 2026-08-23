@@ -17,7 +17,7 @@
     </UserControl.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🔲 PERSPECTIVE" Accent="#FF0F766E" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🔲 PERSPECTIVE" Accent="#FF0F766E" />
 
 <controls:ToolSessionPanel Title="Perspective Correction" PanelWidth="320"  ResetLabel="↺ Reset corners">
         <controls:ToolSessionPanel.Panel>

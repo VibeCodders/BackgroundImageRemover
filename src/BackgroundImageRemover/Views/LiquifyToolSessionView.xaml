@@ -17,7 +17,7 @@
     </UserControl.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="✋ LIQUIFY" Accent="#FF9333EA" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="✋ LIQUIFY" Accent="#FF9333EA" />
 
 <controls:ToolSessionPanel Title="Liquify Warp" >
         <controls:ToolSessionPanel.Panel>

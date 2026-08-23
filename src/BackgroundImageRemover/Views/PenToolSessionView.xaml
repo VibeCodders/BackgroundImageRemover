@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="✏️ PEN" Accent="#FF0EA5E9" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="✏️ PEN" Accent="#FF0EA5E9" />
 
 <controls:ToolSessionPanel Title="Pen" Description="Drag on the image to draw freehand."  ShowReset="False">
         <controls:ToolSessionPanel.Panel>

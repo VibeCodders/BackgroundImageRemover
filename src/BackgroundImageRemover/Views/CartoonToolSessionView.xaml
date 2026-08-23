@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🎭 CARTOON" Accent="#FFA855F7" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🎭 CARTOON" Accent="#FFA855F7" />
 
 <controls:ToolSessionPanel Title="Cartoon" Description="Smooths the image into flat colors and adds dark outlines for a cartoon look." >
         <controls:ToolSessionPanel.Panel>

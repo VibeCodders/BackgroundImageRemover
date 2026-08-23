@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="↺ ROTATE" Accent="#FF7C3AED" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="↺ ROTATE" Accent="#FF7C3AED" />
 
 <controls:ToolSessionPanel Title="Rotate" Description="Rotate by an arbitrary angle around the image center." >
         <controls:ToolSessionPanel.Panel>

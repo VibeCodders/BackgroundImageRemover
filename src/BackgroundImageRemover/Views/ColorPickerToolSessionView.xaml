@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🎨 COLOR PICKER" Accent="#FF0EA5E9" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🎨 COLOR PICKER" Accent="#FF0EA5E9" />
 
 <controls:ToolSessionPanel Title="Color Picker" Description="Click on the image to sample a color."  ShowReset="False">
         <controls:ToolSessionPanel.Panel>

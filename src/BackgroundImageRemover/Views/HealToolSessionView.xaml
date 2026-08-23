@@ -18,7 +18,7 @@
     </views:BrushStrokeSessionViewBase.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🩹 HEAL &amp; REPAIR" Accent="#FFDC2626" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🩹 HEAL &amp; REPAIR" Accent="#FFDC2626" />
 
 <controls:ToolSessionPanel Title="Heal &amp; Repair"  ShowReset="False">
         <controls:ToolSessionPanel.Panel>

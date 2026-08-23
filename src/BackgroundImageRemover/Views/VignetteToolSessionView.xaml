@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🔳 VIGNETTE" Accent="#FFA78BFA" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🔳 VIGNETTE" Accent="#FFA78BFA" />
 
 <controls:ToolSessionPanel Title="Vignette" Description="Adjust the vignette effect on the image." >
         <controls:ToolSessionPanel.Panel>

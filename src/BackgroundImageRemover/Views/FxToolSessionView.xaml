@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="✨ FX" Accent="#FFC026D3" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="✨ FX" Accent="#FFC026D3" />
 
 <controls:ToolSessionPanel Title="Cinematic Effects" >
         <controls:ToolSessionPanel.Panel>

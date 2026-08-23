@@ -23,7 +23,7 @@
     </UserControl.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🎉 EMOJI" Accent="#FFF59E0B" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🎉 EMOJI" Accent="#FFF59E0B" />
 
 <controls:ToolSessionPanel Title="Emoji Overlay" Description="Choose a decorative emoji and position it on the image." >
         <controls:ToolSessionPanel.Panel>

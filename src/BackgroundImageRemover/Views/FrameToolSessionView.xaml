@@ -15,7 +15,7 @@
         </Style>
     </UserControl.Resources>
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="▣ FRAME" Accent="#FF7C3AED" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="▣ FRAME" Accent="#FF7C3AED" />
 
 <controls:ToolSessionPanel Title="Frame &amp; Border" >
         <controls:ToolSessionPanel.Panel>

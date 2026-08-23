@@ -15,7 +15,7 @@
         </Style>
     </UserControl.Resources>
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="📐 TILT-SHIFT" Accent="#FF4F46E5" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="📐 TILT-SHIFT" Accent="#FF4F46E5" />
 
 <controls:ToolSessionPanel Title="Miniature Effect" >
         <controls:ToolSessionPanel.Panel>

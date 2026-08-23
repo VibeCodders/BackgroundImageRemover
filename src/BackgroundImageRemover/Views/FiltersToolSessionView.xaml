@@ -17,7 +17,7 @@
     </UserControl.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🎨 FILTERS" Accent="#FFD946EF" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🎨 FILTERS" Accent="#FFD946EF" />
 
 <controls:ToolSessionPanel Title="Artistic Filters" >
         <controls:ToolSessionPanel.Panel>

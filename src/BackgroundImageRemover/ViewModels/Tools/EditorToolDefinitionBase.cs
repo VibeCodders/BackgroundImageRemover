@@ -17,9 +17,18 @@ public abstract class EditorToolDefinitionBase : IToolDefinition
     public abstract char? Shortcut { get; }
     public virtual bool ShowInPalette => true;
 
+    public virtual bool OpensInlineOnSelect => true;
+
     public bool IsActive(EditorTool activeTool, StrategyKind selectedStrategy) => activeTool == Tool;
 
-    public void Select(DocumentViewModel doc) => doc.ActiveTool = Tool;
+    public void Select(DocumentViewModel doc)
+    {
+        doc.ActiveTool = Tool;
+        if (OpensInlineOnSelect)
+        {
+            doc.OpenToolInlineCommand.Execute(Tool);
+        }
+    }
 
     public void RequestOpen(DocumentViewModel doc) => doc.OpenToolTabCommand.Execute(Tool);
 

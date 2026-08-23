@@ -110,8 +110,8 @@ public partial class ShellViewModel : ObservableObject
         yield return new StrategyToolDefinition(StrategyKind.Inpaint, 8, "InpaintIcon", "Inpaint", "Inpaint (flood + fill background)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
         yield return new StrategyToolDefinition(StrategyKind.EdgeContour, 9, "EdgeContourIcon", "Edge / Contour", "Edge / Contour (Canny outline + largest region)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
         yield return new ToolDefinition(EditorTool.Uncrop, "Uncrop / Expand", "Transform", 4, "UncropIcon", "Uncrop / Expand (U)",
-            (shell, doc) => new UncropToolSessionViewModel(shell, doc, uncropFillService, dialogs, imageLoader, imageExporter, log), shortcut: 'U');
-        yield return new ToolDefinition(EditorTool.Retouch, "Retouch & Brush", "Paint & Retouch", 0, "RetouchIcon", "Retouch & Brush (B)", (shell, doc) => new RetouchToolSessionViewModel(shell, doc), shortcut: 'B');
+            (shell, doc) => new UncropToolSessionViewModel(shell, doc, uncropFillService, dialogs, imageLoader, imageExporter, log), shortcut: 'U', opensInlineOnSelect: false);
+        yield return new ToolDefinition(EditorTool.Retouch, "Retouch & Brush", "Paint & Retouch", 0, "RetouchIcon", "Retouch & Brush (B)", (shell, doc) => new RetouchToolSessionViewModel(shell, doc), shortcut: 'B', opensInlineOnSelect: false);
         yield return new ToolDefinition(EditorTool.Heal, "Heal", "Paint & Retouch", 1, "HealIcon", "Heal (H)", (shell, doc) => new HealToolSessionViewModel(shell, doc), shortcut: 'H');
         yield return new ToolDefinition(EditorTool.Liquify, "Liquify", "Paint & Retouch", 2, "LiquifyIcon", "Liquify (J)", (shell, doc) => new LiquifyToolSessionViewModel(shell, doc), shortcut: 'J');
         yield return new ToolDefinition(EditorTool.Mosaic, "Mosaic", "Paint & Retouch", 3, "MosaicIcon", "Mosaic (M)", (shell, doc) => new MosaicToolSessionViewModel(shell, doc), shortcut: 'M');
@@ -124,7 +124,7 @@ public partial class ShellViewModel : ObservableObject
         yield return new ToolDefinition(EditorTool.Rotate, "Rotate", "Transform", 2, "RotateIcon", "Rotate", (shell, doc) => new RotateToolSessionViewModel(shell, doc));
         yield return new ToolDefinition(EditorTool.Perspective, "Perspective", "Transform", 3, "PerspectiveIcon", "Perspective (P)", (shell, doc) => new PerspectiveToolSessionViewModel(shell, doc), shortcut: 'P');
         yield return new ToolDefinition(EditorTool.Adjustments, "Adjustments", "Color & Adjust", 0, "AdjustmentsIcon", "Adjustments (A)",
-            (shell, doc) => new AdjustmentsToolSessionViewModel(shell, doc, log), shortcut: 'A');
+            (shell, doc) => new AdjustmentsToolSessionViewModel(shell, doc, log), shortcut: 'A', opensInlineOnSelect: false);
         yield return new ToolDefinition(EditorTool.Levels, "Levels", "Color & Adjust", 1, "LevelsIcon", "Levels (L)", (shell, doc) => new LevelsToolSessionViewModel(shell, doc), shortcut: 'L');
         yield return new ToolDefinition(EditorTool.ColorPicker, "Color Picker", "Color & Adjust", 2, "ColorPickerIcon", "Color Picker (Q)", (shell, doc) => new ColorPickerToolSessionViewModel(shell, doc), shortcut: 'Q');
         yield return new ToolDefinition(EditorTool.Blur, "Blur", "Color & Adjust", 3, "BlurIcon", "Blur (W)", (shell, doc) => new BlurToolSessionViewModel(shell, doc), shortcut: 'W');
@@ -202,6 +202,25 @@ public partial class ShellViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Opens a tool session inline in the current document tab (GIMP/Photoshop-style: left-click
+    /// makes the tool immediately usable on the main photo, no new tab). Reuses the exact same
+    /// <see cref="IToolDefinition.OpenSession"/> factory as the tab path, just never inserts the
+    /// result into <see cref="Documents"/>. Cancels any previously open inline session first, so
+    /// there is never more than one live inline session (and its Mats) per document.
+    /// </summary>
+    public void OpenToolInline(DocumentViewModel doc, EditorTool tool)
+    {
+        doc.InlineToolSession?.Cancel();
+
+        if (!_toolsById.TryGetValue($"Tool.{tool}", out var definition))
+        {
+            return;
+        }
+
+        doc.InlineToolSession = definition.OpenSession(this, doc);
+    }
+
+    /// <summary>
     /// Closes a tool session directly without prompting.
     /// </summary>
     public virtual void CloseTabDirect(IToolSessionTab toolTab)
@@ -211,6 +230,10 @@ public partial class ShellViewModel : ObservableObject
             if (parent.ActiveToolSession == toolTab)
             {
                 parent.ActiveToolSession = null;
+            }
+            if (parent.InlineToolSession == toolTab)
+            {
+                parent.InlineToolSession = null;
             }
         }
 

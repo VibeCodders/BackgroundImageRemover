@@ -23,7 +23,7 @@
         </Style>
     </views:BrushStrokeSessionViewBase.Resources>
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="▦ MOSAIC" Accent="#FFEA580C" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="▦ MOSAIC" Accent="#FFEA580C" />
 
 <controls:ToolSessionPanel Title="Mosaic" >
         <controls:ToolSessionPanel.Panel>

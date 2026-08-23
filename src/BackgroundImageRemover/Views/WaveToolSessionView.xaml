@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="〰 WAVE" Accent="#FF0284C7" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="〰 WAVE" Accent="#FF0284C7" />
 
 <controls:ToolSessionPanel Title="Wave" Description="Displaces the pixels with a sine wave; the angle rotates the direction of the ridges." >
         <controls:ToolSessionPanel.Panel>

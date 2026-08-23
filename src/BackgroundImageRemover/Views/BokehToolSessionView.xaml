@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="● BOKEH" Accent="#FF06B6D4" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="● BOKEH" Accent="#FF06B6D4" />
 
 <controls:ToolSessionPanel Title="Bokeh" Description="Scatters soft blurred circles over the image for a dreamy depth-of-field look." >
         <controls:ToolSessionPanel.Panel>

@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="◍ HALFTONE" Accent="#FF7C3AED" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="◍ HALFTONE" Accent="#FF7C3AED" />
 
 <controls:ToolSessionPanel Title="Halftone" Description="Renders the image as dots on a white background; darker areas get bigger dots, like a printed photograph." >
         <controls:ToolSessionPanel.Panel>

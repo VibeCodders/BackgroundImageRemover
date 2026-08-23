@@ -17,6 +17,7 @@ public sealed class ToolDefinition : EditorToolDefinitionBase
     private readonly string _toolTip;
     private readonly char? _shortcut;
     private readonly bool _showInPalette;
+    private readonly bool _opensInlineOnSelect;
     private readonly Func<ShellViewModel, DocumentViewModel, IToolSessionTab> _sessionFactory;
 
     public ToolDefinition(
@@ -28,7 +29,8 @@ public sealed class ToolDefinition : EditorToolDefinitionBase
         string toolTip,
         Func<ShellViewModel, DocumentViewModel, IToolSessionTab> sessionFactory,
         char? shortcut = null,
-        bool showInPalette = true)
+        bool showInPalette = true,
+        bool opensInlineOnSelect = true)
         : base(tool)
     {
         _displayName = displayName;
@@ -39,6 +41,7 @@ public sealed class ToolDefinition : EditorToolDefinitionBase
         _sessionFactory = sessionFactory;
         _shortcut = shortcut;
         _showInPalette = showInPalette;
+        _opensInlineOnSelect = opensInlineOnSelect;
     }
 
     public override string DisplayName => _displayName;
@@ -48,6 +51,7 @@ public sealed class ToolDefinition : EditorToolDefinitionBase
     public override string ToolTip => _toolTip;
     public override char? Shortcut => _shortcut;
     public override bool ShowInPalette => _showInPalette;
+    public override bool OpensInlineOnSelect => _opensInlineOnSelect;
 
     public override IToolSessionTab OpenSession(ShellViewModel shell, DocumentViewModel doc)
         => _sessionFactory(shell, doc);

@@ -29,6 +29,15 @@ public interface IToolDefinition
     /// <summary>False for tools that exist only as a dispatch target (no dedicated palette icon).</summary>
     bool ShowInPalette { get; }
 
+    /// <summary>
+    /// True for tools whose left-click <see cref="Select"/> should open their session inline in
+    /// the current document tab (GIMP/Photoshop-style, no new tab). False for tools that already
+    /// have bespoke inline handling wired directly into <see cref="DocumentViewModel"/> (Uncrop,
+    /// Retouch, Adjustments) or that intentionally keep a fully custom <see cref="Select"/> (the
+    /// background-removal strategy icons).
+    /// </summary>
+    bool OpensInlineOnSelect { get; }
+
     bool IsActive(EditorTool activeTool, StrategyKind selectedStrategy);
 
     /// <summary>GIMP-style single click: highlights the tool without opening its session tab.</summary>

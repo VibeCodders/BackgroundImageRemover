@@ -94,6 +94,18 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
     public bool HasActiveToolSession => ActiveToolSession is not null;
 
+    /// <summary>
+    /// The tool session currently open inline in this document's own tab (GIMP/Photoshop-style
+    /// left-click activation), as opposed to <see cref="ActiveToolSession"/> which tracks a
+    /// session opened as a separate tab. At most one of the two is meaningfully "in use" per
+    /// document at a time in normal usage, but they are independent properties.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasInlineToolSession))]
+    private IToolSessionTab? _inlineToolSession;
+
+    public bool HasInlineToolSession => InlineToolSession is not null;
+
     /// <summary>The tool palette, grouped for display -- <see cref="Views.Controls.StrategyToolbar"/>
     /// binds to this instead of hand-listing every tool/strategy icon.</summary>
     public IReadOnlyList<Tools.ToolCategory> ToolCategories => _shell?.ToolCategories ?? Array.Empty<Tools.ToolCategory>();
@@ -108,6 +120,16 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     {
         if (!IsImageLoaded || _shell is null) return;
         _shell.OpenToolSession(this, tool);
+    }
+
+    /// <summary>
+    /// Opens the specified tool inline in this document's own tab (left-click, GIMP/Photoshop-style).
+    /// </summary>
+    [RelayCommand]
+    public void OpenToolInline(EditorTool tool)
+    {
+        if (!IsImageLoaded || _shell is null) return;
+        _shell.OpenToolInline(this, tool);
     }
 
     /// <summary>

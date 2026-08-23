@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="☀ DODGE / BURN" Accent="#FFB45309" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="☀ DODGE / BURN" Accent="#FFB45309" />
 
 <controls:ToolSessionPanel Title="Dodge / Burn"  ResetLabel="↺ Reset All">
         <controls:ToolSessionPanel.Panel>

@@ -24,7 +24,7 @@
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}"
                Focusable="True" KeyDown="Root_KeyDown">
-        <controls:ToolSessionHeader Badge="✂ BACKGROUND REMOVER" Accent="#FF1E7A33" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="✂ BACKGROUND REMOVER" Accent="#FF1E7A33" />
 
         <!-- Status bar -->
         <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">

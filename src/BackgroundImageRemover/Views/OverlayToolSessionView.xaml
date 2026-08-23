@@ -28,7 +28,7 @@
     </UserControl.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🔲 OVERLAY" Accent="#FF059669" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🔲 OVERLAY" Accent="#FF059669" />
 
 <controls:ToolSessionPanel Title="Overlay (logo / sticker)"  ShowReset="False">
         <controls:ToolSessionPanel.Panel>

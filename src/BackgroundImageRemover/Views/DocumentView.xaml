@@ -356,6 +356,15 @@
                     </Grid>
                 </Grid>
             </Grid>
+
+            <!-- Inline tool session (GIMP/Photoshop-style left-click activation): overlays the
+                 base photo view in place, no new tab. WPF's implicit DataTemplates (MainWindow.xaml)
+                 auto-select the right XyzToolSessionView for whichever session VM is bound here. -->
+            <ContentControl Content="{Binding InlineToolSession}"
+                            Background="{DynamicResource Theme.PanelBackground}"
+                            HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+                            Visibility="{Binding HasInlineToolSession, Converter={StaticResource BoolToVisibilityConverter}}" />
         </Grid>
     </DockPanel>
 </UserControl>

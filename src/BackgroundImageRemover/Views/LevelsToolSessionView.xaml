@@ -23,7 +23,7 @@
     </UserControl.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="📊 LEVELS" Accent="#FFB45309" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="📊 LEVELS" Accent="#FFB45309" />
 
 <controls:ToolSessionPanel Title="Levels" >
         <controls:ToolSessionPanel.Panel>

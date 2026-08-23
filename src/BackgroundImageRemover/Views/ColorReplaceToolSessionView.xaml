@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="🎨 COLOR REPLACE" Accent="#FFEC4899" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="🎨 COLOR REPLACE" Accent="#FFEC4899" />
 
 <controls:ToolSessionPanel Title="Color Replace" Description="Click the image to pick the target color, or choose it below." >
         <controls:ToolSessionPanel.Panel>

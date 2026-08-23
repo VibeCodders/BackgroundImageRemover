@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="↻ TRANSFORM" Accent="#FF2563EB" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="↻ TRANSFORM" Accent="#FF2563EB" />
 
 <controls:ToolSessionPanel Title="Transform" >
         <controls:ToolSessionPanel.Panel>

@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <controls:ToolSessionHeader Badge="◮ GRADIENT" Accent="#FFF59E0B" />
+        <controls:ToolSessionHeader DockPanel.Dock="Top" Badge="◮ GRADIENT" Accent="#FFF59E0B" />
 
 <controls:ToolSessionPanel Title="Gradient" >
         <controls:ToolSessionPanel.Panel>

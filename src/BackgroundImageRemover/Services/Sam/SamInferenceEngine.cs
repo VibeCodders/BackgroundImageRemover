@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Preview;
 using Microsoft.ML.OnnxRuntime;
@@ -69,11 +70,12 @@ public sealed class SamInferenceEngine : IDisposable
             rgb.CopyTo(roi);
         }
 
-        padded.GetArray(out Vec3b[] pixels);
         var input = new DenseTensor<float>(new[] { 1, 3, EncoderInputSize, EncoderInputSize });
         // Contiguous [1,3,H,W] tensor: fill the flat buffer directly (CHW layout).
         // Precompute scale/offset per channel: (px - mean) / std == px * scale - offset.
-        var inputSpan = input.Buffer.Span;
+        // Rows are independent, so the fill runs in parallel; the padded Mat is read directly
+        // through its native buffer, avoiding the per-run GetArray copy (1024x1024 = 1M pixels).
+        var inputMem = input.Buffer;
         int plane = EncoderInputSize * EncoderInputSize;
         float[] scale = new float[3];
         float[] offset = new float[3];
@@ -82,16 +84,24 @@ public sealed class SamInferenceEngine : IDisposable
             scale[c] = 1f / Std[c];
             offset[c] = Mean[c] / Std[c];
         }
-        for (int y = 0; y < EncoderInputSize; y++)
+        unsafe
         {
-            for (int x = 0; x < EncoderInputSize; x++)
+            byte* srcPtr = (byte*)padded.DataPointer;
+            long srcStep = padded.Step();
+            Parallel.For(0, EncoderInputSize, y =>
             {
-                var px = pixels[y * EncoderInputSize + x];
-                int i = y * EncoderInputSize + x;
-                inputSpan[i] = px.Item0 * scale[0] - offset[0];
-                inputSpan[plane + i] = px.Item1 * scale[1] - offset[1];
-                inputSpan[2 * plane + i] = px.Item2 * scale[2] - offset[2];
-            }
+                var row = new Span<Vec3b>((Vec3b*)(srcPtr + y * srcStep), EncoderInputSize);
+                var inputSpan = inputMem.Span;
+                int i = y * EncoderInputSize;
+                for (int x = 0; x < EncoderInputSize; x++)
+                {
+                    var px = row[x];
+                    inputSpan[i] = px.Item0 * scale[0] - offset[0];
+                    inputSpan[plane + i] = px.Item1 * scale[1] - offset[1];
+                    inputSpan[2 * plane + i] = px.Item2 * scale[2] - offset[2];
+                    i++;
+                }
+            });
         }
 
         var inputName = _encoder.InputMetadata.Keys.First();
@@ -151,13 +161,27 @@ public sealed class SamInferenceEngine : IDisposable
         var masksTensor = results.First(r => r.Name.Contains("mask", StringComparison.OrdinalIgnoreCase)).AsTensor<float>();
 
         int h = targetSize.Height, w = targetSize.Width;
-        var maskBytes = new byte[h * w];
+        using var mask = new Mat(h, w, MatType.CV_8UC1);
         if (masksTensor is DenseTensor<float> dense)
         {
-            var span = dense.Buffer.Span;
-            for (int i = 0; i < maskBytes.Length; i++)
+            // Threshold the flat buffer straight into the mask Mat (no intermediate array),
+            // in parallel over rows.
+            var outputMem = dense.Buffer;
+            unsafe
             {
-                maskBytes[i] = span[i] > 0 ? (byte)255 : (byte)0;
+                byte* maskPtr = (byte*)mask.DataPointer;
+                long maskStep = mask.Step();
+                Parallel.For(0, h, y =>
+                {
+                    var maskRow = new Span<byte>((byte*)(maskPtr + y * maskStep), w);
+                    var span = outputMem.Span;
+                    int i = y * w;
+                    for (int x = 0; x < w; x++)
+                    {
+                        maskRow[x] = span[i] > 0 ? (byte)255 : (byte)0;
+                        i++;
+                    }
+                });
             }
         }
         else
@@ -166,13 +190,10 @@ public sealed class SamInferenceEngine : IDisposable
             {
                 for (int x = 0; x < w; x++)
                 {
-                    maskBytes[y * w + x] = masksTensor[0, 0, y, x] > 0 ? (byte)255 : (byte)0;
+                    mask.Set(y, x, masksTensor[0, 0, y, x] > 0 ? (byte)255 : (byte)0);
                 }
             }
         }
-
-        using var mask = new Mat(h, w, MatType.CV_8UC1);
-        mask.SetArray(maskBytes);
 
         var feathered = new Mat();
         Cv2.GaussianBlur(mask, feathered, new Size(5, 5), 0);

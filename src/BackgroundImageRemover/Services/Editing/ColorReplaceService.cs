@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
@@ -47,49 +48,59 @@ public static class ColorReplaceService
 
         try
         {
-            // Zero-copy 2D views over the native buffers: no copies in or out.
-            var hsvSpan = hsv.AsSpan2D<Vec3b>();
-            var srcSpan = bgr.AsSpan2D<Vec3b>();
-            var dstSpan = result.AsSpan2D<Vec3b>();
-            for (int y = 0; y < h; y++)
+            // Single parallel pass over the native buffers: no copies in or out. Rows are
+            // independent, so results are identical to the sequential pass.
+            unsafe
             {
-                for (int x = 0; x < w; x++)
+                byte* hsvPtr = (byte*)hsv.DataPointer;
+                byte* srcPtr = (byte*)bgr.DataPointer;
+                byte* dstPtr = (byte*)result.DataPointer;
+                long hsvStep = hsv.Step();
+                long srcStep = bgr.Step();
+                long dstStep = result.Step();
+                Parallel.For(0, h, y =>
                 {
-                    Vec3b px = hsvSpan[y, x];
-                    double hueDist = Math.Abs(px[0] - tHue);
-                    hueDist = Math.Min(hueDist, 180 - hueDist);
-                    double sd = Math.Abs(px[1] - tSat) / 255.0;
-                    double vd = Math.Abs(px[2] - tVal) / 255.0;
-                    double d = Math.Sqrt((hueDist / 180.0) * (hueDist / 180.0) + sd * sd + vd * vd) / Math.Sqrt(3.0);
+                    var hsvRow = new Span<Vec3b>((Vec3b*)(hsvPtr + y * hsvStep), w);
+                    var srcRow = new Span<Vec3b>((Vec3b*)(srcPtr + y * srcStep), w);
+                    var dstRow = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), w);
+                    for (int x = 0; x < w; x++)
+                    {
+                        Vec3b px = hsvRow[x];
+                        double hueDist = Math.Abs(px[0] - tHue);
+                        hueDist = Math.Min(hueDist, 180 - hueDist);
+                        double sd = Math.Abs(px[1] - tSat) / 255.0;
+                        double vd = Math.Abs(px[2] - tVal) / 255.0;
+                        double d = Math.Sqrt((hueDist / 180.0) * (hueDist / 180.0) + sd * sd + vd * vd) / Math.Sqrt(3.0);
 
-                    double factor;
-                    if (d <= edgeStart)
-                    {
-                        factor = 1.0;
-                    }
-                    else if (d >= tolerance)
-                    {
-                        factor = 0.0;
-                    }
-                    else
-                    {
-                        factor = softness <= EditingGuard.Epsilon ? 1.0 : (tolerance - d) / (tolerance - edgeStart);
-                    }
+                        double factor;
+                        if (d <= edgeStart)
+                        {
+                            factor = 1.0;
+                        }
+                        else if (d >= tolerance)
+                        {
+                            factor = 0.0;
+                        }
+                        else
+                        {
+                            factor = softness <= EditingGuard.Epsilon ? 1.0 : (tolerance - d) / (tolerance - edgeStart);
+                        }
 
-                    Vec3b original = srcSpan[y, x];
-                    Vec3b replacement = newColor;
-                    if (preserveLuminance && newV > 0)
-                    {
-                        double originalV = Math.Max(original[0], Math.Max(original[1], original[2]));
-                        double scale = originalV / newV;
-                        replacement = new Vec3b(
-                            ClampByte(newColor[0] * scale),
-                            ClampByte(newColor[1] * scale),
-                            ClampByte(newColor[2] * scale));
-                    }
+                        Vec3b original = srcRow[x];
+                        Vec3b replacement = newColor;
+                        if (preserveLuminance && newV > 0)
+                        {
+                            double originalV = Math.Max(original[0], Math.Max(original[1], original[2]));
+                            double scale = originalV / newV;
+                            replacement = new Vec3b(
+                                ClampByte(newColor[0] * scale),
+                                ClampByte(newColor[1] * scale),
+                                ClampByte(newColor[2] * scale));
+                        }
 
-                    dstSpan[y, x] = PixelColor.Blend(original, replacement, factor);
-                }
+                        dstRow[x] = PixelColor.Blend(original, replacement, factor);
+                    }
+                });
             }
 
             return result;

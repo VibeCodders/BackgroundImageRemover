@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
@@ -89,31 +90,46 @@ public static class OilPaintService
                 sumGData[b] = PixelLoop.GetData<float>(sumsG[b]);
                 sumRData[b] = PixelLoop.GetData<float>(sumsR[b]);
             }
-            Vec3b[] srcData = PixelLoop.GetData<Vec3b>(bgr);
-            var dstSpan = result.AsSpan2D<Vec3b>();
-            int cols = dstSpan.Width;
-            for (int i = 0; i < srcData.Length; i++)
-            {
-                int best = 0;
-                float bestCount = countData[0][i];
-                for (int b = 1; b < levels; b++)
-                {
-                    float c = countData[b][i];
-                    if (c > bestCount)
-                    {
-                        bestCount = c;
-                        best = b;
-                    }
-                }
 
-                float cb = sumBData[best][i];
-                float cg = sumGData[best][i];
-                float cr = sumRData[best][i];
-                var src = srcData[i];
-                byte vb = bestCount > 0 ? (byte)Math.Clamp(cb / bestCount, 0, 255) : src.Item0;
-                byte vg = bestCount > 0 ? (byte)Math.Clamp(cg / bestCount, 0, 255) : src.Item1;
-                byte vr = bestCount > 0 ? (byte)Math.Clamp(cr / bestCount, 0, 255) : src.Item2;
-                dstSpan[i / cols, i % cols] = new Vec3b(vb, vg, vr);
+            // Per-pixel selection is independent, so rows are processed in parallel over the
+            // native buffers (the per-bin arrays are read-only once filled).
+            int cols = result.Cols;
+            unsafe
+            {
+                byte* srcPtr = (byte*)bgr.DataPointer;
+                byte* dstPtr = (byte*)result.DataPointer;
+                long srcStep = bgr.Step();
+                long dstStep = result.Step();
+                Parallel.For(0, result.Rows, y =>
+                {
+                    var srcRow = new Span<Vec3b>((Vec3b*)(srcPtr + y * srcStep), cols);
+                    var dstRow = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), cols);
+                    int rowStart = y * cols;
+                    for (int x = 0; x < cols; x++)
+                    {
+                        int i = rowStart + x;
+                        int best = 0;
+                        float bestCount = countData[0][i];
+                        for (int b = 1; b < levels; b++)
+                        {
+                            float c = countData[b][i];
+                            if (c > bestCount)
+                            {
+                                bestCount = c;
+                                best = b;
+                            }
+                        }
+
+                        float cb = sumBData[best][i];
+                        float cg = sumGData[best][i];
+                        float cr = sumRData[best][i];
+                        var src = srcRow[x];
+                        byte vb = bestCount > 0 ? (byte)Math.Clamp(cb / bestCount, 0, 255) : src.Item0;
+                        byte vg = bestCount > 0 ? (byte)Math.Clamp(cg / bestCount, 0, 255) : src.Item1;
+                        byte vr = bestCount > 0 ? (byte)Math.Clamp(cr / bestCount, 0, 255) : src.Item2;
+                        dstRow[x] = new Vec3b(vb, vg, vr);
+                    }
+                });
             }
 
             return result;

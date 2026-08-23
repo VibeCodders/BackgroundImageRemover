@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
@@ -27,23 +28,29 @@ public static class VignetteService
         double maxRadius = Math.Sqrt(cx * cx + cy * cy);
         double radius = maxRadius * (1.0 - strength * 0.3);
 
-        // Build a radial falloff mask (0 at center, strength at corners).
+        // Build a radial falloff mask (0 at center, strength at corners). Rows are independent
+        // per-pixel computations, so the mask is built in parallel.
         var mask = new Mat(h, w, MatType.CV_32FC1, Scalar.All(0));
-        var maskSpan = mask.AsSpan2D<float>();
-        for (int y = 0; y < h; y++)
+        unsafe
         {
-            for (int x = 0; x < w; x++)
+            byte* maskPtr = (byte*)mask.DataPointer;
+            long maskStep = mask.Step();
+            Parallel.For(0, h, y =>
             {
-                double dx = (x - cx) / (w / 2.0);
+                var maskRow = new Span<float>((float*)(maskPtr + y * maskStep), w);
                 double dy = (y - cy) / (h / 2.0);
-                // Roundness blends between elliptical (0) and circular (1).
-                double r = Math.Sqrt(dx * dx * (1 - roundness) + dy * dy * (1 - roundness) + dx * dx * roundness + dy * dy * roundness);
-                double dist = r * maxRadius * 0.5;
-                double t = Math.Clamp(dist / radius, 0.0, 1.0);
-                // Feather softens the transition.
-                t = Math.Pow(t, 1.0 + feather * 2.0);
-                maskSpan[y, x] = (float)(t * strength);
-            }
+                for (int x = 0; x < w; x++)
+                {
+                    double dx = (x - cx) / (w / 2.0);
+                    // Roundness blends between elliptical (0) and circular (1).
+                    double r = Math.Sqrt(dx * dx * (1 - roundness) + dy * dy * (1 - roundness) + dx * dx * roundness + dy * dy * roundness);
+                    double dist = r * maxRadius * 0.5;
+                    double t = Math.Clamp(dist / radius, 0.0, 1.0);
+                    // Feather softens the transition.
+                    t = Math.Pow(t, 1.0 + feather * 2.0);
+                    maskRow[x] = (float)(t * strength);
+                }
+            });
         }
 
         try

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -104,16 +105,25 @@ public static class ImageProcessingHelper
                         using var shiftPositive = new Mat();
                         Cv2.Add(hFloat, Scalar.All(360.0), shiftPositive);
 
-                        var shiftedSpan = shiftPositive.AsSpan2D<float>();
-                        var hueSpan = channels[0].AsSpan2D<byte>();
-                        for (int r = 0; r < shiftedSpan.Height; r++)
+                        int hueRows = channels[0].Rows;
+                        int hueCols = channels[0].Cols;
+                        unsafe
                         {
-                            for (int c = 0; c < shiftedSpan.Width; c++)
+                            byte* shiftPtr = (byte*)shiftPositive.DataPointer;
+                            byte* huePtr = (byte*)channels[0].DataPointer;
+                            long shiftStep = shiftPositive.Step();
+                            long hueStep = channels[0].Step();
+                            Parallel.For(0, hueRows, r =>
                             {
-                                float val = shiftedSpan[r, c] % 180f;
-                                if (val < 0) val += 180f;
-                                hueSpan[r, c] = (byte)val;
-                            }
+                                var shiftRow = new Span<float>((float*)(shiftPtr + r * shiftStep), hueCols);
+                                var hueRow = new Span<byte>((byte*)(huePtr + r * hueStep), hueCols);
+                                for (int c = 0; c < hueCols; c++)
+                                {
+                                    float val = shiftRow[c] % 180f;
+                                    if (val < 0) val += 180f;
+                                    hueRow[c] = (byte)val;
+                                }
+                            });
                         }
 
                         // Saturation multiplier
@@ -337,19 +347,26 @@ public static class ImageProcessingHelper
         float centerX = size.Width / 2.0f;
         float centerY = size.Height / 2.0f;
         float maxDistance = MathF.Sqrt(centerX * centerX + centerY * centerY);
+        int w = size.Width;
+        int h = size.Height;
 
-        var span = mask.AsSpan2D<float>();
-        for (int r = 0; r < span.Height; r++)
+        unsafe
         {
-            float dy = r - centerY;
-            for (int c = 0; c < span.Width; c++)
+            byte* maskPtr = (byte*)mask.DataPointer;
+            long maskStep = mask.Step();
+            Parallel.For(0, h, r =>
             {
-                float dx = c - centerX;
-                float dist = MathF.Sqrt(dx * dx + dy * dy) / maxDistance;
-                // Cosine smooth roll-off
-                float factor = 1.0f - (float)strength * MathF.Pow(dist, 1.8f);
-                span[r, c] = Math.Clamp(factor, 0.0f, 1.0f);
-            }
+                var maskRow = new Span<float>((float*)(maskPtr + r * maskStep), w);
+                float dy = r - centerY;
+                for (int c = 0; c < w; c++)
+                {
+                    float dx = c - centerX;
+                    float dist = MathF.Sqrt(dx * dx + dy * dy) / maxDistance;
+                    // Cosine smooth roll-off
+                    float factor = 1.0f - (float)strength * MathF.Pow(dist, 1.8f);
+                    maskRow[c] = Math.Clamp(factor, 0.0f, 1.0f);
+                }
+            });
         }
 
         return mask;

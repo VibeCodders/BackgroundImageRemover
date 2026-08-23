@@ -37,37 +37,59 @@ public sealed class ImageLoaderService : IImageLoaderService
 
             int orientation = ExifOrientationHelper.ReadOrientation(bytes);
 
-            // Peek at the raw channel count so a transparent PNG (4 channels) can be
-            // decoded with its alpha intact.
-            using (var probe = Cv2.ImDecode(bytes, ImreadModes.Unchanged))
-            {
-                if (probe.Empty())
-                {
-                    throw new InvalidOperationException($"Could not decode image: {filePath}");
-                }
-                if (probe.Channels() != 4)
-                {
-                    return LoadWithoutAlpha(bytes, filePath, orientation);
-                }
-            }
-
-            using var mat = Cv2.ImDecode(bytes, ImreadModes.Unchanged);
+            // Single decode for the common 8-bit 1/3/4-channel cases (JPEG, most PNGs): the
+            // previous version decoded twice — once to probe the channel count, then again to
+            // produce the working Mat. The Unchanged decode ignores EXIF (like the probe), so
+            // orientation is applied manually below, exactly as before. Unusual depths (16-bit,
+            // float) fall back to a Color-mode re-decode that converts to 8-bit.
+            var mat = Cv2.ImDecode(bytes, ImreadModes.Unchanged);
             if (mat.Empty())
             {
+                mat.Dispose();
                 throw new InvalidOperationException($"Could not decode image: {filePath}");
             }
 
-            var (bgr, alpha) = BackgroundCompositingService.SplitBgra(mat);
-            if (orientation != 1)
+            if (mat.Channels() == 4)
             {
-                // Ownership of the rotated Mats transfers to the LoadedImage.
-                var orientedBgr = ExifOrientationHelper.ApplyOrientation(bgr, orientation);
-                var orientedAlpha = ExifOrientationHelper.ApplyOrientation(alpha, orientation);
-                bgr.Dispose();
-                alpha.Dispose();
-                return new LoadedImage(filePath, orientedBgr, orientedAlpha);
+                var (bgr, alpha) = BackgroundCompositingService.SplitBgra(mat);
+                mat.Dispose();
+                if (orientation != 1)
+                {
+                    // Ownership of the rotated Mats transfers to the LoadedImage.
+                    var orientedBgr = ExifOrientationHelper.ApplyOrientation(bgr, orientation);
+                    var orientedAlpha = ExifOrientationHelper.ApplyOrientation(alpha, orientation);
+                    bgr.Dispose();
+                    alpha.Dispose();
+                    return new LoadedImage(filePath, orientedBgr, orientedAlpha);
+                }
+                return new LoadedImage(filePath, bgr, alpha);
             }
-            return new LoadedImage(filePath, bgr, alpha);
+
+            if (mat.Type() == MatType.CV_8UC3)
+            {
+                if (orientation != 1)
+                {
+                    var oriented = ExifOrientationHelper.ApplyOrientation(mat, orientation);
+                    mat.Dispose();
+                    return new LoadedImage(filePath, oriented);
+                }
+                return new LoadedImage(filePath, mat);
+            }
+
+            if (mat.Type() == MatType.CV_8UC1)
+            {
+                using var bgrMat = new Mat();
+                Cv2.CvtColor(mat, bgrMat, ColorConversionCodes.GRAY2BGR);
+                mat.Dispose();
+                if (orientation != 1)
+                {
+                    return new LoadedImage(filePath, ExifOrientationHelper.ApplyOrientation(bgrMat, orientation));
+                }
+                return new LoadedImage(filePath, bgrMat.Clone());
+            }
+
+            mat.Dispose();
+            return LoadWithoutAlpha(bytes, filePath, orientation);
         }, ct);
     }
 

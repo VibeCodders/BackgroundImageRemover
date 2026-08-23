@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using CommunityToolkit.HighPerformance;
 using OpenCvSharp;
 
@@ -82,5 +83,29 @@ public static class PixelLoop
         long elemSize = mat.ElemSize();  // bytes per element
         int padding = (int)((step / elemSize) - cols);
         return new Span2D<T>((T*)mat.DataPointer, rows, cols, padding);
+    }
+
+    /// <summary>
+    /// Runs <paramref name="rowAction"/> once per row of <paramref name="mat"/> in parallel
+    /// (worker threads), passing the row's start address and its row index. Use inside an unsafe
+    /// block and create a typed span from the pointer, e.g.
+    /// <c>new Span&lt;Vec3b&gt;((Vec3b*)rowPtr, mat.Cols)</c>. The pointer honors the Mat's row
+    /// stride, so ROI views work. Rows are processed by exactly one thread each and pixel math is
+    /// deterministic, so results are identical to a sequential pass — this only makes CPU-bound
+    /// per-pixel passes over large images faster. The returned spans are only valid for the
+    /// duration of the callback; do not store them.
+    /// </summary>
+    public static unsafe void ForEachRowParallel(Mat mat, Action<IntPtr, int> rowAction)
+    {
+        ArgumentNullException.ThrowIfNull(mat);
+        ArgumentNullException.ThrowIfNull(rowAction);
+        if (mat.IsDisposed || mat.Empty())
+        {
+            return;
+        }
+
+        byte* ptr = (byte*)mat.DataPointer;
+        long step = mat.Step();
+        Parallel.For(0, mat.Rows, y => rowAction((IntPtr)(ptr + y * step), y));
     }
 }

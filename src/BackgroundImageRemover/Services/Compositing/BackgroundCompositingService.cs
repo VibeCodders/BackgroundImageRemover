@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
@@ -363,30 +364,40 @@ public static class BackgroundCompositingService
     }
 
     /// <summary>
-    /// Composites a BGRA cutout onto an opaque BGR background in a single pass over zero-copy
-    /// <see cref="Span2D{T}"/> views: <c>result = fg*a + bg*(1-a)</c>. The previous version
-    /// materialized ~9 intermediate CV_32F Mats (a full-image float pass each) for every export.
+    /// Composites a BGRA cutout onto an opaque BGR background in a single parallel pass over the
+    /// native buffers: <c>result = fg*a + bg*(1-a)</c>. The previous version materialized ~9
+    /// intermediate CV_32F Mats (a full-image float pass each) for every export.
     /// </summary>
     private static Mat CompositeOntoBgr(Mat bgra, Mat backgroundBgr)
     {
-        var fgSpan = bgra.AsSpan2D<Vec4b>();
-        var bgSpan = backgroundBgr.AsSpan2D<Vec3b>();
-
+        int rows = bgra.Rows;
+        int cols = bgra.Cols;
         var result = new Mat(bgra.Size(), MatType.CV_8UC3);
-        var dstSpan = result.AsSpan2D<Vec3b>();
-        for (int y = 0; y < dstSpan.Height; y++)
+        unsafe
         {
-            for (int x = 0; x < dstSpan.Width; x++)
+            byte* fgPtr = (byte*)bgra.DataPointer;
+            byte* bgPtr = (byte*)backgroundBgr.DataPointer;
+            byte* dstPtr = (byte*)result.DataPointer;
+            long fgStep = bgra.Step();
+            long bgStep = backgroundBgr.Step();
+            long dstStep = result.Step();
+            Parallel.For(0, rows, y =>
             {
-                float a = fgSpan[y, x].Item3 / 255f;
-                float inv = 1f - a;
-                var fg = fgSpan[y, x];
-                var bg = bgSpan[y, x];
-                dstSpan[y, x] = new Vec3b(
-                    BlendByte(fg.Item0, bg.Item0, inv, a),
-                    BlendByte(fg.Item1, bg.Item1, inv, a),
-                    BlendByte(fg.Item2, bg.Item2, inv, a));
-            }
+                var fgRow = new Span<Vec4b>((Vec4b*)(fgPtr + y * fgStep), cols);
+                var bgRow = new Span<Vec3b>((Vec3b*)(bgPtr + y * bgStep), cols);
+                var dstRow = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), cols);
+                for (int x = 0; x < cols; x++)
+                {
+                    float a = fgRow[x].Item3 / 255f;
+                    float inv = 1f - a;
+                    var fg = fgRow[x];
+                    var bg = bgRow[x];
+                    dstRow[x] = new Vec3b(
+                        BlendByte(fg.Item0, bg.Item0, inv, a),
+                        BlendByte(fg.Item1, bg.Item1, inv, a),
+                        BlendByte(fg.Item2, bg.Item2, inv, a));
+                }
+            });
         }
         return result;
     }

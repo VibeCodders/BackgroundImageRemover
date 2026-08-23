@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
@@ -28,18 +29,26 @@ public static class WaveService
 
         using var mapX = new Mat(h, w, MatType.CV_32FC1);
         using var mapY = new Mat(h, w, MatType.CV_32FC1);
-        var mapXSpan = mapX.AsSpan2D<float>();
-        var mapYSpan = mapY.AsSpan2D<float>();
-        for (int y = 0; y < h; y++)
+        // Each map entry is an independent per-pixel computation, so rows are built in parallel.
+        unsafe
         {
-            for (int x = 0; x < w; x++)
+            byte* xPtr = (byte*)mapX.DataPointer;
+            byte* yPtr = (byte*)mapY.DataPointer;
+            long xStep = mapX.Step();
+            long yStep = mapY.Step();
+            Parallel.For(0, h, y =>
             {
-                // Coordinate along the wave direction.
-                double u = x * cosA + y * sinA;
-                double offset = amplitude * Math.Sin(2.0 * Math.PI * u / wl);
-                mapXSpan[y, x] = (float)(x - offset * sinA);
-                mapYSpan[y, x] = (float)(y + offset * cosA);
-            }
+                var mapXRow = new Span<float>((float*)(xPtr + y * xStep), w);
+                var mapYRow = new Span<float>((float*)(yPtr + y * yStep), w);
+                for (int x = 0; x < w; x++)
+                {
+                    // Coordinate along the wave direction.
+                    double u = x * cosA + y * sinA;
+                    double offset = amplitude * Math.Sin(2.0 * Math.PI * u / wl);
+                    mapXRow[x] = (float)(x - offset * sinA);
+                    mapYRow[x] = (float)(y + offset * cosA);
+                }
+            });
         }
 
         var result = new Mat();

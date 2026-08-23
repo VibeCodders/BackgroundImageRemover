@@ -1,5 +1,5 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Services.Compositing;
-using CommunityToolkit.HighPerformance;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Helpers;
@@ -15,61 +15,81 @@ public static class ImageProcessingUtility
 
     /// <summary>
     /// Alpha-composites <paramref name="overlayBgra"/> over <paramref name="baseBgra"/>,
-    /// scaled by <paramref name="opacity"/> (0..1). Single-pass over zero-copy
-    /// <see cref="Span2D{T}"/> views: the previous version materialized ~11 intermediate
-    /// CV_32F Mats. Blend math is identical (<c>result = base*(1-a) + overlay*a</c> with
-    /// <c>a = overlayAlpha*opacity/255</c>) and the result alpha stays the base alpha.
+    /// scaled by <paramref name="opacity"/> (0..1). Single parallel pass over the native
+    /// buffers: the previous version materialized ~11 intermediate CV_32F Mats. Blend math is
+    /// identical (<c>result = base*(1-a) + overlay*a</c> with <c>a = overlayAlpha*opacity/255</c>)
+    /// and the result alpha stays the base alpha.
     /// </summary>
     public static Mat CompositeOverBgra(Mat baseBgra, Mat overlayBgra, double opacity)
     {
-        var baseSpan = baseBgra.AsSpan2D<Vec4b>();
-        var ovSpan = overlayBgra.AsSpan2D<Vec4b>();
+        int rows = baseBgra.Rows;
+        int cols = baseBgra.Cols;
         float op = (float)opacity;
-
         var result = new Mat(baseBgra.Size(), MatType.CV_8UC4);
-        var dstSpan = result.AsSpan2D<Vec4b>();
-        for (int y = 0; y < dstSpan.Height; y++)
+        unsafe
         {
-            for (int x = 0; x < dstSpan.Width; x++)
+            byte* basePtr = (byte*)baseBgra.DataPointer;
+            byte* ovPtr = (byte*)overlayBgra.DataPointer;
+            byte* dstPtr = (byte*)result.DataPointer;
+            long baseStep = baseBgra.Step();
+            long ovStep = overlayBgra.Step();
+            long dstStep = result.Step();
+            Parallel.For(0, rows, y =>
             {
-                var b = baseSpan[y, x];
-                var o = ovSpan[y, x];
-                float a = o.Item3 * op / 255f;
-                float inv = 1f - a;
-                dstSpan[y, x] = new Vec4b(
-                    BlendByte(o.Item0, b.Item0, inv, a),
-                    BlendByte(o.Item1, b.Item1, inv, a),
-                    BlendByte(o.Item2, b.Item2, inv, a),
-                    b.Item3);
-            }
+                var baseRow = new Span<Vec4b>((Vec4b*)(basePtr + y * baseStep), cols);
+                var ovRow = new Span<Vec4b>((Vec4b*)(ovPtr + y * ovStep), cols);
+                var dstRow = new Span<Vec4b>((Vec4b*)(dstPtr + y * dstStep), cols);
+                for (int x = 0; x < cols; x++)
+                {
+                    var b = baseRow[x];
+                    var o = ovRow[x];
+                    float a = o.Item3 * op / 255f;
+                    float inv = 1f - a;
+                    dstRow[x] = new Vec4b(
+                        BlendByte(o.Item0, b.Item0, inv, a),
+                        BlendByte(o.Item1, b.Item1, inv, a),
+                        BlendByte(o.Item2, b.Item2, inv, a),
+                        b.Item3);
+                }
+            });
         }
         return result;
     }
 
     /// <summary>
     /// Alpha-composites <paramref name="overlayRoi"/> onto <paramref name="dstRoi"/> in place,
-    /// scaled by <paramref name="opacity"/> (0..1). Single-pass over zero-copy
-    /// <see cref="Span2D{T}"/> views; the previous version materialized ~8 intermediate
-    /// CV_32F Mats per call (text overlay and shape/mosaic stamping call it per block).
+    /// scaled by <paramref name="opacity"/> (0..1). Single parallel pass over the native
+    /// buffers; the previous version materialized ~8 intermediate CV_32F Mats per call (text
+    /// overlay and shape/mosaic stamping call it per block). Works on ROI views (the row
+    /// pointers honor the parent's stride).
     /// </summary>
     public static Mat AlphaComposite(Mat dstRoi, Mat overlayRoi, double opacity)
     {
-        var dstSpan = dstRoi.AsSpan2D<Vec3b>();
-        var ovSpan = overlayRoi.AsSpan2D<Vec4b>();
+        int rows = dstRoi.Rows;
+        int cols = dstRoi.Cols;
         float op = (float)opacity;
-        for (int y = 0; y < dstSpan.Height; y++)
+        unsafe
         {
-            for (int x = 0; x < dstSpan.Width; x++)
+            byte* dstPtr = (byte*)dstRoi.DataPointer;
+            byte* ovPtr = (byte*)overlayRoi.DataPointer;
+            long dstStep = dstRoi.Step();
+            long ovStep = overlayRoi.Step();
+            Parallel.For(0, rows, y =>
             {
-                var d = dstSpan[y, x];
-                var o = ovSpan[y, x];
-                float a = o.Item3 * op / 255f;
-                float inv = 1f - a;
-                dstSpan[y, x] = new Vec3b(
-                    BlendByte(o.Item0, d.Item0, inv, a),
-                    BlendByte(o.Item1, d.Item1, inv, a),
-                    BlendByte(o.Item2, d.Item2, inv, a));
-            }
+                var dstRow = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), cols);
+                var ovRow = new Span<Vec4b>((Vec4b*)(ovPtr + y * ovStep), cols);
+                for (int x = 0; x < cols; x++)
+                {
+                    var d = dstRow[x];
+                    var o = ovRow[x];
+                    float a = o.Item3 * op / 255f;
+                    float inv = 1f - a;
+                    dstRow[x] = new Vec3b(
+                        BlendByte(o.Item0, d.Item0, inv, a),
+                        BlendByte(o.Item1, d.Item1, inv, a),
+                        BlendByte(o.Item2, d.Item2, inv, a));
+                }
+            });
         }
         return dstRoi;
     }

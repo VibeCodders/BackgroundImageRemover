@@ -57,18 +57,21 @@ public static class HsvPixelAdjuster
     /// no native interop per pixel). Semantically identical to adjusting each pixel individually,
     /// but much faster on large images.
     /// </summary>
-    public static void AdjustPixelArray(
+    public static unsafe void AdjustPixelArray(
         Mat hsvMat,
         double hueShift, double satMultiplier, double valMultiplier)
     {
         ArgumentNullException.ThrowIfNull(hsvMat);
-        var hsvSpan = hsvMat.AsSpan2D<Vec3b>();
-        for (int y = 0; y < hsvSpan.Height; y++)
+        int cols = hsvMat.Cols;
+        // Rows are processed in parallel; each pixel is adjusted independently, so results are
+        // identical to the sequential pass.
+        PixelLoop.ForEachRowParallel(hsvMat, (rowPtr, _) =>
         {
-            for (int x = 0; x < hsvSpan.Width; x++)
+            var row = new Span<Vec3b>((Vec3b*)rowPtr, cols);
+            for (int x = 0; x < cols; x++)
             {
-                AdjustPixel(ref hsvSpan[y, x], hueShift, satMultiplier, valMultiplier);
+                AdjustPixel(ref row[x], hueShift, satMultiplier, valMultiplier);
             }
-        }
+        });
     }
 }

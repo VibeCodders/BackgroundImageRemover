@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
@@ -207,15 +208,21 @@ public static class FrameService
         double cy = (bgra.Height - 1) / 2.0;
         double maxDist = Math.Max(1e-6, Math.Sqrt(cx * cx + cy * cy));
         int w = bgra.Width;
-        var factorSpan = factor.AsSpan2D<float>();
-        for (int y = 0; y < factorSpan.Height; y++)
+        int h = bgra.Height;
+        unsafe
         {
-            for (int x = 0; x < factorSpan.Width; x++)
+            byte* factorPtr = (byte*)factor.DataPointer;
+            long factorStep = factor.Step();
+            Parallel.For(0, h, y =>
             {
-                double d = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / maxDist;
-                double falloff = Math.Clamp((d - 0.35) / 0.65, 0.0, 1.0);
-                factorSpan[y, x] = (float)(strength * falloff * falloff);
-            }
+                var factorRow = new Span<float>((float*)(factorPtr + y * factorStep), w);
+                for (int x = 0; x < w; x++)
+                {
+                    double d = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / maxDist;
+                    double falloff = Math.Clamp((d - 0.35) / 0.65, 0.0, 1.0);
+                    factorRow[x] = (float)(strength * falloff * falloff);
+                }
+            });
         }
 
         using var split = ChannelSplit.Of(bgra);

@@ -1,5 +1,5 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Helpers;
-using CommunityToolkit.HighPerformance;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -49,14 +49,13 @@ public static class GradientService
 
         try
         {
-            var maskSpan = mask.AsSpan2D<float>();
-            var overlaySpan = overlay.AsSpan2D<Vec3b>();
-
+            double maxProj = 1;
+            double maxR = 1;
             if (kind == GradientKind.Linear)
             {
                 // Normalize by the largest corner projection so the gradient always spans the
                 // full image regardless of angle.
-                double maxProj = 0;
+                maxProj = 0;
                 foreach (double px in new[] { 0.0, w - 1.0 })
                 {
                     foreach (double py in new[] { 0.0, h - 1.0 })
@@ -68,33 +67,46 @@ public static class GradientService
                 {
                     maxProj = 1;
                 }
-
-                for (int y = 0; y < h; y++)
-                {
-                    for (int x = 0; x < w; x++)
-                    {
-                        double proj = (x - cx) * dirX + (y - cy) * dirY;
-                        double t = (proj / maxProj + 1.0) * 0.5;
-                        WriteGradient(maskSpan, overlaySpan, x, y, Math.Clamp(t, 0.0, 1.0), opacity, colorA, colorB);
-                    }
-                }
             }
             else
             {
-                double maxR = Math.Sqrt(w * w + h * h) / 2.0;
+                maxR = Math.Sqrt(w * w + h * h) / 2.0;
                 if (maxR < EditingGuard.Epsilon)
                 {
                     maxR = 1;
                 }
+            }
 
-                for (int y = 0; y < h; y++)
+            // Mask + overlay rows are independent per-pixel computations, so they are built in
+            // parallel; the gradient math is identical to the sequential version.
+            unsafe
+            {
+                byte* maskPtr = (byte*)mask.DataPointer;
+                byte* overlayPtr = (byte*)overlay.DataPointer;
+                long maskStep = mask.Step();
+                long overlayStep = overlay.Step();
+                Parallel.For(0, h, y =>
                 {
-                    for (int x = 0; x < w; x++)
+                    var maskRow = new Span<float>((float*)(maskPtr + y * maskStep), w);
+                    var overlayRow = new Span<Vec3b>((Vec3b*)(overlayPtr + y * overlayStep), w);
+                    if (kind == GradientKind.Linear)
                     {
-                        double dist = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
-                        WriteGradient(maskSpan, overlaySpan, x, y, Math.Clamp(dist / maxR, 0.0, 1.0), opacity, colorA, colorB);
+                        for (int x = 0; x < w; x++)
+                        {
+                            double proj = (x - cx) * dirX + (y - cy) * dirY;
+                            double t = (proj / maxProj + 1.0) * 0.5;
+                            WriteGradient(maskRow, overlayRow, x, Math.Clamp(t, 0.0, 1.0), opacity, colorA, colorB);
+                        }
                     }
-                }
+                    else
+                    {
+                        for (int x = 0; x < w; x++)
+                        {
+                            double dist = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                            WriteGradient(maskRow, overlayRow, x, Math.Clamp(dist / maxR, 0.0, 1.0), opacity, colorA, colorB);
+                        }
+                    }
+                });
             }
 
             // Gravity-fill never fails below: BlendByMask builds a fresh Mat.
@@ -111,10 +123,10 @@ public static class GradientService
         }
     }
 
-    private static void WriteGradient(Span2D<float> maskSpan, Span2D<Vec3b> overlaySpan, int x, int y, double t, double opacity, Vec3b colorA, Vec3b colorB)
+    private static void WriteGradient(Span<float> maskRow, Span<Vec3b> overlayRow, int x, double t, double opacity, Vec3b colorA, Vec3b colorB)
     {
-        maskSpan[y, x] = (float)(t * opacity);
-        overlaySpan[y, x] = new Vec3b(
+        maskRow[x] = (float)(t * opacity);
+        overlayRow[x] = new Vec3b(
             (byte)(colorA[0] + (colorB[0] - colorA[0]) * t),
             (byte)(colorA[1] + (colorB[1] - colorA[1]) * t),
             (byte)(colorA[2] + (colorB[2] - colorA[2]) * t));

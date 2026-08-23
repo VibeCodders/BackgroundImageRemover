@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
@@ -54,19 +55,26 @@ public static class FxService
         var c = color ?? new Vec3b(80, 120, 255); // warm orange-red in BGR
         var result = bgr.Clone();
         float maxDist = MathF.Sqrt(bgr.Width * bgr.Width + bgr.Height * bgr.Height);
-        var span = result.AsSpan2D<Vec3b>();
-        for (int y = 0; y < span.Height; y++)
+        int cols = result.Cols;
+        int rows = result.Rows;
+        unsafe
         {
-            for (int x = 0; x < span.Width; x++)
+            byte* resPtr = (byte*)result.DataPointer;
+            long resStep = result.Step();
+            Parallel.For(0, rows, y =>
             {
-                float d = MathF.Sqrt(x * x + y * y) / maxDist;
-                float falloff = MathF.Pow(1.0f - d, 2.0f);
-                float amount = (float)strength * falloff;
-                ref var px = ref span[y, x];
-                px.Item0 = (byte)Math.Min(255, px.Item0 + c.Item0 * amount);
-                px.Item1 = (byte)Math.Min(255, px.Item1 + c.Item1 * amount);
-                px.Item2 = (byte)Math.Min(255, px.Item2 + c.Item2 * amount);
-            }
+                var row = new Span<Vec3b>((Vec3b*)(resPtr + y * resStep), cols);
+                for (int x = 0; x < cols; x++)
+                {
+                    float d = MathF.Sqrt(x * x + y * y) / maxDist;
+                    float falloff = MathF.Pow(1.0f - d, 2.0f);
+                    float amount = (float)strength * falloff;
+                    ref var px = ref row[x];
+                    px.Item0 = (byte)Math.Min(255, px.Item0 + c.Item0 * amount);
+                    px.Item1 = (byte)Math.Min(255, px.Item1 + c.Item1 * amount);
+                    px.Item2 = (byte)Math.Min(255, px.Item2 + c.Item2 * amount);
+                }
+            });
         }
         return result;
     }
@@ -132,19 +140,28 @@ public static class FxService
     {
         using var mapX = new Mat(channel.Size(), MatType.CV_32FC1);
         using var mapY = new Mat(channel.Size(), MatType.CV_32FC1);
-        var mapXSpan = mapX.AsSpan2D<float>();
-        var mapYSpan = mapY.AsSpan2D<float>();
-        for (int y = 0; y < mapXSpan.Height; y++)
+        int w = channel.Width;
+        int h = channel.Height;
+        unsafe
         {
-            for (int x = 0; x < mapXSpan.Width; x++)
+            byte* xPtr = (byte*)mapX.DataPointer;
+            byte* yPtr = (byte*)mapY.DataPointer;
+            long xStep = mapX.Step();
+            long yStep = mapY.Step();
+            Parallel.For(0, h, y =>
             {
-                float dx = x - cx;
-                float dy = y - cy;
-                float norm = maxR > 0 ? MathF.Sqrt(dx * dx + dy * dy) / maxR : 0;
-                float scale = 1.0f + strength * 0.06f * norm;
-                mapXSpan[y, x] = cx + dx * scale;
-                mapYSpan[y, x] = cy + dy * scale;
-            }
+                var mapXRow = new Span<float>((float*)(xPtr + y * xStep), w);
+                var mapYRow = new Span<float>((float*)(yPtr + y * yStep), w);
+                for (int x = 0; x < w; x++)
+                {
+                    float dx = x - cx;
+                    float dy = y - cy;
+                    float norm = maxR > 0 ? MathF.Sqrt(dx * dx + dy * dy) / maxR : 0;
+                    float scale = 1.0f + strength * 0.06f * norm;
+                    mapXRow[x] = cx + dx * scale;
+                    mapYRow[x] = cy + dy * scale;
+                }
+            });
         }
 
         var result = new Mat();
@@ -152,28 +169,46 @@ public static class FxService
         return result;
     }
 
-    /// <summary>screen(a,b) = 255 - (255-a)*(255-b)/255, blended toward b by <paramref name="t"/>.</summary>
+    /// <summary>screen(a,b) = 255 - (255-a)*(255-b)/255, blended toward b by <paramref name="t"/>.
+    /// Single parallel pass over the native buffers (the previous version materialized ~6
+    /// intermediate CV_32FC3 Mats per call).</summary>
     private static Mat ScreenBlend(Mat baseBgr, Mat blendBgr, double t)
     {
-        using var aF = new Mat();
-        baseBgr.ConvertTo(aF, MatType.CV_32FC3);
-        using var bF = new Mat();
-        blendBgr.ConvertTo(bF, MatType.CV_32FC3);
-
-        using var invA = new Mat();
-        Cv2.Subtract(new Mat(aF.Size(), aF.Type(), Scalar.All(255.0)), aF, invA);
-        using var invB = new Mat();
-        Cv2.Subtract(new Mat(bF.Size(), bF.Type(), Scalar.All(255.0)), bF, invB);
-        using var product = invA.Mul(invB).ToMat();
-        using var product255 = new Mat();
-        Cv2.Divide(product, new Mat(aF.Size(), aF.Type(), Scalar.All(255.0)), product255);
-        using var screen = new Mat();
-        Cv2.Subtract(new Mat(aF.Size(), aF.Type(), Scalar.All(255.0)), product255, screen);
-
-        using var blendedF = new Mat();
-        Cv2.AddWeighted(aF, 1.0 - t, screen, t, 0, blendedF);
-        var result = new Mat();
-        blendedF.ConvertTo(result, MatType.CV_8UC3);
+        int rows = baseBgr.Rows;
+        int cols = baseBgr.Cols;
+        float f = (float)t;
+        var result = new Mat(baseBgr.Size(), MatType.CV_8UC3);
+        unsafe
+        {
+            byte* aPtr = (byte*)baseBgr.DataPointer;
+            byte* bPtr = (byte*)blendBgr.DataPointer;
+            byte* dstPtr = (byte*)result.DataPointer;
+            long aStep = baseBgr.Step();
+            long bStep = blendBgr.Step();
+            long dstStep = result.Step();
+            Parallel.For(0, rows, y =>
+            {
+                var aRow = new Span<Vec3b>((Vec3b*)(aPtr + y * aStep), cols);
+                var bRow = new Span<Vec3b>((Vec3b*)(bPtr + y * bStep), cols);
+                var dstRow = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), cols);
+                for (int x = 0; x < cols; x++)
+                {
+                    var a = aRow[x];
+                    var b = bRow[x];
+                    dstRow[x] = new Vec3b(
+                        ScreenByte(a.Item0, b.Item0, f),
+                        ScreenByte(a.Item1, b.Item1, f),
+                        ScreenByte(a.Item2, b.Item2, f));
+                }
+            });
+        }
         return result;
+    }
+
+    private static byte ScreenByte(byte a, byte b, float t)
+    {
+        float screen = 255f - (255f - a) * (255f - b) / 255f;
+        float v = a * (1f - t) + screen * t;
+        return (byte)Math.Clamp(Math.Round(v, MidpointRounding.AwayFromZero), 0, 255);
     }
 }

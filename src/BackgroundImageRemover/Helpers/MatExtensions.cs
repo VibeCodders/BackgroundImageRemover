@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
@@ -259,43 +260,59 @@ public static class MatExtensions
         ArgumentNullException.ThrowIfNull(modified);
         ArgumentNullException.ThrowIfNull(mask);
 
-        var origSpan = original.AsSpan2D<Vec3b>();
         bool modFloat = modified.Type() == MatType.CV_32FC3;
-        var modByteSpan = modFloat ? default : modified.AsSpan2D<Vec3b>();
-        var modFloatSpan = modFloat ? modified.AsSpan2D<Vec3f>() : default;
         bool byteMask = mask.Type() == MatType.CV_8UC1;
-        var maskByteSpan = byteMask ? mask.AsSpan2D<byte>() : default;
-        var maskFloatSpan = byteMask ? default : mask.AsSpan2D<float>();
+        int rows = original.Rows;
+        int cols = original.Cols;
 
         var result = new Mat(original.Size(), MatType.CV_8UC3);
-        var dstSpan = result.AsSpan2D<Vec3b>();
-        for (int y = 0; y < dstSpan.Height; y++)
+        unsafe
         {
-            for (int x = 0; x < dstSpan.Width; x++)
+            byte* origPtr = (byte*)original.DataPointer;
+            byte* modPtr = (byte*)modified.DataPointer;
+            byte* maskPtr = (byte*)mask.DataPointer;
+            byte* dstPtr = (byte*)result.DataPointer;
+            long origStep = original.Step();
+            long modStep = modified.Step();
+            long maskStep = mask.Step();
+            long dstStep = result.Step();
+
+            // Rows are independent and each is processed by exactly one thread, so results are
+            // identical to a sequential pass (same per-pixel math, no cross-row dependencies).
+            Parallel.For(0, rows, y =>
             {
-                float m = byteMask ? maskByteSpan[y, x] / 255f : maskFloatSpan[y, x];
-                float inv = 1f - m;
-                var orig = origSpan[y, x];
-                float mb, mg, mr;
-                if (modFloat)
+                var origRow = new Span<Vec3b>((Vec3b*)(origPtr + y * origStep), cols);
+                var dstRow = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), cols);
+                var maskByteRow = byteMask ? new Span<byte>((byte*)(maskPtr + y * maskStep), cols) : Span<byte>.Empty;
+                var maskFloatRow = byteMask ? Span<float>.Empty : new Span<float>((float*)(maskPtr + y * maskStep), cols);
+                var modByteRow = modFloat ? Span<Vec3b>.Empty : new Span<Vec3b>((Vec3b*)(modPtr + y * modStep), cols);
+                var modFloatRow = modFloat ? new Span<Vec3f>((Vec3f*)(modPtr + y * modStep), cols) : Span<Vec3f>.Empty;
+                for (int x = 0; x < cols; x++)
                 {
-                    var mod = modFloatSpan[y, x];
-                    mb = mod.Item0;
-                    mg = mod.Item1;
-                    mr = mod.Item2;
+                    float m = byteMask ? maskByteRow[x] / 255f : maskFloatRow[x];
+                    float inv = 1f - m;
+                    var orig = origRow[x];
+                    float mb, mg, mr;
+                    if (modFloat)
+                    {
+                        var mod = modFloatRow[x];
+                        mb = mod.Item0;
+                        mg = mod.Item1;
+                        mr = mod.Item2;
+                    }
+                    else
+                    {
+                        var mod = modByteRow[x];
+                        mb = mod.Item0;
+                        mg = mod.Item1;
+                        mr = mod.Item2;
+                    }
+                    dstRow[x] = new Vec3b(
+                        BlendByte(orig.Item0, mb, inv, m),
+                        BlendByte(orig.Item1, mg, inv, m),
+                        BlendByte(orig.Item2, mr, inv, m));
                 }
-                else
-                {
-                    var mod = modByteSpan[y, x];
-                    mb = mod.Item0;
-                    mg = mod.Item1;
-                    mr = mod.Item2;
-                }
-                dstSpan[y, x] = new Vec3b(
-                    BlendByte(orig.Item0, mb, inv, m),
-                    BlendByte(orig.Item1, mg, inv, m),
-                    BlendByte(orig.Item2, mr, inv, m));
-            }
+            });
         }
         return result;
     }

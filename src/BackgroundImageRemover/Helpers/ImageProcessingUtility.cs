@@ -134,14 +134,21 @@ public static class ImageProcessingUtility
     }
 
     /// <summary>Applies CLAHE contrast equalization on the Lab L channel, returning a new BGR Mat.</summary>
-    public static Mat ApplyClahe(Mat bgr)
+    public static Mat ApplyClahe(Mat bgr) => ApplyClahe(bgr, clipLimit: 2.0, tileSize: 8);
+
+    /// <summary>
+    /// Applies CLAHE contrast equalization on the Lab L channel with explicit parameters,
+    /// returning a new BGR Mat. Used by the shared pipelines and by
+    /// <see cref="BackgroundImageRemover.Services.Editing.LevelsService.Equalize"/>.
+    /// </summary>
+    public static Mat ApplyClahe(Mat bgr, double clipLimit, int tileSize)
     {
         using var lab = new Mat();
         Cv2.CvtColor(bgr, lab, ColorConversionCodes.BGR2Lab);
         var labChannels = Cv2.Split(lab);
         try
         {
-            using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
+            using var clahe = Cv2.CreateCLAHE(clipLimit, new Size(tileSize, tileSize));
             clahe.Apply(labChannels[0], labChannels[0]);
             Cv2.Merge(labChannels, lab);
             var result = new Mat();
@@ -151,6 +158,48 @@ public static class ImageProcessingUtility
         finally
         {
             foreach (var ch in labChannels) ch.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Neutralizes color casts with a gray-world assumption: each channel is scaled so its mean
+    /// matches the average of the three channel means. Gains are clamped to [0.5, 2.0] and a
+    /// near-zero mean leaves that channel untouched, so degenerate inputs cannot blow up. Returns
+    /// a new BGR Mat. Replaces the copy-pasted implementations in
+    /// <see cref="BackgroundImageRemover.Services.Editing.LevelsService"/>,
+    /// <see cref="BackgroundImageRemover.Services.Refinement.RetouchEffectsService"/> and
+    /// <see cref="ImageProcessingHelper.ApplyAutoEnhance"/>.
+    /// </summary>
+    public static Mat AutoWhiteBalance(Mat bgr)
+    {
+        var channels = Cv2.Split(bgr);
+        try
+        {
+            double[] means = new double[3];
+            double avg = 0.0;
+            for (int i = 0; i < 3; i++)
+            {
+                means[i] = Cv2.Mean(channels[i]).Val0;
+                avg += means[i];
+            }
+            avg /= 3.0;
+
+            for (int i = 0; i < 3; i++)
+            {
+                double gain = means[i] < 1e-3 ? 1.0 : avg / means[i];
+                gain = Math.Clamp(gain, 0.5, 2.0);
+                using var adjusted = new Mat();
+                channels[i].ConvertTo(adjusted, MatType.CV_8UC1, gain, 0.0);
+                adjusted.CopyTo(channels[i]);
+            }
+
+            var result = new Mat();
+            Cv2.Merge(channels, result);
+            return result;
+        }
+        finally
+        {
+            foreach (var ch in channels) ch.Dispose();
         }
     }
 

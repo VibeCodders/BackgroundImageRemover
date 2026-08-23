@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -89,28 +90,7 @@ public static class LevelsService
 
     /// <summary>Applies contrast-limited adaptive histogram equalization in the L channel of LAB space.</summary>
     public static Mat Equalize(Mat bgr, double clipLimit = 2.0, int tileSize = 8)
-    {
-        using var lab = new Mat();
-        Cv2.CvtColor(bgr, lab, ColorConversionCodes.BGR2Lab);
-        var channels = Cv2.Split(lab);
-        try
-        {
-            using var clahe = Cv2.CreateCLAHE(clipLimit, new Size(tileSize, tileSize));
-            using var equalized = new Mat();
-            clahe.Apply(channels[0], equalized);
-            equalized.CopyTo(channels[0]);
-
-            using var merged = new Mat();
-            Cv2.Merge(channels, merged);
-            var result = new Mat();
-            Cv2.CvtColor(merged, result, ColorConversionCodes.Lab2BGR);
-            return result;
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
-    }
+        => ImageProcessingUtility.ApplyClahe(bgr, clipLimit, tileSize);
 
     /// <summary>Inverts the image (negative).</summary>
     public static Mat Invert(Mat bgr)
@@ -121,38 +101,7 @@ public static class LevelsService
     }
 
     /// <summary>Neutralizes color casts using a gray-world assumption (per-channel gain).</summary>
-    public static Mat AutoWhiteBalance(Mat bgr)
-    {
-        var channels = Cv2.Split(bgr);
-        try
-        {
-            double[] means = new double[3];
-            double avg = 0.0;
-            for (int i = 0; i < 3; i++)
-            {
-                means[i] = Cv2.Mean(channels[i]).Val0;
-                avg += means[i];
-            }
-            avg /= 3.0;
-
-            for (int i = 0; i < 3; i++)
-            {
-                double gain = means[i] < 1e-3 ? 1.0 : avg / means[i];
-                gain = Math.Clamp(gain, 0.5, 2.0);
-                using var adjusted = new Mat();
-                channels[i].ConvertTo(adjusted, MatType.CV_8UC1, gain, 0.0);
-                adjusted.CopyTo(channels[i]);
-            }
-
-            var result = new Mat();
-            Cv2.Merge(channels, result);
-            return result;
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
-    }
+    public static Mat AutoWhiteBalance(Mat bgr) => ImageProcessingUtility.AutoWhiteBalance(bgr);
 
     private static Mat BuildLut(double black, double white, double gamma, double outputBlack, double outputWhite)
     {

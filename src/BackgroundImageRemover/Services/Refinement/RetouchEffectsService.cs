@@ -20,24 +20,7 @@ public static class RetouchEffectsService
             return bgr.Clone();
         }
 
-        using var lab = new Mat();
-        Cv2.CvtColor(bgr, lab, ColorConversionCodes.BGR2Lab);
-        var labChannels = Cv2.Split(lab);
-        Mat enhanced;
-        try
-        {
-            using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
-            clahe.Apply(labChannels[0], labChannels[0]);
-            Cv2.Merge(labChannels, lab);
-            enhanced = new Mat();
-            Cv2.CvtColor(lab, enhanced, ColorConversionCodes.Lab2BGR);
-        }
-        finally
-        {
-            foreach (var ch in labChannels) ch.Dispose();
-        }
-
-        using (enhanced)
+        using var enhanced = ImageProcessingUtility.ApplyClahe(bgr);
         {
             var result = new Mat();
             Cv2.AddWeighted(bgr, 1.0 - strength, enhanced, strength, 0, result);
@@ -112,50 +95,10 @@ public static class RetouchEffectsService
     }
 
     /// <summary>One-click automatic contrast via CLAHE on the Luminance channel.</summary>
-    public static Mat AutoContrast(Mat bgr)
-    {
-        using var lab = new Mat();
-        Cv2.CvtColor(bgr, lab, ColorConversionCodes.BGR2Lab);
-        var channels = Cv2.Split(lab);
-        try
-        {
-            using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
-            clahe.Apply(channels[0], channels[0]);
-            Cv2.Merge(channels, lab);
-            var result = new Mat();
-            Cv2.CvtColor(lab, result, ColorConversionCodes.Lab2BGR);
-            return result;
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
-    }
+    public static Mat AutoContrast(Mat bgr) => ImageProcessingUtility.ApplyClahe(bgr);
 
     /// <summary>One-click gray-world automatic white balance.</summary>
-    public static Mat AutoWhiteBalance(Mat bgr)
-    {
-        var means = Cv2.Mean(bgr);
-        double avg = (means.Val0 + means.Val1 + means.Val2) / 3.0;
-        double bGain = avg / Math.Max(means.Val0, 1.0);
-        double gGain = avg / Math.Max(means.Val1, 1.0);
-        double rGain = avg / Math.Max(means.Val2, 1.0);
-
-        var channels = Cv2.Split(bgr);
-        try
-        {
-            channels[0].ConvertTo(channels[0], MatType.CV_8UC1, bGain);
-            channels[1].ConvertTo(channels[1], MatType.CV_8UC1, gGain);
-            channels[2].ConvertTo(channels[2], MatType.CV_8UC1, rGain);
-            var result = new Mat();
-            Cv2.Merge(channels, result);
-            return result;
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
-    }
+    public static Mat AutoWhiteBalance(Mat bgr) => ImageProcessingUtility.AutoWhiteBalance(bgr);
 
     /// <summary>Radial chromatic aberration (delegates to the shared FX implementation).</summary>
     public static Mat ChromaticAberration(Mat bgr, double strength) => FxService.ChromaticAberration(bgr, strength);

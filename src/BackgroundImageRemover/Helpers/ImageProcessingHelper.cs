@@ -355,31 +355,8 @@ public static class ImageProcessingHelper
     /// <summary>Applies gray-world white balance followed by CLAHE contrast equalization.</summary>
     private static Mat ApplyAutoEnhance(Mat src)
     {
-        var means = Cv2.Mean(src);
-        double avg = (means.Val0 + means.Val1 + means.Val2) / 3.0;
-        double bGain = avg / Math.Max(means.Val0, 1.0);
-        double gGain = avg / Math.Max(means.Val1, 1.0);
-        double rGain = avg / Math.Max(means.Val2, 1.0);
-
-        var channels = Cv2.Split(src);
-        Mat balanced;
-        try
-        {
-            channels[0].ConvertTo(channels[0], MatType.CV_8UC1, bGain);
-            channels[1].ConvertTo(channels[1], MatType.CV_8UC1, gGain);
-            channels[2].ConvertTo(channels[2], MatType.CV_8UC1, rGain);
-            balanced = new Mat();
-            Cv2.Merge(channels, balanced);
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
-
-        using (balanced)
-        {
-            return ImageProcessingUtility.ApplyClahe(balanced);
-        }
+        using var balanced = ImageProcessingUtility.AutoWhiteBalance(src);
+        return ImageProcessingUtility.ApplyClahe(balanced);
     }
 }
 

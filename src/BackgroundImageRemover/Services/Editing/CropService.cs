@@ -43,9 +43,15 @@ public static class CropService
         return new Rect(x, y, width, height);
     }
 
-    /// <summary>Crops away the given margins (in pixels) from each side.</summary>
+    /// <summary>Crops away the given margins (in pixels) from each side. An empty source is
+    /// returned unchanged instead of crashing on degenerate bounds.</summary>
     public static Mat CropMargins(Mat src, int left, int top, int right, int bottom)
     {
+        if (src.Width <= 0 || src.Height <= 0)
+        {
+            return src.Clone();
+        }
+
         int width = Math.Max(1, src.Width - left - right);
         int height = Math.Max(1, src.Height - top - bottom);
         int x = Math.Clamp(left, 0, src.Width - 1);
@@ -84,6 +90,11 @@ public static class CropService
     /// <summary>Returns the centered rectangle of the requested pixel size, clamped to the image bounds.</summary>
     public static Rect CenteredRectForSize(Size size, int width, int height)
     {
+        if (size.Width <= 0 || size.Height <= 0)
+        {
+            return new Rect(0, 0, 0, 0);
+        }
+
         width = Math.Clamp(width, 1, size.Width);
         height = Math.Clamp(height, 1, size.Height);
         int x = (size.Width - width) / 2;

@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -34,27 +35,6 @@ public sealed class EdgeContourStrategy : StrategyBase
         Cv2.Dilate(closed, dilated, kernel, iterations: 1);
         ct.ThrowIfCancellationRequested();
 
-        using var largest = KeepLargestFilledRegion(dilated);
-        var feathered = new Mat();
-        Cv2.GaussianBlur(largest, feathered, new Size(5, 5), 0);
-        return feathered;
-    }
-
-    /// <summary>Keeps only the largest connected white region and fills any holes inside it.</summary>
-    private static Mat KeepLargestFilledRegion(Mat binary)
-    {
-        Cv2.FindContours(binary, out Point[][] contours, out _,
-            RetrievalModes.External, ContourApproximationModes.ApproxSimple);
-
-        var mask = new Mat(binary.Size(), MatType.CV_8UC1, Scalar.All(0));
-        if (contours.Length == 0)
-        {
-            return mask;
-        }
-
-        var largestContour = contours.OrderByDescending(c => Cv2.ContourArea(c)).First();
-        IEnumerable<Point>[] single = { largestContour };
-        Cv2.DrawContours(mask, single, -1, Scalar.All(255), thickness: -1);
-        return mask;
+        return MaskHelpers.Feather(MaskHelpers.KeepLargestFilledRegion(dilated));
     }
 }

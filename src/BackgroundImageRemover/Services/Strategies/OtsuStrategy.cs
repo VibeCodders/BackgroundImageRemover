@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -33,11 +34,7 @@ public sealed class OtsuStrategy : StrategyBase
             binary.CopyTo(foreground); // subject is the bright side
         }
 
-        var largest = KeepLargestFilledRegion(foreground);
-        var feathered = new Mat();
-        Cv2.GaussianBlur(largest, feathered, new Size(5, 5), 0);
-        largest.Dispose();
-        return feathered;
+        return MaskHelpers.Feather(MaskHelpers.KeepLargestFilledRegion(foreground));
     }
 
     private static bool BorderIsMostlyBright(Mat binary)
@@ -69,24 +66,5 @@ public sealed class OtsuStrategy : StrategyBase
         {
             dark++;
         }
-    }
-
-    /// <summary>Keeps only the largest connected white region and fills any holes inside it.</summary>
-    private static Mat KeepLargestFilledRegion(Mat binary)
-    {
-        Cv2.FindContours(binary, out Point[][] contours, out HierarchyIndex[] hierarchy,
-            RetrievalModes.External, ContourApproximationModes.ApproxSimple);
-
-        var mask = new Mat(binary.Size(), MatType.CV_8UC1, Scalar.All(0));
-        if (contours.Length == 0)
-        {
-            return mask;
-        }
-
-        var largest = contours.OrderByDescending(c => Cv2.ContourArea(c)).First();
-        // Drawing the outer contour filled also closes the holes inside the subject.
-        IEnumerable<Point>[] single = { largest };
-        Cv2.DrawContours(mask, single, -1, Scalar.All(255), thickness: -1);
-        return mask;
     }
 }

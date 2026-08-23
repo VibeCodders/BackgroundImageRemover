@@ -50,6 +50,8 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 #### Bug fixes
 - `ApplyAsync` now guards against overlapping runs via the `IsBusy` flag, preventing race conditions on the shared strategy cache
 - Adjustment parameters are now clamped to valid ranges in `DocumentViewModel.Adjustments.cs` to prevent crashes from out-of-range values
+- Degenerate images no longer crash the geometry/resize/trim helpers: `GeometryHelper.ClampToSize`, `CropService.CenteredRectForSize`/`CropMargins` and `ResizeService` (all methods) now return safe empty results instead of throwing inside `Math.Clamp` or dividing by zero on 0-sized sources, and `ChromaKeyStrategy.DetectDominantBorderColor` no longer touches `At(0,0)` on an empty Mat — pinned by new `GeometryHelperTests`, `CropServiceTests`, `ResizeServiceTests` and the ChromaKey empty-image test
+- The strategies' repeated mask feather (Gaussian blur + dispose) and the identical "keep largest filled region" contour step are now the shared `MaskHelpers.Feather`/`MaskHelpers.KeepLargestFilledRegion` (used by Otsu, EdgeContour, KMeans, MagicWand, FloodFill and GrabCut), covered by `MaskHelpersTests`
 
 ### Build
 

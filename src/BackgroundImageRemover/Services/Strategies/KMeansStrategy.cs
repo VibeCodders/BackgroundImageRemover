@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -65,10 +66,7 @@ public sealed class KMeansStrategy : StrategyBase
         }
         mask.SetArray(maskData);
 
-        var feathered = new Mat();
-        Cv2.GaussianBlur(mask, feathered, new Size(5, 5), 0);
-        mask.Dispose();
-        return feathered;
+        return MaskHelpers.Feather(mask);
     }
 
     private static void CountBorder(int[] labels, int x, int y, int cols, int[] borderCount)

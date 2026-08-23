@@ -9,6 +9,11 @@ public static class ResizeService
 {
     public static Mat ResizeTo(Mat src, int width, int height, ResampleMethod method = ResampleMethod.Lanczos)
     {
+        if (IsEmpty(src))
+        {
+            return src.Clone();
+        }
+
         width = Math.Max(1, width);
         height = Math.Max(1, height);
         var result = new Mat();
@@ -18,6 +23,11 @@ public static class ResizeService
 
     public static Mat ResizePercent(Mat src, double percent, ResampleMethod method = ResampleMethod.Lanczos)
     {
+        if (IsEmpty(src))
+        {
+            return src.Clone();
+        }
+
         percent = Math.Max(0.01, percent);
         var result = new Mat();
         Cv2.Resize(src, result, new Size(0, 0), percent, percent, ToFlags(method));
@@ -26,6 +36,11 @@ public static class ResizeService
 
     public static Mat ResizeToWidth(Mat src, int width, ResampleMethod method = ResampleMethod.Lanczos)
     {
+        if (IsEmpty(src))
+        {
+            return src.Clone();
+        }
+
         width = Math.Max(1, width);
         int height = Math.Max(1, (int)Math.Round((double)src.Height * width / src.Width));
         return ResizeTo(src, width, height, method);
@@ -33,6 +48,11 @@ public static class ResizeService
 
     public static Mat ResizeToHeight(Mat src, int height, ResampleMethod method = ResampleMethod.Lanczos)
     {
+        if (IsEmpty(src))
+        {
+            return src.Clone();
+        }
+
         height = Math.Max(1, height);
         int width = Math.Max(1, (int)Math.Round((double)src.Width * height / src.Height));
         return ResizeTo(src, width, height, method);
@@ -41,6 +61,11 @@ public static class ResizeService
     /// <summary>Scales to the largest size that fits inside the given box while preserving aspect ratio.</summary>
     public static Mat FitWithin(Mat src, int maxWidth, int maxHeight, ResampleMethod method = ResampleMethod.Lanczos)
     {
+        if (IsEmpty(src))
+        {
+            return src.Clone();
+        }
+
         maxWidth = Math.Max(1, maxWidth);
         maxHeight = Math.Max(1, maxHeight);
         double scale = Math.Min((double)maxWidth / src.Width, (double)maxHeight / src.Height);
@@ -50,6 +75,11 @@ public static class ResizeService
     /// <summary>Scales to cover the given box (cropping overflow) while preserving aspect ratio.</summary>
     public static Mat FillTo(Mat src, int width, int height, ResampleMethod method = ResampleMethod.Lanczos)
     {
+        if (IsEmpty(src))
+        {
+            return src.Clone();
+        }
+
         width = Math.Max(1, width);
         height = Math.Max(1, height);
         double scale = Math.Max((double)width / src.Width, (double)height / src.Height);
@@ -70,10 +100,19 @@ public static class ResizeService
     /// <summary>Resizes to the requested megapixel count (area), preserving aspect ratio.</summary>
     public static Mat ResizeToMegapixels(Mat src, double megapixels, ResampleMethod method = ResampleMethod.Lanczos)
     {
+        if (IsEmpty(src))
+        {
+            return src.Clone();
+        }
+
         megapixels = Math.Max(0.01, megapixels);
         double scale = Math.Sqrt((megapixels * 1_000_000.0) / (src.Width * (double)src.Height));
         return ResizePercent(src, scale, method);
     }
+
+    /// <summary>An empty source cannot be resized meaningfully; the ratio-based methods would
+    /// divide by zero. Callers get a safe empty clone instead of a crash.</summary>
+    private static bool IsEmpty(Mat src) => src.Width <= 0 || src.Height <= 0;
 
     private static InterpolationFlags ToFlags(ResampleMethod method)
         => ResampleMethodHelper.ToInterpolationFlags(method);

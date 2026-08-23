@@ -19,6 +19,11 @@ public sealed class ChromaKeyStrategy : StrategyBase
     /// <summary>Detects the dominant border color of <paramref name="bgr"/> via a quantized histogram.</summary>
     public static Vec3b DetectDominantBorderColor(Mat bgr)
     {
+        if (bgr.Width <= 0 || bgr.Height <= 0)
+        {
+            return default; // empty image: no border to sample, avoid the At(0,0) fallback crash
+        }
+
         int bandW = Math.Max(1, bgr.Width / BorderBandFractionDenominator);
         int bandH = Math.Max(1, bgr.Height / BorderBandFractionDenominator);
 

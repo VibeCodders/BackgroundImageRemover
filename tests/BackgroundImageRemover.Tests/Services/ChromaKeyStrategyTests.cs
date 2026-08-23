@@ -32,4 +32,16 @@ public class ChromaKeyStrategyTests
         Assert.Equal(20, detected.Item1);
         Assert.Equal(30, detected.Item2);
     }
+
+    [Fact]
+    public void DetectDominantBorderColor_EmptyImage_ReturnsDefaultWithoutThrowing()
+    {
+        using var empty = new Mat(0, 0, MatType.CV_8UC3);
+
+        // Regression: the sample list is empty and the At(0, 0) fallback used to throw on a
+        // 0-sized Mat, which crashed the Chroma Key tool on degenerate images.
+        var detected = ChromaKeyStrategy.DetectDominantBorderColor(empty);
+
+        Assert.Equal(new Vec3b(0, 0, 0), detected);
+    }
 }

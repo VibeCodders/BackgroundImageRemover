@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -129,11 +130,7 @@ public sealed class GrabCutStrategy : StrategyBase
         Cv2.MorphologyEx(binary, cleaned, MorphTypes.Open, kernel);
         Cv2.MorphologyEx(cleaned, cleaned, MorphTypes.Close, kernel);
 
-        var feathered = new Mat();
-        Cv2.GaussianBlur(cleaned, feathered, new Size(kernelSize, kernelSize), 0);
-        cleaned.Dispose();
-
-        return feathered;
+        return MaskHelpers.Feather(cleaned, kernelSize);
     }
 
     private enum GrabCutMasks : byte

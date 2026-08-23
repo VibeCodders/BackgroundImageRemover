@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -53,9 +54,6 @@ public sealed class FloodFillStrategy : StrategyBase
         Cv2.BitwiseNot(background, mask);
         background.Dispose();
 
-        var feathered = new Mat();
-        Cv2.GaussianBlur(mask, feathered, new Size(5, 5), 0);
-        mask.Dispose();
-        return feathered;
+        return MaskHelpers.Feather(mask);
     }
 }

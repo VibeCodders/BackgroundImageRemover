@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -38,9 +39,6 @@ public sealed class MagicWandRemovalStrategy : StrategyBase
 
         // The blurred mask is the strategy's output: ownership transfers to the caller, so it
         // must not be disposed here (unlike the `using` temporaries above).
-        var feathered = new Mat();
-        Cv2.GaussianBlur(mask, feathered, new Size(5, 5), 0);
-        mask.Dispose();
-        return feathered;
+        return MaskHelpers.Feather(mask);
     }
 }

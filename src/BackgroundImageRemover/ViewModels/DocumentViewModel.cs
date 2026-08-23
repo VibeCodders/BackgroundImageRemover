@@ -219,7 +219,9 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
 
         var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
         _preview = preview;
-        PreviewBitmap = preview.Bgr.ToBitmapSource();
+        // The working pair IS the new source (it was cloned into _loadedImage above): show its
+        // alpha in the fallback so a size-changed cutout previews like a freshly loaded one.
+        PreviewBitmap = preview.Bgr.ToPreviewBitmap(_workingAlpha);
 
         // A size-changing edit (crop, resize, transform, frame, compose...) rebuilt the
         // source image above: keep the status-bar dimensions in sync or they go stale.

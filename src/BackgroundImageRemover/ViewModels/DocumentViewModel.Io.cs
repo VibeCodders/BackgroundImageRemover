@@ -209,7 +209,9 @@ public partial class DocumentViewModel
             _loadedImage = snapshot;
             var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
             _preview = preview;
-            PreviewBitmap = preview.Bgr.ToBitmapSource();
+            // Same cutout-aware fallback as a fresh load: show the source's alpha when it is
+            // a real cutout (the ResultBitmap built below carries the alpha either way).
+            PreviewBitmap = preview.Bgr.ToPreviewBitmap(_loadedImage.FullAlpha);
             ResultBitmap = null;
 
             // The snapshot is the current state of the source tab: restore it verbatim as the

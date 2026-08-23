@@ -41,7 +41,7 @@ public static class BlurService
         length = Math.Max(1, length);
         int ksize = EditingGuard.EnsureOdd((int)Math.Round(length));
 
-        var kernel = new Mat(ksize, ksize, MatType.CV_32FC1, Scalar.All(0));
+        using var kernel = new Mat(ksize, ksize, MatType.CV_32FC1, Scalar.All(0));
         double rad = angleDeg * Math.PI / 180.0;
         double dx = Math.Cos(rad);
         double dy = Math.Sin(rad);
@@ -53,8 +53,18 @@ public static class BlurService
             int y = cy + (int)Math.Round(dy * (i - ksize / 2));
             if (x >= 0 && x < ksize && y >= 0 && y < ksize)
             {
-                kernel.Set(y, x, 1.0 / ksize);
+                kernel.Set(y, x, 1.0);
             }
+        }
+
+        // For diagonal angles, rounding can map multiple samples onto the same cell (or push
+        // some samples out of bounds), so a fixed 1/ksize weight per iteration does not always
+        // sum to 1. Normalize by the actual number of populated cells so the kernel is a proper
+        // weighted average and the blur doesn't darken/brighten the image at non-axis angles.
+        double kernelSum = Cv2.Sum(kernel).Val0;
+        if (kernelSum > EditingGuard.Epsilon)
+        {
+            kernel.ConvertTo(kernel, -1, 1.0 / kernelSum);
         }
 
         var result = new Mat();

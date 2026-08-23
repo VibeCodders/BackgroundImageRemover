@@ -31,7 +31,10 @@ public static class OverlayService
         margin = Math.Max(0, margin);
 
         using var prepared = PrepareOverlay(overlayBgra, scale, rotation, flipHorizontal, flipVertical, tint);
-        var (pos, _) = ComputeIntersection(baseBgr.Size(), prepared.Size(), anchor, margin);
+        // Use the raw (possibly negative) anchor position rather than AnchorPositionHelper's
+        // pre-clamped intersection rect: BlendPrepared needs the true signed offset to crop the
+        // correct portion of an overlay that is larger than the base image (see BlendPrepared).
+        var pos = AnchorPositionHelper.ComputeOrigin(baseBgr.Size(), prepared.Size(), anchor, margin);
 
         Mat baseForOverlay;
         if (dropShadow)
@@ -52,7 +55,13 @@ public static class OverlayService
     private static Mat PrepareOverlay(Mat overlay, double scale, double rotation, bool flipH, bool flipV, Vec3b? tint)
     {
         var current = new Mat();
-        Cv2.Resize(overlay, current, new Size(0, 0), scale, scale, InterpolationFlags.Lanczos4);
+        // Resizing by fx/fy factors alone can round a small overlay down to a 0x0 target size
+        // (e.g. a 10px overlay at the minimum 0.01 scale), which OpenCV rejects with an
+        // "!dsize.empty()" exception. Compute an explicit target size clamped to at least 1x1.
+        var targetSize = new Size(
+            Math.Max(1, (int)Math.Round(overlay.Width * scale)),
+            Math.Max(1, (int)Math.Round(overlay.Height * scale)));
+        Cv2.Resize(overlay, current, targetSize, 0, 0, InterpolationFlags.Lanczos4);
 
         try
         {
@@ -130,17 +139,24 @@ public static class OverlayService
     private static Mat BlendPrepared(Mat baseBgr, Mat overlay, int x, int y, double opacity, OverlayBlendMode blend)
     {
         var result = baseBgr.Clone();
-        x = Math.Clamp(x, 0, baseBgr.Width);
-        y = Math.Clamp(y, 0, baseBgr.Height);
-        int w = Math.Min(overlay.Width, baseBgr.Width - x);
-        int h = Math.Min(overlay.Height, baseBgr.Height - y);
+
+        // x/y may be negative (e.g. an overlay larger than the base, anchored so part of it
+        // falls off the left/top edge). Clamping x/y to 0 without also cropping the matching
+        // amount off the overlay's origin used to paste the overlay's top-left corner at
+        // canvas (0,0) instead of the correct, already-clipped, portion of the overlay.
+        int destX = Math.Clamp(x, 0, baseBgr.Width);
+        int destY = Math.Clamp(y, 0, baseBgr.Height);
+        int srcX = destX - x;
+        int srcY = destY - y;
+        int w = Math.Min(overlay.Width - srcX, baseBgr.Width - destX);
+        int h = Math.Min(overlay.Height - srcY, baseBgr.Height - destY);
         if (w <= 0 || h <= 0)
         {
             return result;
         }
 
-        using var roi = new Mat(result, new Rect(x, y, w, h));
-        using var overlayRoi = new Mat(overlay, new Rect(0, 0, w, h));
+        using var roi = new Mat(result, new Rect(destX, destY, w, h));
+        using var overlayRoi = new Mat(overlay, new Rect(srcX, srcY, w, h));
 
         if (blend == OverlayBlendMode.Normal)
         {
@@ -207,7 +223,4 @@ public static class OverlayService
         }
         return (byte)(255 - 2 * (255 - b) * (255 - f) / 255);
     }
-
-    private static (Rect Destination, Rect Overlay) ComputeIntersection(Size baseSize, Size overlaySize, TextAnchor anchor, int margin)
-        => AnchorPositionHelper.ComputeIntersection(baseSize, overlaySize, anchor, margin);
 }

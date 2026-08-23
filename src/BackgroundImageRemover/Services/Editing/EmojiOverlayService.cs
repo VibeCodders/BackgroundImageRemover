@@ -53,9 +53,13 @@ public static class EmojiOverlayService
         using var emojiRoi = new Mat(canvas, new Rect(canvasX0, canvasY0, x1 - x0, y1 - y0));
         using var imgRoi = new Mat(result, new Rect(x0, y0, x1 - x0, y1 - y0));
 
+        // The glyph's alpha channel already has `opacity` baked in (see DrawEmoji's brush
+        // alpha = 255 * opacity), so only normalize to 0..1 here. Multiplying by `opacity`
+        // again would apply it twice (effectively opacity^2), making a 0.5 opacity render
+        // roughly as faint as 0.25.
         using var eSplit = ChannelSplit.Of(emojiRoi);
         using var alpha = new Mat();
-        eSplit[3].ConvertTo(alpha, MatType.CV_32FC1, opacity / 255.0);
+        eSplit[3].ConvertTo(alpha, MatType.CV_32FC1, 1.0 / 255.0);
         using var alpha3 = new Mat();
         Cv2.CvtColor(alpha, alpha3, ColorConversionCodes.GRAY2BGR);
 

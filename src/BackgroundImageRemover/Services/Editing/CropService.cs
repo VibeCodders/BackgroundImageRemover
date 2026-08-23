@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Helpers;
+using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -139,17 +140,10 @@ public static class CropService
 
     private static Mat ToBgr(Mat src)
     {
-        var channels = Cv2.Split(src);
-        try
-        {
-            var bgr = new Mat();
-            Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, bgr);
-            return bgr;
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
+        using var split = ChannelSplit.Of(src);
+        var bgr = new Mat();
+        Cv2.Merge(new[] { split[0], split[1], split[2] }, bgr);
+        return bgr;
     }
 
     /// <summary>

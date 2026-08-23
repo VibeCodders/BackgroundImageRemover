@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Helpers;
+using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -10,7 +11,7 @@ public static class FxService
     public static Mat Glow(Mat bgr, double strength, double sigma = 12)
     {
         strength = Math.Clamp(strength, 0.0, 1.0);
-        if (strength <= 1e-4)
+        if (bgr is null || strength <= 1e-4)
         {
             return EditingGuard.ReturnCloneIfNull(bgr);
         }
@@ -24,7 +25,7 @@ public static class FxService
     public static Mat Bloom(Mat bgr, double strength, double threshold = 200)
     {
         strength = Math.Clamp(strength, 0.0, 1.0);
-        if (strength <= 1e-4)
+        if (bgr is null || strength <= 1e-4)
         {
             return EditingGuard.ReturnCloneIfNull(bgr);
         }
@@ -45,7 +46,7 @@ public static class FxService
     public static Mat LightLeak(Mat bgr, double strength, Vec3b? color = null)
     {
         strength = Math.Clamp(strength, 0.0, 1.0);
-        if (strength <= 1e-4)
+        if (bgr is null || strength <= 1e-4)
         {
             return EditingGuard.ReturnCloneIfNull(bgr);
         }
@@ -71,26 +72,21 @@ public static class FxService
     public static Mat ChromaticAberration(Mat bgr, double strength)
     {
         strength = Math.Clamp(strength, 0.0, 2.0);
-        if (Math.Abs(strength) < 1e-4)
+        if (bgr is null || Math.Abs(strength) < 1e-4)
         {
             return EditingGuard.ReturnCloneIfNull(bgr);
         }
 
-        var channels = Cv2.Split(bgr); // B, G, R
         Mat r, g, b;
-        try
+        using (var split = ChannelSplit.Of(bgr)) // B, G, R
         {
             float cx = bgr.Width / 2.0f;
             float cy = bgr.Height / 2.0f;
             float maxR = MathF.Sqrt(cx * cx + cy * cy);
 
-            r = RemapRadially(channels[2], cx, cy, maxR, (float)strength);
-            b = RemapRadially(channels[0], cx, cy, maxR, -(float)strength);
-            g = channels[1].Clone();
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
+            r = RemapRadially(split[2], cx, cy, maxR, (float)strength);
+            b = RemapRadially(split[0], cx, cy, maxR, -(float)strength);
+            g = split[1].Clone();
         }
 
         using (r)
@@ -108,7 +104,7 @@ public static class FxService
     {
         count = Math.Clamp(count, 0, 200);
         size = Math.Max(1, size);
-        if (count == 0)
+        if (bgr is null || count == 0)
         {
             return EditingGuard.ReturnCloneIfNull(bgr);
         }

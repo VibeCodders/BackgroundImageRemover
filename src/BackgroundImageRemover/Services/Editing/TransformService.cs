@@ -69,7 +69,10 @@ public static class TransformService
     /// <summary>Scales by a uniform factor; the factor is clamped to keep at least 1px in each dimension.</summary>
     public static Mat Resize(Mat bgr, double scale)
     {
-        scale = Math.Max(scale, 1.0 / Math.Max(bgr.Width, bgr.Height));
+        // The smallest dimension is the one at risk of rounding down to 0px, so the lower
+        // bound must be derived from Min (not Max) of width/height to guarantee both
+        // dimensions stay >= 1px after scaling.
+        scale = Math.Max(scale, 1.0 / Math.Min(bgr.Width, bgr.Height));
         var result = new Mat();
         Cv2.Resize(bgr, result, new Size(0, 0), scale, scale, InterpolationFlags.Lanczos4);
         return result;

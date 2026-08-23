@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -24,19 +25,9 @@ public static class ThermalService
         }
 
         // Build one 256-entry LUT per channel that already folds in the intensity blend.
-        using var lutB = new Mat(1, 256, MatType.CV_8UC1);
-        using var lutG = new Mat(1, 256, MatType.CV_8UC1);
-        using var lutR = new Mat(1, 256, MatType.CV_8UC1);
-        for (int i = 0; i < 256; i++)
-        {
-            double t = i / 255.0;
-            double cb = ThermalB(t);
-            double cg = ThermalG(t);
-            double cr = ThermalR(t);
-            lutB.Set<byte>(0, i, (byte)Math.Clamp(i + (cb - i) * intensity, 0, 255));
-            lutG.Set<byte>(0, i, (byte)Math.Clamp(i + (cg - i) * intensity, 0, 255));
-            lutR.Set<byte>(0, i, (byte)Math.Clamp(i + (cr - i) * intensity, 0, 255));
-        }
+        using var lutB = ImageProcessingUtility.BuildLut(i => i + (ThermalB(i / 255.0) - i) * intensity);
+        using var lutG = ImageProcessingUtility.BuildLut(i => i + (ThermalG(i / 255.0) - i) * intensity);
+        using var lutR = ImageProcessingUtility.BuildLut(i => i + (ThermalR(i / 255.0) - i) * intensity);
 
         using var chB = new Mat();
         using var chG = new Mat();

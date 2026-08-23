@@ -20,16 +20,9 @@ public static class FrameService
             return bgra.Clone();
         }
 
-        byte a = (byte)Math.Round(255 * opacity);
-        var result = new Mat(
-            bgra.Height + 2 * thickness,
-            bgra.Width + 2 * thickness,
-            MatType.CV_8UC4,
+        byte a = ImageProcessingUtility.OpacityToAlphaByte(opacity);
+        return ExpandCanvas(bgra, thickness, thickness, thickness, thickness,
             new Scalar(color.Item0, color.Item1, color.Item2, a));
-
-        using var inner = new Mat(result, new Rect(thickness, thickness, bgra.Width, bgra.Height));
-        bgra.CopyTo(inner);
-        return result;
     }
 
     /// <summary>Draws an accent line inside the image edge (an "inner border"), with adjustable opacity.</summary>
@@ -90,15 +83,7 @@ public static class FrameService
             return bgra.Clone();
         }
 
-        var result = new Mat(
-            bgra.Height + top + bottom,
-            bgra.Width + left + right,
-            MatType.CV_8UC4,
-            Scalar.All(0));
-
-        using var inner = new Mat(result, new Rect(left, top, bgra.Width, bgra.Height));
-        bgra.CopyTo(inner);
-        return result;
+        return ExpandCanvas(bgra, top, right, bottom, left, Scalar.All(0));
     }
 
     /// <summary>Expands the canvas by margins filled with a mat color instead of transparency.</summary>
@@ -113,15 +98,8 @@ public static class FrameService
             return bgra.Clone();
         }
 
-        var result = new Mat(
-            bgra.Height + top + bottom,
-            bgra.Width + left + right,
-            MatType.CV_8UC4,
+        return ExpandCanvas(bgra, top, right, bottom, left,
             new Scalar(matColor.Item0, matColor.Item1, matColor.Item2, 255));
-
-        using var inner = new Mat(result, new Rect(left, top, bgra.Width, bgra.Height));
-        bgra.CopyTo(inner);
-        return result;
     }
 
     /// <summary>Adds a border only on the requested sides, expanding the canvas on those sides.</summary>
@@ -137,17 +115,10 @@ public static class FrameService
         int padT = top ? thickness : 0;
         int padR = right ? thickness : 0;
         int padB = bottom ? thickness : 0;
-        byte a = (byte)Math.Round(255 * Math.Clamp(opacity, 0.0, 1.0));
+        byte a = ImageProcessingUtility.OpacityToAlphaByte(opacity);
 
-        var result = new Mat(
-            bgra.Height + padT + padB,
-            bgra.Width + padL + padR,
-            MatType.CV_8UC4,
+        return ExpandCanvas(bgra, padT, padR, padB, padL,
             new Scalar(color.Item0, color.Item1, color.Item2, a));
-
-        using var inner = new Mat(result, new Rect(padL, padT, bgra.Width, bgra.Height));
-        bgra.CopyTo(inner);
-        return result;
     }
 
     /// <summary>Adds a border whose color runs a diagonal gradient from <paramref name="colorA"/> (top-left) to <paramref name="colorB"/> (bottom-right).</summary>
@@ -161,7 +132,7 @@ public static class FrameService
 
         int w = bgra.Width + 2 * thickness;
         int h = bgra.Height + 2 * thickness;
-        byte a = (byte)Math.Round(255 * Math.Clamp(opacity, 0.0, 1.0));
+        byte a = ImageProcessingUtility.OpacityToAlphaByte(opacity);
         var result = new Mat(h, w, MatType.CV_8UC4, Scalar.All(0));
 
         double denom = Math.Max(1, w + h - 2);
@@ -175,8 +146,7 @@ public static class FrameService
                 a));
         });
 
-        using var inner = new Mat(result, new Rect(thickness, thickness, bgra.Width, bgra.Height));
-        bgra.CopyTo(inner);
+        PasteInner(result, bgra, thickness, thickness);
         return result;
     }
 
@@ -191,7 +161,7 @@ public static class FrameService
         }
 
         using var overlay = new Mat(bgra.Size(), MatType.CV_8UC4, Scalar.All(0));
-        byte a = (byte)Math.Round(255 * opacity);
+        byte a = ImageProcessingUtility.OpacityToAlphaByte(opacity);
         var highlightScalar = new Scalar(highlight.Item0, highlight.Item1, highlight.Item2, a);
         var shadowScalar = new Scalar(shadow.Item0, shadow.Item1, shadow.Item2, a);
 
@@ -215,12 +185,8 @@ public static class FrameService
             return bgra.Clone();
         }
 
-        byte a = (byte)Math.Round(255 * Math.Clamp(opacity, 0.0, 1.0));
-        var result = new Mat(bgra.Height + height, bgra.Width, MatType.CV_8UC4,
-            new Scalar(color.Item0, color.Item1, color.Item2, a));
-        using var top = new Mat(result, new Rect(0, 0, bgra.Width, bgra.Height));
-        bgra.CopyTo(top);
-        return result;
+        byte a = ImageProcessingUtility.OpacityToAlphaByte(opacity);
+        return ExpandCanvas(bgra, 0, 0, height, 0, new Scalar(color.Item0, color.Item1, color.Item2, a));
     }
 
     /// <summary>Fades the image corners toward <paramref name="color"/> (a photographic vignette).</summary>
@@ -244,7 +210,9 @@ public static class FrameService
         });
 
         using var split = ChannelSplit.Of(bgra);
-        var colorValues = new[] { color.Item0 / 255.0, color.Item1 / 255.0, color.Item2 / 255.0 };
+        // Channel values are on the 0..255 scale (matching chF/baseW below), so the target
+        // color must NOT be normalized to 0..1 here or the vignette color barely registers.
+        var colorValues = new[] { (double)color.Item0, (double)color.Item1, (double)color.Item2 };
         var channels = new Mat[4];
         try
         {
@@ -282,5 +250,21 @@ public static class FrameService
     private static Mat CompositeOverlay(Mat baseBgra, Mat overlayBgra, double opacity)
     {
         return ImageProcessingUtility.CompositeOverBgra(baseBgra, overlayBgra, opacity);
+    }
+
+    /// <summary>Creates a <paramref name="fill"/>-colored canvas expanded by the given per-side
+    /// margins and pastes <paramref name="bgra"/> at its original position.</summary>
+    private static Mat ExpandCanvas(Mat bgra, int top, int right, int bottom, int left, Scalar fill)
+    {
+        var result = new Mat(bgra.Height + top + bottom, bgra.Width + left + right, MatType.CV_8UC4, fill);
+        PasteInner(result, bgra, left, top);
+        return result;
+    }
+
+    /// <summary>Copies <paramref name="src"/> into <paramref name="dest"/> at the given offset.</summary>
+    private static void PasteInner(Mat dest, Mat src, int left, int top)
+    {
+        using var inner = new Mat(dest, new Rect(left, top, src.Width, src.Height));
+        src.CopyTo(inner);
     }
 }

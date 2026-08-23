@@ -113,24 +113,15 @@ public static class RetouchEffectsService
 
         using var hsv = new Mat();
         Cv2.CvtColor(bgr, hsv, ColorConversionCodes.BGR2HSV);
-        var channels = Cv2.Split(hsv);
-        Mat boosted;
-        try
+        using var boosted = new Mat();
+        using (var split = ChannelSplit.Of(hsv))
         {
-            channels[1].ConvertTo(channels[1], MatType.CV_8UC1, 1.0 + amount);
-            Cv2.Merge(channels, hsv);
-            boosted = new Mat();
+            split[1].ConvertTo(split[1], MatType.CV_8UC1, 1.0 + amount);
+            Cv2.Merge(split.Channels, hsv);
             Cv2.CvtColor(hsv, boosted, ColorConversionCodes.HSV2BGR);
         }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
 
-        using (boosted)
-        {
-            return BlendByAlpha(bgr, boosted, alpha);
-        }
+        return BlendByAlpha(bgr, boosted, alpha);
     }
 
     /// <summary>Composites <paramref name="inside"/> where alpha is high over <paramref name="outside"/> where alpha is low.</summary>

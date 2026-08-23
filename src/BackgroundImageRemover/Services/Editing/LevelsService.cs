@@ -1,5 +1,6 @@
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -36,56 +37,42 @@ public static class LevelsService
             return result;
         }
 
-        var channels = Cv2.Split(bgr);
-        try
+        using var split = ChannelSplit.Of(bgr);
+        int index = channel switch
         {
-            int index = channel switch
-            {
-                LevelsChannel.Blue => 0,
-                LevelsChannel.Green => 1,
-                _ => 2 // Red
-            };
-            using var adjusted = new Mat();
-            Cv2.LUT(channels[index], lut, adjusted);
-            adjusted.CopyTo(channels[index]);
-            var result = new Mat();
-            Cv2.Merge(channels, result);
-            return result;
-        }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
+            LevelsChannel.Blue => 0,
+            LevelsChannel.Green => 1,
+            _ => 2 // Red
+        };
+        using var adjusted = new Mat();
+        Cv2.LUT(split[index], lut, adjusted);
+        adjusted.CopyTo(split[index]);
+        var merged = new Mat();
+        Cv2.Merge(split.Channels, merged);
+        return merged;
     }
 
     /// <summary>Stretches each channel's min/max to the full 0–255 range (auto-contrast).</summary>
     public static Mat AutoLevels(Mat bgr)
     {
-        var channels = Cv2.Split(bgr);
-        try
+        using var split = ChannelSplit.Of(bgr);
+        for (int i = 0; i < split.Channels.Length; i++)
         {
-            for (int i = 0; i < channels.Length; i++)
+            Cv2.MinMaxLoc(split[i], out double min, out double max);
+            if (max - min < 1.0)
             {
-                Cv2.MinMaxLoc(channels[i], out double min, out double max);
-                if (max - min < 1.0)
-                {
-                    continue;
-                }
-
-                using var lut = BuildLut(min, max, 1.0, 0.0, 255.0);
-                using var adjusted = new Mat();
-                Cv2.LUT(channels[i], lut, adjusted);
-                adjusted.CopyTo(channels[i]);
+                continue;
             }
 
-            var result = new Mat();
-            Cv2.Merge(channels, result);
-            return result;
+            using var lut = BuildLut(min, max, 1.0, 0.0, 255.0);
+            using var adjusted = new Mat();
+            Cv2.LUT(split[i], lut, adjusted);
+            adjusted.CopyTo(split[i]);
         }
-        finally
-        {
-            foreach (var ch in channels) ch.Dispose();
-        }
+
+        var result = new Mat();
+        Cv2.Merge(split.Channels, result);
+        return result;
     }
 
     /// <summary>Applies contrast-limited adaptive histogram equalization in the L channel of LAB space.</summary>
@@ -105,26 +92,12 @@ public static class LevelsService
 
     private static Mat BuildLut(double black, double white, double gamma, double outputBlack, double outputWhite)
     {
-        var lut = new byte[256];
-        for (int i = 0; i < 256; i++)
+        return ImageProcessingUtility.BuildLut(i =>
         {
-            if (i <= black)
-            {
-                lut[i] = (byte)outputBlack;
-            }
-            else if (i >= white)
-            {
-                lut[i] = (byte)outputWhite;
-            }
-            else
-            {
-                double t = (i - black) / (white - black);
-                lut[i] = (byte)Math.Round(outputBlack + (outputWhite - outputBlack) * Math.Pow(t, 1.0 / gamma));
-            }
-        }
-
-        var lutMat = new Mat(1, 256, MatType.CV_8UC1);
-        lutMat.SetArray(lut);
-        return lutMat;
+            if (i <= black) return outputBlack;
+            if (i >= white) return outputWhite;
+            double t = (i - black) / (white - black);
+            return outputBlack + (outputWhite - outputBlack) * Math.Pow(t, 1.0 / gamma);
+        });
     }
 }

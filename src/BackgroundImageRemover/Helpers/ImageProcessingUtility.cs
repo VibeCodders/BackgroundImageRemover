@@ -230,6 +230,10 @@ public static class ImageProcessingUtility
         return BuildLut(lut);
     }
 
+    /// <summary>Converts a 0..1 opacity to a 0..255 alpha byte, clamping out-of-range input.</summary>
+    public static byte OpacityToAlphaByte(double opacity)
+        => (byte)Math.Round(255 * Math.Clamp(opacity, 0.0, 1.0));
+
     public static int GaussianKernelSize(double radius)
     {
         return Math.Max(1, (int)Math.Round(radius * 2) | 1);

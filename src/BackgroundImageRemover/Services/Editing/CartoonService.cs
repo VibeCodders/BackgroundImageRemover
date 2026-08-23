@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -22,12 +23,7 @@ public static class CartoonService
         // 2. Quantize each channel to a small number of levels (flat cartoon colors).
         int levels = Math.Clamp(quantizeLevels, 2, 32);
         double step = 256.0 / levels;
-        using var lut = new Mat(1, 256, MatType.CV_8UC1);
-        for (int i = 0; i < 256; i++)
-        {
-            int v = (int)Math.Round(i / step) * (int)step;
-            lut.Set<byte>(0, i, (byte)Math.Min(255, v));
-        }
+        using var lut = ImageProcessingUtility.BuildLut(i => Math.Min(255, Math.Round(i / step) * step));
         using var quantized = new Mat();
         Cv2.LUT(smooth, lut, quantized);
 

@@ -104,13 +104,13 @@ public static class TextOverlayService
                 Math.Max(0, blockPad - platePad),
                 Math.Max(1, block.Width - 2 * (blockPad - platePad)),
                 Math.Max(1, block.Height - 2 * (blockPad - platePad)));
-            byte pa = (byte)Math.Round(255 * Math.Clamp(options.PlateOpacity, 0.0, 1.0));
+            byte pa = ImageProcessingUtility.OpacityToAlphaByte(options.PlateOpacity);
             Cv2.Rectangle(block, plateRect, new Scalar(options.PlateColor.Item0, options.PlateColor.Item1, options.PlateColor.Item2, pa), -1);
         }
 
         if (options.ShadowOffset != 0)
         {
-            byte sa = (byte)Math.Round(255 * Math.Clamp(options.ShadowOpacity, 0.0, 1.0));
+            byte sa = ImageProcessingUtility.OpacityToAlphaByte(options.ShadowOpacity);
             using var shadow = new Mat(blockSize, MatType.CV_8UC4, Scalar.All(0));
             var shadowOrigin = new Point(origin.X + options.ShadowOffset, origin.Y + options.ShadowOffset);
             var shadowColor = new Scalar(options.ShadowColor.Item0, options.ShadowColor.Item1, options.ShadowColor.Item2, sa);
@@ -252,17 +252,23 @@ public static class TextOverlayService
     private static Mat CompositeTextBlock(Mat bgr, Mat blockBgra, Point position, double opacity)
     {
         var result = bgr.Clone();
-        int x = Math.Clamp(position.X, 0, bgr.Width);
-        int y = Math.Clamp(position.Y, 0, bgr.Height);
-        int w = Math.Min(blockBgra.Width, bgr.Width - x);
-        int h = Math.Min(blockBgra.Height, bgr.Height - y);
+        // position may be negative (e.g. a text block wider/taller than the image once margins
+        // are subtracted). Clamping x/y to 0 without cropping the same amount off the block's
+        // source origin used to paste the block's top-left corner at canvas (0,0) instead of the
+        // correctly clipped portion of the block (mirrors the analogous fix in OverlayService).
+        int destX = Math.Clamp(position.X, 0, bgr.Width);
+        int destY = Math.Clamp(position.Y, 0, bgr.Height);
+        int srcX = destX - position.X;
+        int srcY = destY - position.Y;
+        int w = Math.Min(blockBgra.Width - srcX, bgr.Width - destX);
+        int h = Math.Min(blockBgra.Height - srcY, bgr.Height - destY);
         if (w <= 0 || h <= 0)
         {
             return result;
         }
 
-        using var blockRoi = new Mat(blockBgra, new Rect(0, 0, w, h));
-        using var dstRoi = new Mat(result, new Rect(x, y, w, h));
+        using var blockRoi = new Mat(blockBgra, new Rect(srcX, srcY, w, h));
+        using var dstRoi = new Mat(result, new Rect(destX, destY, w, h));
 
         ImageProcessingUtility.AlphaComposite(dstRoi, blockRoi, opacity);
 

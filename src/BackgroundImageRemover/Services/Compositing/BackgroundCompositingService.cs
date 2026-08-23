@@ -227,19 +227,17 @@ public static class BackgroundCompositingService
         double invRange = 1.0 / (max - min);
         unsafe
         {
-            byte* dstPtr = (byte*)result.DataPointer;
-            long dstStep = result.Step();
-            Parallel.For(0, h, y =>
+            PixelLoop.ForEachRowParallel(result, (dstPtr, y) =>
             {
-                var row = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), w);
+                var row = new Span<Vec3b>((Vec3b*)dstPtr, w);
                 for (int x = 0; x < w; x++)
                 {
                     float t = (float)Math.Clamp(((x * dx + y * dy) - min) * invRange, 0.0, 1.0);
                     float invT = 1f - t;
                     row[x] = new Vec3b(
-                        BlendByte(end.Item0, start.Item0, invT, t),
-                        BlendByte(end.Item1, start.Item1, invT, t),
-                        BlendByte(end.Item2, start.Item2, invT, t));
+                        PixelColor.BlendWeighted(end.Item0, t, start.Item0, invT),
+                        PixelColor.BlendWeighted(end.Item1, t, start.Item1, invT),
+                        PixelColor.BlendWeighted(end.Item2, t, start.Item2, invT));
                 }
             });
         }
@@ -365,22 +363,15 @@ public static class BackgroundCompositingService
     /// </summary>
     private static Mat CompositeOntoBgr(Mat bgra, Mat backgroundBgr)
     {
-        int rows = bgra.Rows;
         int cols = bgra.Cols;
         var result = new Mat(bgra.Size(), MatType.CV_8UC3);
         unsafe
         {
-            byte* fgPtr = (byte*)bgra.DataPointer;
-            byte* bgPtr = (byte*)backgroundBgr.DataPointer;
-            byte* dstPtr = (byte*)result.DataPointer;
-            long fgStep = bgra.Step();
-            long bgStep = backgroundBgr.Step();
-            long dstStep = result.Step();
-            Parallel.For(0, rows, y =>
+            PixelLoop.ForEachRowParallel(bgra, backgroundBgr, result, (fgPtr, bgPtr, dstPtr, _) =>
             {
-                var fgRow = new Span<Vec4b>((Vec4b*)(fgPtr + y * fgStep), cols);
-                var bgRow = new Span<Vec3b>((Vec3b*)(bgPtr + y * bgStep), cols);
-                var dstRow = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), cols);
+                var fgRow = new Span<Vec4b>((Vec4b*)fgPtr, cols);
+                var bgRow = new Span<Vec3b>((Vec3b*)bgPtr, cols);
+                var dstRow = new Span<Vec3b>((Vec3b*)dstPtr, cols);
                 for (int x = 0; x < cols; x++)
                 {
                     float a = fgRow[x].Item3 / 255f;
@@ -388,18 +379,13 @@ public static class BackgroundCompositingService
                     var fg = fgRow[x];
                     var bg = bgRow[x];
                     dstRow[x] = new Vec3b(
-                        BlendByte(fg.Item0, bg.Item0, inv, a),
-                        BlendByte(fg.Item1, bg.Item1, inv, a),
-                        BlendByte(fg.Item2, bg.Item2, inv, a));
+                        PixelColor.BlendWeighted(fg.Item0, a, bg.Item0, inv),
+                        PixelColor.BlendWeighted(fg.Item1, a, bg.Item1, inv),
+                        PixelColor.BlendWeighted(fg.Item2, a, bg.Item2, inv));
                 }
             });
         }
         return result;
     }
 
-    private static byte BlendByte(byte fg, byte bg, float inv, float a)
-    {
-        float v = fg * a + bg * inv;
-        return (byte)Math.Clamp(Math.Round(v, MidpointRounding.AwayFromZero), 0, 255);
-    }
 }

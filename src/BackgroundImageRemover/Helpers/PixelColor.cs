@@ -29,4 +29,17 @@ public static class PixelColor
             BlendByte(from[1], to[1], t),
             BlendByte(from[2], to[2], t));
     }
+
+    /// <summary>
+    /// Blends two channel values with explicit weights: <c>first * firstWeight + second * secondWeight</c>
+    /// (the weights normally sum to 1), rounded away from zero and clamped to [0, 255]. Unifies the
+    /// private <c>BlendByte</c> helpers that the mask-blend (<see cref="MatExtensions.BlendByMask"/>),
+    /// alpha-composite and Uncrop fill passes each re-rolled. The second channel is a float because
+    /// some callers blend from CV_32F sources (values still on the 0..255 scale).
+    /// </summary>
+    public static byte BlendWeighted(byte first, float firstWeight, float second, float secondWeight)
+    {
+        float v = first * firstWeight + second * secondWeight;
+        return (byte)Math.Clamp(Math.Round(v, MidpointRounding.AwayFromZero), 0, 255);
+    }
 }

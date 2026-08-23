@@ -86,6 +86,36 @@ public static class PixelLoop
     }
 
     /// <summary>
+    /// Fills a single-channel CV_32FC1 Mat by invoking <paramref name="value"/> once per pixel
+    /// in parallel (rows are independent, so results are identical to a sequential pass), writing
+    /// straight into the native buffer through zero-copy spans. Replaces the unsafe
+    /// <c>Parallel.For</c> + <c>Span&lt;float&gt;</c> mask-fill skeleton that was copy-pasted
+    /// across the vignette/frame/adjustments services; the per-pixel math stays in the caller.
+    /// </summary>
+    public static unsafe void FillFloatParallel(Mat mask, Func<int, int, float> value)
+    {
+        ArgumentNullException.ThrowIfNull(mask);
+        ArgumentNullException.ThrowIfNull(value);
+        if (mask.IsDisposed || mask.Empty())
+        {
+            return;
+        }
+
+        int w = mask.Width;
+        int h = mask.Height;
+        byte* ptr = (byte*)mask.DataPointer;
+        long step = mask.Step();
+        Parallel.For(0, h, y =>
+        {
+            var row = new Span<float>((float*)(ptr + y * step), w);
+            for (int x = 0; x < w; x++)
+            {
+                row[x] = value(x, y);
+            }
+        });
+    }
+
+    /// <summary>
     /// Runs <paramref name="rowAction"/> once per row of <paramref name="mat"/> in parallel
     /// (worker threads), passing the row's start address and its row index. Use inside an unsafe
     /// block and create a typed span from the pointer, e.g.
@@ -95,7 +125,7 @@ public static class PixelLoop
     /// per-pixel passes over large images faster. The returned spans are only valid for the
     /// duration of the callback; do not store them.
     /// </summary>
-    public static unsafe void ForEachRowParallel(Mat mat, Action<IntPtr, int> rowAction)
+    public static unsafe void ForEachRowParallel(Mat mat, Action<IntPtr, int> rowAction, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(mat);
         ArgumentNullException.ThrowIfNull(rowAction);
@@ -106,6 +136,38 @@ public static class PixelLoop
 
         byte* ptr = (byte*)mat.DataPointer;
         long step = mat.Step();
-        Parallel.For(0, mat.Rows, y => rowAction((IntPtr)(ptr + y * step), y));
+        Parallel.For(0, mat.Rows, new ParallelOptions { CancellationToken = ct }, y => rowAction((IntPtr)(ptr + y * step), y));
+    }
+
+    /// <summary>
+    /// Runs <paramref name="rowAction"/> once per row in parallel over three Mats — two inputs
+    /// and one destination (e.g. a blend pass) — passing the three row start addresses and the
+    /// row index. The pointers honor each Mat's row stride, so ROI views work; rows are
+    /// independent per-pixel computations, so results are identical to a sequential pass.
+    /// Callers create typed spans from the pointers inside the callback. For an in-place pass
+    /// (destination is also an input), pass the same Mat twice. Replaces the copy-pasted
+    /// 3-pointer <c>Parallel.For</c> skeleton in the screen/alpha blend passes
+    /// (<c>FxService.ScreenBlend</c>, <c>ImageProcessingUtility.CompositeOverBgra</c> and
+    /// <c>AlphaComposite</c>).
+    /// </summary>
+    public static unsafe void ForEachRowParallel(Mat srcA, Mat srcB, Mat dst, Action<IntPtr, IntPtr, IntPtr, int> rowAction, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(srcA);
+        ArgumentNullException.ThrowIfNull(srcB);
+        ArgumentNullException.ThrowIfNull(dst);
+        ArgumentNullException.ThrowIfNull(rowAction);
+        if (srcA.IsDisposed || srcA.Empty())
+        {
+            return;
+        }
+
+        byte* aPtr = (byte*)srcA.DataPointer;
+        byte* bPtr = (byte*)srcB.DataPointer;
+        byte* dPtr = (byte*)dst.DataPointer;
+        long aStep = srcA.Step();
+        long bStep = srcB.Step();
+        long dStep = dst.Step();
+        Parallel.For(0, srcA.Rows, new ParallelOptions { CancellationToken = ct }, y =>
+            rowAction((IntPtr)(aPtr + y * aStep), (IntPtr)(bPtr + y * bStep), (IntPtr)(dPtr + y * dStep), y));
     }
 }

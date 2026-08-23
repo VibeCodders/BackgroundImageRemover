@@ -140,35 +140,15 @@ public static class FxService
 
     private static Mat RemapRadially(Mat channel, float cx, float cy, float maxR, float strength)
     {
-        using var mapX = new Mat(channel.Size(), MatType.CV_32FC1);
-        using var mapY = new Mat(channel.Size(), MatType.CV_32FC1);
-        int w = channel.Width;
-        int h = channel.Height;
-        unsafe
+        return RemapHelper.Remap(channel, (x, y, mapXRow, mapYRow) =>
         {
-            byte* xPtr = (byte*)mapX.DataPointer;
-            byte* yPtr = (byte*)mapY.DataPointer;
-            long xStep = mapX.Step();
-            long yStep = mapY.Step();
-            Parallel.For(0, h, y =>
-            {
-                var mapXRow = new Span<float>((float*)(xPtr + y * xStep), w);
-                var mapYRow = new Span<float>((float*)(yPtr + y * yStep), w);
-                for (int x = 0; x < w; x++)
-                {
-                    float dx = x - cx;
-                    float dy = y - cy;
-                    float norm = maxR > 0 ? MathF.Sqrt(dx * dx + dy * dy) / maxR : 0;
-                    float scale = 1.0f + strength * 0.06f * norm;
-                    mapXRow[x] = cx + dx * scale;
-                    mapYRow[x] = cy + dy * scale;
-                }
-            });
-        }
-
-        var result = new Mat();
-        Cv2.Remap(channel, result, mapX, mapY, InterpolationFlags.Linear, BorderTypes.Constant, Scalar.All(0));
-        return result;
+            float dx = x - cx;
+            float dy = y - cy;
+            float norm = maxR > 0 ? MathF.Sqrt(dx * dx + dy * dy) / maxR : 0;
+            float scale = 1.0f + strength * 0.06f * norm;
+            mapXRow[x] = cx + dx * scale;
+            mapYRow[x] = cy + dy * scale;
+        }, BorderTypes.Constant, Scalar.All(0));
     }
 
     /// <summary>screen(a,b) = 255 - (255-a)*(255-b)/255, blended toward b by <paramref name="t"/>.
@@ -176,23 +156,16 @@ public static class FxService
     /// intermediate CV_32FC3 Mats per call).</summary>
     private static Mat ScreenBlend(Mat baseBgr, Mat blendBgr, double t)
     {
-        int rows = baseBgr.Rows;
         int cols = baseBgr.Cols;
         float f = (float)t;
         var result = new Mat(baseBgr.Size(), MatType.CV_8UC3);
         unsafe
         {
-            byte* aPtr = (byte*)baseBgr.DataPointer;
-            byte* bPtr = (byte*)blendBgr.DataPointer;
-            byte* dstPtr = (byte*)result.DataPointer;
-            long aStep = baseBgr.Step();
-            long bStep = blendBgr.Step();
-            long dstStep = result.Step();
-            Parallel.For(0, rows, y =>
+            PixelLoop.ForEachRowParallel(baseBgr, blendBgr, result, (aPtr, bPtr, dstPtr, _) =>
             {
-                var aRow = new Span<Vec3b>((Vec3b*)(aPtr + y * aStep), cols);
-                var bRow = new Span<Vec3b>((Vec3b*)(bPtr + y * bStep), cols);
-                var dstRow = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), cols);
+                var aRow = new Span<Vec3b>((Vec3b*)aPtr, cols);
+                var bRow = new Span<Vec3b>((Vec3b*)bPtr, cols);
+                var dstRow = new Span<Vec3b>((Vec3b*)dstPtr, cols);
                 for (int x = 0; x < cols; x++)
                 {
                     var a = aRow[x];

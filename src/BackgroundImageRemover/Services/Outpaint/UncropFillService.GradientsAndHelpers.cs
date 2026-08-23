@@ -15,8 +15,9 @@ public sealed partial class UncropFillService
         CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        int totalW = sourceBgr.Width + padding.Left + padding.Right;
-        int totalH = sourceBgr.Height + padding.Top + padding.Bottom;
+        var canvasSize = padding.ExpandedSize(sourceBgr.Size());
+        int totalW = canvasSize.Width;
+        int totalH = canvasSize.Height;
 
         var result = new Mat(totalH, totalW, MatType.CV_8UC3, Scalar.All(0));
 
@@ -30,16 +31,13 @@ public sealed partial class UncropFillService
 
         // Rows are independent per-pixel math over the padded canvas, so they run in parallel;
         // the gradient interpolation, distance falloff and noise are identical to the sequential
-        // pass (Random.Shared is thread-safe). Cancellation flows through ParallelOptions so the
-        // callers' OperationCanceledException handling is preserved.
+        // pass (Random.Shared is thread-safe). Cancellation flows through the parallel options so
+        // the callers' OperationCanceledException handling is preserved.
         unsafe
         {
-            byte* ptr = (byte*)result.DataPointer;
-            long step = result.Step();
-
-            Parallel.For(0, totalH, new ParallelOptions { CancellationToken = ct }, y =>
+            PixelLoop.ForEachRowParallel(result, (rowPtr, y) =>
             {
-                byte* rowPtr = ptr + y * step;
+                byte* rowBase = (byte*)rowPtr;
                 for (int x = 0; x < totalW; x++)
                 {
                     // Check if inside interior
@@ -88,17 +86,16 @@ public sealed partial class UncropFillService
                         r = (byte)Math.Clamp(r + n, 0, 255);
                     }
 
-                    byte* pixel = rowPtr + x * 3;
+                    byte* pixel = rowBase + x * 3;
                     pixel[0] = b;
                     pixel[1] = g;
                     pixel[2] = r;
                 }
-            });
+            }, ct);
         }
 
         ct.ThrowIfCancellationRequested();
-        using var interiorRoi = new Mat(result, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
-        sourceBgr.CopyTo(interiorRoi);
+        ImageProcessingUtility.RestoreInterior(result, sourceBgr, padding);
 
         return result;
     }
@@ -145,13 +142,7 @@ public sealed partial class UncropFillService
         int intTop = padding.Top;
         int intBottom = padding.Top + innerH - 1;
 
-        int dx = 0;
-        if (x < intLeft) dx = intLeft - x;
-        else if (x > intRight) dx = x - intRight;
-
-        int dy = 0;
-        if (y < intTop) dy = intTop - y;
-        else if (y > intBottom) dy = y - intBottom;
+        GeometryHelper.DistanceToRect(x, y, intLeft, intTop, intRight, intBottom, out int dx, out int dy);
 
         if (dy >= dx)
         {
@@ -201,15 +192,12 @@ public sealed partial class UncropFillService
         float maxDist = Math.Max(1f, Math.Max(Math.Max(padding.Left, padding.Right), Math.Max(padding.Top, padding.Bottom)));
 
         // Rows are independent per-pixel math, so they run in parallel (identical results to
-        // the sequential pass); cancellation flows through ParallelOptions.
+        // the sequential pass); cancellation flows through the parallel options.
         unsafe
         {
-            byte* ptr = (byte*)canvas.DataPointer;
-            long step = canvas.Step();
-
-            Parallel.For(0, h, new ParallelOptions { CancellationToken = ct }, y =>
+            PixelLoop.ForEachRowParallel(canvas, (rowPtr, y) =>
             {
-                byte* rowPtr = ptr + y * step;
+                byte* rowBase = (byte*)rowPtr;
                 for (int x = 0; x < w; x++)
                 {
                     if (x >= intLeft && x < intRight && y >= intTop && y < intBottom)
@@ -217,24 +205,18 @@ public sealed partial class UncropFillService
                         continue;
                     }
 
-                    int dx = 0;
-                    if (x < intLeft) dx = intLeft - x;
-                    else if (x >= intRight) dx = x - (intRight - 1);
-
-                    int dy = 0;
-                    if (y < intTop) dy = intTop - y;
-                    else if (y >= intBottom) dy = y - (intBottom - 1);
+                    GeometryHelper.DistanceToRect(x, y, intLeft, intTop, intRight - 1, intBottom - 1, out int dx, out int dy);
 
                     float dist = MathF.Sqrt(dx * dx + dy * dy);
                     float t = Math.Clamp(dist / maxDist, 0f, 1f);
                     float multiplier = 1.0f - (1.0f - fadeFactor) * t;
 
-                    byte* pixel = rowPtr + x * 3;
+                    byte* pixel = rowBase + x * 3;
                     pixel[0] = (byte)Math.Clamp(pixel[0] * multiplier, 0, 255);
                     pixel[1] = (byte)Math.Clamp(pixel[1] * multiplier, 0, 255);
                     pixel[2] = (byte)Math.Clamp(pixel[2] * multiplier, 0, 255);
                 }
-            });
+            }, ct);
         }
     }
 
@@ -287,9 +269,9 @@ public sealed partial class UncropFillService
                         float inv = 1f - factor;
                         var cur = dstRow[x];
                         val = new Vec3b(
-                            BlendByte(src.Item0, cur.Item0, inv, factor),
-                            BlendByte(src.Item1, cur.Item1, inv, factor),
-                            BlendByte(src.Item2, cur.Item2, inv, factor));
+                            PixelColor.BlendWeighted(src.Item0, factor, cur.Item0, inv),
+                            PixelColor.BlendWeighted(src.Item1, factor, cur.Item1, inv),
+                            PixelColor.BlendWeighted(src.Item2, factor, cur.Item2, inv));
                     }
                     else
                     {
@@ -301,9 +283,4 @@ public sealed partial class UncropFillService
         }
     }
 
-    private static byte BlendByte(byte fg, byte bg, float inv, float a)
-    {
-        float v = fg * a + bg * inv;
-        return (byte)Math.Clamp(Math.Round(v, MidpointRounding.AwayFromZero), 0, 255);
-    }
 }

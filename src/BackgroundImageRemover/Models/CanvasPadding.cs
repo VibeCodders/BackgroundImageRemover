@@ -11,6 +11,14 @@ public readonly record struct CanvasPadding(int Left, int Top, int Right, int Bo
 
     public bool IsZero => Left == 0 && Top == 0 && Right == 0 && Bottom == 0;
 
+    /// <summary>Total size of the padded canvas that contains a source of <paramref name="source"/>.</summary>
+    public OpenCvSharp.Size ExpandedSize(OpenCvSharp.Size source)
+        => new(source.Width + Left + Right, source.Height + Top + Bottom);
+
+    /// <summary>Region of the padded canvas occupied by the original (unpadded) source.</summary>
+    public OpenCvSharp.Rect InteriorRect(OpenCvSharp.Size source)
+        => new(Left, Top, source.Width, source.Height);
+
     /// <summary>
     /// Computes centered padding required to adjust a source size to a target aspect ratio.
     /// </summary>

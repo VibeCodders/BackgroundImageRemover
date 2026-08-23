@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
 
@@ -22,23 +23,16 @@ public static class ImageProcessingUtility
     /// </summary>
     public static Mat CompositeOverBgra(Mat baseBgra, Mat overlayBgra, double opacity)
     {
-        int rows = baseBgra.Rows;
         int cols = baseBgra.Cols;
         float op = (float)opacity;
         var result = new Mat(baseBgra.Size(), MatType.CV_8UC4);
         unsafe
         {
-            byte* basePtr = (byte*)baseBgra.DataPointer;
-            byte* ovPtr = (byte*)overlayBgra.DataPointer;
-            byte* dstPtr = (byte*)result.DataPointer;
-            long baseStep = baseBgra.Step();
-            long ovStep = overlayBgra.Step();
-            long dstStep = result.Step();
-            Parallel.For(0, rows, y =>
+            PixelLoop.ForEachRowParallel(baseBgra, overlayBgra, result, (basePtr, ovPtr, dstPtr, _) =>
             {
-                var baseRow = new Span<Vec4b>((Vec4b*)(basePtr + y * baseStep), cols);
-                var ovRow = new Span<Vec4b>((Vec4b*)(ovPtr + y * ovStep), cols);
-                var dstRow = new Span<Vec4b>((Vec4b*)(dstPtr + y * dstStep), cols);
+                var baseRow = new Span<Vec4b>((Vec4b*)basePtr, cols);
+                var ovRow = new Span<Vec4b>((Vec4b*)ovPtr, cols);
+                var dstRow = new Span<Vec4b>((Vec4b*)dstPtr, cols);
                 for (int x = 0; x < cols; x++)
                 {
                     var b = baseRow[x];
@@ -46,9 +40,9 @@ public static class ImageProcessingUtility
                     float a = o.Item3 * op / 255f;
                     float inv = 1f - a;
                     dstRow[x] = new Vec4b(
-                        BlendByte(o.Item0, b.Item0, inv, a),
-                        BlendByte(o.Item1, b.Item1, inv, a),
-                        BlendByte(o.Item2, b.Item2, inv, a),
+                        PixelColor.BlendWeighted(o.Item0, a, b.Item0, inv),
+                        PixelColor.BlendWeighted(o.Item1, a, b.Item1, inv),
+                        PixelColor.BlendWeighted(o.Item2, a, b.Item2, inv),
                         b.Item3);
                 }
             });
@@ -65,19 +59,15 @@ public static class ImageProcessingUtility
     /// </summary>
     public static Mat AlphaComposite(Mat dstRoi, Mat overlayRoi, double opacity)
     {
-        int rows = dstRoi.Rows;
         int cols = dstRoi.Cols;
         float op = (float)opacity;
         unsafe
         {
-            byte* dstPtr = (byte*)dstRoi.DataPointer;
-            byte* ovPtr = (byte*)overlayRoi.DataPointer;
-            long dstStep = dstRoi.Step();
-            long ovStep = overlayRoi.Step();
-            Parallel.For(0, rows, y =>
+            // In-place pass: the destination is also the base input, so the same Mat is passed twice.
+            PixelLoop.ForEachRowParallel(dstRoi, overlayRoi, dstRoi, (dstPtr, ovPtr, _, _) =>
             {
-                var dstRow = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), cols);
-                var ovRow = new Span<Vec4b>((Vec4b*)(ovPtr + y * ovStep), cols);
+                var dstRow = new Span<Vec3b>((Vec3b*)dstPtr, cols);
+                var ovRow = new Span<Vec4b>((Vec4b*)ovPtr, cols);
                 for (int x = 0; x < cols; x++)
                 {
                     var d = dstRow[x];
@@ -85,19 +75,13 @@ public static class ImageProcessingUtility
                     float a = o.Item3 * op / 255f;
                     float inv = 1f - a;
                     dstRow[x] = new Vec3b(
-                        BlendByte(o.Item0, d.Item0, inv, a),
-                        BlendByte(o.Item1, d.Item1, inv, a),
-                        BlendByte(o.Item2, d.Item2, inv, a));
+                        PixelColor.BlendWeighted(o.Item0, a, d.Item0, inv),
+                        PixelColor.BlendWeighted(o.Item1, a, d.Item1, inv),
+                        PixelColor.BlendWeighted(o.Item2, a, d.Item2, inv));
                 }
             });
         }
         return dstRoi;
-    }
-
-    private static byte BlendByte(byte fg, byte bg, float inv, float a)
-    {
-        float v = fg * a + bg * inv;
-        return (byte)Math.Clamp(Math.Round(v, MidpointRounding.AwayFromZero), 0, 255);
     }
 
     public static Mat BlendLinear(Mat a, Mat b, double t)
@@ -272,6 +256,72 @@ public static class ImageProcessingUtility
         using var roi = new Mat(result, bounds);
         regionOp(roi);
         return result;
+    }
+
+    /// <summary>Returns an odd kernel size of at least <paramref name="min"/>, rounding an even radius up by one.</summary>
+    public static int OddKernelAtLeast(int radius, int min = 3)
+        => Math.Max(min, radius % 2 == 0 ? radius + 1 : radius);
+
+    /// <summary>
+    /// Pads <paramref name="src"/> on all four sides with <paramref name="padding"/> using the
+    /// given border mode (optionally with a constant <paramref name="borderValue"/>). Replaces the
+    /// copy-pasted <c>Cv2.CopyMakeBorder</c> calls that each repeated the
+    /// top/bottom/left/right padding order.
+    /// </summary>
+    public static Mat ExpandBorder(Mat src, CanvasPadding padding, BorderTypes borderType, Scalar? borderValue = null)
+    {
+        var dst = new Mat();
+        if (borderValue is { } value)
+        {
+            Cv2.CopyMakeBorder(src, dst, padding.Top, padding.Bottom, padding.Left, padding.Right, borderType, value);
+        }
+        else
+        {
+            Cv2.CopyMakeBorder(src, dst, padding.Top, padding.Bottom, padding.Left, padding.Right, borderType);
+        }
+
+        return dst;
+    }
+
+    /// <summary>
+    /// Builds a CV_8UC1 mask that is 255 over the padded (new) area of a canvas and 0 over the
+    /// source interior — the "what did uncrop add" mask used by the outpaint services.
+    /// </summary>
+    public static Mat CreateNewAreaMask(Size canvasSize, CanvasPadding padding, Size sourceSize)
+    {
+        var mask = new Mat(canvasSize, MatType.CV_8UC1, Scalar.All(255));
+        using (var innerRoi = new Mat(mask, padding.InteriorRect(sourceSize)))
+        {
+            innerRoi.SetTo(Scalar.All(0));
+        }
+
+        return mask;
+    }
+
+    /// <summary>
+    /// Copies <paramref name="source"/> into the interior (unpadded) region of
+    /// <paramref name="canvas"/>, overwriting whatever the border fill produced there.
+    /// </summary>
+    public static void RestoreInterior(Mat canvas, Mat source, CanvasPadding padding)
+    {
+        using var interiorRoi = new Mat(canvas, padding.InteriorRect(source.Size()));
+        source.CopyTo(interiorRoi);
+    }
+
+    /// <summary>
+    /// Gaussian-blurs the whole <paramref name="canvas"/> with a kernel of
+    /// <paramref name="kernel"/> and restores the untouched <paramref name="source"/> in the
+    /// interior, returning a new Mat (the input is left intact). The "blur the padded border
+    /// then put the crisp original back" step shared by the mirror/replicate/solid-color fills.
+    /// </summary>
+    public static Mat BlurBorderAndRestoreInterior(Mat canvas, Mat source, CanvasPadding padding, int kernel, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        using var blurred = new Mat();
+        Cv2.GaussianBlur(canvas, blurred, new Size(kernel, kernel), 0);
+        ct.ThrowIfCancellationRequested();
+        RestoreInterior(blurred, source, padding);
+        return blurred.Clone();
     }
 
     public static Mat ApplyToChannel(Mat bgr, int channelIndex, Func<Mat, Mat> operation)

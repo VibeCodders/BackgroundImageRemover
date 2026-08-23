@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -16,31 +17,23 @@ public sealed partial class UncropFillService
     {
         ct.ThrowIfCancellationRequested();
 
-        int totalW = sourceBgr.Width + padding.Left + padding.Right;
-        int totalH = sourceBgr.Height + padding.Top + padding.Bottom;
+        var canvasSize = padding.ExpandedSize(sourceBgr.Size());
+        int totalW = canvasSize.Width;
+        int totalH = canvasSize.Height;
 
         // Step 1: build the expanded canvas from a plausible prior. OpenCV inpainting alone
         // smears when the unknown region is large, so the new area starts as a mirrored
         // continuation of the image (or the sampled edge color when requested). Inpainting is
         // then only used to reconcile the seam, keeping the outer texture crisp.
-        using var expanded = new Mat();
+        using var expanded = preFillEdgeAverage
+            ? ImageProcessingUtility.ExpandBorder(sourceBgr, padding, BorderTypes.Constant, Scalar.All(0))
+            : ImageProcessingUtility.ExpandBorder(sourceBgr, padding, BorderTypes.Reflect101);
         if (preFillEdgeAverage)
         {
-            Cv2.CopyMakeBorder(sourceBgr, expanded, padding.Top, padding.Bottom, padding.Left, padding.Right,
-                BorderTypes.Constant, Scalar.All(0));
             FillBorderRegions(expanded, padding, sourceBgr.Size(), SampleEdgeAverageColor(sourceBgr));
         }
-        else
-        {
-            Cv2.CopyMakeBorder(sourceBgr, expanded, padding.Top, padding.Bottom, padding.Left, padding.Right,
-                BorderTypes.Reflect101);
-        }
 
-        using var newAreaMask = new Mat(totalH, totalW, MatType.CV_8UC1, Scalar.All(255));
-        using (var innerRoi = new Mat(newAreaMask, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height)))
-        {
-            innerRoi.SetTo(Scalar.All(0));
-        }
+        using var newAreaMask = ImageProcessingUtility.CreateNewAreaMask(expanded.Size(), padding, sourceBgr.Size());
 
         ct.ThrowIfCancellationRequested();
 
@@ -50,7 +43,7 @@ public sealed partial class UncropFillService
         // Step 2: restrict inpainting to a band hugging the interior edge. The mirrored region
         // beyond that band already looks like content, so it is preserved instead of smeared.
         using var interior = new Mat(totalH, totalW, MatType.CV_8UC1, Scalar.All(0));
-        using (var innerRoi = new Mat(interior, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height)))
+        using (var innerRoi = new Mat(interior, padding.InteriorRect(sourceBgr.Size())))
         {
             innerRoi.SetTo(Scalar.All(255));
         }
@@ -73,8 +66,7 @@ public sealed partial class UncropFillService
         // Step 3: restore the untouched original interior, feathering the seam when requested.
         if (blendMargin <= 0)
         {
-            using var interiorRoi = new Mat(result, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
-            sourceBgr.CopyTo(interiorRoi);
+            ImageProcessingUtility.RestoreInterior(result, sourceBgr, padding);
         }
         else
         {
@@ -98,11 +90,11 @@ public sealed partial class UncropFillService
         blendOverlap = Math.Max(2, Math.Min(blendOverlap, patchSize / 2));
 
         // Start with edge replicate as baseline
-        using var baseReplicate = new Mat();
-        Cv2.CopyMakeBorder(sourceBgr, baseReplicate, padding.Top, padding.Bottom, padding.Left, padding.Right, BorderTypes.Replicate);
+        using var baseReplicate = ImageProcessingUtility.ExpandBorder(sourceBgr, padding, BorderTypes.Replicate);
 
-        int totalW = sourceBgr.Width + padding.Left + padding.Right;
-        int totalH = sourceBgr.Height + padding.Top + padding.Bottom;
+        var canvasSize = padding.ExpandedSize(sourceBgr.Size());
+        int totalW = canvasSize.Width;
+        int totalH = canvasSize.Height;
 
         var result = baseReplicate.Clone();
 
@@ -146,8 +138,7 @@ public sealed partial class UncropFillService
         // Restore interior
         if (blendMargin <= 0)
         {
-            using var interiorRoi = new Mat(result, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
-            sourceBgr.CopyTo(interiorRoi);
+            ImageProcessingUtility.RestoreInterior(result, sourceBgr, padding);
         }
         else
         {

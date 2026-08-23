@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -14,23 +15,16 @@ public sealed partial class UncropFillService
         CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        var result = new Mat();
         var borderType = mirrorType == UncropMirrorType.Reflect ? BorderTypes.Reflect : BorderTypes.Reflect101;
-        Cv2.CopyMakeBorder(sourceBgr, result, padding.Top, padding.Bottom, padding.Left, padding.Right, borderType);
+        var result = ImageProcessingUtility.ExpandBorder(sourceBgr, padding, borderType);
         ct.ThrowIfCancellationRequested();
 
         if (blurRadius > 0)
         {
-            int kernel = blurRadius % 2 == 0 ? blurRadius + 1 : blurRadius;
-            kernel = Math.Max(3, kernel);
-            using var blurred = new Mat();
-            Cv2.GaussianBlur(result, blurred, new Size(kernel, kernel), 0);
-            ct.ThrowIfCancellationRequested();
-
-            using var interiorRoi = new Mat(blurred, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
-            sourceBgr.CopyTo(interiorRoi);
+            var blurred = ImageProcessingUtility.BlurBorderAndRestoreInterior(result, sourceBgr, padding,
+                ImageProcessingUtility.OddKernelAtLeast(blurRadius), ct);
             result.Dispose();
-            result = blurred.Clone();
+            result = blurred;
         }
 
         if (fadeOpacity < 0.999)
@@ -62,9 +56,7 @@ public sealed partial class UncropFillService
             return FillSolidColorBlurred(sourceBgr, padding, blurRadius, ct);
         }
 
-        var expanded = new Mat();
-        Cv2.CopyMakeBorder(sourceBgr, expanded, padding.Top, padding.Bottom, padding.Left, padding.Right,
-            BorderTypes.Constant, Scalar.All(0));
+        var expanded = ImageProcessingUtility.ExpandBorder(sourceBgr, padding, BorderTypes.Constant, Scalar.All(0));
         var color = customColor ?? SampleEdgeAverageColor(sourceBgr);
         ct.ThrowIfCancellationRequested();
         FillBorderRegions(expanded, padding, sourceBgr.Size(), color);
@@ -75,23 +67,15 @@ public sealed partial class UncropFillService
     public Mat FillReplicate(Mat sourceBgr, CanvasPadding padding, int smoothRadius = 0, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        var result = new Mat();
-        Cv2.CopyMakeBorder(sourceBgr, result, padding.Top, padding.Bottom, padding.Left, padding.Right,
-            BorderTypes.Replicate);
+        var result = ImageProcessingUtility.ExpandBorder(sourceBgr, padding, BorderTypes.Replicate);
         ct.ThrowIfCancellationRequested();
 
         if (smoothRadius > 0)
         {
-            int kernel = smoothRadius % 2 == 0 ? smoothRadius + 1 : smoothRadius;
-            kernel = Math.Max(3, kernel);
-            using var smoothed = new Mat();
-            Cv2.GaussianBlur(result, smoothed, new Size(kernel, kernel), 0);
-            ct.ThrowIfCancellationRequested();
-
-            using var interiorRoi = new Mat(smoothed, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
-            sourceBgr.CopyTo(interiorRoi);
+            var smoothed = ImageProcessingUtility.BlurBorderAndRestoreInterior(result, sourceBgr, padding,
+                ImageProcessingUtility.OddKernelAtLeast(smoothRadius), ct);
             result.Dispose();
-            result = smoothed.Clone();
+            result = smoothed;
         }
 
         return result;
@@ -100,9 +84,7 @@ public sealed partial class UncropFillService
     public Mat FillWrap(Mat sourceBgr, CanvasPadding padding, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        var result = new Mat();
-        Cv2.CopyMakeBorder(sourceBgr, result, padding.Top, padding.Bottom, padding.Left, padding.Right,
-            BorderTypes.Wrap);
+        var result = ImageProcessingUtility.ExpandBorder(sourceBgr, padding, BorderTypes.Wrap);
         ct.ThrowIfCancellationRequested();
         return result;
     }
@@ -116,8 +98,9 @@ public sealed partial class UncropFillService
         CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        int totalW = sourceBgr.Width + padding.Left + padding.Right;
-        int totalH = sourceBgr.Height + padding.Top + padding.Bottom;
+        var canvasSize = padding.ExpandedSize(sourceBgr.Size());
+        int totalW = canvasSize.Width;
+        int totalH = canvasSize.Height;
 
         // Scale image to at least cover the total canvas size (cover mode) with zoom factor
         double scaleX = (double)totalW / sourceBgr.Width;
@@ -156,8 +139,7 @@ public sealed partial class UncropFillService
         // Overlay original image in interior with optional feather
         if (blendMargin <= 0)
         {
-            using var interiorRoi = new Mat(result, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
-            sourceBgr.CopyTo(interiorRoi);
+            ImageProcessingUtility.RestoreInterior(result, sourceBgr, padding);
         }
         else
         {
@@ -171,29 +153,13 @@ public sealed partial class UncropFillService
     private static Mat FillSolidColorBlurred(Mat sourceBgr, CanvasPadding padding, int blurRadius, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        using var replicated = new Mat();
-        Cv2.CopyMakeBorder(sourceBgr, replicated, padding.Top, padding.Bottom, padding.Left, padding.Right,
-            BorderTypes.Replicate);
+        using var replicated = ImageProcessingUtility.ExpandBorder(sourceBgr, padding, BorderTypes.Replicate);
 
-        int kernel;
-        if (blurRadius > 0)
-        {
-            kernel = blurRadius % 2 == 0 ? blurRadius + 1 : blurRadius;
-            kernel = Math.Max(3, kernel);
-        }
-        else
-        {
-            int maxPad = Math.Max(Math.Max(padding.Left, padding.Right), Math.Max(padding.Top, padding.Bottom));
-            kernel = Math.Max(3, (maxPad / 2) | 1);
-        }
+        int kernel = blurRadius > 0
+            ? ImageProcessingUtility.OddKernelAtLeast(blurRadius)
+            : Math.Max(3, (Math.Max(Math.Max(padding.Left, padding.Right), Math.Max(padding.Top, padding.Bottom)) / 2) | 1);
 
         ct.ThrowIfCancellationRequested();
-        var result = new Mat();
-        Cv2.GaussianBlur(replicated, result, new Size(kernel, kernel), 0);
-
-        ct.ThrowIfCancellationRequested();
-        using var interiorRoi = new Mat(result, new Rect(padding.Left, padding.Top, sourceBgr.Width, sourceBgr.Height));
-        sourceBgr.CopyTo(interiorRoi);
-        return result;
+        return ImageProcessingUtility.BlurBorderAndRestoreInterior(replicated, sourceBgr, padding, kernel, ct);
     }
 }

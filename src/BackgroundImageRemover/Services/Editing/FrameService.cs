@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
@@ -207,23 +206,12 @@ public static class FrameService
         double cx = (bgra.Width - 1) / 2.0;
         double cy = (bgra.Height - 1) / 2.0;
         double maxDist = Math.Max(1e-6, Math.Sqrt(cx * cx + cy * cy));
-        int w = bgra.Width;
-        int h = bgra.Height;
-        unsafe
+        PixelLoop.FillFloatParallel(factor, (x, y) =>
         {
-            byte* factorPtr = (byte*)factor.DataPointer;
-            long factorStep = factor.Step();
-            Parallel.For(0, h, y =>
-            {
-                var factorRow = new Span<float>((float*)(factorPtr + y * factorStep), w);
-                for (int x = 0; x < w; x++)
-                {
-                    double d = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / maxDist;
-                    double falloff = Math.Clamp((d - 0.35) / 0.65, 0.0, 1.0);
-                    factorRow[x] = (float)(strength * falloff * falloff);
-                }
-            });
-        }
+            double d = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / maxDist;
+            double falloff = Math.Clamp((d - 0.35) / 0.65, 0.0, 1.0);
+            return (float)(strength * falloff * falloff);
+        });
 
         using var split = ChannelSplit.Of(bgra);
         // Channel values are on the 0..255 scale (matching chF/baseW below), so the target

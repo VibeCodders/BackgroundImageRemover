@@ -348,27 +348,16 @@ public static class ImageProcessingHelper
         float centerX = size.Width / 2.0f;
         float centerY = size.Height / 2.0f;
         float maxDistance = MathF.Sqrt(centerX * centerX + centerY * centerY);
-        int w = size.Width;
-        int h = size.Height;
 
-        unsafe
+        PixelLoop.FillFloatParallel(mask, (x, y) =>
         {
-            byte* maskPtr = (byte*)mask.DataPointer;
-            long maskStep = mask.Step();
-            Parallel.For(0, h, r =>
-            {
-                var maskRow = new Span<float>((float*)(maskPtr + r * maskStep), w);
-                float dy = r - centerY;
-                for (int c = 0; c < w; c++)
-                {
-                    float dx = c - centerX;
-                    float dist = MathF.Sqrt(dx * dx + dy * dy) / maxDistance;
-                    // Cosine smooth roll-off
-                    float factor = 1.0f - (float)strength * MathF.Pow(dist, 1.8f);
-                    maskRow[c] = Math.Clamp(factor, 0.0f, 1.0f);
-                }
-            });
-        }
+            float dx = x - centerX;
+            float dy = y - centerY;
+            float dist = MathF.Sqrt(dx * dx + dy * dy) / maxDistance;
+            // Cosine smooth roll-off
+            float factor = 1.0f - (float)strength * MathF.Pow(dist, 1.8f);
+            return Math.Clamp(factor, 0.0f, 1.0f);
+        });
 
         return mask;
     }

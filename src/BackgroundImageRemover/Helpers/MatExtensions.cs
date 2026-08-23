@@ -308,20 +308,15 @@ public static class MatExtensions
                         mr = mod.Item2;
                     }
                     dstRow[x] = new Vec3b(
-                        BlendByte(orig.Item0, mb, inv, m),
-                        BlendByte(orig.Item1, mg, inv, m),
-                        BlendByte(orig.Item2, mr, inv, m));
+                        PixelColor.BlendWeighted(orig.Item0, inv, mb, m),
+                        PixelColor.BlendWeighted(orig.Item1, inv, mg, m),
+                        PixelColor.BlendWeighted(orig.Item2, inv, mr, m));
                 }
             });
         }
         return result;
     }
 
-    private static byte BlendByte(byte a, float b, float inv, float m)
-    {
-        float v = a * inv + b * m;
-        return (byte)Math.Clamp(Math.Round(v, MidpointRounding.AwayFromZero), 0, 255);
-    }
 
     /// <summary>
     /// Returns the alpha channel from a <see cref="LoadedImage"/> as an independent, full-resolution

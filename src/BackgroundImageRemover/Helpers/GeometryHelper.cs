@@ -26,4 +26,16 @@ public static class GeometryHelper
         int height = Math.Clamp(rect.Height, 1, size.Height - y);
         return new Rect(x, y, width, height);
     }
+
+    /// <summary>
+    /// Computes the offset of point (x, y) from the axis-aligned rectangle
+    /// [left, right] × [top, bottom] (edges inclusive): (0, 0) when the point is inside,
+    /// otherwise the distance to the nearest edge along each axis (positive outside, 0 inside).
+    /// Unifies the copy-pasted distance-to-interior math in the Uncrop fill services.
+    /// </summary>
+    public static void DistanceToRect(int x, int y, int left, int top, int right, int bottom, out int dx, out int dy)
+    {
+        dx = x < left ? left - x : x > right ? x - right : 0;
+        dy = y < top ? top - y : y > bottom ? y - bottom : 0;
+    }
 }

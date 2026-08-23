@@ -80,13 +80,19 @@ public static class ImageProcessingHelper
             // 3. Saturation and Hue shift (in HSV space)
             if (Math.Abs(adjustments.Saturation - 1.0) > 1e-4 || Math.Abs(adjustments.HueShift) > 1e-4)
             {
-                using var hsv = new Mat();
-                Cv2.CvtColor(current, hsv, ColorConversionCodes.BGR2HSV);
-                var channels = Cv2.Split(hsv);
-                try
+                if (Math.Abs(adjustments.HueShift) <= 1e-4)
                 {
-                    // Hue is 0..180 in OpenCV 8-bit HSV
-                    if (Math.Abs(adjustments.HueShift) > 1e-4)
+                    // Saturation-only case reuses the shared HSV helper.
+                    var saturated = ImageProcessingUtility.AdjustSaturationByMultiplier(current, adjustments.Saturation);
+                    current.Dispose();
+                    current = saturated;
+                }
+                else
+                {
+                    using var hsv = new Mat();
+                    Cv2.CvtColor(current, hsv, ColorConversionCodes.BGR2HSV);
+                    var channels = Cv2.Split(hsv);
+                    try
                     {
                         // Convert degrees [-180, 180] to OpenCV hue scale [-90, 90]
                         double shift = (adjustments.HueShift / 360.0) * 180.0;
@@ -107,23 +113,23 @@ public static class ImageProcessingHelper
                                 channels[0].Set(r, c, (byte)val);
                             }
                         }
-                    }
 
-                    // Saturation multiplier
-                    if (Math.Abs(adjustments.Saturation - 1.0) > 1e-4)
+                        // Saturation multiplier
+                        if (Math.Abs(adjustments.Saturation - 1.0) > 1e-4)
+                        {
+                            channels[1].ConvertTo(channels[1], MatType.CV_8UC1, adjustments.Saturation);
+                        }
+
+                        Cv2.Merge(channels, hsv);
+                        var bgrResult = new Mat();
+                        Cv2.CvtColor(hsv, bgrResult, ColorConversionCodes.HSV2BGR);
+                        current.Dispose();
+                        current = bgrResult;
+                    }
+                    finally
                     {
-                        channels[1].ConvertTo(channels[1], MatType.CV_8UC1, adjustments.Saturation);
+                        foreach (var ch in channels) ch.Dispose();
                     }
-
-                    Cv2.Merge(channels, hsv);
-                    var bgrResult = new Mat();
-                    Cv2.CvtColor(hsv, bgrResult, ColorConversionCodes.HSV2BGR);
-                    current.Dispose();
-                    current = bgrResult;
-                }
-                finally
-                {
-                    foreach (var ch in channels) ch.Dispose();
                 }
             }
 
@@ -188,30 +194,11 @@ public static class ImageProcessingHelper
             // 5.7 Clarity: local contrast via CLAHE on the Luminance channel, blended with the original.
             if (adjustments.Clarity > 1e-4)
             {
-                using var lab = new Mat();
-                Cv2.CvtColor(current, lab, ColorConversionCodes.BGR2Lab);
-                var labChannels = Cv2.Split(lab);
-                Mat clarified;
-                try
-                {
-                    using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
-                    clahe.Apply(labChannels[0], labChannels[0]);
-                    Cv2.Merge(labChannels, lab);
-                    clarified = new Mat();
-                    Cv2.CvtColor(lab, clarified, ColorConversionCodes.Lab2BGR);
-                }
-                finally
-                {
-                    foreach (var ch in labChannels) ch.Dispose();
-                }
-
-                using (clarified)
-                {
-                    var blended = new Mat();
-                    Cv2.AddWeighted(current, 1.0 - adjustments.Clarity, clarified, adjustments.Clarity, 0, blended);
-                    current.Dispose();
-                    current = blended;
-                }
+                using var clarified = ImageProcessingUtility.ApplyClahe(current);
+                var blended = new Mat();
+                Cv2.AddWeighted(current, 1.0 - adjustments.Clarity, clarified, adjustments.Clarity, 0, blended);
+                current.Dispose();
+                current = blended;
             }
 
             // 5.8 Fade: lift blacks toward mid-gray for a matte film look.
@@ -252,43 +239,25 @@ public static class ImageProcessingHelper
             // 5.96 Dehaze: local contrast equalization plus a slight saturation lift.
             if (adjustments.Dehaze > 1e-4)
             {
-                using var lab = new Mat();
-                Cv2.CvtColor(current, lab, ColorConversionCodes.BGR2Lab);
-                var labChannels = Cv2.Split(lab);
-                Mat enhanced;
+                using var enhanced = ImageProcessingUtility.ApplyClahe(current);
+                using var hsv = new Mat();
+                Cv2.CvtColor(enhanced, hsv, ColorConversionCodes.BGR2HSV);
+                var sat = Cv2.Split(hsv);
                 try
                 {
-                    using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
-                    clahe.Apply(labChannels[0], labChannels[0]);
-                    Cv2.Merge(labChannels, lab);
-                    Cv2.CvtColor(lab, enhanced = new Mat(), ColorConversionCodes.Lab2BGR);
+                    sat[1].ConvertTo(sat[1], MatType.CV_8UC1, 1.15);
+                    Cv2.Merge(sat, hsv);
+                    Cv2.CvtColor(hsv, enhanced, ColorConversionCodes.HSV2BGR);
                 }
                 finally
                 {
-                    foreach (var ch in labChannels) ch.Dispose();
+                    foreach (var ch in sat) ch.Dispose();
                 }
 
-                using (enhanced)
-                {
-                    using var hsv = new Mat();
-                    Cv2.CvtColor(enhanced, hsv, ColorConversionCodes.BGR2HSV);
-                    var sat = Cv2.Split(hsv);
-                    try
-                    {
-                        sat[1].ConvertTo(sat[1], MatType.CV_8UC1, 1.15);
-                        Cv2.Merge(sat, hsv);
-                        Cv2.CvtColor(hsv, enhanced, ColorConversionCodes.HSV2BGR);
-                    }
-                    finally
-                    {
-                        foreach (var ch in sat) ch.Dispose();
-                    }
-
-                    var dehazed = new Mat();
-                    Cv2.AddWeighted(current, 1.0 - adjustments.Dehaze, enhanced, adjustments.Dehaze, 0, dehazed);
-                    current.Dispose();
-                    current = dehazed;
-                }
+                var dehazed = new Mat();
+                Cv2.AddWeighted(current, 1.0 - adjustments.Dehaze, enhanced, adjustments.Dehaze, 0, dehazed);
+                current.Dispose();
+                current = dehazed;
             }
 
             // 5.97 Soften: edge-preserving bilateral smoothing.
@@ -326,8 +295,7 @@ public static class ImageProcessingHelper
             // 5.995 Posterize.
             if (adjustments.PosterizeLevels > 0)
             {
-                int bucket = Math.Max(1, 256 / Math.Max(1, adjustments.PosterizeLevels));
-                using var lut = ImageProcessingUtility.BuildLut(i => (i / bucket) * bucket);
+                using var lut = ImageProcessingUtility.BuildPosterizeLut(adjustments.PosterizeLevels);
                 var posterized = new Mat();
                 Cv2.LUT(current, lut, posterized);
                 current.Dispose();
@@ -423,22 +391,7 @@ public static class ImageProcessingHelper
 
         using (balanced)
         {
-            using var lab = new Mat();
-            Cv2.CvtColor(balanced, lab, ColorConversionCodes.BGR2Lab);
-            var labChannels = Cv2.Split(lab);
-            try
-            {
-                using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
-                clahe.Apply(labChannels[0], labChannels[0]);
-                Cv2.Merge(labChannels, lab);
-                var result = new Mat();
-                Cv2.CvtColor(lab, result, ColorConversionCodes.Lab2BGR);
-                return result;
-            }
-            finally
-            {
-                foreach (var ch in labChannels) ch.Dispose();
-            }
+            return ImageProcessingUtility.ApplyClahe(balanced);
         }
     }
 }

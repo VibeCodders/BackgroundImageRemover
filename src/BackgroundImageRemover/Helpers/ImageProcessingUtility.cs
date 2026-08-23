@@ -97,10 +97,16 @@ public static class ImageProcessingUtility
 
     public static Mat AdjustSaturation(Mat bgr, double boost)
     {
+        return AdjustSaturationByMultiplier(bgr, 1.0 + boost);
+    }
+
+    /// <summary>Scales the saturation channel (HSV) by a multiplicative factor; 1.0 leaves the image unchanged.</summary>
+    public static Mat AdjustSaturationByMultiplier(Mat bgr, double multiplier)
+    {
         using var hsv = new Mat();
         Cv2.CvtColor(bgr, hsv, ColorConversionCodes.BGR2HSV);
         using var split = ChannelSplit.Of(hsv);
-        split[1].ConvertTo(split[1], MatType.CV_8UC1, 1.0 + boost);
+        split[1].ConvertTo(split[1], MatType.CV_8UC1, multiplier);
         var result = new Mat();
         Cv2.Merge(split.Channels, result);
         using (result)
@@ -108,6 +114,27 @@ public static class ImageProcessingUtility
             var output = new Mat();
             Cv2.CvtColor(result, output, ColorConversionCodes.HSV2BGR);
             return output;
+        }
+    }
+
+    /// <summary>Applies CLAHE contrast equalization on the Lab L channel, returning a new BGR Mat.</summary>
+    public static Mat ApplyClahe(Mat bgr)
+    {
+        using var lab = new Mat();
+        Cv2.CvtColor(bgr, lab, ColorConversionCodes.BGR2Lab);
+        var labChannels = Cv2.Split(lab);
+        try
+        {
+            using var clahe = Cv2.CreateCLAHE(2.0, new Size(8, 8));
+            clahe.Apply(labChannels[0], labChannels[0]);
+            Cv2.Merge(labChannels, lab);
+            var result = new Mat();
+            Cv2.CvtColor(lab, result, ColorConversionCodes.Lab2BGR);
+            return result;
+        }
+        finally
+        {
+            foreach (var ch in labChannels) ch.Dispose();
         }
     }
 

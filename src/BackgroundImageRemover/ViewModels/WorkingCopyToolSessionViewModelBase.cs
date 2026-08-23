@@ -25,6 +25,9 @@ public abstract partial class WorkingCopyToolSessionViewModelBase : ToolSessionV
     /// <summary>Builds the final BGR result from the working copy. Used for both preview and apply.</summary>
     protected abstract Mat BuildResult();
 
+    /// <summary>Routes any <see cref="ToolParameterAttribute"/> change into the debounced preview refresh.</summary>
+    protected override void OnToolParameterChanged() => RequestRefresh();
+
     /// <summary>Refreshes the preview bitmap from the working copy synchronously. Used by
     /// programmatic refresh points and tests; slider/parameter changes route through
     /// <see cref="ToolSessionViewModelBase.RequestRefresh"/> (debounced, see <see cref="RefreshAsync"/>).</summary>

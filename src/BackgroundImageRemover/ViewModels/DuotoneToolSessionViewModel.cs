@@ -17,15 +17,19 @@ public partial class DuotoneToolSessionViewModel : PreviewToolSessionViewModelBa
     public override string AccentColor => "#8B5CF6";
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _darkColor = WpfColor.FromRgb(20, 20, 80);
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _lightColor = WpfColor.FromRgb(255, 200, 40);
 
     [ObservableProperty]
+    [ToolParameter]
     private double _midpoint = 0.5;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _strength = 1.0;
 
     /// <summary>Ready-made dark/light color pairs for one-click application.</summary>
@@ -50,11 +54,6 @@ public partial class DuotoneToolSessionViewModel : PreviewToolSessionViewModelBa
     {
         RefreshPreview();
     }
-
-    partial void OnDarkColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnLightColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnMidpointChanged(double value) => RequestRefresh();
-    partial void OnStrengthChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => DuotoneService.Apply(bgr, DarkColor.ToVec3b(), LightColor.ToVec3b(), Midpoint, Strength);

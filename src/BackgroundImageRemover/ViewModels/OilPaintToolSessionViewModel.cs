@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,9 +13,11 @@ public partial class OilPaintToolSessionViewModel : PreviewToolSessionViewModelB
     public override string AccentColor => "#B45309";
 
     [ObservableProperty]
+    [ToolParameter]
     private int _brushSize = 3;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _detail = 8;
 
     protected override string OperationName => "Oil Paint";
@@ -26,9 +29,6 @@ public partial class OilPaintToolSessionViewModel : PreviewToolSessionViewModelB
     {
         RefreshPreview();
     }
-
-    partial void OnBrushSizeChanged(int value) => RequestRefresh();
-    partial void OnDetailChanged(int value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => OilPaintService.Apply(bgr, BrushSize, Detail);

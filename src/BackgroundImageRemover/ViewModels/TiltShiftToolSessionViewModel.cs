@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,18 +13,23 @@ public partial class TiltShiftToolSessionViewModel : PreviewToolSessionViewModel
     public override string AccentColor => "#4F46E5";
 
     [ObservableProperty]
+    [ToolParameter]
     private double _focusCenter = 0.5;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _focusWidth = 0.35;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _blurRadius = 12;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _vertical;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _saturationBoost = 0.3;
 
     protected override string OperationName => "Tilt-Shift";
@@ -35,12 +41,6 @@ public partial class TiltShiftToolSessionViewModel : PreviewToolSessionViewModel
     {
         RefreshPreview();
     }
-
-    partial void OnFocusCenterChanged(double value) => RequestRefresh();
-    partial void OnFocusWidthChanged(double value) => RequestRefresh();
-    partial void OnBlurRadiusChanged(double value) => RequestRefresh();
-    partial void OnVerticalChanged(bool value) => RequestRefresh();
-    partial void OnSaturationBoostChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => TiltShiftService.Apply(bgr, FocusCenter, FocusWidth, BlurRadius, Vertical, SaturationBoost);

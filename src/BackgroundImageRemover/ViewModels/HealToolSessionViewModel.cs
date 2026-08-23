@@ -28,21 +28,27 @@ public partial class HealToolSessionViewModel : WorkingCopyToolSessionViewModelB
     private double _brushRadius = 20;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _healRadius = 3;
 
     [ObservableProperty]
+    [ToolParameter]
     private InpaintTypes _inpaintMethod = InpaintTypes.Telea;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _removeDustKernel;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _removeScratchesStrength;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _surfaceSmoothStrength;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _detailEnhanceStrength;
 
     public HealToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
@@ -60,13 +66,6 @@ public partial class HealToolSessionViewModel : WorkingCopyToolSessionViewModelB
         RefreshResult();
         StatusMessage = "Paint over blemishes, then apply the heal.";
     }
-
-    partial void OnRemoveDustKernelChanged(int value) => RequestRefresh();
-    partial void OnRemoveScratchesStrengthChanged(double value) => RequestRefresh();
-    partial void OnSurfaceSmoothStrengthChanged(double value) => RequestRefresh();
-    partial void OnDetailEnhanceStrengthChanged(double value) => RequestRefresh();
-    partial void OnHealRadiusChanged(double value) => RequestRefresh();
-    partial void OnInpaintMethodChanged(InpaintTypes value) => RequestRefresh();
 
     public void OnStrokeStart(WpfPoint imagePoint, double pixelRadius)
         => _strokes.Begin(imagePoint, pixelRadius, StampMask);

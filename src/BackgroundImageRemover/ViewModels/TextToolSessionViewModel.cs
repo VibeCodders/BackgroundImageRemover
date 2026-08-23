@@ -15,66 +15,87 @@ public partial class TextToolSessionViewModel : PreviewToolSessionViewModelBase
     public override string AccentColor => "#DB2777";
 
     [ObservableProperty]
+    [ToolParameter]
     private string? _text = "Watermark";
 
     [ObservableProperty]
+    [ToolParameter]
     private int _fontSize = 48;
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _color = WpfColor.FromRgb(255, 255, 255);
 
     [ObservableProperty]
+    [ToolParameter]
     private double _opacity = 1.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private TextAnchor _anchor = TextAnchor.BottomRight;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _margin = 20;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _rotation;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _outlineThickness;
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _outlineColor = WpfColor.FromRgb(0, 0, 0);
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _bold;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _shadowOffset;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _shadowOpacity = 0.5;
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _shadowColor = WpfColor.FromRgb(0, 0, 0);
 
     [ObservableProperty]
+    [ToolParameter]
     private double _shadowBlur;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _letterSpacing;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _lineSpacing;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _autoFitWidth;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _backgroundPlate;
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _plateColor = WpfColor.FromRgb(0, 0, 0);
 
     [ObservableProperty]
+    [ToolParameter]
     private double _plateOpacity = 0.5;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _platePadding = 10;
 
     protected override string OperationName => "Text";
@@ -86,28 +107,6 @@ public partial class TextToolSessionViewModel : PreviewToolSessionViewModelBase
     {
         RefreshPreview();
     }
-
-    partial void OnTextChanged(string? value) => RequestRefresh();
-    partial void OnFontSizeChanged(int value) => RequestRefresh();
-    partial void OnColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnOpacityChanged(double value) => RequestRefresh();
-    partial void OnAnchorChanged(TextAnchor value) => RequestRefresh();
-    partial void OnMarginChanged(int value) => RequestRefresh();
-    partial void OnRotationChanged(double value) => RequestRefresh();
-    partial void OnOutlineThicknessChanged(int value) => RequestRefresh();
-    partial void OnOutlineColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnBoldChanged(bool value) => RequestRefresh();
-    partial void OnShadowOffsetChanged(int value) => RequestRefresh();
-    partial void OnShadowOpacityChanged(double value) => RequestRefresh();
-    partial void OnShadowColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnShadowBlurChanged(double value) => RequestRefresh();
-    partial void OnLetterSpacingChanged(double value) => RequestRefresh();
-    partial void OnLineSpacingChanged(int value) => RequestRefresh();
-    partial void OnAutoFitWidthChanged(bool value) => RequestRefresh();
-    partial void OnBackgroundPlateChanged(bool value) => RequestRefresh();
-    partial void OnPlateColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnPlateOpacityChanged(double value) => RequestRefresh();
-    partial void OnPlatePaddingChanged(int value) => RequestRefresh();
 
     private TextOverlayOptions BuildOptions() => new()
     {

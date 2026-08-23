@@ -15,6 +15,7 @@ public partial class SharpenToolSessionViewModel : MaskToolSessionViewModelBase
     public override string AccentColor => "#7C3AED";
 
     [ObservableProperty]
+    [ToolParameter]
     private double _strength = 0.5;
 
     protected override string OperationName => "Sharpen";
@@ -25,8 +26,6 @@ public partial class SharpenToolSessionViewModel : MaskToolSessionViewModelBase
         InitMask();
         StatusMessage = "Choose whole-image or paint a region to sharpen, then apply.";
     }
-
-    partial void OnStrengthChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat src) => SharpenService.SharpenAll(src, Strength);
 

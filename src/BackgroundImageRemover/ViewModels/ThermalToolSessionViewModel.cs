@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,9 +13,11 @@ public partial class ThermalToolSessionViewModel : PreviewToolSessionViewModelBa
     public override string AccentColor => "#DC2626";
 
     [ObservableProperty]
+    [ToolParameter]
     private double _intensity = 1.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _invert;
 
     protected override string OperationName => "Thermal";
@@ -26,9 +29,6 @@ public partial class ThermalToolSessionViewModel : PreviewToolSessionViewModelBa
     {
         RefreshPreview();
     }
-
-    partial void OnIntensityChanged(double value) => RequestRefresh();
-    partial void OnInvertChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => ThermalService.Apply(bgr, Intensity, Invert);

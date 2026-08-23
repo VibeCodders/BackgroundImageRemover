@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,15 +15,18 @@ public partial class FiltersToolSessionViewModel : PreviewToolSessionViewModelBa
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEffect))]
+    [ToolParameter]
     private FilterKind _selectedFilter = FilterKind.Sepia;
 
     /// <summary>True when the selected filter actually changes the image (i.e. not "None").</summary>
     public bool HasEffect => SelectedFilter != FilterKind.None;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _intensity = 1.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _posterizeLevels = 4;
 
     protected override string OperationName => "Filters";
@@ -34,10 +38,6 @@ public partial class FiltersToolSessionViewModel : PreviewToolSessionViewModelBa
     {
         RefreshPreview();
     }
-
-    partial void OnSelectedFilterChanged(FilterKind value) => RequestRefresh();
-    partial void OnIntensityChanged(double value) => RequestRefresh();
-    partial void OnPosterizeLevelsChanged(int value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => FilterService.Apply(bgr, SelectedFilter, Intensity, PosterizeLevels);

@@ -12,9 +12,11 @@ public partial class NoiseToolSessionViewModel : MaskToolSessionViewModelBase
     public override string AccentColor => "#4B5563";
 
     [ObservableProperty]
+    [ToolParameter]
     private double _noiseStrength = 20;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _gaussianNoise = true;
 
     protected override string OperationName => "Noise";
@@ -25,9 +27,6 @@ public partial class NoiseToolSessionViewModel : MaskToolSessionViewModelBase
         InitMask();
         StatusMessage = "Add Gaussian or salt-and-pepper noise, then apply.";
     }
-
-    partial void OnNoiseStrengthChanged(double value) => RequestRefresh();
-    partial void OnGaussianNoiseChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat src)
     {

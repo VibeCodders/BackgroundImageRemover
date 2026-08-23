@@ -15,12 +15,15 @@ public partial class BlurToolSessionViewModel : MaskToolSessionViewModelBase
     public override string AccentColor => "#0E7490";
 
     [ObservableProperty]
+    [ToolParameter]
     private double _blurRadius = 12;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _motionBlur;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _motionAngle;
 
     protected override string OperationName => "Blur";
@@ -31,10 +34,6 @@ public partial class BlurToolSessionViewModel : MaskToolSessionViewModelBase
         InitMask();
         StatusMessage = "Choose whole-image or paint a region to blur, then apply.";
     }
-
-    partial void OnBlurRadiusChanged(double value) => RequestRefresh();
-    partial void OnMotionBlurChanged(bool value) => RequestRefresh();
-    partial void OnMotionAngleChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat src)
     {

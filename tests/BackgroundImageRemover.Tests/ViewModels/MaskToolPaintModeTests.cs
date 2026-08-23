@@ -1,5 +1,7 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Tests.Helpers;
 using BackgroundImageRemover.ViewModels;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OpenCvSharp;
 using WpfPoint = System.Windows.Point;
 using Xunit;
@@ -11,7 +13,7 @@ namespace BackgroundImageRemover.Tests.ViewModels;
 /// the effect is applied inside the painted mask while the rest of the image stays untouched,
 /// WholeImage applies it everywhere, and with no flags the image is returned unchanged.
 /// </summary>
-public class MaskToolPaintModeTests
+public partial class MaskToolPaintModeTests
 {
     private const int Width = 40;
     private const int Height = 40;
@@ -98,6 +100,26 @@ public class MaskToolPaintModeTests
     }
 
     [Fact]
+    public async Task ToolParameterChange_RoutesOnlyMarkedPropertiesIntoRefresh()
+    {
+        using var vm = await CreateToolAsync();
+        Assert.Equal(0, vm.ToolParameterChangeCount);
+
+        // A property backed by a [ToolParameter] field routes into the parameter refresh.
+        vm.Parameter = 42;
+        Assert.Equal(1, vm.ToolParameterChangeCount);
+
+        // Internal state (title, dirty flag, preview bitmap) is not a parameter and stays silent.
+        vm.Title = "Renamed";
+        vm.IsDirty = true;
+        Assert.Equal(1, vm.ToolParameterChangeCount);
+
+        // Reset restores the parameter through its property setter, which routes again.
+        vm.ResetCommand.Execute(null);
+        Assert.Equal(2, vm.ToolParameterChangeCount);
+    }
+
+    [Fact]
     public async Task RefreshResult_SetsIsDirtyOnlyWhenEffectActive()
     {
         using var vm = await CreateToolAsync();
@@ -132,8 +154,12 @@ public class MaskToolPaintModeTests
     /// protected <see cref="MaskToolSessionViewModelBase.BuildResult"/> /
     /// <see cref="MaskToolSessionViewModelBase.RefreshResult"/> for assertions.
     /// </summary>
-    private sealed class TestMaskTool : MaskToolSessionViewModelBase
+    private sealed partial class TestMaskTool : MaskToolSessionViewModelBase
     {
+        [ObservableProperty]
+        [ToolParameter]
+        private int _parameter = 1;
+
         public TestMaskTool(ShellViewModel shell, DocumentViewModel parentDocument)
             : base(shell, parentDocument)
         {
@@ -143,6 +169,13 @@ public class MaskToolPaintModeTests
         public override string ToolBadge => "Test";
         public override string AccentColor => "#000000";
         protected override string OperationName => "Test";
+
+        /// <summary>Counts the [ToolParameter] routing calls (instead of refreshing the preview).</summary>
+        public int ToolParameterChangeCount { get; private set; }
+
+        protected override void OnToolParameterChanged() => ToolParameterChangeCount++;
+
+        protected override void OnResetToolDefaults() => Parameter = 1;
 
         protected override Mat ApplyEffect(Mat src)
         {

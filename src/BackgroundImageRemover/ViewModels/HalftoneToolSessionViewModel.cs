@@ -14,12 +14,15 @@ public partial class HalftoneToolSessionViewModel : PreviewToolSessionViewModelB
     public override string AccentColor => "#7C3AED";
 
     [ObservableProperty]
+    [ToolParameter]
     private int _cellSize = 6;
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _dotColor = WpfColor.FromRgb(20, 20, 20);
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _invert;
 
     protected override string OperationName => "Halftone";
@@ -31,10 +34,6 @@ public partial class HalftoneToolSessionViewModel : PreviewToolSessionViewModelB
     {
         RefreshPreview();
     }
-
-    partial void OnCellSizeChanged(int value) => RequestRefresh();
-    partial void OnDotColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnInvertChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => HalftoneService.Apply(bgr, CellSize, DotColor.ToVec3b(), Invert);

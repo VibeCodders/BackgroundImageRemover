@@ -13,21 +13,27 @@ public partial class FxToolSessionViewModel : PreviewToolSessionViewModelBase
     public override string AccentColor => "#C026D3";
 
     [ObservableProperty]
+    [ToolParameter]
     private double _glowStrength;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _bloomStrength;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _lightLeakStrength;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _chromaticAberrationStrength;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _bokehCount;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _bokehSize = 20;
 
     protected override string OperationName => "FX";
@@ -41,13 +47,6 @@ public partial class FxToolSessionViewModel : PreviewToolSessionViewModelBase
     {
         RefreshPreview();
     }
-
-    partial void OnGlowStrengthChanged(double value) => RequestRefresh();
-    partial void OnBloomStrengthChanged(double value) => RequestRefresh();
-    partial void OnLightLeakStrengthChanged(double value) => RequestRefresh();
-    partial void OnChromaticAberrationStrengthChanged(double value) => RequestRefresh();
-    partial void OnBokehCountChanged(int value) => RequestRefresh();
-    partial void OnBokehSizeChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
     {

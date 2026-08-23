@@ -18,33 +18,43 @@ public partial class EmojiToolSessionViewModel : PreviewToolSessionViewModelBase
         Enum.GetValues<EmojiOverlayService.EmojiKind>().ToArray();
 
     [ObservableProperty]
+    [ToolParameter]
     private EmojiOverlayService.EmojiKind _selectedEmoji = EmojiOverlayService.EmojiKind.Star;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _emojiSize = 48;
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _emojiColor = WpfColor.FromRgb(255, 255, 255);
 
     [ObservableProperty]
+    [ToolParameter]
     private double _opacity = 1.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _scatterMode;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _scatterCount = 20;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _minSize = 20;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _maxSize = 60;
 
     [ObservableProperty]
+    [ToolParameter]
     private TextAnchor _anchor = TextAnchor.BottomRight;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _margin = 20;
 
     protected override string OperationName => "Emoji";
@@ -56,17 +66,6 @@ public partial class EmojiToolSessionViewModel : PreviewToolSessionViewModelBase
     {
         RefreshPreview();
     }
-
-    partial void OnSelectedEmojiChanged(EmojiOverlayService.EmojiKind value) => RequestRefresh();
-    partial void OnEmojiSizeChanged(int value) => RequestRefresh();
-    partial void OnEmojiColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnOpacityChanged(double value) => RequestRefresh();
-    partial void OnScatterModeChanged(bool value) => RequestRefresh();
-    partial void OnScatterCountChanged(int value) => RequestRefresh();
-    partial void OnMinSizeChanged(int value) => RequestRefresh();
-    partial void OnMaxSizeChanged(int value) => RequestRefresh();
-    partial void OnAnchorChanged(TextAnchor value) => RequestRefresh();
-    partial void OnMarginChanged(int value) => RequestRefresh();
 
     private Point ComputeEmojiPosition(Mat image)
     {

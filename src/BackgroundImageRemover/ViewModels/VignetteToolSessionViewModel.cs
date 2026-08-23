@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,15 +13,19 @@ public partial class VignetteToolSessionViewModel : PreviewToolSessionViewModelB
     public override string AccentColor => "#A78BDA";
 
     [ObservableProperty]
+    [ToolParameter]
     private double _strength = 0.3;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _roundness = 0.5;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _feather = 0.5;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _invert;
 
     protected override string OperationName => "Vignette";
@@ -32,11 +37,6 @@ public partial class VignetteToolSessionViewModel : PreviewToolSessionViewModelB
     {
         RefreshPreview();
     }
-
-    partial void OnStrengthChanged(double value) => RequestRefresh();
-    partial void OnRoundnessChanged(double value) => RequestRefresh();
-    partial void OnFeatherChanged(double value) => RequestRefresh();
-    partial void OnInvertChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => VignetteService.Apply(bgr, Strength, Roundness, Feather, Invert);

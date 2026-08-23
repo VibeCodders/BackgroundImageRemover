@@ -15,18 +15,23 @@ public partial class ColorReplaceToolSessionViewModel : PreviewToolSessionViewMo
     public override string AccentColor => "#EC4899";
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _targetColor = WpfColor.FromRgb(255, 0, 0);
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _replacementColor = WpfColor.FromRgb(0, 255, 0);
 
     [ObservableProperty]
+    [ToolParameter]
     private double _tolerance = 0.25;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _softness = 0.4;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _preserveLuminance = true;
 
     protected override string OperationName => "Color Replace";
@@ -38,12 +43,6 @@ public partial class ColorReplaceToolSessionViewModel : PreviewToolSessionViewMo
     {
         RefreshPreview();
     }
-
-    partial void OnTargetColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnReplacementColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnToleranceChanged(double value) => RequestRefresh();
-    partial void OnSoftnessChanged(double value) => RequestRefresh();
-    partial void OnPreserveLuminanceChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => ColorReplaceService.Apply(bgr, TargetColor.ToVec3b(), ReplacementColor.ToVec3b(),

@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,12 +13,15 @@ public partial class WaveToolSessionViewModel : PreviewToolSessionViewModelBase
     public override string AccentColor => "#0284C7";
 
     [ObservableProperty]
+    [ToolParameter]
     private double _amplitude = 12;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _wavelength = 80;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _angle;
 
     protected override string OperationName => "Wave";
@@ -29,10 +33,6 @@ public partial class WaveToolSessionViewModel : PreviewToolSessionViewModelBase
     {
         RefreshPreview();
     }
-
-    partial void OnAmplitudeChanged(double value) => RequestRefresh();
-    partial void OnWavelengthChanged(double value) => RequestRefresh();
-    partial void OnAngleChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => WaveService.Apply(bgr, Amplitude, Wavelength, Angle);

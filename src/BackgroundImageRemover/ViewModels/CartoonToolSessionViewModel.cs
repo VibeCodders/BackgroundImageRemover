@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,12 +13,15 @@ public partial class CartoonToolSessionViewModel : PreviewToolSessionViewModelBa
     public override string AccentColor => "#A855F7";
 
     [ObservableProperty]
+    [ToolParameter]
     private int _smoothness = 8;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _quantizeLevels = 8;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _edgeThreshold = 12;
 
     protected override string OperationName => "Cartoon";
@@ -29,10 +33,6 @@ public partial class CartoonToolSessionViewModel : PreviewToolSessionViewModelBa
     {
         RefreshPreview();
     }
-
-    partial void OnSmoothnessChanged(int value) => RequestRefresh();
-    partial void OnQuantizeLevelsChanged(int value) => RequestRefresh();
-    partial void OnEdgeThresholdChanged(int value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => CartoonService.Apply(bgr, Smoothness, QuantizeLevels, EdgeThreshold);

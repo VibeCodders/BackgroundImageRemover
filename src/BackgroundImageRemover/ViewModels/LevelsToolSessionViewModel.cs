@@ -14,33 +14,43 @@ public partial class LevelsToolSessionViewModel : PreviewToolSessionViewModelBas
     public override string AccentColor => "#B45309";
 
     [ObservableProperty]
+    [ToolParameter]
     private double _blackPoint = 0.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _whitePoint = 255.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _gamma = 1.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private LevelsChannel _channel = LevelsChannel.Rgb;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _outputBlack = 0.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _outputWhite = 255.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _autoLevelsEnabled;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _autoWhiteBalanceEnabled;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _equalizeEnabled;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _invertEnabled;
 
     protected override string OperationName => "Levels";
@@ -61,17 +71,6 @@ public partial class LevelsToolSessionViewModel : PreviewToolSessionViewModelBas
     {
         RefreshPreview();
     }
-
-    partial void OnBlackPointChanged(double value) => RequestRefresh();
-    partial void OnWhitePointChanged(double value) => RequestRefresh();
-    partial void OnGammaChanged(double value) => RequestRefresh();
-    partial void OnChannelChanged(LevelsChannel value) => RequestRefresh();
-    partial void OnOutputBlackChanged(double value) => RequestRefresh();
-    partial void OnOutputWhiteChanged(double value) => RequestRefresh();
-    partial void OnAutoLevelsEnabledChanged(bool value) => RequestRefresh();
-    partial void OnAutoWhiteBalanceEnabledChanged(bool value) => RequestRefresh();
-    partial void OnEqualizeEnabledChanged(bool value) => RequestRefresh();
-    partial void OnInvertEnabledChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
     {

@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,12 +13,15 @@ public partial class EmbossToolSessionViewModel : PreviewToolSessionViewModelBas
     public override string AccentColor => "#92400E";
 
     [ObservableProperty]
+    [ToolParameter]
     private double _angle = 135;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _strength = 1.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _grayscale = true;
 
     protected override string OperationName => "Emboss";
@@ -29,10 +33,6 @@ public partial class EmbossToolSessionViewModel : PreviewToolSessionViewModelBas
     {
         RefreshPreview();
     }
-
-    partial void OnAngleChanged(double value) => RequestRefresh();
-    partial void OnStrengthChanged(double value) => RequestRefresh();
-    partial void OnGrayscaleChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => EmbossService.Apply(bgr, Angle, Strength, Grayscale);

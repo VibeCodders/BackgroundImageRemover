@@ -17,15 +17,19 @@ public partial class GradientToolSessionViewModel : PreviewToolSessionViewModelB
     private GradientKind _kind = GradientKind.Linear;
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _colorA = WpfColor.FromRgb(255, 0, 0);
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _colorB = WpfColor.FromRgb(0, 0, 255);
 
     [ObservableProperty]
+    [ToolParameter]
     private double _angle = 90;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _opacity = 0.6;
 
     protected override string OperationName => "Gradient";
@@ -49,11 +53,6 @@ public partial class GradientToolSessionViewModel : PreviewToolSessionViewModelB
         OnPropertyChanged(nameof(LinearVisibility));
         RefreshPreview();
     }
-
-    partial void OnColorAChanged(WpfColor value) => RequestRefresh();
-    partial void OnColorBChanged(WpfColor value) => RequestRefresh();
-    partial void OnAngleChanged(double value) => RequestRefresh();
-    partial void OnOpacityChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => GradientService.Apply(bgr, Kind, ColorA.ToVec3b(), ColorB.ToVec3b(), Angle, Opacity);

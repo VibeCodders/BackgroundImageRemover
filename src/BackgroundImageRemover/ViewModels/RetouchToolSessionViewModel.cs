@@ -41,33 +41,43 @@ public partial class RetouchToolSessionViewModel : WorkingCopyToolSessionViewMod
     private double _magicWandTolerance = 25.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _dehaze;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _defringe;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _blurBackgroundRadius;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _sharpenStrength;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _colorBoost;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _removeDustKernel;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _surfaceBlur;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _autoContrast;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _autoWhiteBalance;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _chromaticAberration;
 
     [ObservableProperty]
@@ -156,17 +166,6 @@ public partial class RetouchToolSessionViewModel : WorkingCopyToolSessionViewMod
         MagicWandService.Apply(_workingBgr, _workingAlpha, imagePoint, MagicWandTolerance, add: BrushMode == BrushMode.Restore);
         RefreshResult();
     }
-
-    partial void OnDehazeChanged(double value) => RequestRefresh();
-    partial void OnDefringeChanged(bool value) => RequestRefresh();
-    partial void OnBlurBackgroundRadiusChanged(int value) => RequestRefresh();
-    partial void OnSharpenStrengthChanged(double value) => RequestRefresh();
-    partial void OnColorBoostChanged(double value) => RequestRefresh();
-    partial void OnRemoveDustKernelChanged(int value) => RequestRefresh();
-    partial void OnSurfaceBlurChanged(double value) => RequestRefresh();
-    partial void OnAutoContrastChanged(bool value) => RequestRefresh();
-    partial void OnAutoWhiteBalanceChanged(bool value) => RequestRefresh();
-    partial void OnChromaticAberrationChanged(double value) => RequestRefresh();
 
     /// <summary>Applies the whole-image retouch effects on top of the brush/wand alpha edits.</summary>
     protected override Mat BuildResult()

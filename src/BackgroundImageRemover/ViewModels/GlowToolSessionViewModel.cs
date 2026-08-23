@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,12 +13,15 @@ public partial class GlowToolSessionViewModel : PreviewToolSessionViewModelBase
     public override string AccentColor => "#FFB300";
 
     [ObservableProperty]
+    [ToolParameter]
     private int _threshold = 180;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _radius = 20;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _strength = 0.8;
 
     protected override string OperationName => "Glow";
@@ -29,10 +33,6 @@ public partial class GlowToolSessionViewModel : PreviewToolSessionViewModelBase
     {
         RefreshPreview();
     }
-
-    partial void OnThresholdChanged(int value) => RequestRefresh();
-    partial void OnRadiusChanged(int value) => RequestRefresh();
-    partial void OnStrengthChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => GlowService.Apply(bgr, Threshold, Radius, Strength);

@@ -20,24 +20,31 @@ public partial class MosaicToolSessionViewModel : MaskToolSessionViewModelBase
     private Rect? _selectedRegion;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _cellSize = 16;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _blurRadius = 20;
 
     [ObservableProperty]
+    [ToolParameter]
     private MosaicMode _mode = MosaicMode.Pixelate;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _invertRegion;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _strength = 1.0;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _jitter = 6;
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _fillColor = WpfColor.FromRgb(0, 0, 0);
 
     public InteractionMode PreviewMode => PaintMode ? InteractionMode.Brush : InteractionMode.DrawRect;
@@ -50,14 +57,6 @@ public partial class MosaicToolSessionViewModel : MaskToolSessionViewModelBase
         InitMask();
         StatusMessage = "Choose mosaic or blur, then paint or select a region.";
     }
-
-    partial void OnCellSizeChanged(int value) => RequestRefresh();
-    partial void OnBlurRadiusChanged(int value) => RequestRefresh();
-    partial void OnModeChanged(MosaicMode value) => RequestRefresh();
-    partial void OnInvertRegionChanged(bool value) => RequestRefresh();
-    partial void OnStrengthChanged(double value) => RequestRefresh();
-    partial void OnJitterChanged(int value) => RequestRefresh();
-    partial void OnFillColorChanged(WpfColor value) => RequestRefresh();
 
     public void OnRectSelected(Rect rect)
     {

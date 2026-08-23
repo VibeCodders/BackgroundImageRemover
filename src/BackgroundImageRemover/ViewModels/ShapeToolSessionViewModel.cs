@@ -24,42 +24,54 @@ public partial class ShapeToolSessionViewModel : PreviewToolSessionViewModelBase
 
     // Position (top-left) and size as a percentage of the image, 0..100.
     [ObservableProperty]
+    [ToolParameter]
     private double _positionX = 20;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _positionY = 20;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _sizeWidth = 60;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _sizeHeight = 60;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _strokeWidth = 4;
 
     // Sides (polygon) or points (star), shared by both point-based shapes.
     [ObservableProperty]
+    [ToolParameter]
     private int _segments = 5;
 
     // Inner/outer radius ratio for the star shape.
     [ObservableProperty]
+    [ToolParameter]
     private double _starRatio = 0.45;
 
     // Free rotation (degrees) applied to any closed shape about its center.
     [ObservableProperty]
+    [ToolParameter]
     private double _rotation;
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _strokeColor = WpfColor.FromRgb(255, 255, 255);
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _fillEnabled;
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _fillColor = WpfColor.FromRgb(239, 68, 68);
 
     [ObservableProperty]
+    [ToolParameter]
     private double _fillOpacity = 0.5;
 
     protected override string OperationName => "Shape";
@@ -97,19 +109,6 @@ public partial class ShapeToolSessionViewModel : PreviewToolSessionViewModelBase
         OnPropertyChanged(nameof(PointShapesVisibility));
         RefreshPreview();
     }
-
-    partial void OnPositionXChanged(double value) => RequestRefresh();
-    partial void OnPositionYChanged(double value) => RequestRefresh();
-    partial void OnSizeWidthChanged(double value) => RequestRefresh();
-    partial void OnSizeHeightChanged(double value) => RequestRefresh();
-    partial void OnStrokeWidthChanged(int value) => RequestRefresh();
-    partial void OnStrokeColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnSegmentsChanged(int value) => RequestRefresh();
-    partial void OnStarRatioChanged(double value) => RequestRefresh();
-    partial void OnRotationChanged(double value) => RequestRefresh();
-    partial void OnFillEnabledChanged(bool value) => RequestRefresh();
-    partial void OnFillColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnFillOpacityChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
     {

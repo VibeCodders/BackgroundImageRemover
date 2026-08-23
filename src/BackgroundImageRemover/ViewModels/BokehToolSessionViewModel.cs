@@ -14,18 +14,23 @@ public partial class BokehToolSessionViewModel : PreviewToolSessionViewModelBase
     public override string AccentColor => "#06B6D4";
 
     [ObservableProperty]
+    [ToolParameter]
     private WpfColor _color = WpfColor.FromRgb(255, 255, 255);
 
     [ObservableProperty]
+    [ToolParameter]
     private int _radius = 14;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _count = 100;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _opacity = 0.9;
 
     [ObservableProperty]
+    [ToolParameter]
     private int _blur = 6;
 
     protected override string OperationName => "Bokeh";
@@ -37,12 +42,6 @@ public partial class BokehToolSessionViewModel : PreviewToolSessionViewModelBase
     {
         RefreshPreview();
     }
-
-    partial void OnColorChanged(WpfColor value) => RequestRefresh();
-    partial void OnRadiusChanged(int value) => RequestRefresh();
-    partial void OnCountChanged(int value) => RequestRefresh();
-    partial void OnOpacityChanged(double value) => RequestRefresh();
-    partial void OnBlurChanged(int value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => BokehService.Apply(bgr, Color.ToVec3b(), Radius, Count, Opacity, Blur);

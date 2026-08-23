@@ -22,6 +22,9 @@ public abstract partial class PreviewToolSessionViewModelBase : ToolSessionViewM
     /// <summary>Computes the resulting BGR image from the full-resolution source.</summary>
     protected abstract Mat ApplyEffect(Mat bgr);
 
+    /// <summary>Routes any <see cref="ToolParameterAttribute"/> change into the debounced live preview.</summary>
+    protected override void OnToolParameterChanged() => RequestRefresh();
+
     /// <summary>Name recorded in the document's edit history when the tool is applied.</summary>
     protected abstract string OperationName { get; }
 

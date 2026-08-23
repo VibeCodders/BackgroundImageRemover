@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
@@ -19,6 +21,9 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
 {
     protected readonly ShellViewModel _shell;
     protected readonly DocumentViewModel _parentDocument;
+
+    // Property names backed by [ToolParameter]-decorated fields, discovered once per concrete type.
+    private static readonly ConcurrentDictionary<Type, HashSet<string>> _toolParameterNames = new();
 
     // Shared snapshot and working-alpha state used by most tool session view models.
     protected LoadedImage? _sourceImage;
@@ -64,6 +69,74 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
         {
             _title = "Untitled";
         }
+    }
+
+    /// <summary>
+    /// Automatically routes any change to a parameter decorated with
+    /// <see cref="ToolParameterAttribute"/> into <see cref="OnToolParameterChanged"/>, so tools
+    /// no longer need to declare a <c>partial void OnXxxChanged</c> handler for every slider,
+    /// check box or color picker. Internal state (title, dirty flag, preview bitmap, status
+    /// message) is not marked and therefore does not trigger a refresh.
+    /// </summary>
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if (e.PropertyName is not null && IsToolParameter(e.PropertyName))
+        {
+            OnToolParameterChanged();
+        }
+    }
+
+    /// <summary>
+    /// Called after a parameter marked with <see cref="ToolParameterAttribute"/> changes value.
+    /// Bases that render a live preview override this to route into their refresh pipeline
+    /// (e.g. the debounced <see cref="RequestRefresh"/>); the default is a no-op.
+    /// </summary>
+    protected virtual void OnToolParameterChanged()
+    {
+    }
+
+    /// <summary>
+    /// True when <paramref name="propertyName"/> is backed by a field (or is a property)
+    /// decorated with <see cref="ToolParameterAttribute"/>. The name set is built once per
+    /// concrete type (including base-class declarations) and cached.
+    /// </summary>
+    private bool IsToolParameter(string propertyName)
+    {
+        var names = _toolParameterNames.GetOrAdd(GetType(), static type =>
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            for (var t = type; t is not null && t != typeof(object); t = t.BaseType)
+            {
+                foreach (var field in t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                {
+                    if (field.IsDefined(typeof(ToolParameterAttribute), false))
+                    {
+                        names.Add(ToPropertyName(field.Name));
+                    }
+                }
+
+                foreach (var property in t.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                {
+                    if (property.IsDefined(typeof(ToolParameterAttribute), false))
+                    {
+                        names.Add(property.Name);
+                    }
+                }
+            }
+
+            return names;
+        });
+        return names.Contains(propertyName);
+    }
+
+    /// <summary>Converts a CommunityToolkit backing-field name (e.g. <c>_blurRadius</c>) to the generated property name (<c>BlurRadius</c>).</summary>
+    private static string ToPropertyName(string fieldName)
+    {
+        var name = fieldName.StartsWith("m_", StringComparison.Ordinal)
+            ? fieldName[2..]
+            : fieldName.StartsWith("_", StringComparison.Ordinal) ? fieldName[1..] : fieldName;
+        return name.Length > 0 ? char.ToUpperInvariant(name[0]) + name[1..] : name;
     }
 
     public virtual Task<bool> TrySaveProjectAsync() => Task.FromResult(true);

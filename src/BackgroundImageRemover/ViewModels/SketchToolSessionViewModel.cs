@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,9 +13,11 @@ public partial class SketchToolSessionViewModel : PreviewToolSessionViewModelBas
     public override string AccentColor => "#6B7280";
 
     [ObservableProperty]
+    [ToolParameter]
     private int _blurRadius = 7;
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _invert;
 
     protected override string OperationName => "Sketch";
@@ -26,9 +29,6 @@ public partial class SketchToolSessionViewModel : PreviewToolSessionViewModelBas
     {
         RefreshPreview();
     }
-
-    partial void OnBlurRadiusChanged(int value) => RequestRefresh();
-    partial void OnInvertChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => SketchService.Apply(bgr, BlurRadius, Invert);

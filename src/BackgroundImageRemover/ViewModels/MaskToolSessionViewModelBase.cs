@@ -35,6 +35,9 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
     {
     }
 
+    /// <summary>Routes any <see cref="ToolParameterAttribute"/> change into the debounced preview refresh.</summary>
+    protected override void OnToolParameterChanged() => RequestRefresh();
+
     /// <summary>Initializes the source snapshot, working alpha, and painted mask. Call from subclass constructor.</summary>
     protected void InitMask()
     {

@@ -45,16 +45,6 @@
 </StackPanel>
 </controls:ToolSessionPanel.Panel>
 
-        <controls:ToolSessionPanel.Preview>
-
-
-        <Grid Margin="8">
-            <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
-                <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
-            </Border>
-        </Grid>
-    
-        </controls:ToolSessionPanel.Preview>
     </controls:ToolSessionPanel>
 </DockPanel>
 </UserControl>

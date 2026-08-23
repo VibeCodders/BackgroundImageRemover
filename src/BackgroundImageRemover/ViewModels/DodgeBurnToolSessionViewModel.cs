@@ -12,9 +12,11 @@ public partial class DodgeBurnToolSessionViewModel : MaskToolSessionViewModelBas
     public override string AccentColor => "#B45309";
 
     [ObservableProperty]
+    [ToolParameter]
     private bool _dodge = true;
 
     [ObservableProperty]
+    [ToolParameter]
     private double _strength = 0.3;
 
     protected override string OperationName => "DodgeBurn";
@@ -25,9 +27,6 @@ public partial class DodgeBurnToolSessionViewModel : MaskToolSessionViewModelBas
         InitMask();
         StatusMessage = "Dodge (lighten) or Burn (darken) a region, then apply.";
     }
-
-    partial void OnDodgeChanged(bool value) => RequestRefresh();
-    partial void OnStrengthChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat src) => DodgeBurnService.DodgeBurnAll(src, Dodge, Strength);
 

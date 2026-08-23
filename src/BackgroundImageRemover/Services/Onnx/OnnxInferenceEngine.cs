@@ -88,8 +88,6 @@ public sealed class OnnxInferenceEngine : IDisposable
 
         using var resized = new Mat();
         Cv2.Resize(bgr, resized, new Size(inputSize, inputSize), interpolation: InterpolationFlags.Area);
-        using var rgb = new Mat();
-        Cv2.CvtColor(resized, rgb, ColorConversionCodes.BGR2RGB);
 
         // Precompute scale/offset per channel so each pixel is a multiply-add, not two
         // divisions: (px / 255 - mean) / std == px * invScale - offset.
@@ -104,8 +102,10 @@ public sealed class OnnxInferenceEngine : IDisposable
 
         // The input tensor's backing buffer is rented from the shared pool (3*plane floats,
         // ~3 MB at 1024²) and returned after the run, instead of allocating a fresh array per
-        // segmentation. Rows are independent, so the fill runs in parallel; the RGB Mat is
-        // read directly through its native buffer, avoiding a per-run GetArray copy.
+        // segmentation. Rows are independent, so the fill runs in parallel and reads the
+        // resized BGR Mat directly through its native buffer — the BGR→RGB swap is folded into
+        // the channel writes (R = Item2, G = Item1, B = Item0), eliminating the full-image
+        // CvtColor pass that used to precede the fill.
         int tensorLength = 3 * plane;
         float[] rented = ArrayPool<float>.Shared.Rent(tensorLength);
         using var smallMask = new Mat(inputSize, inputSize, MatType.CV_8UC1);
@@ -115,8 +115,8 @@ public sealed class OnnxInferenceEngine : IDisposable
             var inputMem = input.Buffer;
             unsafe
             {
-                byte* srcPtr = (byte*)rgb.DataPointer;
-                long srcStep = rgb.Step();
+                byte* srcPtr = (byte*)resized.DataPointer;
+                long srcStep = resized.Step();
                 Parallel.For(0, inputSize, y =>
                 {
                     var row = new Span<Vec3b>((Vec3b*)(srcPtr + y * srcStep), inputSize);
@@ -125,9 +125,9 @@ public sealed class OnnxInferenceEngine : IDisposable
                     for (int x = 0; x < inputSize; x++)
                     {
                         var px = row[x];
-                        inputSpan[i] = px.Item0 * scale[0] - offset[0];
-                        inputSpan[plane + i] = px.Item1 * scale[1] - offset[1];
-                        inputSpan[2 * plane + i] = px.Item2 * scale[2] - offset[2];
+                        inputSpan[i] = px.Item2 * scale[0] - offset[0]; // R
+                        inputSpan[plane + i] = px.Item1 * scale[1] - offset[1]; // G
+                        inputSpan[2 * plane + i] = px.Item0 * scale[2] - offset[2]; // B
                         i++;
                     }
                 });

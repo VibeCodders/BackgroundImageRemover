@@ -67,7 +67,9 @@ public static class FxService
                 for (int x = 0; x < cols; x++)
                 {
                     float d = MathF.Sqrt(x * x + y * y) / maxDist;
-                    float falloff = MathF.Pow(1.0f - d, 2.0f);
+                    // (1-d)²: integer exponent, so an explicit multiply is bit-identical to
+                    // MathF.Pow and cheaper.
+                    float falloff = (1.0f - d) * (1.0f - d);
                     float amount = (float)strength * falloff;
                     ref var px = ref row[x];
                     px.Item0 = (byte)Math.Min(255, px.Item0 + c.Item0 * amount);

@@ -63,13 +63,11 @@ public sealed class SamInferenceEngine : IDisposable
 
         using var resized = new Mat();
         Cv2.Resize(bgr, resized, size, interpolation: InterpolationFlags.Area);
-        using var rgb = new Mat();
-        Cv2.CvtColor(resized, rgb, ColorConversionCodes.BGR2RGB);
 
         using var padded = new Mat(EncoderInputSize, EncoderInputSize, MatType.CV_8UC3, Scalar.All(0));
         using (var roi = new Mat(padded, new Rect(0, 0, size.Width, size.Height)))
         {
-            rgb.CopyTo(roi);
+            resized.CopyTo(roi);
         }
 
         // Precompute scale/offset per channel: (px - mean) / std == px * scale - offset.
@@ -84,9 +82,10 @@ public sealed class SamInferenceEngine : IDisposable
 
         // The input tensor's backing buffer is rented from the shared pool (3*plane floats,
         // ~12 MB at 1024²) and returned after the run, instead of allocating a fresh array per
-        // embedding computation. Rows are independent, so the fill runs in parallel; the
-        // padded Mat is read directly through its native buffer, avoiding a per-run GetArray
-        // copy (1024x1024 = 1M pixels).
+        // embedding computation. Rows are independent, so the fill runs in parallel and reads
+        // the padded BGR Mat directly through its native buffer — the BGR→RGB swap is folded
+        // into the channel writes (R = Item2, G = Item1, B = Item0), eliminating the
+        // full-image CvtColor pass that used to precede the pad.
         int tensorLength = 3 * plane;
         float[] rented = ArrayPool<float>.Shared.Rent(tensorLength);
         try
@@ -105,9 +104,9 @@ public sealed class SamInferenceEngine : IDisposable
                     for (int x = 0; x < EncoderInputSize; x++)
                     {
                         var px = row[x];
-                        inputSpan[i] = px.Item0 * scale[0] - offset[0];
-                        inputSpan[plane + i] = px.Item1 * scale[1] - offset[1];
-                        inputSpan[2 * plane + i] = px.Item2 * scale[2] - offset[2];
+                        inputSpan[i] = px.Item2 * scale[0] - offset[0]; // R
+                        inputSpan[plane + i] = px.Item1 * scale[1] - offset[1]; // G
+                        inputSpan[2 * plane + i] = px.Item0 * scale[2] - offset[2]; // B
                         i++;
                     }
                 });

@@ -7,3 +7,8 @@ tests/BackgroundImageRemover.Tests/bin/
 publish_test/
 publish/
 artifacts/
+
+# BenchmarkDotNet output
+benchmarks/**/BenchmarkDotNet.Artifacts/
+benchmarks/**/bin/
+benchmarks/**/obj/

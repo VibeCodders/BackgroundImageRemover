@@ -28,15 +28,18 @@ public sealed partial class UncropFillService
 
         Scalar endColor = customEndColor ?? SampleEdgeAverageColor(sourceBgr);
 
+        // Rows are independent per-pixel math over the padded canvas, so they run in parallel;
+        // the gradient interpolation, distance falloff and noise are identical to the sequential
+        // pass (Random.Shared is thread-safe). Cancellation flows through ParallelOptions so the
+        // callers' OperationCanceledException handling is preserved.
         unsafe
         {
             byte* ptr = (byte*)result.DataPointer;
             long step = result.Step();
 
-            for (int y = 0; y < totalH; y++)
+            Parallel.For(0, totalH, new ParallelOptions { CancellationToken = ct }, y =>
             {
-                if (y % 32 == 0) ct.ThrowIfCancellationRequested();
-
+                byte* rowPtr = ptr + y * step;
                 for (int x = 0; x < totalW; x++)
                 {
                     // Check if inside interior
@@ -85,12 +88,12 @@ public sealed partial class UncropFillService
                         r = (byte)Math.Clamp(r + n, 0, 255);
                     }
 
-                    byte* pixel = ptr + y * step + x * 3;
+                    byte* pixel = rowPtr + x * 3;
                     pixel[0] = b;
                     pixel[1] = g;
                     pixel[2] = r;
                 }
-            }
+            });
         }
 
         ct.ThrowIfCancellationRequested();
@@ -197,14 +200,16 @@ public sealed partial class UncropFillService
 
         float maxDist = Math.Max(1f, Math.Max(Math.Max(padding.Left, padding.Right), Math.Max(padding.Top, padding.Bottom)));
 
+        // Rows are independent per-pixel math, so they run in parallel (identical results to
+        // the sequential pass); cancellation flows through ParallelOptions.
         unsafe
         {
             byte* ptr = (byte*)canvas.DataPointer;
             long step = canvas.Step();
 
-            for (int y = 0; y < h; y++)
+            Parallel.For(0, h, new ParallelOptions { CancellationToken = ct }, y =>
             {
-                if (y % 32 == 0) ct.ThrowIfCancellationRequested();
+                byte* rowPtr = ptr + y * step;
                 for (int x = 0; x < w; x++)
                 {
                     if (x >= intLeft && x < intRight && y >= intTop && y < intBottom)
@@ -224,12 +229,12 @@ public sealed partial class UncropFillService
                     float t = Math.Clamp(dist / maxDist, 0f, 1f);
                     float multiplier = 1.0f - (1.0f - fadeFactor) * t;
 
-                    byte* pixel = ptr + y * step + x * 3;
+                    byte* pixel = rowPtr + x * 3;
                     pixel[0] = (byte)Math.Clamp(pixel[0] * multiplier, 0, 255);
                     pixel[1] = (byte)Math.Clamp(pixel[1] * multiplier, 0, 255);
                     pixel[2] = (byte)Math.Clamp(pixel[2] * multiplier, 0, 255);
                 }
-            }
+            });
         }
     }
 
@@ -239,56 +244,61 @@ public sealed partial class UncropFillService
         int h = sourceBgr.Height;
         featherPx = Math.Max(1, Math.Min(featherPx, Math.Min(w, h) / 4));
 
-        // Single-pass blend over zero-copy views: the previous version built a float alpha mask
-        // and ~7 intermediate CV_32FC3 Mats (a full-image float pass each). Blend math is
+        // Single-pass blend over the native buffers: the previous version built a float alpha
+        // mask and ~7 intermediate CV_32FC3 Mats (a full-image float pass each). Blend math is
         // identical: result = source*factor + existing*(1-factor) near the edges, existing
-        // (already-filled) content elsewhere.
-        ct.ThrowIfCancellationRequested();
-        var srcSpan = sourceBgr.AsSpan2D<Vec3b>();
-        var dstSpan = resultCanvas.AsSpan2D<Vec3b>();
-        int ox = padding.Left;
-        int oy = padding.Top;
-        bool padL = padding.Left > 0, padR = padding.Right > 0, padT = padding.Top > 0, padB = padding.Bottom > 0;
-
-        for (int y = 0; y < h; y++)
+        // (already-filled) content elsewhere. Rows are independent, so they run in parallel
+        // (cancellation flows through ParallelOptions).
+        unsafe
         {
-            if (y % 16 == 0) ct.ThrowIfCancellationRequested();
-            int distTop = y;
-            int distBottom = h - 1 - y;
-            for (int x = 0; x < w; x++)
+            byte* srcBase = (byte*)sourceBgr.DataPointer;
+            long srcStep = sourceBgr.Step();
+            byte* dstBase = (byte*)resultCanvas.DataPointer;
+            long dstStep = resultCanvas.Step();
+            int ox = padding.Left;
+            int oy = padding.Top;
+            bool padL = padding.Left > 0, padR = padding.Right > 0, padT = padding.Top > 0, padB = padding.Bottom > 0;
+
+            Parallel.For(0, h, new ParallelOptions { CancellationToken = ct }, y =>
             {
-                int distLeft = x;
-                int distRight = w - 1 - x;
-
-                int minDist = int.MaxValue;
-                if (padL) minDist = Math.Min(minDist, distLeft);
-                if (padR) minDist = Math.Min(minDist, distRight);
-                if (padT) minDist = Math.Min(minDist, distTop);
-                if (padB) minDist = Math.Min(minDist, distBottom);
-
-                // The alpha mask is 1.0 everywhere except the feather band, so the whole
-                // interior is overwritten with the source; only the band blends with the
-                // pre-existing (background) content.
-                var src = srcSpan[y, x];
-                Vec3b val;
-                if (minDist < featherPx)
+                var srcRow = new Span<Vec3b>((Vec3b*)(srcBase + y * srcStep), w);
+                var dstRow = new Span<Vec3b>((Vec3b*)(dstBase + (oy + y) * dstStep + ox * 3), w);
+                int distTop = y;
+                int distBottom = h - 1 - y;
+                for (int x = 0; x < w; x++)
                 {
-                    float factor = (float)minDist / featherPx;
-                    float inv = 1f - factor;
-                    var cur = dstSpan[oy + y, ox + x];
-                    val = new Vec3b(
-                        BlendByte(src.Item0, cur.Item0, inv, factor),
-                        BlendByte(src.Item1, cur.Item1, inv, factor),
-                        BlendByte(src.Item2, cur.Item2, inv, factor));
+                    int distLeft = x;
+                    int distRight = w - 1 - x;
+
+                    int minDist = int.MaxValue;
+                    if (padL) minDist = Math.Min(minDist, distLeft);
+                    if (padR) minDist = Math.Min(minDist, distRight);
+                    if (padT) minDist = Math.Min(minDist, distTop);
+                    if (padB) minDist = Math.Min(minDist, distBottom);
+
+                    // The alpha mask is 1.0 everywhere except the feather band, so the whole
+                    // interior is overwritten with the source; only the band blends with the
+                    // pre-existing (background) content.
+                    var src = srcRow[x];
+                    Vec3b val;
+                    if (minDist < featherPx)
+                    {
+                        float factor = (float)minDist / featherPx;
+                        float inv = 1f - factor;
+                        var cur = dstRow[x];
+                        val = new Vec3b(
+                            BlendByte(src.Item0, cur.Item0, inv, factor),
+                            BlendByte(src.Item1, cur.Item1, inv, factor),
+                            BlendByte(src.Item2, cur.Item2, inv, factor));
+                    }
+                    else
+                    {
+                        val = src;
+                    }
+                    dstRow[x] = val;
                 }
-                else
-                {
-                    val = src;
-                }
-                dstSpan[oy + y, ox + x] = val;
-            }
+            });
         }
-        ct.ThrowIfCancellationRequested();
     }
 
     private static byte BlendByte(byte fg, byte bg, float inv, float a)

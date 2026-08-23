@@ -24,7 +24,9 @@ public partial class ImagePreviewControl
         // work without the user having to tab to the control first.
         RootGrid.Focus();
 
-        if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
+        // Middle and right double-click both reset the view (right is equivalent to middle
+        // for the tools' panning/reset interactions).
+        if ((e.ChangedButton is MouseButton.Middle or MouseButton.Right) && e.ClickCount == 2)
         {
             ResetView();
             e.Handled = true;

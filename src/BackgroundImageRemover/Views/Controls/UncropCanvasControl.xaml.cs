@@ -39,8 +39,7 @@ public partial class UncropCanvasControl : UserControl
         set => SetValue(ImagePaddingProperty, value);
     }
 
-    private Point? _panStart;
-    private Point _panStartTranslate;
+    private readonly PanGesture _pan = new();
     private double _contentScale = 1;
 
     public UncropCanvasControl()
@@ -179,40 +178,41 @@ public partial class UncropCanvasControl : UserControl
 
     private void RootGrid_MouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
+        // Middle and right double-click both reset the view (right is equivalent to middle
+        // for panning/reset interactions).
+        if ((e.ChangedButton is MouseButton.Middle or MouseButton.Right) && e.ClickCount == 2)
         {
-            ZoomScale.ScaleX = 1;
-            ZoomScale.ScaleY = 1;
-            PanTranslate.X = 0;
-            PanTranslate.Y = 0;
+            ResetView();
             e.Handled = true;
             return;
         }
 
-        if (e.MiddleButton == MouseButtonState.Pressed)
-        {
-            _panStart = e.GetPosition(this);
-            _panStartTranslate = new Point(PanTranslate.X, PanTranslate.Y);
-            RootGrid.CaptureMouse();
-        }
+        // Pan on middle- or right-drag (shared PanGesture, same as the other preview controls).
+        _pan.TryStart(e, e.GetPosition(this), PanTranslate, RootGrid);
     }
 
     private void RootGrid_MouseMove(object sender, MouseEventArgs e)
     {
-        if (_panStart is { } start && e.MiddleButton == MouseButtonState.Pressed)
-        {
-            var p = ViewInteractionHelper.ComputePan(start, _panStartTranslate, e.GetPosition(this));
-            PanTranslate.X = p.X;
-            PanTranslate.Y = p.Y;
-        }
+        _pan.Move(e, e.GetPosition(this), PanTranslate);
     }
 
     private void RootGrid_MouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (_panStart is not null && e.MiddleButton == MouseButtonState.Released)
-        {
-            _panStart = null;
-            RootGrid.ReleaseMouseCapture();
-        }
+        _pan.End(e, RootGrid);
+    }
+
+    private void RootGrid_MouseLeave(object sender, MouseEventArgs e)
+    {
+        // A pan drag that leaves the control would otherwise stay captured until the
+        // button is released anywhere; release it when the cursor exits the control.
+        _pan.CancelIfButtonReleased(e, RootGrid);
+    }
+
+    private void ResetView()
+    {
+        ZoomScale.ScaleX = 1;
+        ZoomScale.ScaleY = 1;
+        PanTranslate.X = 0;
+        PanTranslate.Y = 0;
     }
 }

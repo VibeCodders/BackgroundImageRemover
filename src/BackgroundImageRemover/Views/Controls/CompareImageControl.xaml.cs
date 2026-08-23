@@ -182,7 +182,9 @@ public partial class CompareImageControl : UserControl
     {
         RootGrid.Focus();
 
-        if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
+        // Middle and right double-click both reset the view (right is equivalent to middle
+        // for panning/reset interactions).
+        if ((e.ChangedButton is MouseButton.Middle or MouseButton.Right) && e.ClickCount == 2)
         {
             ResetView();
             e.Handled = true;

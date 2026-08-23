@@ -34,7 +34,8 @@
           MouseWheel="RootGrid_MouseWheel"
           MouseDown="RootGrid_MouseDown"
           MouseMove="RootGrid_MouseMove"
-          MouseUp="RootGrid_MouseUp">
+          MouseUp="RootGrid_MouseUp"
+          MouseLeave="RootGrid_MouseLeave">
         <Grid x:Name="ZoomPanHost">
             <Grid.RenderTransform>
                 <TransformGroup>

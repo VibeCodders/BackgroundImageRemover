@@ -27,7 +27,10 @@ public partial class StrategyToolbar : UserControl
             case MouseButton.Left:
                 definition.Select(vm);
                 break;
+            // Right click behaves like middle click: it opens the tool's dedicated tab
+            // instead of only selecting it.
             case MouseButton.Middle:
+            case MouseButton.Right:
                 button.IsChecked = true;
                 definition.RequestOpen(vm);
                 break;

@@ -45,6 +45,32 @@ public class SketchServiceTests
         ServiceTestHelper.AssertChangesPixels(normal, inverted);
     }
 
+    /// <summary>
+    /// Regression coverage for the "Invert" checkbox label: it must describe what checking the
+    /// box actually produces. Invert=false is the classic "dark lines on light paper" look
+    /// (mostly bright output); Invert=true bitwise-negates that into a near-black image
+    /// ("light lines on dark paper"). Getting this backwards in the UI label led a user to check
+    /// the box expecting the light-paper look and instead get an all-black result.
+    /// </summary>
+    [Fact]
+    public void Apply_OnPhotoLikeImage_DefaultIsLightPaper_InvertIsDarkPaper()
+    {
+        using var input = new Mat(64, 64, MatType.CV_8UC3);
+        Cv2.Randu(input, new Scalar(60, 60, 60), new Scalar(180, 180, 180));
+        Cv2.GaussianBlur(input, input, new Size(5, 5), 0);
+
+        using var normal = SketchService.Apply(input, 7, false);
+        using var inverted = SketchService.Apply(input, 7, true);
+
+        using var grayNormal = new Mat();
+        Cv2.CvtColor(normal, grayNormal, ColorConversionCodes.BGR2GRAY);
+        using var grayInverted = new Mat();
+        Cv2.CvtColor(inverted, grayInverted, ColorConversionCodes.BGR2GRAY);
+
+        Assert.True(Cv2.Mean(grayNormal).Val0 > 200, "Invert=false should be mostly-light paper.");
+        Assert.True(Cv2.Mean(grayInverted).Val0 < 55, "Invert=true should be mostly-dark paper.");
+    }
+
     [Fact]
     public void Apply_DifferentBlur_ChangesResult()
     {

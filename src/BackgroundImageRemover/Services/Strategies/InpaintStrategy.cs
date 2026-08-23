@@ -6,7 +6,7 @@ namespace BackgroundImageRemover.Services.Strategies;
 
 /// <summary>
 /// Removes the background by in-painting the region outside the estimated foreground mask.
-/// Uses OpenCV's Navier-Stokes based <see cref="Cv2.Inpaint(Mat,Mat,double,InpaintMethod)"/>
+/// Uses OpenCV's Navier-Stokes based <see cref="Cv2.Inpaint(Mat,Mat,double,InpaintTypes)"/>
 /// to reconstruct the background pixels from the surrounding foreground, producing a seamless
 /// matte when the subject is later composited onto a new background.
 /// </summary>
@@ -25,7 +25,7 @@ public sealed class InpaintStrategy : StrategyBase
         // Inpaint the background region of the source image so the composited cutout blends.
         using var inpainted = new Mat();
         double radius = Math.Max(1.0, context.InpaintRadius);
-        Cv2.Inpaint(bgr, bgMask, inpainted, radius, InpaintMethod.NS);
+        Cv2.Inpaint(bgr, bgMask, inpainted, radius, InpaintTypes.NS);
 
         // The strategy's mask contract is 255 = subject (keep): invert the background mask.
         // (Regression: this used to return the background mask as-is, so the tool kept the

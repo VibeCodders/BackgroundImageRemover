@@ -204,7 +204,7 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
             if (area >= minArea)
             {
                 using var component = new Mat();
-                Cv2.Compare(labels, new Scalar(i), component, CmpType.EQ);
+                Cv2.Compare(labels, new Scalar(i), component, CmpTypes.EQ);
                 Cv2.BitwiseOr(keep, component, keep);
             }
         }
@@ -239,7 +239,7 @@ public abstract class StrategyBase : IBackgroundRemovalStrategy
 
         if (bestLabel >= 0)
         {
-            Cv2.Compare(labels, new Scalar(bestLabel), mask, CmpType.EQ);
+            Cv2.Compare(labels, new Scalar(bestLabel), mask, CmpTypes.EQ);
         }
     }
 }

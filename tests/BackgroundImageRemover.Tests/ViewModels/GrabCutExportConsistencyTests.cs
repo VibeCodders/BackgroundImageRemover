@@ -131,7 +131,7 @@ public class GrabCutExportConsistencyTests
             using (var diff = new Mat())
             {
                 Cv2.Resize(previewLabels, upscaled, fullLabels.Size(), interpolation: InterpolationFlags.Nearest);
-                Cv2.Compare(fullLabels, upscaled, diff, CmpType.NE);
+                Cv2.Compare(fullLabels, upscaled, diff, CmpTypes.NE);
                 Assert.Equal(0, Cv2.CountNonZero(diff));
             }
 
@@ -140,7 +140,7 @@ public class GrabCutExportConsistencyTests
             using var exportedAlpha = exporter.CapturedBgra!.ExtractAlphaChannel();
             using (var diff = new Mat())
             {
-                Cv2.Compare(exportedAlpha, recording.FullAlpha!, diff, CmpType.NE);
+                Cv2.Compare(exportedAlpha, recording.FullAlpha!, diff, CmpTypes.NE);
                 Assert.Equal(0, Cv2.CountNonZero(diff));
             }
 

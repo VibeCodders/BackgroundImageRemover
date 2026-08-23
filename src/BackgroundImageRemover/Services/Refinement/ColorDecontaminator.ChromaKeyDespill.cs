@@ -68,7 +68,7 @@ internal static class ChromaKeyDespill
             // Apply only where the pixel is semi-transparent AND the dominant channel is actually
             // elevated above the others.
             using var dominantMask = new Mat();
-            Cv2.Compare(dominantF, othersAvg, dominantMask, CmpType.GT);
+            Cv2.Compare(dominantF, othersAvg, dominantMask, CmpTypes.GT);
             using var apply = new Mat();
             Cv2.BitwiseAnd(edgeView, dominantMask, apply);
 

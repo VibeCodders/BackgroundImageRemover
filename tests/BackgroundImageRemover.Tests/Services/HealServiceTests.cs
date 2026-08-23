@@ -30,7 +30,7 @@ public class HealServiceTests
         using var mask = new Mat(image.Size(), MatType.CV_8UC1, Scalar.All(0));
         Cv2.Rectangle(mask, new Rect(30, 0, 1, 60), new Scalar(255), -1);
 
-        using var result = HealService.HealRegion(image, mask, radius: 3, InpaintMethod.Telea);
+        using var result = HealService.HealRegion(image, mask, radius: 3, InpaintTypes.Telea);
 
         var healed = result.Get<Vec3b>(30, 30);
         // The scratch (0,0,0) is replaced by the surrounding gradient colors.
@@ -43,7 +43,7 @@ public class HealServiceTests
         using var image = MakeGradient();
         using var mask = new Mat(image.Size(), MatType.CV_8UC1, Scalar.All(0));
 
-        using var result = HealService.HealRegion(image, mask, radius: 3, InpaintMethod.NS);
+        using var result = HealService.HealRegion(image, mask, radius: 3, InpaintTypes.NS);
 
         ServiceTestHelper.AssertNoChange(image, result);
     }
@@ -93,7 +93,7 @@ public class HealServiceTests
         using var image = new Mat(1, 1, MatType.CV_8UC3, new Scalar(100, 100, 100));
         using var mask = new Mat(1, 1, MatType.CV_8UC1, Scalar.All(255));
 
-        using var result = HealService.HealRegion(image, mask, radius: 3, InpaintMethod.Telea);
+        using var result = HealService.HealRegion(image, mask, radius: 3, InpaintTypes.Telea);
 
         Assert.Equal(new Size(1, 1), result.Size());
     }

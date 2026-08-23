@@ -104,7 +104,7 @@ internal static class BackgroundEstimation
     public static Mat CreateDensityMask(Mat density, Mat edgeMask)
     {
         using var densityMask = new Mat();
-        Cv2.Compare(density, Scalar.All(DensityThreshold), densityMask, CmpType.GE);
+        Cv2.Compare(density, Scalar.All(DensityThreshold), densityMask, CmpTypes.GE);
 
         // Owned by the caller: must NOT be a using-declaration, otherwise it is disposed
         // before the method actually returns and the caller receives a dead Mat.

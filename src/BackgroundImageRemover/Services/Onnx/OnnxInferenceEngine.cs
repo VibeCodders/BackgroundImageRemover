@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Threading.Tasks;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Logging;
 using Microsoft.ML.OnnxRuntime;
@@ -136,15 +137,16 @@ public sealed class OnnxInferenceEngine : IDisposable
             using var results = session.Run(new[] { NamedOnnxValue.CreateFromTensor(inputName, input) });
             var output = results.First().AsTensor<float>();
 
-            // DenseTensor<float> exposes its backing buffer as a span: normalize and rescale
-            // over the flat data, using SIMD-accelerated min/max from SimdLinq for the range.
-            // The bytes are written straight into the mask Mat's buffer (no intermediate array),
-            // in parallel.
+            // DenseTensor<float> exposes its backing buffer as a span: rescale the flat data
+            // in place with a SIMD pass (ZLinqPixelOps) after computing the range with
+            // SIMD-accelerated min/max from SimdLinq, then write the bytes straight into the
+            // mask Mat's buffer (no intermediate array), in parallel.
             if (output is DenseTensor<float> dense)
             {
                 var outputMem = dense.Buffer;
                 (float min, float max) = outputMem.Span.MinMax();
                 float range = Math.Max(1e-6f, max - min);
+                ZLinqPixelOps.NormalizeMaskToByteRange(outputMem.Span, min, range);
                 unsafe
                 {
                     byte* maskPtr = (byte*)smallMask.DataPointer;
@@ -156,8 +158,7 @@ public sealed class OnnxInferenceEngine : IDisposable
                         int i = y * inputSize;
                         for (int x = 0; x < inputSize; x++)
                         {
-                            float v = (outputSpan[i] - min) / range;
-                            maskRow[x] = (byte)Math.Clamp(v * 255f, 0f, 255f);
+                            maskRow[x] = (byte)Math.Clamp(outputSpan[i], 0f, 255f);
                             i++;
                         }
                     });
@@ -168,11 +169,11 @@ public sealed class OnnxInferenceEngine : IDisposable
                 float[] fallback = output.ToArray();
                 (float min, float max) = fallback.MinMax();
                 float range = Math.Max(1e-6f, max - min);
+                ZLinqPixelOps.NormalizeMaskToByteRange(fallback, min, range);
                 var maskBytes = new byte[inputSize * inputSize];
                 for (int i = 0; i < maskBytes.Length; i++)
                 {
-                    float v = (fallback[i] - min) / range;
-                    maskBytes[i] = (byte)Math.Clamp(v * 255f, 0f, 255f);
+                    maskBytes[i] = (byte)Math.Clamp(fallback[i], 0f, 255f);
                 }
                 smallMask.SetArray(maskBytes);
             }

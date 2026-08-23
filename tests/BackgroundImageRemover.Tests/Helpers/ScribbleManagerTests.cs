@@ -108,7 +108,7 @@ public class ScribbleManagerTests
         Assert.True(Cv2.CountNonZero(fgSnapshot!) > 0);
         Assert.True(Cv2.CountNonZero(bgSnapshot!) > 0);
         using var cleared = new Mat();
-        Cv2.Compare(fgSnapshot, new Scalar(255), cleared, CmpType.EQ); // any operation must not throw
+        Cv2.Compare(fgSnapshot, new Scalar(255), cleared, CmpTypes.EQ); // any operation must not throw
     }
 
     [Fact]

@@ -117,11 +117,12 @@ public static class ImageProcessingHelper
                             {
                                 var shiftRow = new Span<float>((float*)(shiftPtr + r * shiftStep), hueCols);
                                 var hueRow = new Span<byte>((byte*)(huePtr + r * hueStep), hueCols);
+                                // Wrap modulo 180 in place with a SIMD pass (ZLinqPixelOps),
+                                // so the per-pixel loop below is a pure cast.
+                                ZLinqPixelOps.WrapHue180(shiftRow);
                                 for (int c = 0; c < hueCols; c++)
                                 {
-                                    float val = shiftRow[c] % 180f;
-                                    if (val < 0) val += 180f;
-                                    hueRow[c] = (byte)val;
+                                    hueRow[c] = (byte)shiftRow[c];
                                 }
                             });
                         }

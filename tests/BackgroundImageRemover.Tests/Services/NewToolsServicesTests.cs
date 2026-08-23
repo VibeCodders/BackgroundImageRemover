@@ -14,7 +14,7 @@ public class NewToolsServicesTests
         using var mask = new Mat(20, 20, MatType.CV_8UC1, Scalar.All(0));
         mask.Set(10, 10, (byte)255);
 
-        using var result = HealService.HealRegion(src, mask, 3, InpaintMethod.Telea);
+        using var result = HealService.HealRegion(src, mask, 3, InpaintTypes.Telea);
 
         ServiceTestHelper.AssertPreservesSizeAndType(src, result);
     }

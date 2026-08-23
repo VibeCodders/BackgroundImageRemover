@@ -10,7 +10,7 @@ namespace BackgroundImageRemover.Services.Editing;
 public static class HealService
 {
     /// <summary>Inpaints the painted (non-zero) regions of <paramref name="mask"/> using the surrounding pixels.</summary>
-    public static Mat HealRegion(Mat bgr, Mat mask, double radius, InpaintMethod method)
+    public static Mat HealRegion(Mat bgr, Mat mask, double radius, InpaintTypes method)
     {
         radius = Math.Max(0.1, radius);
         var result = new Mat();

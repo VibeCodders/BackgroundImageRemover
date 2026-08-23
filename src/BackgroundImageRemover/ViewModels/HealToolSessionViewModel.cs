@@ -31,7 +31,7 @@ public partial class HealToolSessionViewModel : WorkingCopyToolSessionViewModelB
     private double _healRadius = 3;
 
     [ObservableProperty]
-    private InpaintMethod _inpaintMethod = InpaintMethod.Telea;
+    private InpaintTypes _inpaintMethod = InpaintTypes.Telea;
 
     [ObservableProperty]
     private int _removeDustKernel;
@@ -66,7 +66,7 @@ public partial class HealToolSessionViewModel : WorkingCopyToolSessionViewModelB
     partial void OnSurfaceSmoothStrengthChanged(double value) => RefreshResult();
     partial void OnDetailEnhanceStrengthChanged(double value) => RefreshResult();
     partial void OnHealRadiusChanged(double value) => RefreshResult();
-    partial void OnInpaintMethodChanged(InpaintMethod value) => RefreshResult();
+    partial void OnInpaintMethodChanged(InpaintTypes value) => RefreshResult();
 
     public void OnStrokeStart(WpfPoint imagePoint, double pixelRadius)
         => _strokes.Begin(imagePoint, pixelRadius, StampMask);

@@ -44,7 +44,7 @@ public sealed partial class UncropFillService
 
         ct.ThrowIfCancellationRequested();
 
-        var cvMethod = method == UncropInpaintMethod.Telea ? InpaintMethod.Telea : InpaintMethod.NS;
+        var cvMethod = method == UncropInpaintMethod.Telea ? InpaintTypes.Telea : InpaintTypes.NS;
         double radius = Math.Max(1.0, Math.Min(100.0, inpaintRadius));
 
         // Step 2: restrict inpainting to a band hugging the interior edge. The mirrored region

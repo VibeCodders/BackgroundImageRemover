@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Threading.Tasks;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Preview;
 using Microsoft.ML.OnnxRuntime;
@@ -177,9 +178,11 @@ public sealed class SamInferenceEngine : IDisposable
         using var mask = new Mat(h, w, MatType.CV_8UC1);
         if (masksTensor is DenseTensor<float> dense)
         {
-            // Threshold the flat buffer straight into the mask Mat (no intermediate array),
+            // Threshold the flat buffer to 0/1 in place with a SIMD pass (ZLinqPixelOps),
+            // then write the bytes straight into the mask Mat (no intermediate array),
             // in parallel over rows.
             var outputMem = dense.Buffer;
+            ZLinqPixelOps.ThresholdToUnit(outputMem.Span);
             unsafe
             {
                 byte* maskPtr = (byte*)mask.DataPointer;

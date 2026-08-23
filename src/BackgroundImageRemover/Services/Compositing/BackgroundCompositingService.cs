@@ -53,7 +53,7 @@ public static class BackgroundCompositingService
     {
         using var split = ChannelSplit.Of(bgra);
         using var mask = new Mat();
-        Cv2.Compare(split[3], 0, mask, CmpType.EQ);
+        Cv2.Compare(split[3], 0, mask, CmpTypes.EQ);
         split[0].SetTo(Scalar.All(0), mask);
         split[1].SetTo(Scalar.All(0), mask);
         split[2].SetTo(Scalar.All(0), mask);

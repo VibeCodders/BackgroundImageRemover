@@ -44,7 +44,7 @@ public static class OilPaintService
             for (int b = 0; b < levels; b++)
             {
                 masks[b] = new Mat();
-                Cv2.Compare(binIdx, b, masks[b], CmpType.EQ);
+                Cv2.Compare(binIdx, b, masks[b], CmpTypes.EQ);
                 masks[b].ConvertTo(masks[b], MatType.CV_32FC1);
 
                 counts[b] = new Mat();

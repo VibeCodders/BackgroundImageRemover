@@ -5,30 +5,11 @@ using BackgroundImageRemover.Services.ImageIo;
 using BackgroundImageRemover.Services.Strategies;
 using OpenCvSharp;
 
+using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
 public class BatchProcessingServiceTests
 {
-    private sealed class FakeImageLoaderService : IImageLoaderService
-    {
-        public string? PathToFail;
-
-        public Task<LoadedImage> LoadAsync(string filePath, CancellationToken ct = default)
-        {
-            if (filePath == PathToFail)
-            {
-                throw new InvalidOperationException("simulated decode failure");
-            }
-            return Task.FromResult(new LoadedImage(filePath, new Mat(4, 4, MatType.CV_8UC3, Scalar.All(128))));
-        }
-
-        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, Scalar.All(128))));
-
-        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, Scalar.All(128))));
-    }
-
     private sealed class FakeImageExportService : IImageExportService
     {
         public readonly List<string> ExportedPaths = new();
@@ -89,7 +70,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_ExportsOneFilePerInput()
     {
-        var loader = new FakeImageLoaderService();
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128));
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
 
@@ -102,7 +83,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_SkipsFilesThatFailToLoad_AndContinuesWithTheRest()
     {
-        var loader = new FakeImageLoaderService { PathToFail = "bad.png" };
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128), failOnPath: "bad.png");
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
 
@@ -115,7 +96,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_WithJpegOptions_ExportsJpgFilesWithQuality()
     {
-        var loader = new FakeImageLoaderService();
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128));
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
 
@@ -140,7 +121,7 @@ public class BatchProcessingServiceTests
     public async Task RunAsync_WithImageBackground_CompositesCutoutOntoChosenImage()
     {
         // The fake loader serves the same gray(128) image for inputs and for the background.
-        var loader = new FakeImageLoaderService();
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128));
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
         var options = new BatchExportOptions
@@ -166,7 +147,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_WithUnloadableBackgroundImage_FallsBackToSolidColor()
     {
-        var loader = new FakeImageLoaderService { PathToFail = "bg.png" };
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128), failOnPath: "bg.png");
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
         var options = new BatchExportOptions
@@ -192,7 +173,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_DefaultOptions_ExportsPngFiles()
     {
-        var loader = new FakeImageLoaderService();
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128));
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
 
@@ -207,7 +188,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_WithWebpOptions_ExportsWebpFiles()
     {
-        var loader = new FakeImageLoaderService();
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128));
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
         var options = new BatchExportOptions { ExportWebp = true };
@@ -223,7 +204,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_WithWebpAndSkipExisting_ChecksWebpExtension()
     {
-        var loader = new FakeImageLoaderService();
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128));
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
         var outputDir = Path.Combine(Path.GetTempPath(), $"batch_webp_skip_{Guid.NewGuid():N}");
@@ -253,7 +234,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_WithSkipExisting_SkipsFilesWhoseOutputAlreadyExists()
     {
-        var loader = new FakeImageLoaderService();
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128));
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
         var outputDir = Path.Combine(Path.GetTempPath(), $"batch_skip_{Guid.NewGuid():N}");
@@ -280,7 +261,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_WithSkipExisting_ReportsSkippedCountInFinalProgress()
     {
-        var loader = new FakeImageLoaderService();
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128));
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
         var outputDir = Path.Combine(Path.GetTempPath(), $"batch_skip_{Guid.NewGuid():N}");
@@ -309,7 +290,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_WithoutSkipExisting_ReExportsFilesThatAlreadyHaveOutput()
     {
-        var loader = new FakeImageLoaderService();
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128));
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
         var outputDir = Path.Combine(Path.GetTempPath(), $"batch_skip_{Guid.NewGuid():N}");
@@ -333,7 +314,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_ReportsFailedCountInFinalProgress()
     {
-        var loader = new FakeImageLoaderService { PathToFail = "bad.png" };
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128), failOnPath: "bad.png");
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
         var reported = new List<BatchProgress>();
@@ -351,7 +332,7 @@ public class BatchProcessingServiceTests
     [Fact]
     public async Task RunAsync_ReportsProgressForEveryFile()
     {
-        var loader = new FakeImageLoaderService();
+        var loader = new TestImageLoader(4, 4, new Scalar(128, 128, 128));
         var exporter = new FakeImageExportService();
         var service = new BatchProcessingService(loader, exporter);
         var reported = new List<BatchProgress>();

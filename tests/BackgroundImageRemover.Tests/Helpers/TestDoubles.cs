@@ -76,19 +76,23 @@ public sealed class TestImageLoader : IImageLoaderService
     private readonly Scalar _background;
     private readonly byte? _alphaValue;
     private readonly Action<Mat>? _draw;
+    private readonly string? _failOnPath;
 
     /// <param name="background">Solid BGR fill color of the image; null uses the default BGR(10,20,30).</param>
     /// <param name="alphaValue">When set, the image carries a single-channel alpha filled with this
     /// value (0 = fully transparent cutout); when null, the image has no alpha channel.</param>
     /// <param name="draw">Optional callback that paints shapes (subject rectangle, blur, ...) into the
     /// BGR Mat right after creation. Invoked on a fresh Mat for every load.</param>
-    public TestImageLoader(int width, int height, Scalar? background = null, byte? alphaValue = null, Action<Mat>? draw = null)
+    /// <param name="failOnPath">When set, <see cref="LoadAsync"/> throws for that exact path,
+    /// simulating a decode failure (used by the batch-processing failure tests).</param>
+    public TestImageLoader(int width, int height, Scalar? background = null, byte? alphaValue = null, Action<Mat>? draw = null, string? failOnPath = null)
     {
         _width = width;
         _height = height;
         _background = background ?? new Scalar(10, 20, 30);
         _alphaValue = alphaValue;
         _draw = draw;
+        _failOnPath = failOnPath;
     }
 
     private LoadedImage Create(string name) => new(name, CreateBgr(), CreateAlpha());
@@ -104,7 +108,14 @@ public sealed class TestImageLoader : IImageLoaderService
         ? new Mat(_height, _width, MatType.CV_8UC1, new Scalar(value))
         : null;
 
-    public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default) => Task.FromResult(Create(path));
+    public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
+    {
+        if (_failOnPath is not null && path == _failOnPath)
+        {
+            throw new InvalidOperationException("simulated decode failure");
+        }
+        return Task.FromResult(Create(path));
+    }
     public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default) => Task.FromResult(Create(sourceName));
     public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png") => Task.FromResult(Create(sourceName));
 }

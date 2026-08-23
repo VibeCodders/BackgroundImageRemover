@@ -222,13 +222,13 @@ public class AutosaveServiceTests
             new GrabCutStrategy(),
             new SamStrategy(new SamInferenceEngine(new FakeModelCacheService())),
             new FakeUncropFillService(),
-            new FakeImageLoaderService(),
+            new TestImageLoader(4, 4),
             new FakeImageExportService());
     }
 
     private static DocumentViewModel CreateDocument(ISettingsService settings, IProjectService projectService) =>
         new(
-            new FakeImageLoaderService(),
+            new TestImageLoader(4, 4),
             new FakeImageExportService(),
             new FakeDownscaleService(),
             new FakeDialogService(),
@@ -254,16 +254,5 @@ public class AutosaveServiceTests
             => _inner.LoadAsync(path, ct);
     }
 
-    private sealed class FakeImageLoaderService : IImageLoaderService
-    {
-        public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(path, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
-
-        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
-
-        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
-    }
-
 }
+

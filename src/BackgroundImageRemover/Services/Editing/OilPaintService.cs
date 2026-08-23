@@ -55,6 +55,9 @@ public static class OilPaintService
                 Cv2.ExtractChannel(bgr, mb, 0);
                 Cv2.ExtractChannel(bgr, mg, 1);
                 Cv2.ExtractChannel(bgr, mr, 2);
+                mb.ConvertTo(mb, MatType.CV_32FC1);
+                mg.ConvertTo(mg, MatType.CV_32FC1);
+                mr.ConvertTo(mr, MatType.CV_32FC1);
                 Cv2.Multiply(mb, masks[b], mb);
                 Cv2.Multiply(mg, masks[b], mg);
                 Cv2.Multiply(mr, masks[b], mr);

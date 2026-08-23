@@ -6,3 +6,4 @@ tests/BackgroundImageRemover.Tests/bin/
 .freebuff/
 publish_test/
 publish/
+artifacts/

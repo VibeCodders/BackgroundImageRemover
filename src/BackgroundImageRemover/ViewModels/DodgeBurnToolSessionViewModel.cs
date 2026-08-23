@@ -29,49 +29,11 @@ public partial class DodgeBurnToolSessionViewModel : MaskToolSessionViewModelBas
     partial void OnDodgeChanged(bool value) => RefreshResult();
     partial void OnStrengthChanged(double value) => RefreshResult();
 
-    protected override void RefreshResult()
-    {
-        if (!EnsureSourceAlpha()) return;
+    protected override Mat ApplyEffect(Mat src) => DodgeBurnService.DodgeBurnAll(src, Dodge, Strength);
 
-        Mat result;
-        if (WholeImage)
-        {
-            result = DodgeBurnService.DodgeBurnAll(_sourceImage!.FullBgr, Dodge, Strength);
-        }
-        else if (PaintMode && HasPaintedMask)
-        {
-            result = DodgeBurnService.DodgeBurnRegion(_sourceImage!.FullBgr, _paintedMask!, Dodge, Strength);
-        }
-        else
-        {
-            result = _sourceImage!.FullBgr.Clone();
-        }
-
-        using var _ = result;
-        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
-        IsDirty = IsEffectActive;
-    }
-
-    protected override Mat BuildResult(Mat src)
-    {
-        if (WholeImage)
-        {
-            return DodgeBurnService.DodgeBurnAll(src, Dodge, Strength);
-        }
-        else if (PaintMode && HasPaintedMask)
-        {
-            return DodgeBurnService.DodgeBurnRegion(src, _paintedMask!, Dodge, Strength);
-        }
-        return src.Clone();
-    }
-
-    protected override void OnReset()
+    protected override void OnResetToolDefaults()
     {
         Dodge = true;
         Strength = 0.3;
-        WholeImage = false;
-        PaintMode = false;
-        _paintedMask?.SetTo(Scalar.All(0));
-        RefreshResult();
     }
 }

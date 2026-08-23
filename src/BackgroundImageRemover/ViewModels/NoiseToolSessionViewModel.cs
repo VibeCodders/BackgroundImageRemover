@@ -29,59 +29,16 @@ public partial class NoiseToolSessionViewModel : MaskToolSessionViewModelBase
     partial void OnNoiseStrengthChanged(double value) => RefreshResult();
     partial void OnGaussianNoiseChanged(bool value) => RefreshResult();
 
-    protected override void RefreshResult()
+    protected override Mat ApplyEffect(Mat src)
     {
-        if (!EnsureSourceAlpha()) return;
-
-        Mat result;
-        if (WholeImage)
-        {
-            result = GaussianNoise
-                ? NoiseService.AddGaussianNoise(_sourceImage!.FullBgr, NoiseStrength)
-                : NoiseService.AddSaltPepperNoise(_sourceImage!.FullBgr, NoiseStrength);
-        }
-        else if (PaintMode && HasPaintedMask)
-        {
-            result = GaussianNoise
-                ? NoiseService.AddGaussianNoise(_sourceImage!.FullBgr, NoiseStrength)
-                : NoiseService.AddSaltPepperNoise(_sourceImage!.FullBgr, NoiseStrength);
-            result = result.BlendByMask(_sourceImage!.FullBgr, _paintedMask!);
-        }
-        else
-        {
-            result = _sourceImage!.FullBgr.Clone();
-        }
-
-        using var _ = result;
-        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
-        IsDirty = IsEffectActive;
+        return GaussianNoise
+            ? NoiseService.AddGaussianNoise(src, NoiseStrength)
+            : NoiseService.AddSaltPepperNoise(src, NoiseStrength);
     }
 
-    protected override Mat BuildResult(Mat src)
-    {
-        if (WholeImage)
-        {
-            return GaussianNoise
-                ? NoiseService.AddGaussianNoise(src, NoiseStrength)
-                : NoiseService.AddSaltPepperNoise(src, NoiseStrength);
-        }
-        else if (PaintMode && HasPaintedMask)
-        {
-            var noisy = GaussianNoise
-                ? NoiseService.AddGaussianNoise(src, NoiseStrength)
-                : NoiseService.AddSaltPepperNoise(src, NoiseStrength);
-            return noisy.BlendByMask(src, _paintedMask!);
-        }
-        return src.Clone();
-    }
-
-    protected override void OnReset()
+    protected override void OnResetToolDefaults()
     {
         NoiseStrength = 20;
         GaussianNoise = true;
-        WholeImage = false;
-        PaintMode = false;
-        _paintedMask?.SetTo(Scalar.All(0));
-        RefreshResult();
     }
 }

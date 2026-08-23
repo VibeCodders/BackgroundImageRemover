@@ -33,50 +33,15 @@ public partial class HueSatToolSessionViewModel : MaskToolSessionViewModelBase
     partial void OnSaturationChanged(double value) => RefreshResult();
     partial void OnValueChanged(double value) => RefreshResult();
 
-    protected override void RefreshResult()
-    {
-        if (!EnsureSourceAlpha()) return;
+    protected override Mat ApplyEffect(Mat src) => HueSatService.AdjustHueSat(src, HueShift, Saturation, Value);
 
-        Mat result;
-        if (WholeImage)
-        {
-            result = HueSatService.AdjustHueSat(_sourceImage!.FullBgr, HueShift, Saturation, Value);
-        }
-        else if (PaintMode && HasPaintedMask)
-        {
-            result = HueSatService.AdjustHueSatRegion(_sourceImage!.FullBgr, _paintedMask!, HueShift, Saturation, Value);
-        }
-        else
-        {
-            result = _sourceImage!.FullBgr.Clone();
-        }
+    protected override Mat ApplyEffectToRegion(Mat src, Mat mask)
+        => HueSatService.AdjustHueSatRegion(src, mask, HueShift, Saturation, Value);
 
-        using var _ = result;
-        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
-        IsDirty = IsEffectActive;
-    }
-
-    protected override Mat BuildResult(Mat src)
-    {
-        if (WholeImage)
-        {
-            return HueSatService.AdjustHueSat(src, HueShift, Saturation, Value);
-        }
-        else if (PaintMode && HasPaintedMask)
-        {
-            return HueSatService.AdjustHueSatRegion(src, _paintedMask!, HueShift, Saturation, Value);
-        }
-        return src.Clone();
-    }
-
-    protected override void OnReset()
+    protected override void OnResetToolDefaults()
     {
         HueShift = 0;
         Saturation = 1;
         Value = 1;
-        WholeImage = false;
-        PaintMode = false;
-        _paintedMask?.SetTo(Scalar.All(0));
-        RefreshResult();
     }
 }

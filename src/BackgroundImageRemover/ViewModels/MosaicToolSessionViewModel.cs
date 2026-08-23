@@ -115,6 +115,8 @@ public partial class MosaicToolSessionViewModel : MaskToolSessionViewModelBase
             : MosaicService.BlendByMask(src, effect, _paintedMask);
     }
 
+    protected override Mat ApplyEffect(Mat src) => ApplyModeCore(src, null);
+
     private Mat ApplyModeCore(Mat src, Rect? region) => Mode switch
     {
         MosaicMode.Blur => Strength < 0.999

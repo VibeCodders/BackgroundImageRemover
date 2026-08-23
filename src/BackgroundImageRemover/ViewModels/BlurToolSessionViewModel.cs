@@ -36,55 +36,20 @@ public partial class BlurToolSessionViewModel : MaskToolSessionViewModelBase
     partial void OnMotionBlurChanged(bool value) => RefreshResult();
     partial void OnMotionAngleChanged(double value) => RefreshResult();
 
-    protected override void RefreshResult()
+    protected override Mat ApplyEffect(Mat src)
     {
-        if (!EnsureSourceAlpha()) return;
-
-        Mat result;
-        if (WholeImage)
-        {
-            result = MotionBlur
-                ? BlurService.MotionBlur(_sourceImage!.FullBgr, BlurRadius, MotionAngle)
-                : BlurService.BlurAll(_sourceImage!.FullBgr, BlurRadius);
-        }
-        else if (PaintMode && HasPaintedMask)
-        {
-            result = BlurService.BlurRegion(_sourceImage!.FullBgr, _paintedMask!, BlurRadius);
-        }
-        else
-        {
-            result = _sourceImage!.FullBgr.Clone();
-        }
-
-        using var _ = result;
-        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
-        IsDirty = IsEffectActive;
+        return MotionBlur
+            ? BlurService.MotionBlur(src, BlurRadius, MotionAngle)
+            : BlurService.BlurAll(src, BlurRadius);
     }
 
-    protected override Mat BuildResult(Mat src)
-    {
-        if (WholeImage)
-        {
-            return MotionBlur
-                ? BlurService.MotionBlur(src, BlurRadius, MotionAngle)
-                : BlurService.BlurAll(src, BlurRadius);
-        }
-        else if (PaintMode && HasPaintedMask)
-        {
-            return BlurService.BlurRegion(src, _paintedMask!, BlurRadius);
-        }
-        return src.Clone();
-    }
+    protected override Mat ApplyEffectToRegion(Mat src, Mat mask)
+        => BlurService.BlurRegion(src, mask, BlurRadius);
 
-    protected override void OnReset()
+    protected override void OnResetToolDefaults()
     {
-        BrushRadius = 40;
         BlurRadius = 12;
-        WholeImage = false;
         MotionBlur = false;
         MotionAngle = 0;
-        PaintMode = false;
-        _paintedMask?.SetTo(Scalar.All(0));
-        RefreshResult();
     }
 }

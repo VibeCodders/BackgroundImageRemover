@@ -80,16 +80,51 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
     }
 
     /// <summary>
-    /// Builds the preview result. Called on every parameter change.
-/// </summary>
-    protected abstract void RefreshResult();
+    /// Builds the preview result and updates the bitmap. Called on every parameter change.
+    /// Concrete here: subclasses only implement <see cref="ApplyEffect"/> (and optionally
+    /// <see cref="ApplyEffectToRegion"/>), so the whole-image / painted-mask / unchanged
+    /// branching lives in one place instead of being copy-pasted in every mask tool.
+    /// </summary>
+    protected virtual void RefreshResult()
+    {
+        if (!EnsureSourceAlpha()) return;
+        using var result = BuildResult(_sourceImage!.FullBgr);
+        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
+        IsDirty = IsEffectActive;
+    }
 
     /// <summary>
-    /// Builds the final result Mat for application. Called when the user applies the tool.
+    /// Builds the final result Mat: applies the effect to the whole image, to the painted mask
+    /// region, or returns an unchanged clone. Called when the user applies the tool.
     /// </summary>
     /// <param name="src">The source BGR image.</param>
     /// <returns>The resulting BGR image (caller owns disposal).</returns>
-    protected abstract Mat BuildResult(Mat src);
+    protected virtual Mat BuildResult(Mat src)
+    {
+        if (WholeImage)
+        {
+            return ApplyEffect(src);
+        }
+        if (PaintMode && HasPaintedMask)
+        {
+            return ApplyEffectToRegion(src, _paintedMask!);
+        }
+        return src.Clone();
+    }
+
+    /// <summary>Applies the tool's effect to the entire image.</summary>
+    protected abstract Mat ApplyEffect(Mat src);
+
+    /// <summary>
+    /// Applies the tool's effect restricted to the painted mask. The default (whole-image effect
+    /// blended back by the mask) matches the standard mask-tool semantics; tools with dedicated
+    /// region implementations override this.
+    /// </summary>
+    protected virtual Mat ApplyEffectToRegion(Mat src, Mat mask)
+    {
+        using var effect = ApplyEffect(src);
+        return src.BlendByMask(effect, mask);
+    }
 
     /// <summary>
     /// Gets the operation name to record in the edit history.
@@ -100,6 +135,22 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
     {
         ApplyAndClose(_sourceImage is not null && _workingAlpha is not null ? BuildResult(_sourceImage.FullBgr) : null, OperationName);
         return Task.CompletedTask;
+    }
+
+    protected override void OnReset()
+    {
+        BrushRadius = 40;
+        OnResetToolDefaults();
+        WholeImage = false;
+        PaintMode = false;
+        _paintedMask?.SetTo(Scalar.All(0));
+        RefreshResult();
+    }
+
+    /// <summary>Restores the tool's own parameter defaults. The common mask reset tail (brush
+    /// radius, whole-image/paint flags, mask clearing and preview refresh) lives in the base.</summary>
+    protected virtual void OnResetToolDefaults()
+    {
     }
 
     public override void Dispose()

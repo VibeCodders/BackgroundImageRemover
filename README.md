@@ -11,6 +11,7 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 - **Interactive refinement**: brush-based foreground/background scribbles, mask adjustments (feather, expand, blur, gamma, threshold, despeckle, fill holes, smooth edges, CLAHE, median/bilateral filtering)
 - **GrabCut rect handles**: after drawing the initial GrabCut rectangle, corner handles appear so you can move or resize it without redrawing; an "Edit rect" button is also available in the strategy panel
 - **Edge refinement**: alpha matting, color decontamination, hole filling
+- **Per-mode Uncrop toolbar tools**: one icon per outpainting fill method (Mirror, Inpaint, Solid Color, Edge Stretch, Tile/Wrap, Zoom & Blur, Edge Gradient, Patch Synthesis) — clicking one pre-selects its fill mode in the inline panel, middle-click opens the Uncrop session with it already active
 - **Export**: PNG (transparent/solid color/blurred/gradient), JPEG, WebP
 - **Batch processing** with configurable export options
 - **Non-destructive history**: undo/redo timeline with step restoration
@@ -44,6 +45,13 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 - New `ClearSamPointsCommand` to reset all prompt points
 - SAM prompt points are saved/restored in `.ibrproj` project files
 - Additional points count displayed in the UI
+
+#### Per-mode Uncrop tools in the toolbar (new)
+- The Uncrop/outpaint fill methods are now first-class toolbar entries in a dedicated **Uncrop** category (right after Transform): the general "Uncrop / Expand" entry plus one icon per fill mode — **Mirror**, **Inpaint**, **Solid Color**, **Edge Stretch (Replicate)**, **Tile/Wrap**, **Zoom & Blur**, **Edge Gradient**, **Patch Synthesis** — each with its own `EditorTool` value (`UncropMirror`, `UncropInpaint`, ...), a family icon (the expand-arrows silhouette plus a center glyph for the method), and its own tooltip
+- Left-clicking a variant sets `ActiveTool` to that variant (so only the clicked icon highlights) **and** pre-selects the fill mode in the document's inline Uncrop panel; middle-click/right-click opens the Uncrop tool session with that fill mode already selected
+- Implemented data-driven: the new `UncropModeToolDefinition` (`EditorToolDefinitionBase` subclass) is registered once per mode in `App.xaml.cs` and the `ShellViewModel` test fallback — no new switches; the toolbar, palette grouping and tab dispatch pick them up automatically
+- The tool-session and inline Uncrop panels gained the previously missing option panels for Zoom & Blur (radius/zoom/blend margin), Edge Gradient (style/noise), Patch Synthesis (patch size/blend overlap) and Edge Stretch (smoothing), plus the disabled "AI outpainting (coming soon)" entry — matching the standalone Uncrop window
+- `UncropModeToolDefinitionTests` pins the registrations (id/fill-mode mapping, category, radio-style `IsActive`), the inline fill-mode pre-selection on `Select`, and the session pre-selection on `RequestOpen`
 
 #### New drawing & color tools (new)
 - **Shape**: draw a rectangle, ellipse, line, arrow, **polygon** or **star** with stroke color/width and a semi-transparent fill — drag directly on the interactive preview to place it, then drag inside to **move** it, its **corner handles** to **resize** it, or its **rotation handle** (above the shape) to **tilt** it freely (hold **Shift** to snap rotation to 5° steps for precise alignment); percentage sliders plus sides/points, star-ratio and rotation controls allow fine-tuning

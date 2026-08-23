@@ -102,18 +102,62 @@
         <!-- Replicate / Clamp -->
         <RadioButton Content="Edge clamp (Replicate)" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
                      IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
+        <StackPanel Margin="16,0,0,8" Visibility="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Replicate}">
+            <DockPanel Margin="0,0,0,4">
+                <TextBlock Text="Smooth:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
+                <TextBlock Text="{Binding UncropOptions.ReplicateSmoothRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                <Slider Minimum="0" Maximum="30" Value="{Binding UncropOptions.ReplicateSmoothRadius}" SmallChange="2" LargeChange="6" />
+            </DockPanel>
+        </StackPanel>
 
         <!-- Zoom Blur -->
         <RadioButton Content="Zoom blur" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
                      IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ZoomBlur}" />
+        <StackPanel Margin="16,0,0,8" Visibility="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ZoomBlur}">
+            <DockPanel Margin="0,0,0,4">
+                <TextBlock Text="Blur:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
+                <TextBlock Text="{Binding UncropOptions.ZoomBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                <Slider Minimum="1" Maximum="101" Value="{Binding UncropOptions.ZoomBlurRadius}" SmallChange="2" LargeChange="10" />
+            </DockPanel>
+            <DockPanel Margin="0,0,0,4">
+                <TextBlock Text="Zoom:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
+                <TextBlock Text="{Binding UncropOptions.ZoomScale, StringFormat={}{0:F2}x}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                <Slider Minimum="1.0" Maximum="2.5" Value="{Binding UncropOptions.ZoomScale}" SmallChange="0.05" LargeChange="0.25" />
+            </DockPanel>
+            <DockPanel Margin="0,0,0,4">
+                <TextBlock Text="Blend:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
+                <TextBlock Text="{Binding UncropOptions.BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                <Slider Minimum="0" Maximum="30" Value="{Binding UncropOptions.BlendMargin}" SmallChange="1" LargeChange="5" />
+            </DockPanel>
+        </StackPanel>
 
         <!-- Gradient -->
         <RadioButton Content="Edge gradient" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
                      IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeGradient}" />
+        <StackPanel Margin="16,0,0,8" Visibility="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=EdgeGradient}">
+            <ComboBox ItemsSource="{Binding UncropOptions.GradientModes}" SelectedItem="{Binding UncropOptions.SelectedGradientMode}" Margin="0,0,0,6" />
+            <DockPanel Margin="0,0,0,4">
+                <TextBlock Text="Noise:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
+                <TextBlock Text="{Binding UncropOptions.GradientNoiseAmount, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                <Slider Minimum="0.0" Maximum="0.20" Value="{Binding UncropOptions.GradientNoiseAmount}" SmallChange="0.01" LargeChange="0.05" />
+            </DockPanel>
+        </StackPanel>
 
         <!-- Patch Synthesis -->
-        <RadioButton Content="Patch synthesis (Texture)" GroupName="UncropFillModeDoc" Margin="0,0,0,8"
+        <RadioButton Content="Patch synthesis (Texture)" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
                      IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PatchSynthesis}" />
+        <StackPanel Margin="16,0,0,8" Visibility="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=PatchSynthesis}">
+            <DockPanel Margin="0,0,0,4">
+                <TextBlock Text="Patch:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
+                <TextBlock Text="{Binding UncropOptions.PatchSize, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                <Slider Minimum="8" Maximum="64" Value="{Binding UncropOptions.PatchSize}" SmallChange="4" LargeChange="8" />
+            </DockPanel>
+            <DockPanel Margin="0,0,0,8">
+                <TextBlock Text="Blend:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
+                <TextBlock Text="{Binding UncropOptions.PatchBlendOverlap, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
+                <Slider Minimum="2" Maximum="24" Value="{Binding UncropOptions.PatchBlendOverlap}" SmallChange="2" LargeChange="4" />
+            </DockPanel>
+        </StackPanel>
 
         <Button Content="Apply Uncrop Fill" Command="{Binding ApplyUncropCommand}"
                 Height="32" FontWeight="SemiBold" Background="{DynamicResource Theme.AccentBackground}" Foreground="{DynamicResource Theme.AccentForeground}" BorderThickness="0" Margin="0,8,0,0" />

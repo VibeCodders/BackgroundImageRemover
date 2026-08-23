@@ -38,7 +38,7 @@ public partial class ShellViewModel : ObservableObject
     /// <summary>Fixed left-to-right/top-to-bottom category order for the palette (not alphabetical).</summary>
     private static readonly string[] CategoryDisplayOrder =
     [
-        "Background Removal", "Selection", "Drawing", "Paint & Retouch", "Transform",
+        "Background Removal", "Selection", "Drawing", "Paint & Retouch", "Transform", "Uncrop",
         "Color & Adjust", "Filters & FX", "Composite", "Text & Decor"
     ];
 
@@ -109,8 +109,16 @@ public partial class ShellViewModel : ObservableObject
         yield return new StrategyToolDefinition(StrategyKind.Otsu, 7, "OtsuIcon", "Otsu Threshold", "Otsu Threshold (high contrast)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
         yield return new StrategyToolDefinition(StrategyKind.Inpaint, 8, "InpaintIcon", "Inpaint", "Inpaint (flood + fill background)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
         yield return new StrategyToolDefinition(StrategyKind.EdgeContour, 9, "EdgeContourIcon", "Edge / Contour", "Edge / Contour (Canny outline + largest region)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new ToolDefinition(EditorTool.Uncrop, "Uncrop / Expand", "Transform", 4, "UncropIcon", "Uncrop / Expand (U)",
+        yield return new ToolDefinition(EditorTool.Uncrop, "Uncrop / Expand", "Uncrop", 0, "UncropIcon", "Uncrop / Expand (U)",
             (shell, doc) => new UncropToolSessionViewModel(shell, doc, uncropFillService, dialogs, imageLoader, imageExporter, log), shortcut: 'U', opensInlineOnSelect: false);
+        yield return new UncropModeToolDefinition(EditorTool.UncropMirror, UncropFillMode.Mirror, "Uncrop Mirror", 1, "UncropMirrorIcon", "Uncrop with a mirror/reflection fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
+        yield return new UncropModeToolDefinition(EditorTool.UncropInpaint, UncropFillMode.Inpaint, "Uncrop Inpaint", 2, "UncropInpaintIcon", "Uncrop with a content-aware inpainting fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
+        yield return new UncropModeToolDefinition(EditorTool.UncropSolidColor, UncropFillMode.SolidColor, "Uncrop Solid Color", 3, "UncropSolidColorIcon", "Uncrop with a solid color fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
+        yield return new UncropModeToolDefinition(EditorTool.UncropReplicate, UncropFillMode.Replicate, "Uncrop Edge Stretch", 4, "UncropReplicateIcon", "Uncrop with an edge-stretch (replicate) fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
+        yield return new UncropModeToolDefinition(EditorTool.UncropWrap, UncropFillMode.Wrap, "Uncrop Tile / Wrap", 5, "UncropWrapIcon", "Uncrop with a tile / wrap fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
+        yield return new UncropModeToolDefinition(EditorTool.UncropZoomBlur, UncropFillMode.ZoomBlur, "Uncrop Zoom & Blur", 6, "UncropZoomBlurIcon", "Uncrop with a zoom & blur background fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
+        yield return new UncropModeToolDefinition(EditorTool.UncropEdgeGradient, UncropFillMode.EdgeGradient, "Uncrop Edge Gradient", 7, "UncropEdgeGradientIcon", "Uncrop with an edge-gradient fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
+        yield return new UncropModeToolDefinition(EditorTool.UncropPatchSynthesis, UncropFillMode.PatchSynthesis, "Uncrop Patch Synthesis", 8, "UncropPatchSynthesisIcon", "Uncrop with patch texture synthesis fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
         yield return new ToolDefinition(EditorTool.Retouch, "Retouch & Brush", "Paint & Retouch", 0, "RetouchIcon", "Retouch & Brush (B)", (shell, doc) => new RetouchToolSessionViewModel(shell, doc), shortcut: 'B', opensInlineOnSelect: false);
         yield return new ToolDefinition(EditorTool.Heal, "Heal", "Paint & Retouch", 1, "HealIcon", "Heal (H)", (shell, doc) => new HealToolSessionViewModel(shell, doc), shortcut: 'H');
         yield return new ToolDefinition(EditorTool.Liquify, "Liquify", "Paint & Retouch", 2, "LiquifyIcon", "Liquify (J)", (shell, doc) => new LiquifyToolSessionViewModel(shell, doc), shortcut: 'J');

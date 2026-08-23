@@ -143,22 +143,53 @@
                     <!-- Zoom Blur Mode -->
                     <RadioButton Content="Zoom &amp; Blur background" GroupName="UncropFillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ZoomBlur}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ZoomBlur}">
+                        <controls:SliderField Header="Blur radius:" Value="{Binding Options.ZoomBlurRadius}" Minimum="1" Maximum="101" SmallChange="2" LargeChange="10" ValueFormat="{}{0} px"  />
+
+                        <controls:SliderField Header="Zoom scale:" Value="{Binding Options.ZoomScale}" Minimum="1.0" Maximum="2.5" SmallChange="0.05" LargeChange="0.25" ValueFormat="{}{0:F2}x"  />
+
+                        <controls:SliderField Header="Blend margin:" Value="{Binding Options.BlendMargin}" Minimum="0" Maximum="30" SmallChange="1" LargeChange="5" ValueFormat="{}{0} px"  />
+
+                    </StackPanel>
 
                     <!-- Edge Gradient Mode -->
                     <RadioButton Content="Edge gradient" GroupName="UncropFillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=EdgeGradient}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=EdgeGradient}">
+                        <TextBlock Text="Gradient style:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" Margin="0,0,0,2" />
+                        <ComboBox ItemsSource="{Binding Options.GradientModes}" SelectedItem="{Binding Options.SelectedGradientMode}" Margin="0,0,0,6" />
+
+                        <controls:SliderField Header="Noise (dither):" Value="{Binding Options.GradientNoiseAmount}" Minimum="0.0" Maximum="0.20" SmallChange="0.01" LargeChange="0.05" ValueFormat="{}{0:P0}"  />
+
+                    </StackPanel>
 
                     <!-- Patch Synthesis Mode -->
                     <RadioButton Content="Patch texture synthesis" GroupName="UncropFillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PatchSynthesis}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=PatchSynthesis}">
+                        <controls:SliderField Header="Patch size:" Value="{Binding Options.PatchSize}" Minimum="8" Maximum="64" SmallChange="4" LargeChange="8" ValueFormat="{}{0} px"  />
+
+                        <controls:SliderField Header="Blend overlap:" Value="{Binding Options.PatchBlendOverlap}" Minimum="2" Maximum="24" SmallChange="2" LargeChange="4" ValueFormat="{}{0} px"  />
+
+                    </StackPanel>
 
                     <!-- Replicate Mode -->
                     <RadioButton Content="Edge stretch (Replicate)" GroupName="UncropFillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
+                    <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Replicate}">
+                        <controls:SliderField Header="Smoothing:" Value="{Binding Options.ReplicateSmoothRadius}" Minimum="0" Maximum="30" SmallChange="2" LargeChange="6" ValueFormat="{}{0} px"  />
+
+                    </StackPanel>
 
                     <!-- Wrap Mode -->
                     <RadioButton Content="Tile / Pattern (Wrap)" GroupName="UncropFillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Wrap}" />
+
+                    <!-- AI Outpaint Mode -->
+                    <RadioButton Content="AI outpainting (coming soon)" GroupName="UncropFillMode" Margin="0,0,0,4"
+                                 IsEnabled="False"
+                                 ToolTip="Not available yet: no AI outpainting model is configured in this build."
+                                 IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=AiOutpaint}" />
 
                     <Separator Margin="0,8,0,8" />
                     <TextBlock Text="Finishing" FontWeight="Bold" Margin="0,0,0,4" />

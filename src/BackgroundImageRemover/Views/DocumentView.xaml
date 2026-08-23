@@ -229,7 +229,7 @@
 
         <!-- Dynamic Contextual Side Panel (Only visible when a tool is active), resizable -->
         <Grid DockPanel.Dock="Right"
-              Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground|Uncrop|Retouch|Adjustments}">
+              Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=RemoveBackground|Uncrop|UncropMirror|UncropInpaint|UncropSolidColor|UncropReplicate|UncropWrap|UncropZoomBlur|UncropEdgeGradient|UncropPatchSynthesis|Retouch|Adjustments}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="5" />
                 <ColumnDefinition x:Name="ToolOptionsColumn" Width="330" MinWidth="240" MaxWidth="600" />
@@ -247,7 +247,7 @@
 
                     <!-- PANEL 2: UNCROP / CANVAS EXPAND -->
                     <panels:UncropPanel
-                        Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Uncrop}" />
+                        Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Uncrop|UncropMirror|UncropInpaint|UncropSolidColor|UncropReplicate|UncropWrap|UncropZoomBlur|UncropEdgeGradient|UncropPatchSynthesis}" />
 
                     <!-- PANEL 3: RETOUCH & BRUSH -->
                     <panels:RetouchPanel
@@ -289,7 +289,7 @@
             <!-- Editor Work Area (when image is loaded) -->
             <Grid Visibility="{Binding IsImageLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
                 <!-- View when UNPAINT/UNCROP tool is active -->
-                <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Uncrop}" Margin="8">
+                <Grid Visibility="{Binding ActiveTool, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Uncrop|UncropMirror|UncropInpaint|UncropSolidColor|UncropReplicate|UncropWrap|UncropZoomBlur|UncropEdgeGradient|UncropPatchSynthesis}" Margin="8">
                     <controls:UncropCanvasControl ImageSource="{Binding PreviewBitmap}"
                                                   ImagePadding="{Binding UncropOptions.Padding, Mode=TwoWay}" />
                 </Grid>

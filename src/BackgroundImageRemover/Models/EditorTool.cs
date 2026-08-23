@@ -14,6 +14,30 @@ public enum EditorTool
     /// <summary>Canvas expansion and outpainting/infill methods.</summary>
     Uncrop,
 
+    /// <summary>Uncrop with a mirror/reflection fill of the edge pixels.</summary>
+    UncropMirror,
+
+    /// <summary>Uncrop with a content-aware inpainting fill.</summary>
+    UncropInpaint,
+
+    /// <summary>Uncrop with a solid color fill.</summary>
+    UncropSolidColor,
+
+    /// <summary>Uncrop with an edge-stretch (replicate) fill.</summary>
+    UncropReplicate,
+
+    /// <summary>Uncrop with a tile / wrap fill.</summary>
+    UncropWrap,
+
+    /// <summary>Uncrop with a zoom &amp; blur background fill.</summary>
+    UncropZoomBlur,
+
+    /// <summary>Uncrop with an edge-gradient fill.</summary>
+    UncropEdgeGradient,
+
+    /// <summary>Uncrop with patch texture synthesis fill.</summary>
+    UncropPatchSynthesis,
+
     /// <summary>Direct brush and magic wand pixel retouching.</summary>
     Retouch,
 

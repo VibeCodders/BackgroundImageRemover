@@ -709,6 +709,14 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
                 }
                 break;
             case EditorTool.Uncrop:
+            case EditorTool.UncropMirror:
+            case EditorTool.UncropInpaint:
+            case EditorTool.UncropSolidColor:
+            case EditorTool.UncropReplicate:
+            case EditorTool.UncropWrap:
+            case EditorTool.UncropZoomBlur:
+            case EditorTool.UncropEdgeGradient:
+            case EditorTool.UncropPatchSynthesis:
             case EditorTool.None:
             default:
                 OriginalMode = InteractionMode.None;

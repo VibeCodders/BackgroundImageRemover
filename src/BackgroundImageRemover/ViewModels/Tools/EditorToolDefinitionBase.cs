@@ -21,7 +21,7 @@ public abstract class EditorToolDefinitionBase : IToolDefinition
 
     public bool IsActive(EditorTool activeTool, StrategyKind selectedStrategy) => activeTool == Tool;
 
-    public void Select(DocumentViewModel doc)
+    public virtual void Select(DocumentViewModel doc)
     {
         doc.ActiveTool = Tool;
         if (OpensInlineOnSelect)

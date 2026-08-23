@@ -59,7 +59,8 @@ public partial class UncropToolSessionViewModel : ToolSessionViewModelBase
         IDialogService dialogs,
         IImageLoaderService imageLoader,
         IImageExportService imageExporter,
-        IFileLogService log)
+        IFileLogService log,
+        UncropFillMode? initialFillMode = null)
         : base(shell, parentDocument)
     {
         _fillService = fillService;
@@ -93,5 +94,13 @@ public partial class UncropToolSessionViewModel : ToolSessionViewModelBase
 
         var sourceSnapshot = parentDocument.CreateCurrentStateSnapshot();
         AdoptImage(sourceSnapshot);
+
+        // Per-mode toolbar entries (UncropMirror/Inpaint/...) open the session pre-set to their
+        // fill method; AdoptImage's Options.Reset() does not touch SelectedFillMode, so the
+        // preset survives. The general "Uncrop / Expand" entry keeps the default (Mirror).
+        if (initialFillMode is { } mode)
+        {
+            Options.SelectedFillMode = mode;
+        }
     }
 }

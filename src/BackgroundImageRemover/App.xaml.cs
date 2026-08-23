@@ -116,6 +116,18 @@ public partial class App : Application
         window.Show();
     }
 
+    /// <summary>Builds a data-driven palette entry for one specific Uncrop fill mode.</summary>
+    private static IToolDefinition UncropModeTool(
+        IServiceProvider sp, EditorTool tool, UncropFillMode fillMode, int order,
+        string iconResourceKey, string displayName, string toolTip)
+        => new UncropModeToolDefinition(
+            tool, fillMode, displayName, order, iconResourceKey, toolTip,
+            sp.GetRequiredService<IUncropFillService>(),
+            sp.GetRequiredService<IDialogService>(),
+            sp.GetRequiredService<IImageLoaderService>(),
+            sp.GetRequiredService<IImageExportService>(),
+            sp.GetRequiredService<IFileLogService>());
+
     /// <summary>Builds a data-driven palette entry for a background-removal strategy.</summary>
     private static IToolDefinition StrategyTool(
         IServiceProvider sp, StrategyKind strategy, int order, string iconResourceKey,
@@ -212,9 +224,17 @@ public partial class App : Application
             var exporter = sp.GetRequiredService<IImageExportService>();
             var fill = sp.GetRequiredService<IUncropFillService>();
             var log = sp.GetRequiredService<IFileLogService>();
-            return new ToolDefinition(EditorTool.Uncrop, "Uncrop / Expand", "Transform", 4, "UncropIcon", "Uncrop / Expand (U)",
+            return new ToolDefinition(EditorTool.Uncrop, "Uncrop / Expand", "Uncrop", 0, "UncropIcon", "Uncrop / Expand (U)",
                 (shell, doc) => new UncropToolSessionViewModel(shell, doc, fill, dialogs, loader, exporter, log), shortcut: 'U');
         });
+        services.AddSingleton<IToolDefinition>(sp => UncropModeTool(sp, EditorTool.UncropMirror, UncropFillMode.Mirror, 1, "UncropMirrorIcon", "Uncrop Mirror", "Uncrop with a mirror/reflection fill"));
+        services.AddSingleton<IToolDefinition>(sp => UncropModeTool(sp, EditorTool.UncropInpaint, UncropFillMode.Inpaint, 2, "UncropInpaintIcon", "Uncrop Inpaint", "Uncrop with a content-aware inpainting fill"));
+        services.AddSingleton<IToolDefinition>(sp => UncropModeTool(sp, EditorTool.UncropSolidColor, UncropFillMode.SolidColor, 3, "UncropSolidColorIcon", "Uncrop Solid Color", "Uncrop with a solid color fill"));
+        services.AddSingleton<IToolDefinition>(sp => UncropModeTool(sp, EditorTool.UncropReplicate, UncropFillMode.Replicate, 4, "UncropReplicateIcon", "Uncrop Edge Stretch", "Uncrop with an edge-stretch (replicate) fill"));
+        services.AddSingleton<IToolDefinition>(sp => UncropModeTool(sp, EditorTool.UncropWrap, UncropFillMode.Wrap, 5, "UncropWrapIcon", "Uncrop Tile / Wrap", "Uncrop with a tile / wrap fill"));
+        services.AddSingleton<IToolDefinition>(sp => UncropModeTool(sp, EditorTool.UncropZoomBlur, UncropFillMode.ZoomBlur, 6, "UncropZoomBlurIcon", "Uncrop Zoom & Blur", "Uncrop with a zoom & blur background fill"));
+        services.AddSingleton<IToolDefinition>(sp => UncropModeTool(sp, EditorTool.UncropEdgeGradient, UncropFillMode.EdgeGradient, 7, "UncropEdgeGradientIcon", "Uncrop Edge Gradient", "Uncrop with an edge-gradient fill"));
+        services.AddSingleton<IToolDefinition>(sp => UncropModeTool(sp, EditorTool.UncropPatchSynthesis, UncropFillMode.PatchSynthesis, 8, "UncropPatchSynthesisIcon", "Uncrop Patch Synthesis", "Uncrop with patch texture synthesis fill"));
         services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Retouch, "Retouch & Brush", "Paint & Retouch", 0, "RetouchIcon", "Retouch & Brush (B)", (shell, doc) => new RetouchToolSessionViewModel(shell, doc), shortcut: 'B'));
         services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Heal, "Heal", "Paint & Retouch", 1, "HealIcon", "Heal (H)", (shell, doc) => new HealToolSessionViewModel(shell, doc), shortcut: 'H'));
         services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Liquify, "Liquify", "Paint & Retouch", 2, "LiquifyIcon", "Liquify (J)", (shell, doc) => new LiquifyToolSessionViewModel(shell, doc), shortcut: 'J'));

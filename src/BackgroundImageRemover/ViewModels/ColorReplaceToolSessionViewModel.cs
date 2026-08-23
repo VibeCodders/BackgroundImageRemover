@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
 using WpfColor = System.Windows.Media.Color;
+using WpfPoint = System.Windows.Point;
 
 namespace BackgroundImageRemover.ViewModels;
 
@@ -53,6 +54,21 @@ public partial class ColorReplaceToolSessionViewModel : PreviewToolSessionViewMo
     protected override Mat ApplyEffect(Mat bgr)
         => ColorReplaceService.Apply(bgr, TargetColor.ToVec3b(), ReplacementColor.ToVec3b(),
             Tolerance, Softness, PreserveLuminance);
+
+    /// <summary>Sets the target color from a click on the preview image.</summary>
+    public void OnImageClicked(WpfPoint imagePoint)
+    {
+        if (_sourceImage is null)
+        {
+            return;
+        }
+
+        int x = (int)Math.Round(imagePoint.X);
+        int y = (int)Math.Round(imagePoint.Y);
+        Vec3b bgr = ColorPickerService.Sample(_sourceImage.FullBgr, x, y);
+        TargetColor = WpfColor.FromRgb(bgr[2], bgr[1], bgr[0]);
+        StatusMessage = $"Target color sampled at ({x}, {y}).";
+    }
 
     [RelayCommand]
     private void Reset()

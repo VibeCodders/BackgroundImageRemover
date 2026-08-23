@@ -5,6 +5,7 @@ public enum InteractionMode
 {
     None,
     DrawRect,
+    EditRect,
     ScribbleForeground,
     ScribbleBackground,
     EraseForeground,

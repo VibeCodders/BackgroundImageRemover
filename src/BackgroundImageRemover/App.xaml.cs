@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Autosave;
 using BackgroundImageRemover.Services.Batch;
 using BackgroundImageRemover.Services.Dialogs;
@@ -15,7 +16,6 @@ using BackgroundImageRemover.Services.Settings;
 using BackgroundImageRemover.Services.Strategies;
 using BackgroundImageRemover.ViewModels;
 using BackgroundImageRemover.ViewModels.Tools;
-using BackgroundImageRemover.ViewModels.Tools.Definitions;
 using BackgroundImageRemover.Views;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -106,6 +106,20 @@ public partial class App : Application
         window.Show();
     }
 
+    /// <summary>Builds a data-driven palette entry for a background-removal strategy.</summary>
+    private static IToolDefinition StrategyTool(
+        IServiceProvider sp, StrategyKind strategy, int order, string iconResourceKey,
+        string displayName, string toolTip)
+        => new StrategyToolDefinition(
+            strategy, order, iconResourceKey, displayName, toolTip,
+            sp.GetRequiredService<IDownscaleService>(),
+            sp.GetRequiredService<IDialogService>(),
+            sp.GetRequiredService<IFileLogService>(),
+            sp.GetServices<IBackgroundRemovalStrategy>(),
+            sp.GetRequiredService<OnnxStrategy>(),
+            sp.GetRequiredService<GrabCutStrategy>(),
+            sp.GetRequiredService<SamStrategy>());
+
     private static void ConfigureServices(ServiceCollection services)
     {
         services.AddHttpClient<IModelCacheService, ModelCacheService>();
@@ -142,55 +156,90 @@ public partial class App : Application
         services.AddSingleton<EdgeContourStrategy>();
         services.AddSingleton<IBackgroundRemovalStrategy>(sp => sp.GetRequiredService<EdgeContourStrategy>());
 
-        // Tool palette: one independent IToolDefinition per tool/strategy. Adding a tool means
-        // adding one class under ViewModels/Tools/Definitions and one line here -- both the
+        // Tool palette: one IToolDefinition per tool/strategy, registered data-driven from palette
+        // metadata + session factories (see ToolDefinition / StrategyToolDefinition). Both the
         // palette (StrategyToolbar) and the tab-opening dispatch (ShellViewModel.OpenToolSession)
-        // are built purely from this registered set.
-        services.AddSingleton<IToolDefinition, RemoveBackgroundToolDefinition>();
-        services.AddSingleton<IToolDefinition, OnnxToolDefinition>();
-        services.AddSingleton<IToolDefinition, SamToolDefinition>();
-        services.AddSingleton<IToolDefinition, GrabCutToolDefinition>();
-        services.AddSingleton<IToolDefinition, ChromaKeyToolDefinition>();
-        services.AddSingleton<IToolDefinition, MagicWandToolDefinition>();
-        services.AddSingleton<IToolDefinition, FloodFillToolDefinition>();
-        services.AddSingleton<IToolDefinition, KMeansToolDefinition>();
-        services.AddSingleton<IToolDefinition, OtsuToolDefinition>();
-        services.AddSingleton<IToolDefinition, InpaintToolDefinition>();
-        services.AddSingleton<IToolDefinition, EdgeContourToolDefinition>();
-        services.AddSingleton<IToolDefinition, UncropToolDefinition>();
-        services.AddSingleton<IToolDefinition, RetouchToolDefinition>();
-        services.AddSingleton<IToolDefinition, HealToolDefinition>();
-        services.AddSingleton<IToolDefinition, LiquifyToolDefinition>();
-        services.AddSingleton<IToolDefinition, MosaicToolDefinition>();
-        services.AddSingleton<IToolDefinition, CropToolDefinition>();
-        services.AddSingleton<IToolDefinition, LassoSelectToolDefinition>();
-        services.AddSingleton<IToolDefinition, TransformToolDefinition>();
-        services.AddSingleton<IToolDefinition, ResizeToolDefinition>();
-        services.AddSingleton<IToolDefinition, RotateToolDefinition>();
-        services.AddSingleton<IToolDefinition, PerspectiveToolDefinition>();
-        services.AddSingleton<IToolDefinition, AdjustmentsToolDefinition>();
-        services.AddSingleton<IToolDefinition, LevelsToolDefinition>();
-        services.AddSingleton<IToolDefinition, ColorPickerToolDefinition>();
-        services.AddSingleton<IToolDefinition, BlurToolDefinition>();
-        services.AddSingleton<IToolDefinition, SharpenToolDefinition>();
-        services.AddSingleton<IToolDefinition, VignetteToolDefinition>();
-        services.AddSingleton<IToolDefinition, FiltersToolDefinition>();
-        services.AddSingleton<IToolDefinition, FxToolDefinition>();
-        services.AddSingleton<IToolDefinition, TiltShiftToolDefinition>();
-        services.AddSingleton<IToolDefinition, ComposeToolDefinition>();
-        services.AddSingleton<IToolDefinition, OverlayToolDefinition>();
-        services.AddSingleton<IToolDefinition, FrameToolDefinition>();
-        services.AddSingleton<IToolDefinition, TextToolDefinition>();
-        services.AddSingleton<IToolDefinition, EmojiToolDefinition>();
-        services.AddSingleton<IToolDefinition, NoiseToolDefinition>();
-        services.AddSingleton<IToolDefinition, DodgeBurnToolDefinition>();
-        services.AddSingleton<IToolDefinition, HueSatToolDefinition>();
-        services.AddSingleton<IToolDefinition, CloneStampToolDefinition>();
-        services.AddSingleton<IToolDefinition, RedEyeToolDefinition>();
-        services.AddSingleton<IToolDefinition, ShapeToolDefinition>();
-        services.AddSingleton<IToolDefinition, GradientToolDefinition>();
-        services.AddSingleton<IToolDefinition, ColorReplaceToolDefinition>();
-        services.AddSingleton<IToolDefinition, DuotoneToolDefinition>();
+        // are built purely from this registered set -- adding a tool is one factory registration.
+        services.AddSingleton<IToolDefinition>(sp =>
+        {
+            var downscaler = sp.GetRequiredService<IDownscaleService>();
+            var dialogs = sp.GetRequiredService<IDialogService>();
+            var log = sp.GetRequiredService<IFileLogService>();
+            var strategies = sp.GetServices<IBackgroundRemovalStrategy>();
+            var onnx = sp.GetRequiredService<OnnxStrategy>();
+            var grabCut = sp.GetRequiredService<GrabCutStrategy>();
+            var sam = sp.GetRequiredService<SamStrategy>();
+            return new ToolDefinition(EditorTool.RemoveBackground, "Remove Background", "Background Removal", -1, "ChromaKeyIcon", "Remove Background",
+                (shell, doc) => new BackgroundRemoverToolSessionViewModel(shell, doc, downscaler, dialogs, log, strategies, onnx, grabCut, sam, StrategyKind.ChromaKey),
+                showInPalette: false);
+        });
+        services.AddSingleton<IToolDefinition>(sp => StrategyTool(sp, StrategyKind.Onnx, 0, "OnnxIcon", "AI Background Removal", "AI Background Removal (ONNX)"));
+        services.AddSingleton<IToolDefinition>(sp => StrategyTool(sp, StrategyKind.Sam, 1, "SamIcon", "Segment Anything", "Segment Anything (click to select)"));
+        services.AddSingleton<IToolDefinition>(sp => StrategyTool(sp, StrategyKind.GrabCut, 2, "GrabCutIcon", "GrabCut", "GrabCut (rectangle + scribbles)"));
+        services.AddSingleton<IToolDefinition>(sp => StrategyTool(sp, StrategyKind.ChromaKey, 3, "ChromaKeyIcon", "Chroma Key", "Chroma Key (solid color backdrop)"));
+        services.AddSingleton<IToolDefinition>(sp => StrategyTool(sp, StrategyKind.MagicWand, 4, "MagicWandIcon", "Magic Wand", "Magic Wand (click background)"));
+        services.AddSingleton<IToolDefinition>(sp => StrategyTool(sp, StrategyKind.FloodFill, 5, "FloodFillIcon", "Flood Fill", "Flood Fill (from border)"));
+        services.AddSingleton<IToolDefinition>(sp => StrategyTool(sp, StrategyKind.KMeans, 6, "KMeansIcon", "K-Means", "K-Means (multi-color backdrop)"));
+        services.AddSingleton<IToolDefinition>(sp => StrategyTool(sp, StrategyKind.Otsu, 7, "OtsuIcon", "Otsu Threshold", "Otsu Threshold (high contrast)"));
+        services.AddSingleton<IToolDefinition>(sp => StrategyTool(sp, StrategyKind.Inpaint, 8, "InpaintIcon", "Inpaint", "Inpaint (flood + fill background)"));
+        services.AddSingleton<IToolDefinition>(sp => StrategyTool(sp, StrategyKind.EdgeContour, 9, "EdgeContourIcon", "Edge / Contour", "Edge / Contour (Canny outline + largest region)"));
+        services.AddSingleton<IToolDefinition>(sp =>
+        {
+            var dialogs = sp.GetRequiredService<IDialogService>();
+            var loader = sp.GetRequiredService<IImageLoaderService>();
+            var exporter = sp.GetRequiredService<IImageExportService>();
+            var fill = sp.GetRequiredService<IUncropFillService>();
+            var log = sp.GetRequiredService<IFileLogService>();
+            return new ToolDefinition(EditorTool.Uncrop, "Uncrop / Expand", "Transform", 4, "UncropIcon", "Uncrop / Expand (U)",
+                (shell, doc) => new UncropToolSessionViewModel(shell, doc, fill, dialogs, loader, exporter, log), shortcut: 'U');
+        });
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Retouch, "Retouch & Brush", "Paint & Retouch", 0, "RetouchIcon", "Retouch & Brush (B)", (shell, doc) => new RetouchToolSessionViewModel(shell, doc), shortcut: 'B'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Heal, "Heal", "Paint & Retouch", 1, "HealIcon", "Heal (H)", (shell, doc) => new HealToolSessionViewModel(shell, doc), shortcut: 'H'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Liquify, "Liquify", "Paint & Retouch", 2, "LiquifyIcon", "Liquify (J)", (shell, doc) => new LiquifyToolSessionViewModel(shell, doc), shortcut: 'J'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Mosaic, "Mosaic", "Paint & Retouch", 3, "MosaicIcon", "Mosaic (M)", (shell, doc) => new MosaicToolSessionViewModel(shell, doc), shortcut: 'M'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.CloneStamp, "Clone Stamp", "Paint & Retouch", 7, "CloneStampIcon", "Clone Stamp (S)", (shell, doc) => new CloneStampToolSessionViewModel(shell, doc), shortcut: 'S'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.ColorReplace, "Color Replace", "Paint & Retouch", 12, "ColorReplaceIcon", "Replace a target color with another color", (shell, doc) => new ColorReplaceToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Crop, "Crop", "Selection", 0, "CropIcon", "Crop (E)", (shell, doc) => new CropToolSessionViewModel(shell, doc), shortcut: 'E'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.LassoSelect, "Lasso Select", "Selection", 1, "LassoIcon", "Lasso Select (freehand outline)", (shell, doc) => new LassoSelectToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Transform, "Transform", "Transform", 0, "TransformIcon", "Transform (T)", (shell, doc) => new TransformToolSessionViewModel(shell, doc), shortcut: 'T'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Resize, "Resize", "Transform", 1, "ResizeIcon", "Resize (S)", (shell, doc) => new ResizeToolSessionViewModel(shell, doc), shortcut: 'S'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Rotate, "Rotate", "Transform", 2, "RotateIcon", "Rotate", (shell, doc) => new RotateToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Perspective, "Perspective", "Transform", 3, "PerspectiveIcon", "Perspective (P)", (shell, doc) => new PerspectiveToolSessionViewModel(shell, doc), shortcut: 'P'));
+        services.AddSingleton<IToolDefinition>(sp => new ToolDefinition(EditorTool.Adjustments, "Adjustments", "Color & Adjust", 0, "AdjustmentsIcon", "Adjustments (A)",
+            (shell, doc) => new AdjustmentsToolSessionViewModel(shell, doc, sp.GetRequiredService<IFileLogService>()), shortcut: 'A'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Levels, "Levels", "Color & Adjust", 1, "LevelsIcon", "Levels (L)", (shell, doc) => new LevelsToolSessionViewModel(shell, doc), shortcut: 'L'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.ColorPicker, "Color Picker", "Color & Adjust", 2, "ColorPickerIcon", "Color Picker (Q)", (shell, doc) => new ColorPickerToolSessionViewModel(shell, doc), shortcut: 'Q'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Blur, "Blur", "Color & Adjust", 3, "BlurIcon", "Blur (W)", (shell, doc) => new BlurToolSessionViewModel(shell, doc), shortcut: 'W'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Sharpen, "Sharpen", "Color & Adjust", 4, "SharpenIcon", "Sharpen (Z)", (shell, doc) => new SharpenToolSessionViewModel(shell, doc), shortcut: 'Z'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Vignette, "Vignette", "Color & Adjust", 5, "VignetteIcon", "Vignette (V)", (shell, doc) => new VignetteToolSessionViewModel(shell, doc), shortcut: 'V'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Noise, "Noise", "Color & Adjust", 4, "NoiseIcon", "Add noise (N)", (shell, doc) => new NoiseToolSessionViewModel(shell, doc), shortcut: 'N'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.DodgeBurn, "Dodge / Burn", "Color & Adjust", 5, "DodgeBurnIcon", "Dodge and Burn (B)", (shell, doc) => new DodgeBurnToolSessionViewModel(shell, doc), shortcut: 'B'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.HueSat, "Hue / Sat", "Color & Adjust", 6, "HueSatIcon", "Hue and Saturation (H)", (shell, doc) => new HueSatToolSessionViewModel(shell, doc), shortcut: 'H'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Duotone, "Duotone", "Color & Adjust", 6, "DuotoneIcon", "Map brightness to a two-color palette", (shell, doc) => new DuotoneToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Filters, "Filters", "Filters & FX", 0, "FiltersIcon", "Filters (F)", (shell, doc) => new FiltersToolSessionViewModel(shell, doc), shortcut: 'F'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Fx, "FX", "Filters & FX", 1, "FxIcon", "FX (K)", (shell, doc) => new FxToolSessionViewModel(shell, doc), shortcut: 'K'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.TiltShift, "Tilt-Shift", "Filters & FX", 2, "TiltShiftIcon", "Tilt-Shift (I)", (shell, doc) => new TiltShiftToolSessionViewModel(shell, doc), shortcut: 'I'));
+        services.AddSingleton<IToolDefinition>(sp =>
+        {
+            var dialogs = sp.GetRequiredService<IDialogService>();
+            var loader = sp.GetRequiredService<IImageLoaderService>();
+            return new ToolDefinition(EditorTool.Compose, "Compose", "Composite", 0, "ComposeIcon", "Compose (C)",
+                (shell, doc) => new ComposeToolSessionViewModel(shell, doc, dialogs, loader), shortcut: 'C');
+        });
+        services.AddSingleton<IToolDefinition>(sp =>
+        {
+            var dialogs = sp.GetRequiredService<IDialogService>();
+            var loader = sp.GetRequiredService<IImageLoaderService>();
+            return new ToolDefinition(EditorTool.Overlay, "Overlay", "Composite", 1, "OverlayIcon", "Overlay (O)",
+                (shell, doc) => new OverlayToolSessionViewModel(shell, doc, dialogs, loader), shortcut: 'O');
+        });
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Frame, "Frame", "Composite", 2, "FrameIcon", "Frame (G)", (shell, doc) => new FrameToolSessionViewModel(shell, doc), shortcut: 'G'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Text, "Text", "Text & Decor", 0, "TextIcon", "Text (X)", (shell, doc) => new TextToolSessionViewModel(shell, doc), shortcut: 'X'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Emoji, "Emoji", "Text & Decor", 1, "EmojiIcon", "Emoji (Y)", (shell, doc) => new EmojiToolSessionViewModel(shell, doc), shortcut: 'Y'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.RedEye, "Red Eye", "Retouch", 8, "RedEyeIcon", "Remove red eyes (R)", (shell, doc) => new RedEyeToolSessionViewModel(shell, doc), shortcut: 'R'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Shape, "Shape", "Drawing", 2, "ShapeIcon", "Draw a rectangle, ellipse, line or arrow", (shell, doc) => new ShapeToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Gradient, "Gradient", "Drawing", 1, "GradientIcon", "Overlay a linear or radial gradient", (shell, doc) => new GradientToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Pen, "Pen", "Drawing", 3, "PenIcon", "Draw freehand with a brush/pen", (shell, doc) => new PenToolSessionViewModel(shell, doc)));
 
         services.AddTransient<DocumentViewModel>();
         services.AddSingleton<Func<DocumentViewModel>>(sp => sp.GetRequiredService<DocumentViewModel>);

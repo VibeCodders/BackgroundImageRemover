@@ -49,6 +49,18 @@
                 <Rectangle x:Name="SelectionRectangle"
                            Stroke="DodgerBlue" StrokeThickness="2" StrokeDashArray="4 2"
                            Fill="#220096FF" Visibility="Collapsed" />
+                <Rectangle x:Name="EditHandleTL" Width="10" Height="10" Fill="White" Stroke="DodgerBlue" StrokeThickness="1.5"
+                           Visibility="Collapsed" IsHitTestVisible="False" />
+                <Rectangle x:Name="EditHandleTR" Width="10" Height="10" Fill="White" Stroke="DodgerBlue" StrokeThickness="1.5"
+                           Visibility="Collapsed" IsHitTestVisible="False" />
+                <Rectangle x:Name="EditHandleBL" Width="10" Height="10" Fill="White" Stroke="DodgerBlue" StrokeThickness="1.5"
+                           Visibility="Collapsed" IsHitTestVisible="False" />
+                <Rectangle x:Name="EditHandleBR" Width="10" Height="10" Fill="White" Stroke="DodgerBlue" StrokeThickness="1.5"
+                           Visibility="Collapsed" IsHitTestVisible="False" />
+                <Line x:Name="EditRotateLine" Stroke="DodgerBlue" StrokeThickness="1" StrokeDashArray="2 2"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" Visibility="Collapsed" IsHitTestVisible="False" />
+                <Ellipse x:Name="EditRotateHandle" Width="12" Height="12" Fill="White" Stroke="DodgerBlue" StrokeThickness="1.5"
+                         Visibility="Collapsed" IsHitTestVisible="False" />
                 <Ellipse x:Name="SamPointMarker" Width="14" Height="14" Fill="Yellow" Stroke="Black" StrokeThickness="1.5"
                          Visibility="Collapsed" IsHitTestVisible="False" />
                 <Ellipse x:Name="WandPointMarker" Width="12" Height="12" Fill="#33FF7F50" Stroke="Orange" StrokeThickness="1.5"

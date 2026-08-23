@@ -51,6 +51,29 @@ public static class CoordinateMapper
         return new Rect(topLeft, bottomRight);
     }
 
+    /// <summary>Inverse of <see cref="ControlPointToImagePixel"/>: maps an image-pixel point to its position
+    /// on the control, accounting for letterboxing. Ignores any additional zoom/pan transform (consistent
+    /// with the other <see cref="ImagePreviewControl"/> mappings).</summary>
+    public static Point ImagePixelToControlPoint(Point imagePoint, double controlWidth, double controlHeight, int bitmapPixelWidth, int bitmapPixelHeight)
+    {
+        var content = ImageControlContentRect(controlWidth, controlHeight, bitmapPixelWidth, bitmapPixelHeight);
+        if (content.Width <= 0 || content.Height <= 0 || bitmapPixelWidth <= 0 || bitmapPixelHeight <= 0)
+        {
+            return new Point(0, 0);
+        }
+
+        double scale = content.Width / bitmapPixelWidth;
+        return new Point(content.X + imagePoint.X * scale, content.Y + imagePoint.Y * scale);
+    }
+
+    /// <summary>Maps an image-pixel rectangle to a control-space <see cref="Rect"/> (letterbox-aware).</summary>
+    public static Rect ImageRectToControlRect(OpenCvSharp.Rect imageRect, double controlWidth, double controlHeight, int bitmapPixelWidth, int bitmapPixelHeight)
+    {
+        var topLeft = ImagePixelToControlPoint(new Point(imageRect.X, imageRect.Y), controlWidth, controlHeight, bitmapPixelWidth, bitmapPixelHeight);
+        var bottomRight = ImagePixelToControlPoint(new Point(imageRect.X + imageRect.Width, imageRect.Y + imageRect.Height), controlWidth, controlHeight, bitmapPixelWidth, bitmapPixelHeight);
+        return new Rect(topLeft, bottomRight);
+    }
+
     public static OpenCvSharp.Rect ToCvRect(this Rect rect)
     {
         int x = (int)Math.Round(rect.X);

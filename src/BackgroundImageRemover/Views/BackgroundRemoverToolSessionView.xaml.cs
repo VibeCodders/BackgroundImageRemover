@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using BackgroundImageRemover.Helpers;
+using BackgroundImageRemover.Models;
 using BackgroundImageRemover.ViewModels;
 
 namespace BackgroundImageRemover.Views;
@@ -42,6 +43,20 @@ public partial class BackgroundRemoverToolSessionView : UserControl
     }
 
     private void OriginalPreview_RectSelected(object? sender, OpenCvSharp.Rect e)
+    {
+        if (ViewModel is null) return;
+        ViewModel.GrabCut.SelectedRect = e;
+
+        // After the first rectangle is drawn, switch to EditRect so the user can
+        // move/resize the rect with corner handles instead of redrawing.
+        if (ViewModel.OriginalMode == InteractionMode.DrawRect)
+        {
+            ViewModel.OriginalMode = InteractionMode.EditRect;
+            OriginalPreview.SetEditRect(e.X, e.Y, e.Width, e.Height);
+        }
+    }
+
+    private void OriginalPreview_EditRectSelected(object? sender, OpenCvSharp.Rect e)
     {
         if (ViewModel is not null) ViewModel.GrabCut.SelectedRect = e;
     }

@@ -144,6 +144,9 @@
         <DataTemplate DataType="{x:Type vm:DuotoneToolSessionViewModel}">
             <views:DuotoneToolSessionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PenToolSessionViewModel}">
+            <views:PenToolSessionView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">

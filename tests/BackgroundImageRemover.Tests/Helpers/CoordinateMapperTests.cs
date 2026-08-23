@@ -69,4 +69,25 @@ public class CoordinateMapperTests
         Assert.True(rect.Width >= 1);
         Assert.True(rect.Height >= 1);
     }
+
+    [Fact]
+    public void ImagePixelToControlPoint_RoundTripsWithControlPointToImagePixel()
+    {
+        var control = CoordinateMapper.ImagePixelToControlPoint(new Point(25, 75), 400, 200, 100, 100);
+        var pixel = CoordinateMapper.ControlPointToImagePixel(control, 400, 200, 100, 100);
+
+        Assert.Equal(25, pixel.X, precision: 3);
+        Assert.Equal(75, pixel.Y, precision: 3);
+    }
+
+    [Fact]
+    public void ImageRectToControlRect_MatchesImageControlContentRect()
+    {
+        var ctl = CoordinateMapper.ImageRectToControlRect(new OpenCvSharp.Rect(0, 0, 100, 100), 400, 200, 100, 100);
+
+        Assert.Equal(100, ctl.X, precision: 3);
+        Assert.Equal(0, ctl.Y, precision: 3);
+        Assert.Equal(200, ctl.Width, precision: 3);
+        Assert.Equal(200, ctl.Height, precision: 3);
+    }
 }

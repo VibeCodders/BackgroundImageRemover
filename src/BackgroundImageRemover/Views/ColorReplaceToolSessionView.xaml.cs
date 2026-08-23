@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.ViewModels;
 
 namespace BackgroundImageRemover.Views;
@@ -22,5 +24,24 @@ public partial class ColorReplaceToolSessionView : UserControl
     private void ChooseReplacementColorButton_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel is { } vm) vm.IsReplacementColorPickerOpen = !vm.IsReplacementColorPickerOpen;
+    }
+
+    private void Preview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (ViewModel is not { } vm || Preview.ImageSource is null)
+        {
+            return;
+        }
+
+        var controlPoint = e.GetPosition(Preview);
+        var imagePoint = CoordinateMapper.ControlPointToImagePixel(
+            controlPoint,
+            Preview.ActualWidth, Preview.ActualHeight,
+            Preview.ImageSource.PixelWidth, Preview.ImageSource.PixelHeight);
+
+        if (imagePoint is { } p)
+        {
+            vm.OnImageClicked(p);
+        }
     }
 }

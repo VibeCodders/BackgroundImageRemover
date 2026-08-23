@@ -12,7 +12,6 @@ using BackgroundImageRemover.Services.Settings;
 using BackgroundImageRemover.Services.Strategies;
 using CommunityToolkit.Mvvm.ComponentModel;
 using BackgroundImageRemover.ViewModels.Tools;
-using BackgroundImageRemover.ViewModels.Tools.Definitions;
 
 namespace BackgroundImageRemover.ViewModels;
 
@@ -95,46 +94,60 @@ public partial class ShellViewModel : ObservableObject
         GrabCutStrategy grabCutStrategy, SamStrategy samStrategy, IUncropFillService uncropFillService,
         IImageLoaderService imageLoader, IImageExportService imageExporter)
     {
-        yield return new RemoveBackgroundToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new OnnxToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new SamToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new GrabCutToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new ChromaKeyToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new MagicWandToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new FloodFillToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new KMeansToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new OtsuToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new InpaintToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new EdgeContourToolDefinition(downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
-        yield return new UncropToolDefinition(uncropFillService, dialogs, imageLoader, imageExporter, log);
-        yield return new RetouchToolDefinition();
-        yield return new HealToolDefinition();
-        yield return new LiquifyToolDefinition();
-        yield return new MosaicToolDefinition();
-        yield return new CropToolDefinition();
-        yield return new LassoSelectToolDefinition();
-        yield return new TransformToolDefinition();
-        yield return new ResizeToolDefinition();
-        yield return new RotateToolDefinition();
-        yield return new PerspectiveToolDefinition();
-        yield return new AdjustmentsToolDefinition(log);
-        yield return new LevelsToolDefinition();
-        yield return new ColorPickerToolDefinition();
-        yield return new BlurToolDefinition();
-        yield return new SharpenToolDefinition();
-        yield return new VignetteToolDefinition();
-        yield return new FiltersToolDefinition();
-        yield return new FxToolDefinition();
-        yield return new TiltShiftToolDefinition();
-        yield return new ComposeToolDefinition(dialogs, imageLoader);
-        yield return new OverlayToolDefinition(dialogs, imageLoader);
-        yield return new FrameToolDefinition();
-        yield return new TextToolDefinition();
-        yield return new EmojiToolDefinition();
-        yield return new ShapeToolDefinition();
-        yield return new GradientToolDefinition();
-        yield return new ColorReplaceToolDefinition();
-        yield return new DuotoneToolDefinition();
+        // Data-driven set mirroring the DI registrations in App.xaml.cs. Order matters: the
+        // palette sort (category + Order) is stable, so ties keep this registration order.
+        yield return new ToolDefinition(EditorTool.RemoveBackground, "Remove Background", "Background Removal", -1, "ChromaKeyIcon", "Remove Background",
+            (shell, doc) => new BackgroundRemoverToolSessionViewModel(shell, doc, downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy, StrategyKind.ChromaKey),
+            showInPalette: false);
+        yield return new StrategyToolDefinition(StrategyKind.Onnx, 0, "OnnxIcon", "AI Background Removal", "AI Background Removal (ONNX)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new StrategyToolDefinition(StrategyKind.Sam, 1, "SamIcon", "Segment Anything", "Segment Anything (click to select)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new StrategyToolDefinition(StrategyKind.GrabCut, 2, "GrabCutIcon", "GrabCut", "GrabCut (rectangle + scribbles)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new StrategyToolDefinition(StrategyKind.ChromaKey, 3, "ChromaKeyIcon", "Chroma Key", "Chroma Key (solid color backdrop)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new StrategyToolDefinition(StrategyKind.MagicWand, 4, "MagicWandIcon", "Magic Wand", "Magic Wand (click background)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new StrategyToolDefinition(StrategyKind.FloodFill, 5, "FloodFillIcon", "Flood Fill", "Flood Fill (from border)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new StrategyToolDefinition(StrategyKind.KMeans, 6, "KMeansIcon", "K-Means", "K-Means (multi-color backdrop)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new StrategyToolDefinition(StrategyKind.Otsu, 7, "OtsuIcon", "Otsu Threshold", "Otsu Threshold (high contrast)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new StrategyToolDefinition(StrategyKind.Inpaint, 8, "InpaintIcon", "Inpaint", "Inpaint (flood + fill background)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new StrategyToolDefinition(StrategyKind.EdgeContour, 9, "EdgeContourIcon", "Edge / Contour", "Edge / Contour (Canny outline + largest region)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
+        yield return new ToolDefinition(EditorTool.Uncrop, "Uncrop / Expand", "Transform", 4, "UncropIcon", "Uncrop / Expand (U)",
+            (shell, doc) => new UncropToolSessionViewModel(shell, doc, uncropFillService, dialogs, imageLoader, imageExporter, log), shortcut: 'U');
+        yield return new ToolDefinition(EditorTool.Retouch, "Retouch & Brush", "Paint & Retouch", 0, "RetouchIcon", "Retouch & Brush (B)", (shell, doc) => new RetouchToolSessionViewModel(shell, doc), shortcut: 'B');
+        yield return new ToolDefinition(EditorTool.Heal, "Heal", "Paint & Retouch", 1, "HealIcon", "Heal (H)", (shell, doc) => new HealToolSessionViewModel(shell, doc), shortcut: 'H');
+        yield return new ToolDefinition(EditorTool.Liquify, "Liquify", "Paint & Retouch", 2, "LiquifyIcon", "Liquify (J)", (shell, doc) => new LiquifyToolSessionViewModel(shell, doc), shortcut: 'J');
+        yield return new ToolDefinition(EditorTool.Mosaic, "Mosaic", "Paint & Retouch", 3, "MosaicIcon", "Mosaic (M)", (shell, doc) => new MosaicToolSessionViewModel(shell, doc), shortcut: 'M');
+        yield return new ToolDefinition(EditorTool.CloneStamp, "Clone Stamp", "Paint & Retouch", 7, "CloneStampIcon", "Clone Stamp (S)", (shell, doc) => new CloneStampToolSessionViewModel(shell, doc), shortcut: 'S');
+        yield return new ToolDefinition(EditorTool.ColorReplace, "Color Replace", "Paint & Retouch", 12, "ColorReplaceIcon", "Replace a target color with another color", (shell, doc) => new ColorReplaceToolSessionViewModel(shell, doc));
+        yield return new ToolDefinition(EditorTool.Crop, "Crop", "Selection", 0, "CropIcon", "Crop (E)", (shell, doc) => new CropToolSessionViewModel(shell, doc), shortcut: 'E');
+        yield return new ToolDefinition(EditorTool.LassoSelect, "Lasso Select", "Selection", 1, "LassoIcon", "Lasso Select (freehand outline)", (shell, doc) => new LassoSelectToolSessionViewModel(shell, doc));
+        yield return new ToolDefinition(EditorTool.Transform, "Transform", "Transform", 0, "TransformIcon", "Transform (T)", (shell, doc) => new TransformToolSessionViewModel(shell, doc), shortcut: 'T');
+        yield return new ToolDefinition(EditorTool.Resize, "Resize", "Transform", 1, "ResizeIcon", "Resize (S)", (shell, doc) => new ResizeToolSessionViewModel(shell, doc), shortcut: 'S');
+        yield return new ToolDefinition(EditorTool.Rotate, "Rotate", "Transform", 2, "RotateIcon", "Rotate", (shell, doc) => new RotateToolSessionViewModel(shell, doc));
+        yield return new ToolDefinition(EditorTool.Perspective, "Perspective", "Transform", 3, "PerspectiveIcon", "Perspective (P)", (shell, doc) => new PerspectiveToolSessionViewModel(shell, doc), shortcut: 'P');
+        yield return new ToolDefinition(EditorTool.Adjustments, "Adjustments", "Color & Adjust", 0, "AdjustmentsIcon", "Adjustments (A)",
+            (shell, doc) => new AdjustmentsToolSessionViewModel(shell, doc, log), shortcut: 'A');
+        yield return new ToolDefinition(EditorTool.Levels, "Levels", "Color & Adjust", 1, "LevelsIcon", "Levels (L)", (shell, doc) => new LevelsToolSessionViewModel(shell, doc), shortcut: 'L');
+        yield return new ToolDefinition(EditorTool.ColorPicker, "Color Picker", "Color & Adjust", 2, "ColorPickerIcon", "Color Picker (Q)", (shell, doc) => new ColorPickerToolSessionViewModel(shell, doc), shortcut: 'Q');
+        yield return new ToolDefinition(EditorTool.Blur, "Blur", "Color & Adjust", 3, "BlurIcon", "Blur (W)", (shell, doc) => new BlurToolSessionViewModel(shell, doc), shortcut: 'W');
+        yield return new ToolDefinition(EditorTool.Sharpen, "Sharpen", "Color & Adjust", 4, "SharpenIcon", "Sharpen (Z)", (shell, doc) => new SharpenToolSessionViewModel(shell, doc), shortcut: 'Z');
+        yield return new ToolDefinition(EditorTool.Vignette, "Vignette", "Color & Adjust", 5, "VignetteIcon", "Vignette (V)", (shell, doc) => new VignetteToolSessionViewModel(shell, doc), shortcut: 'V');
+        yield return new ToolDefinition(EditorTool.Noise, "Noise", "Color & Adjust", 4, "NoiseIcon", "Add noise (N)", (shell, doc) => new NoiseToolSessionViewModel(shell, doc), shortcut: 'N');
+        yield return new ToolDefinition(EditorTool.DodgeBurn, "Dodge / Burn", "Color & Adjust", 5, "DodgeBurnIcon", "Dodge and Burn (B)", (shell, doc) => new DodgeBurnToolSessionViewModel(shell, doc), shortcut: 'B');
+        yield return new ToolDefinition(EditorTool.HueSat, "Hue / Sat", "Color & Adjust", 6, "HueSatIcon", "Hue and Saturation (H)", (shell, doc) => new HueSatToolSessionViewModel(shell, doc), shortcut: 'H');
+        yield return new ToolDefinition(EditorTool.Duotone, "Duotone", "Color & Adjust", 6, "DuotoneIcon", "Map brightness to a two-color palette", (shell, doc) => new DuotoneToolSessionViewModel(shell, doc));
+        yield return new ToolDefinition(EditorTool.Filters, "Filters", "Filters & FX", 0, "FiltersIcon", "Filters (F)", (shell, doc) => new FiltersToolSessionViewModel(shell, doc), shortcut: 'F');
+        yield return new ToolDefinition(EditorTool.Fx, "FX", "Filters & FX", 1, "FxIcon", "FX (K)", (shell, doc) => new FxToolSessionViewModel(shell, doc), shortcut: 'K');
+        yield return new ToolDefinition(EditorTool.TiltShift, "Tilt-Shift", "Filters & FX", 2, "TiltShiftIcon", "Tilt-Shift (I)", (shell, doc) => new TiltShiftToolSessionViewModel(shell, doc), shortcut: 'I');
+        yield return new ToolDefinition(EditorTool.Compose, "Compose", "Composite", 0, "ComposeIcon", "Compose (C)",
+            (shell, doc) => new ComposeToolSessionViewModel(shell, doc, dialogs, imageLoader), shortcut: 'C');
+        yield return new ToolDefinition(EditorTool.Overlay, "Overlay", "Composite", 1, "OverlayIcon", "Overlay (O)",
+            (shell, doc) => new OverlayToolSessionViewModel(shell, doc, dialogs, imageLoader), shortcut: 'O');
+        yield return new ToolDefinition(EditorTool.Frame, "Frame", "Composite", 2, "FrameIcon", "Frame (G)", (shell, doc) => new FrameToolSessionViewModel(shell, doc), shortcut: 'G');
+        yield return new ToolDefinition(EditorTool.Text, "Text", "Text & Decor", 0, "TextIcon", "Text (X)", (shell, doc) => new TextToolSessionViewModel(shell, doc), shortcut: 'X');
+        yield return new ToolDefinition(EditorTool.Emoji, "Emoji", "Text & Decor", 1, "EmojiIcon", "Emoji (Y)", (shell, doc) => new EmojiToolSessionViewModel(shell, doc), shortcut: 'Y');
+        yield return new ToolDefinition(EditorTool.RedEye, "Red Eye", "Retouch", 8, "RedEyeIcon", "Remove red eyes (R)", (shell, doc) => new RedEyeToolSessionViewModel(shell, doc), shortcut: 'R');
+        yield return new ToolDefinition(EditorTool.Shape, "Shape", "Drawing", 2, "ShapeIcon", "Draw a rectangle, ellipse, line or arrow", (shell, doc) => new ShapeToolSessionViewModel(shell, doc));
+        yield return new ToolDefinition(EditorTool.Gradient, "Gradient", "Drawing", 1, "GradientIcon", "Overlay a linear or radial gradient", (shell, doc) => new GradientToolSessionViewModel(shell, doc));
+        yield return new ToolDefinition(EditorTool.Pen, "Pen", "Drawing", 3, "PenIcon", "Draw freehand with a brush/pen", (shell, doc) => new PenToolSessionViewModel(shell, doc));
     }
 
     /// <summary>

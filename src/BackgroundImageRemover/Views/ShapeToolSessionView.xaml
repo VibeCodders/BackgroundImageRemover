@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
+             xmlns:models="clr-namespace:BackgroundImageRemover.Models"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
@@ -24,6 +25,9 @@
 
         <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock x:Name="CursorPositionLabel" FontFamily="Consolas" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
+            </StatusBarItem>
         </StatusBar>
 
         <Border DockPanel.Dock="Right" Width="300" Padding="14" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource Theme.PanelBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
@@ -31,8 +35,27 @@
                 <StackPanel>
                     <TextBlock Text="Shape" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
+                    <TextBlock Text="Drag on the left image to place the shape; drag inside it to move, drag its corners to resize, drag the handle above it to rotate (hold Shift to snap to 5° steps). The controls below let you fine-tune." Margin="0,0,0,12"
+                               Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
+
                     <TextBlock Text="Shape type" FontWeight="SemiBold" Margin="0,0,0,4" />
-                    <ComboBox ItemsSource="{Binding ShapeKinds}" SelectedItem="{Binding ShapeKind}" Margin="0,0,0,12" />
+                    <ComboBox ItemsSource="{Binding ShapeKinds}" SelectedItem="{Binding ShapeKind}" Margin="0,0,0,8" />
+
+                    <DockPanel Margin="0,4,0,0"
+                               Visibility="{Binding IsPointShapes, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock Text="Sides / points" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding Segments, StringFormat='{}{0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="3" Maximum="20" Value="{Binding Segments}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,4"
+                            Visibility="{Binding IsPointShapes, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                    <DockPanel Margin="0,4,0,0"
+                               Visibility="{Binding IsStar, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock Text="Inner radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding StarRatio, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0.05" Maximum="0.95" Value="{Binding StarRatio}" SmallChange="0.05" Margin="0,2,0,12"
+                            Visibility="{Binding IsStar, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Position X" FontWeight="SemiBold" DockPanel.Dock="Left" />
@@ -56,7 +79,13 @@
                         <TextBlock Text="Height" FontWeight="SemiBold" DockPanel.Dock="Left" />
                         <TextBlock Text="{Binding SizeHeight, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
-                    <Slider Minimum="1" Maximum="100" Value="{Binding SizeHeight}" SmallChange="1" Margin="0,2,0,12" />
+                    <Slider Minimum="1" Maximum="100" Value="{Binding SizeHeight}" SmallChange="1" Margin="0,2,0,4" />
+
+                    <DockPanel Margin="0,4,0,0">
+                        <TextBlock Text="Rotation" FontWeight="SemiBold" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding Rotation, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="360" Value="{Binding Rotation}" SmallChange="1" Margin="0,2,0,12" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Stroke width" FontWeight="SemiBold" DockPanel.Dock="Left" />
@@ -99,10 +128,23 @@
             </ScrollViewer>
         </Border>
 
-        <Grid Margin="8">
-            <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
-                <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
-            </Border>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <DockPanel Grid.Column="0" Margin="8">
+                <TextBlock DockPanel.Dock="Top" Text="Drag to place or adjust the shape" FontWeight="Bold" Margin="0,0,0,4" />
+                <controls:ImagePreviewControl x:Name="ShapePreview"
+                                              ImageSource="{Binding SourceBitmap}"
+                                              Mode="{x:Static models:InteractionMode.EditRect}"
+                                              RectSelected="ShapePreview_RectSelected" />
+            </DockPanel>
+            <DockPanel Grid.Column="1" Margin="8">
+                <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
+                <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
+                    <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
+                </Border>
+            </DockPanel>
         </Grid>
     </DockPanel>
 </UserControl>

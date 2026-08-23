@@ -79,6 +79,15 @@ public partial class ImagePreviewControl : UserControl
     /// <summary>Raised with the finalized selection rectangle, in source-image pixel coordinates.</summary>
     public event EventHandler<OpenCvSharp.Rect>? RectSelected;
 
+    /// <summary>
+    /// Raised when an existing EditRect is moved or resized (non-rotation, non-new), with
+    /// the updated rectangle in source-image pixel coordinates.
+    /// </summary>
+    public event EventHandler<OpenCvSharp.Rect>? EditRectSelected;
+
+    /// <summary>Raised when the EditRect rotation handle is dragged, with the new angle in degrees.</summary>
+    public event EventHandler<double>? RotationSelected;
+
     /// <summary>Raised at the start of a Brush/Scribble stroke, with the point in image-pixel coordinates.</summary>
     public event EventHandler<Point>? StrokeStart;
 
@@ -110,6 +119,13 @@ public partial class ImagePreviewControl : UserControl
     private Point _panStartTranslate;
     private MouseButton _panButton = MouseButton.Middle;
     private Polyline? _activeStrokeVisual;
+
+    private enum EditGrab { None, New, Move, ResizeTL, ResizeTR, ResizeBL, ResizeBR, Rotate }
+    private OpenCvSharp.Rect? _editImageRect;
+    private EditGrab _editGrab = EditGrab.None;
+    private Point _editGrabStart;
+    private Rect _editGrabBaseControl;
+    private double _editRotation;
 
     public ImagePreviewControl()
     {
@@ -270,12 +286,53 @@ public partial class ImagePreviewControl : UserControl
         control.RootGrid.Cursor = control.Mode == InteractionMode.None ? Cursors.Arrow : Cursors.Cross;
     }
 
+    /// <summary>Shows selection + handles for the given shape bounding box (image pixels).
+    /// Used by <see cref="InteractionMode.EditRect"/> so a shape can be moved/resized after placement.</summary>
+    public void SetEditRect(int x, int y, int w, int h)
+    {
+        if (w < 1 || h < 1)
+        {
+            ClearEditRect();
+            return;
+        }
+        _editImageRect = new OpenCvSharp.Rect(x, y, w, h);
+        if (Mode == InteractionMode.EditRect)
+        {
+            RefreshEditView();
+        }
+    }
+
+    /// <summary>Sets the displayed rotation (degrees) of the editable shape, used to position the
+    /// rotation handle. Called by the host view when the shape's rotation changes by other means.</summary>
+    public void SetEditRotation(double degrees)
+    {
+        _editRotation = degrees;
+        if (Mode == InteractionMode.EditRect && _editImageRect is { } r && ImageSource is not null)
+        {
+            var ctl = CoordinateMapper.ImageRectToControlRect(
+                r, OverlayCanvas.ActualWidth, OverlayCanvas.ActualHeight,
+                ImageSource.PixelWidth, ImageSource.PixelHeight);
+            PositionRotateHandle(ctl, _editRotation);
+        }
+    }
+
+    /// <summary>Hides the editable shape selection + handles.</summary>
+    public void ClearEditRect()
+    {
+        _editImageRect = null;
+        _editGrab = EditGrab.None;
+        SelectionRectangle.Visibility = Visibility.Collapsed;
+        HideEditHandles();
+    }
+
     private void ClearSelection()
     {
         _dragStart = null;
+        _editGrab = EditGrab.None;
         SelectionRectangle.Visibility = Visibility.Collapsed;
         SamPointMarker.Visibility = Visibility.Collapsed;
         WandPointMarker.Visibility = Visibility.Collapsed;
         BrushCursorPreview.Visibility = Visibility.Collapsed;
+        HideEditHandles();
     }
 }

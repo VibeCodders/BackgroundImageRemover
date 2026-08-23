@@ -9,6 +9,7 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 - **Multi-point SAM refinement**: add multiple foreground click points to refine the SAM selection — the primary click plus any additional points all feed the decoder together
 - **Classical algorithms**: GrabCut, Chroma Key, Magic Wand, KMeans, Flood Fill, Otsu
 - **Interactive refinement**: brush-based foreground/background scribbles, mask adjustments (feather, expand, blur, gamma, threshold, despeckle, fill holes, smooth edges, CLAHE, median/bilateral filtering)
+- **GrabCut rect handles**: after drawing the initial GrabCut rectangle, corner handles appear so you can move or resize it without redrawing; an "Edit rect" button is also available in the strategy panel
 - **Edge refinement**: alpha matting, color decontamination, hole filling
 - **Export**: PNG (transparent/solid color/blurred/gradient), JPEG, WebP
 - **Batch processing** with configurable export options
@@ -25,10 +26,11 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 - Additional points count displayed in the UI
 
 #### New drawing & color tools (new)
-- **Shape**: draw a rectangle, ellipse, line or arrow with stroke color/width and a semi-transparent fill, positioned/sized as a percentage of the image
+- **Shape**: draw a rectangle, ellipse, line, arrow, **polygon** or **star** with stroke color/width and a semi-transparent fill — drag directly on the interactive preview to place it, then drag inside to **move** it, its **corner handles** to **resize** it, or its **rotation handle** (above the shape) to **tilt** it freely (hold **Shift** to snap rotation to 5° steps for precise alignment); percentage sliders plus sides/points, star-ratio and rotation controls allow fine-tuning
+- **Pen**: freehand drawing (brush/pen) — drag on the image to draw strokes in a chosen color/width with rounded caps
 - **Gradient**: overlay a linear (angle-selectable) or radial two-color gradient onto the image
-- **Color Replace**: replace a target color (and close hues via tolerance/softness) with another color, optionally preserving the original luminance
-- **Duotone**: map image brightness onto a two-color palette with adjustable midpoint and strength
+- **Color Replace**: replace a target color (and close hues via tolerance/softness) with another color, optionally preserving the original luminance; click the preview to pick the target color
+- **Duotone**: map image brightness onto a two-color palette with adjustable midpoint and strength, plus ready-made preset palettes (Mono, Black & Gold, Navy & Amber, Violet & Cyan, ...)
 - New tools follow the existing `IToolDefinition` convention: one definition class, a session view model, a data-templated view, an icon, DI registration and unit tests — the palette and tab dispatch pick them up automatically
 
 #### Logging improvements (new)

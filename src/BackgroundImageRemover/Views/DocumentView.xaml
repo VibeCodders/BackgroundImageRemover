@@ -328,6 +328,7 @@
                                                            ScribbleOverlay="{Binding ScribbleOverlay}"
                                                            Mode="{Binding OriginalMode}"
                                                            RectSelected="OriginalPreview_RectSelected"
+                                                           EditRectSelected="OriginalPreview_EditRectSelected"
                                                            StrokeStart="OriginalPreview_StrokeStart"
                                                            StrokeMove="OriginalPreview_StrokeMove"
                                                            StrokeEnd="OriginalPreview_StrokeEnd"

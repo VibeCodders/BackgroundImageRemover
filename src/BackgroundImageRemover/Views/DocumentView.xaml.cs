@@ -194,6 +194,20 @@ public partial class DocumentView : UserControl
 
     private void OriginalPreview_RectSelected(object? sender, OpenCvSharp.Rect e)
     {
+        if (ViewModel is null) return;
+        ViewModel.GrabCut.SelectedRect = e;
+
+        // After the first rectangle is drawn, switch to EditRect so the user can
+        // move/resize the rect with corner handles instead of redrawing.
+        if (ViewModel.OriginalMode == InteractionMode.DrawRect)
+        {
+            ViewModel.OriginalMode = InteractionMode.EditRect;
+            OriginalPreview.SetEditRect(e.X, e.Y, e.Width, e.Height);
+        }
+    }
+
+    private void OriginalPreview_EditRectSelected(object? sender, OpenCvSharp.Rect e)
+    {
         if (ViewModel is not null) ViewModel.GrabCut.SelectedRect = e;
     }
 

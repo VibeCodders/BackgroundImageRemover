@@ -31,6 +31,29 @@
                 <StackPanel>
                     <TextBlock Text="Duotone" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
+                    <TextBlock Text="Presets" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding Presets}" Margin="0,0,0,12">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.ApplyPresetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" Margin="0,0,6,6" Padding="6,4"
+                                        Background="{DynamicResource Theme.PanelHeaderBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1"
+                                        Foreground="{DynamicResource Theme.ForegroundBrush}" Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Rectangle Width="14" Height="14" Fill="{Binding Dark, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" VerticalAlignment="Center" Margin="0,0,2,0" />
+                                        <Rectangle Width="14" Height="14" Fill="{Binding Light, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
                     <TextBlock Text="Dark color" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <Rectangle Width="24" Height="24" Fill="{Binding DarkColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />

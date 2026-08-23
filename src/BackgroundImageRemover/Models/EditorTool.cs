@@ -111,5 +111,8 @@ public enum EditorTool
     ColorReplace,
 
     /// <summary>Maps image luminance to a two-color (duotone) palette.</summary>
-    Duotone
+    Duotone,
+
+    /// <summary>Freehand drawing (pen/brush) with a configurable color and width.</summary>
+    Pen
 }

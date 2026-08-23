@@ -31,6 +31,9 @@
                 <StackPanel>
                     <TextBlock Text="Color Replace" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
+                    <TextBlock Text="Click the image to pick the target color, or choose it below." Margin="0,0,0,12"
+                               Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
+
                     <TextBlock Text="Target color" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <Rectangle Width="24" Height="24" Fill="{Binding TargetColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
@@ -74,7 +77,9 @@
 
         <Grid Margin="8">
             <Border BorderBrush="#FF3A3A3A" BorderThickness="1">
-                <controls:ZoomableImageControl ImageSource="{Binding ResultBitmap}" />
+                <controls:ZoomableImageControl x:Name="Preview"
+                                               ImageSource="{Binding ResultBitmap}"
+                                               MouseLeftButtonDown="Preview_MouseLeftButtonDown" />
             </Border>
         </Grid>
     </DockPanel>

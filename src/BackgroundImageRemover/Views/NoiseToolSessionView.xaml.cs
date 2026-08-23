@@ -1,6 +1,6 @@
 namespace BackgroundImageRemover.Views;
 
-public partial class NoiseToolSessionView
+public partial class NoiseToolSessionView : BrushStrokeSessionViewBase
 {
     public NoiseToolSessionView()
     {

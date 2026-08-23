@@ -29,9 +29,7 @@
                                                ImageSource="{Binding ResultBitmap}"
                                                Mode="{Binding Source={x:Static models:InteractionMode.Brush}}"
                                                BrushRadius="{Binding Radius}"
-                                               StrokeStart="RedEyePreview_StrokeStart"
-                                               StrokeMove="RedEyePreview_StrokeMove"
-                                               StrokeEnd="RedEyePreview_StrokeEnd" />
+                                               StrokeStart="RedEyePreview_StrokeStart" />
             </Border>
         </Grid>
     

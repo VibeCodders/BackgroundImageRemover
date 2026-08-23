@@ -38,7 +38,7 @@ public abstract partial class BgraToolSessionViewModelBase : ToolSessionViewMode
     {
         InitSourceAlpha();
         _workingBgra = _sourceImage!.FullBgr.ToBgra(_workingAlpha!);
-        SourceBitmap = _workingBgra.ToBitmapSource();
+        SourceBitmap = _workingBgra.ToFrozenBitmapSource();
     }
 
     /// <summary>Updates <see cref="ToolSessionViewModelBase.ResultBitmap"/> from the current BGRA copy.</summary>
@@ -46,7 +46,7 @@ public abstract partial class BgraToolSessionViewModelBase : ToolSessionViewMode
     {
         if (_workingBgra is not null)
         {
-            ResultBitmap = _workingBgra.ToBitmapSource();
+            ResultBitmap = _workingBgra.ToFrozenBitmapSource();
         }
     }
 

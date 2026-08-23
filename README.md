@@ -19,6 +19,12 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 
 ### Recent Improvements
 
+#### Performance (new)
+- **Bulk pixel access**: the per-pixel effects (Duotone, ColorReplace, Gradient, Vignette, Wave, Liquify, Fx, Frame, Noise, Halftone, Mosaic, OilPaint, CloneStamp, Hue/Sat, RedEye, Overlay blend) now read/write whole-image arrays (`GetArray`/`SetArray`) or direct row pointers instead of calling `Mat.Get/Set/At` per pixel, which did a native interop call for every pixel. Brush stamping (`BrushEditor`, clone-stamp mask) uses a `MatIndexer` over the small region. `ImageProcessingHelper`'s vignette mask and hue-wrap loops were converted the same way.
+- **Frozen display bitmaps**: every `BitmapSource` built for the preview/result/overlay display (shared `MatExtensions` helpers, `PreviewRunner`, `ScribbleManager`, tool sessions, uncrop) is frozen before being handed to WPF, so the render thread can cache them without dispatcher-affinity checks.
+- **Faster ONNX/SAM tensor fills**: the input normalization and mask extraction loops write/read the `DenseTensor` buffer directly through spans instead of the 4-D indexer per pixel.
+- **Parallel batch processing**: batch runs process files concurrently (bounded to the CPU count, max 4) instead of one at a time; progress/error/skip counts stay coherent under a lock. Strategies, the image loader and the exporter are re-entrant per call (ONNX sessions serialize their own runs, GrabCut guards its cached mask), so the outputs are identical.
+
 #### Multi-point SAM (new)
 - Add multiple foreground click points in SAM mode to refine the selection
 - New `ClearSamPointsCommand` to reset all prompt points

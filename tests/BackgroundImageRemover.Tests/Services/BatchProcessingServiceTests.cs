@@ -10,29 +10,44 @@ namespace BackgroundImageRemover.Tests.Services;
 
 public class BatchProcessingServiceTests
 {
+    /// <summary>
+    /// Thread-safe export fake: the batch service now processes files in parallel, so the
+    /// observation lists must tolerate concurrent appends (the real exporter writes to distinct
+    /// files and needs no locking).
+    /// </summary>
     private sealed class FakeImageExportService : IImageExportService
     {
+        private readonly object _gate = new();
         public readonly List<string> ExportedPaths = new();
         public readonly List<int> JpegQualities = new();
         public readonly List<Mat> JpgMats = new();
 
         public Task ExportPngAsync(Mat bgra, string filePath, CancellationToken ct = default)
         {
-            ExportedPaths.Add(filePath);
+            lock (_gate)
+            {
+                ExportedPaths.Add(filePath);
+            }
             return Task.CompletedTask;
         }
 
         public Task ExportJpgAsync(Mat bgr, string filePath, int quality = 95, CancellationToken ct = default)
         {
-            ExportedPaths.Add(filePath);
-            JpegQualities.Add(quality);
-            JpgMats.Add(bgr.Clone()); // keep an owned copy: the service disposes its buffer after exporting
+            lock (_gate)
+            {
+                ExportedPaths.Add(filePath);
+                JpegQualities.Add(quality);
+                JpgMats.Add(bgr.Clone()); // keep an owned copy: the service disposes its buffer after exporting
+            }
             return Task.CompletedTask;
         }
 
         public Task ExportWebpAsync(Mat bgra, string filePath, int quality = 90, CancellationToken ct = default)
         {
-            ExportedPaths.Add(filePath);
+            lock (_gate)
+            {
+                ExportedPaths.Add(filePath);
+            }
             return Task.CompletedTask;
         }
     }
@@ -350,10 +365,17 @@ public class BatchProcessingServiceTests
 
     private sealed class CollectingProgress : IProgress<BatchProgress>
     {
+        private readonly object _gate = new();
         private readonly List<BatchProgress> _target;
 
         public CollectingProgress(List<BatchProgress> target) => _target = target;
 
-        public void Report(BatchProgress value) => _target.Add(value);
+        public void Report(BatchProgress value)
+        {
+            lock (_gate)
+            {
+                _target.Add(value);
+            }
+        }
     }
 }

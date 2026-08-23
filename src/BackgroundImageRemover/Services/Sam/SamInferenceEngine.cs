@@ -71,14 +71,18 @@ public sealed class SamInferenceEngine : IDisposable
 
         padded.GetArray(out Vec3b[] pixels);
         var input = new DenseTensor<float>(new[] { 1, 3, EncoderInputSize, EncoderInputSize });
+        // Contiguous [1,3,H,W] tensor: fill the flat buffer directly (CHW layout).
+        var inputSpan = input.Buffer.Span;
+        int plane = EncoderInputSize * EncoderInputSize;
         for (int y = 0; y < EncoderInputSize; y++)
         {
             for (int x = 0; x < EncoderInputSize; x++)
             {
                 var px = pixels[y * EncoderInputSize + x];
-                input[0, 0, y, x] = (px.Item0 - Mean[0]) / Std[0];
-                input[0, 1, y, x] = (px.Item1 - Mean[1]) / Std[1];
-                input[0, 2, y, x] = (px.Item2 - Mean[2]) / Std[2];
+                int i = y * EncoderInputSize + x;
+                inputSpan[i] = (px.Item0 - Mean[0]) / Std[0];
+                inputSpan[plane + i] = (px.Item1 - Mean[1]) / Std[1];
+                inputSpan[2 * plane + i] = (px.Item2 - Mean[2]) / Std[2];
             }
         }
 
@@ -140,11 +144,22 @@ public sealed class SamInferenceEngine : IDisposable
 
         int h = targetSize.Height, w = targetSize.Width;
         var maskBytes = new byte[h * w];
-        for (int y = 0; y < h; y++)
+        if (masksTensor is DenseTensor<float> dense)
         {
-            for (int x = 0; x < w; x++)
+            var span = dense.Buffer.Span;
+            for (int i = 0; i < maskBytes.Length; i++)
             {
-                maskBytes[y * w + x] = masksTensor[0, 0, y, x] > 0 ? (byte)255 : (byte)0;
+                maskBytes[i] = span[i] > 0 ? (byte)255 : (byte)0;
+            }
+        }
+        else
+        {
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    maskBytes[y * w + x] = masksTensor[0, 0, y, x] > 0 ? (byte)255 : (byte)0;
+                }
             }
         }
 

@@ -129,7 +129,7 @@ public partial class LassoSelectToolSessionViewModel : BgraToolSessionViewModelB
         using var bgr = new Mat();
         Cv2.CvtColor(WorkingBgra, bgr, ColorConversionCodes.BGRA2BGR);
         using var resultBgra = bgr.ToBgra(mask);
-        ResultBitmap = resultBgra.ToBitmapSource();
+        ResultBitmap = resultBgra.ToFrozenBitmapSource();
     }
 
     private static Point ToCvPoint(WpfPoint p) => new((int)Math.Round(p.X), (int)Math.Round(p.Y));

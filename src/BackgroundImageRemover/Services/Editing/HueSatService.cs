@@ -13,8 +13,7 @@ public static class HueSatService
         }
 
         using var hsv = HsvHelper.BgrToHsv(bgr);
-        PixelLoop.ForEach(hsv, (y, x) =>
-            HsvPixelAdjuster.AdjustPixelInMat(hsv, y, x, hueShift, satMult, valMult));
+        HsvPixelAdjuster.AdjustPixelArray(hsv, hueShift, satMult, valMult);
 
         return HsvHelper.HsvToBgr(hsv);
     }
@@ -22,15 +21,18 @@ public static class HueSatService
     public static Mat AdjustHueSatRegion(Mat bgr, Mat mask, double hueShift, double satMult, double valMult)
     {
         using var hsv = HsvHelper.BgrToHsv(bgr);
-        PixelLoop.ForEach(hsv, (y, x) =>
+        Vec3b[] pixels = PixelLoop.GetData<Vec3b>(hsv);
+        byte[] maskData = PixelLoop.GetData<byte>(mask);
+        for (int i = 0; i < pixels.Length; i++)
         {
-            if (mask.Get<byte>(y, x) == 0)
+            if (maskData[i] == 0)
             {
-                return;
+                continue;
             }
 
-            HsvPixelAdjuster.AdjustPixelInMat(hsv, y, x, hueShift, satMult, valMult);
-        });
+            HsvPixelAdjuster.AdjustPixel(ref pixels[i], hueShift, satMult, valMult);
+        }
+        PixelLoop.SetData(hsv, pixels);
 
         return HsvHelper.HsvToBgr(hsv);
     }

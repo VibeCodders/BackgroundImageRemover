@@ -69,4 +69,22 @@ public static class HsvPixelAdjuster
         AdjustPixel(ref pixel, hueShift, satMultiplier, valMultiplier);
         hsvMat.Set(y, x, pixel);
     }
+
+    /// <summary>
+    /// Adjusts every pixel of an HSV Mat in place using bulk array access (one copy in/out
+    /// instead of native interop per pixel). Semantically identical to calling
+    /// <see cref="AdjustPixelInMat"/> for each pixel, but much faster on large images.
+    /// </summary>
+    public static void AdjustPixelArray(
+        Mat hsvMat,
+        double hueShift, double satMultiplier, double valMultiplier)
+    {
+        ArgumentNullException.ThrowIfNull(hsvMat);
+        Vec3b[] pixels = PixelLoop.GetData<Vec3b>(hsvMat);
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            AdjustPixel(ref pixels[i], hueShift, satMultiplier, valMultiplier);
+        }
+        PixelLoop.SetData(hsvMat, pixels);
+    }
 }

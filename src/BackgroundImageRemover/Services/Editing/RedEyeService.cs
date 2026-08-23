@@ -19,6 +19,9 @@ public static class RedEyeService
         int x2 = Math.Min(result.Cols - 1, (int)center.X + r);
         int y2 = Math.Min(result.Rows - 1, (int)center.Y + r);
 
+        // Bulk array access over the region rows: one copy in/out instead of per-pixel interop.
+        Vec3b[] data = PixelLoop.GetData<Vec3b>(result);
+        int cols = result.Cols;
         for (int y = y1; y <= y2; y++)
         {
             for (int x = x1; x <= x2; x++)
@@ -27,7 +30,7 @@ public static class RedEyeService
                 double dy = y - center.Y;
                 if (dx * dx + dy * dy > r * r) continue;
 
-                Vec3b pixel = result.Get<Vec3b>(y, x);
+                ref Vec3b pixel = ref data[y * cols + x];
                 byte b = pixel[0];
                 byte g = pixel[1];
                 byte rv = pixel[2];
@@ -36,10 +39,11 @@ public static class RedEyeService
                 {
                     double avg = (g + b) / 2.0;
                     byte newVal = (byte)Math.Clamp(avg, 0, 255);
-                    result.Set<Vec3b>(y, x, new Vec3b(newVal, newVal, newVal));
+                    pixel = new Vec3b(newVal, newVal, newVal);
                 }
             }
         }
+        PixelLoop.SetData(result, data);
 
         return result;
     }

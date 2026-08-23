@@ -48,6 +48,9 @@ public static class GradientService
 
         try
         {
+            float[] maskData = PixelLoop.GetData<float>(mask);
+            Vec3b[] overlayData = PixelLoop.GetData<Vec3b>(overlay);
+
             if (kind == GradientKind.Linear)
             {
                 // Normalize by the largest corner projection so the gradient always spans the
@@ -65,12 +68,14 @@ public static class GradientService
                     maxProj = 1;
                 }
 
-                PixelLoop.ForEach(h, w, (y, x) =>
+                for (int i = 0; i < maskData.Length; i++)
                 {
+                    int x = i % w;
+                    int y = i / w;
                     double proj = (x - cx) * dirX + (y - cy) * dirY;
                     double t = (proj / maxProj + 1.0) * 0.5;
-                    WriteGradient(mask, overlay, x, y, Math.Clamp(t, 0.0, 1.0), opacity, colorA, colorB);
-                });
+                    WriteGradient(maskData, overlayData, i, Math.Clamp(t, 0.0, 1.0), opacity, colorA, colorB);
+                }
             }
             else
             {
@@ -80,12 +85,17 @@ public static class GradientService
                     maxR = 1;
                 }
 
-                PixelLoop.ForEach(h, w, (y, x) =>
+                for (int i = 0; i < maskData.Length; i++)
                 {
+                    int x = i % w;
+                    int y = i / w;
                     double dist = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
-                    WriteGradient(mask, overlay, x, y, Math.Clamp(dist / maxR, 0.0, 1.0), opacity, colorA, colorB);
-                });
+                    WriteGradient(maskData, overlayData, i, Math.Clamp(dist / maxR, 0.0, 1.0), opacity, colorA, colorB);
+                }
             }
+
+            PixelLoop.SetData(mask, maskData);
+            PixelLoop.SetData(overlay, overlayData);
 
             // Gravity-fill never fails below: BlendByMask builds a fresh Mat.
             var result = bgr.BlendByMask(overlay, mask);
@@ -101,12 +111,12 @@ public static class GradientService
         }
     }
 
-    private static void WriteGradient(Mat mask, Mat overlay, int x, int y, double t, double opacity, Vec3b colorA, Vec3b colorB)
+    private static void WriteGradient(float[] maskData, Vec3b[] overlayData, int i, double t, double opacity, Vec3b colorA, Vec3b colorB)
     {
-        mask.Set(y, x, (float)(t * opacity));
-        overlay.Set(y, x, new Vec3b(
+        maskData[i] = (float)(t * opacity);
+        overlayData[i] = new Vec3b(
             (byte)(colorA[0] + (colorB[0] - colorA[0]) * t),
             (byte)(colorA[1] + (colorB[1] - colorA[1]) * t),
-            (byte)(colorA[2] + (colorB[2] - colorA[2]) * t)));
+            (byte)(colorA[2] + (colorB[2] - colorA[2]) * t));
     }
 }

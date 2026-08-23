@@ -39,26 +39,29 @@ public sealed class OtsuStrategy : StrategyBase
 
     private static bool BorderIsMostlyBright(Mat binary)
     {
+        byte[] data = PixelLoop.GetData<byte>(binary);
+        int cols = binary.Cols;
+        int rows = binary.Rows;
         int bright = 0;
         int dark = 0;
 
-        for (int x = 0; x < binary.Width; x++)
+        for (int x = 0; x < cols; x++)
         {
-            Count(binary, x, 0, ref bright, ref dark);
-            Count(binary, x, binary.Height - 1, ref bright, ref dark);
+            Count(data, x, 0, cols, ref bright, ref dark);
+            Count(data, x, rows - 1, cols, ref bright, ref dark);
         }
-        for (int y = 0; y < binary.Height; y++)
+        for (int y = 0; y < rows; y++)
         {
-            Count(binary, 0, y, ref bright, ref dark);
-            Count(binary, binary.Width - 1, y, ref bright, ref dark);
+            Count(data, 0, y, cols, ref bright, ref dark);
+            Count(data, cols - 1, y, cols, ref bright, ref dark);
         }
 
         return bright >= dark;
     }
 
-    private static void Count(Mat binary, int x, int y, ref int bright, ref int dark)
+    private static void Count(byte[] data, int x, int y, int cols, ref int bright, ref int dark)
     {
-        if (binary.At<byte>(y, x) > 0)
+        if (data[y * cols + x] > 0)
         {
             bright++;
         }

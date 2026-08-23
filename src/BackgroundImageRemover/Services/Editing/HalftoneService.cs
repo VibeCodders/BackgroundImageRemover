@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -21,6 +22,8 @@ public static class HalftoneService
         var result = new Mat(bgr.Size(), MatType.CV_8UC3, Scalar.All(255));
         float maxRadius = cellSize * 0.5f;
         double maxDotR = Math.Max(1.0, maxRadius);
+        byte[] grayData = PixelLoop.GetData<byte>(gray);
+        int grayCols = gray.Cols;
 
         for (int cy = cellSize / 2; cy < bgr.Height; cy += cellSize)
         {
@@ -37,7 +40,7 @@ public static class HalftoneService
                 {
                     for (int x = x0; x < x1; x++)
                     {
-                        lum += gray.At<byte>(y, x);
+                        lum += grayData[y * grayCols + x];
                         n++;
                     }
                 }

@@ -47,9 +47,13 @@ public static class ColorReplaceService
 
         try
         {
-            PixelLoop.ForEach(h, w, (y, x) =>
+            // Bulk array access: one copy in/out instead of native interop per pixel.
+            Vec3b[] hsvData = PixelLoop.GetData<Vec3b>(hsv);
+            Vec3b[] srcData = PixelLoop.GetData<Vec3b>(bgr);
+            var dstData = new Vec3b[srcData.Length];
+            for (int i = 0; i < srcData.Length; i++)
             {
-                Vec3b px = hsv.Get<Vec3b>(y, x);
+                Vec3b px = hsvData[i];
                 double hueDist = Math.Abs(px[0] - tHue);
                 hueDist = Math.Min(hueDist, 180 - hueDist);
                 double sd = Math.Abs(px[1] - tSat) / 255.0;
@@ -70,7 +74,7 @@ public static class ColorReplaceService
                     factor = softness <= EditingGuard.Epsilon ? 1.0 : (tolerance - d) / (tolerance - edgeStart);
                 }
 
-                Vec3b original = bgr.Get<Vec3b>(y, x);
+                Vec3b original = srcData[i];
                 Vec3b replacement = newColor;
                 if (preserveLuminance && newV > 0)
                 {
@@ -82,8 +86,9 @@ public static class ColorReplaceService
                         ClampByte(newColor[2] * scale));
                 }
 
-                result.Set(y, x, PixelColor.Blend(original, replacement, factor));
-            });
+                dstData[i] = PixelColor.Blend(original, replacement, factor);
+            }
+            PixelLoop.SetData(result, dstData);
 
             return result;
         }

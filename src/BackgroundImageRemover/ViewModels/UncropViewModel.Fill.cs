@@ -63,7 +63,7 @@ public partial class UncropViewModel
         {
             Title = !string.IsNullOrEmpty(image.FilePath) ? Path.GetFileName(image.FilePath) + " (Uncrop)" : "Uncrop";
         }
-        SourceBitmap = image.FullBgr.ToBitmapSource();
+        SourceBitmap = image.FullBgr.ToFrozenBitmapSource();
         PreviewResult = null;
         IsImageLoaded = true;
         Options.Reset();
@@ -119,7 +119,7 @@ public partial class UncropViewModel
 
             RefreshUndoRedoState();
             SaveAsCommand.NotifyCanExecuteChanged();
-            PreviewResult = _resultSession.Result!.ToBitmapSource();
+            PreviewResult = _resultSession.Result!.ToFrozenBitmapSource();
             IsDirty = true;
             StatusMessage = $"Applied {config.FillMode} fill.";
         }
@@ -151,7 +151,7 @@ public partial class UncropViewModel
         {
             return;
         }
-        PreviewResult = _resultSession.Result!.ToBitmapSource();
+        PreviewResult = _resultSession.Result!.ToFrozenBitmapSource();
         IsDirty = true;
         RefreshUndoRedoState();
     }
@@ -163,7 +163,7 @@ public partial class UncropViewModel
         {
             return;
         }
-        PreviewResult = _resultSession.Result!.ToBitmapSource();
+        PreviewResult = _resultSession.Result!.ToFrozenBitmapSource();
         IsDirty = true;
         RefreshUndoRedoState();
     }

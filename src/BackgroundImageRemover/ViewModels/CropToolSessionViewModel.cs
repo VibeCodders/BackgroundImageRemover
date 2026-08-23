@@ -124,7 +124,7 @@ public partial class CropToolSessionViewModel : BgraToolSessionViewModelBase
             : TransformService.Rotate90CounterClockwise(WorkingBgra);
         WorkingBgra.Dispose();
         WorkingBgra = rotated;
-        SourceBitmap = WorkingBgra.ToBitmapSource();
+        SourceBitmap = WorkingBgra.ToFrozenBitmapSource();
         SelectedAspect = UncropAspectPresets.Free;
         Angle = 0.0;
         SelectedRect = new Rect(0, 0, WorkingBgra.Width, WorkingBgra.Height);
@@ -167,7 +167,7 @@ public partial class CropToolSessionViewModel : BgraToolSessionViewModelBase
         if (WorkingBgra is null) return;
         using var cropped = CropService.CropRect(WorkingBgra, SelectedRect ?? new Rect(0, 0, WorkingBgra.Width, WorkingBgra.Height));
         using var rotated = Math.Abs(Angle) > 1e-6 ? TransformService.Rotate(cropped, Angle) : cropped.Clone();
-        ResultBitmap = rotated.ToBitmapSource();
+        ResultBitmap = rotated.ToFrozenBitmapSource();
         IsDirty = true;
     }
 

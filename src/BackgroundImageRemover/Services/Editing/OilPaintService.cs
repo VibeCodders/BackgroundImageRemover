@@ -74,15 +74,29 @@ public static class OilPaintService
                     anchor: new Point(-1, -1), normalize: false, BorderTypes.Replicate);
             }
 
-            // Pick the dominant bin per pixel and take its average colour.
+            // Pick the dominant bin per pixel and take its average colour. Bulk array access:
+            // one copy in/out per bin instead of native interop per pixel per bin.
             var result = new Mat(bgr.Size(), MatType.CV_8UC3);
-            PixelLoop.ForEach(bgr, (y, x) =>
+            var countData = new float[levels][];
+            var sumBData = new float[levels][];
+            var sumGData = new float[levels][];
+            var sumRData = new float[levels][];
+            for (int b = 0; b < levels; b++)
+            {
+                countData[b] = PixelLoop.GetData<float>(counts[b]);
+                sumBData[b] = PixelLoop.GetData<float>(sumsB[b]);
+                sumGData[b] = PixelLoop.GetData<float>(sumsG[b]);
+                sumRData[b] = PixelLoop.GetData<float>(sumsR[b]);
+            }
+            Vec3b[] srcData = PixelLoop.GetData<Vec3b>(bgr);
+            var resultData = new Vec3b[srcData.Length];
+            for (int i = 0; i < srcData.Length; i++)
             {
                 int best = 0;
-                float bestCount = counts[0].At<float>(y, x);
+                float bestCount = countData[0][i];
                 for (int b = 1; b < levels; b++)
                 {
-                    float c = counts[b].At<float>(y, x);
+                    float c = countData[b][i];
                     if (c > bestCount)
                     {
                         bestCount = c;
@@ -90,15 +104,16 @@ public static class OilPaintService
                     }
                 }
 
-                float cb = sumsB[best].At<float>(y, x);
-                float cg = sumsG[best].At<float>(y, x);
-                float cr = sumsR[best].At<float>(y, x);
-                var src = bgr.At<Vec3b>(y, x);
+                float cb = sumBData[best][i];
+                float cg = sumGData[best][i];
+                float cr = sumRData[best][i];
+                var src = srcData[i];
                 byte vb = bestCount > 0 ? (byte)Math.Clamp(cb / bestCount, 0, 255) : src.Item0;
                 byte vg = bestCount > 0 ? (byte)Math.Clamp(cg / bestCount, 0, 255) : src.Item1;
                 byte vr = bestCount > 0 ? (byte)Math.Clamp(cr / bestCount, 0, 255) : src.Item2;
-                result.Set<Vec3b>(y, x, new Vec3b(vb, vg, vr));
-            });
+                resultData[i] = new Vec3b(vb, vg, vr);
+            }
+            PixelLoop.SetData(result, resultData);
 
             return result;
         }

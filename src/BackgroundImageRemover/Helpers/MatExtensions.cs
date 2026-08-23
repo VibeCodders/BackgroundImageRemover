@@ -151,6 +151,20 @@ public static class MatExtensions
     }
 
     /// <summary>
+    /// Converts a Mat to a <see cref="System.Windows.Media.Imaging.BitmapSource"/> and freezes
+    /// it. Frozen bitmaps render faster in WPF (the render thread can cache them without
+    /// dispatcher-affinity checks) and are safe to hand to background threads. The source is
+    /// always freshly created here, so freezing cannot break later mutation.
+    /// </summary>
+    public static System.Windows.Media.Imaging.BitmapSource ToFrozenBitmapSource(this Mat mat)
+    {
+        ArgumentNullException.ThrowIfNull(mat);
+        var bitmap = mat.ToBitmapSource();
+        bitmap.Freeze();
+        return bitmap;
+    }
+
+    /// <summary>
     /// Builds a preview-resolution BGRA BitmapSource from a preview BGR Mat plus a full-resolution alpha Mat.
     /// </summary>
     public static System.Windows.Media.Imaging.BitmapSource BuildPreviewWithAlpha(this OpenCvSharp.Mat previewBgr, OpenCvSharp.Mat fullAlpha)
@@ -161,7 +175,7 @@ public static class MatExtensions
         using var previewAlpha = new Mat();
         Cv2.Resize(fullAlpha, previewAlpha, previewBgr.Size(), interpolation: InterpolationFlags.Area);
         using var bgra = previewBgr.ToBgra(previewAlpha);
-        return bgra.ToBitmapSource();
+        return bgra.ToFrozenBitmapSource();
     }
 
     /// <summary>
@@ -178,7 +192,7 @@ public static class MatExtensions
         {
             return previewBgr.BuildPreviewWithAlpha(fullAlpha);
         }
-        return previewBgr.ToBitmapSource();
+        return previewBgr.ToFrozenBitmapSource();
     }
 
     /// <summary>
@@ -192,7 +206,7 @@ public static class MatExtensions
         ArgumentNullException.ThrowIfNull(alpha);
 
         using var bgra = bgr.ToBgra(alpha);
-        return bgra.ToBitmapSource();
+        return bgra.ToFrozenBitmapSource();
     }
 
     /// <summary>

@@ -172,12 +172,12 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
             using var subject = BuildSubjectBgra();
             if (BackgroundMode == ExportBackgroundMode.Transparent || (BackgroundMode == ExportBackgroundMode.Image && BackgroundImagePath is null))
             {
-                ResultBitmap = subject.ToBitmapSource();
+                ResultBitmap = subject.ToFrozenBitmapSource();
             }
             else
             {
                 using var composited = CompositeOnto(subject);
-                ResultBitmap = composited.ToBitmapSource();
+                ResultBitmap = composited.ToFrozenBitmapSource();
             }
         }
         catch (Exception ex)

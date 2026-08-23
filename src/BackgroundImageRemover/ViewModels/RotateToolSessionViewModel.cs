@@ -48,7 +48,7 @@ public partial class RotateToolSessionViewModel : BgraToolSessionViewModelBase
         if (WorkingBgra is null) return;
 
         using var rotated = RotateService.Rotate(WorkingBgra, Angle, Expand);
-        ResultBitmap = rotated.ToBitmapSource();
+        ResultBitmap = rotated.ToFrozenBitmapSource();
         IsDirty = Math.Abs(Angle % 360) > 1e-6;
     }
 

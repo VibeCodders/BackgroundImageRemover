@@ -299,7 +299,7 @@ public class ScribbleManager : IDisposable
         {
             overlay.SetTo(new Scalar(0, 0, 255, 190), _bgScribble);
         }
-        return overlay.ToBitmapSource();
+        return overlay.ToFrozenBitmapSource();
     }
 
     private void PushUndoSnapshot()

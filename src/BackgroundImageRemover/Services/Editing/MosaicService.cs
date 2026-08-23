@@ -78,6 +78,10 @@ public static class MosaicService
         int gh = Math.Max(1, (bounds.Height + cellSize - 1) / cellSize);
         var rng = new Random(12345);
 
+        // Sample colors from a flat copy (the ROI view itself is non-continuous).
+        Vec3b[] roiData = PixelLoop.GetData<Vec3b>(roi);
+        int roiCols = roi.Cols;
+
         for (int gy = 0; gy < gh; gy++)
         {
             for (int gx = 0; gx < gw; gx++)
@@ -86,7 +90,7 @@ public static class MosaicService
                 int cy0 = gy * cellSize;
                 int sx = Math.Clamp(cx0 + jitter / 2 + (jitter > 0 ? rng.Next(jitter) : 0), 0, bounds.Width - 1);
                 int sy = Math.Clamp(cy0 + jitter / 2 + (jitter > 0 ? rng.Next(jitter) : 0), 0, bounds.Height - 1);
-                var color = roi.At<Vec3b>(sy, sx);
+                var color = roiData[sy * roiCols + sx];
                 int x1 = Math.Min(bounds.Width, cx0 + cellSize);
                 int y1 = Math.Min(bounds.Height, cy0 + cellSize);
                 using var cell = new Mat(roi, new Rect(cx0, cy0, x1 - cx0, y1 - cy0));

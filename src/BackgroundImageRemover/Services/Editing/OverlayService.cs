@@ -121,15 +121,15 @@ public static class OverlayService
         shadowOpacity = Math.Clamp(shadowOpacity, 0.0, 1.0);
 
         using var shadow = new Mat(overlay.Size(), MatType.CV_8UC4, Scalar.All(0));
-        for (int y = 0; y < overlay.Height; y++)
+        Vec4b[] overlayData = PixelLoop.GetData<Vec4b>(overlay);
+        var shadowData = new Vec4b[overlayData.Length];
+        for (int i = 0; i < overlayData.Length; i++)
         {
-            for (int x = 0; x < overlay.Width; x++)
-            {
-                byte a = overlay.At<Vec4b>(y, x).Item3;
-                byte sa = (byte)Math.Round(a * shadowOpacity);
-                shadow.Set(y, x, new Vec4b(0, 0, 0, sa));
-            }
+            byte a = overlayData[i].Item3;
+            byte sa = (byte)Math.Round(a * shadowOpacity);
+            shadowData[i] = new Vec4b(0, 0, 0, sa);
         }
+        PixelLoop.SetData(shadow, shadowData);
 
         int sx = Math.Clamp(position.X + offset, 0, baseBgr.Width);
         int sy = Math.Clamp(position.Y + offset, 0, baseBgr.Height);
@@ -164,20 +164,29 @@ public static class OverlayService
             return result;
         }
 
+        // Bulk array access on the full Mats (the ROI views are non-continuous, which
+        // GetArray/SetArray cannot read/write): index the flat arrays with the region offsets.
+        Vec3b[] baseData = PixelLoop.GetData<Vec3b>(result);
+        Vec4b[] overlayData = PixelLoop.GetData<Vec4b>(overlay);
+        int baseCols = result.Cols;
+        int overlayCols = overlay.Cols;
         for (int yy = 0; yy < h; yy++)
         {
+            int baseRow = (destY + yy) * baseCols + destX;
+            int overlayRow = (srcY + yy) * overlayCols + srcX;
             for (int xx = 0; xx < w; xx++)
             {
-                var basePx = roi.At<Vec3b>(yy, xx);
-                var fg = overlayRoi.At<Vec4b>(yy, xx);
+                var basePx = baseData[baseRow + xx];
+                var fg = overlayData[overlayRow + xx];
                 double a = fg.Item3 * opacity / 255.0;
                 BlendPixel(basePx, new Vec3b(fg.Item0, fg.Item1, fg.Item2), blend, out var blended);
-                roi.Set(yy, xx, new Vec3b(
+                baseData[baseRow + xx] = new Vec3b(
                     (byte)Math.Round(basePx.Item0 * (1.0 - a) + blended.Item0 * a),
                     (byte)Math.Round(basePx.Item1 * (1.0 - a) + blended.Item1 * a),
-                    (byte)Math.Round(basePx.Item2 * (1.0 - a) + blended.Item2 * a)));
+                    (byte)Math.Round(basePx.Item2 * (1.0 - a) + blended.Item2 * a));
             }
         }
+        PixelLoop.SetData(result, baseData);
 
         return result;
     }

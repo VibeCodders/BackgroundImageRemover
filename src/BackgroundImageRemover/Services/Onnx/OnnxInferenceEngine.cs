@@ -89,14 +89,19 @@ public sealed class OnnxInferenceEngine : IDisposable
 
         rgb.GetArray(out Vec3b[] pixels);
         var input = new DenseTensor<float>(new[] { 1, 3, inputSize, inputSize });
+        // The tensor is contiguous [1,3,H,W]: fill its buffer directly (CHW layout), one
+        // channel plane at a time, instead of going through the 4-D indexer per pixel.
+        var inputSpan = input.Buffer.Span;
+        int plane = inputSize * inputSize;
         for (int y = 0; y < inputSize; y++)
         {
             for (int x = 0; x < inputSize; x++)
             {
                 var px = pixels[y * inputSize + x];
-                input[0, 0, y, x] = (px.Item0 / 255f - definition.Mean[0]) / definition.Std[0];
-                input[0, 1, y, x] = (px.Item1 / 255f - definition.Mean[1]) / definition.Std[1];
-                input[0, 2, y, x] = (px.Item2 / 255f - definition.Mean[2]) / definition.Std[2];
+                int i = y * inputSize + x;
+                inputSpan[i] = (px.Item0 / 255f - definition.Mean[0]) / definition.Std[0];
+                inputSpan[plane + i] = (px.Item1 / 255f - definition.Mean[1]) / definition.Std[1];
+                inputSpan[2 * plane + i] = (px.Item2 / 255f - definition.Mean[2]) / definition.Std[2];
             }
         }
 
@@ -104,21 +109,40 @@ public sealed class OnnxInferenceEngine : IDisposable
         using var results = session.Run(new[] { NamedOnnxValue.CreateFromTensor(inputName, input) });
         var output = results.First().AsTensor<float>();
 
+        // DenseTensor<float> exposes its backing buffer as a span: normalize and rescale in
+        // one pass over the flat data instead of two passes through the 4-D indexer.
         var maskBytes = new byte[inputSize * inputSize];
-        float min = float.MaxValue, max = float.MinValue;
-        for (int i = 0; i < maskBytes.Length; i++)
+        if (output is DenseTensor<float> dense)
         {
-            float v = output.GetValue(i);
-            if (v < min) min = v;
-            if (v > max) max = v;
-        }
-        float range = Math.Max(1e-6f, max - min);
-        for (int y = 0; y < inputSize; y++)
-        {
-            for (int x = 0; x < inputSize; x++)
+            var outputSpan = dense.Buffer.Span;
+            float min = float.MaxValue, max = float.MinValue;
+            for (int i = 0; i < outputSpan.Length; i++)
             {
-                float v = (output[0, 0, y, x] - min) / range;
-                maskBytes[y * inputSize + x] = (byte)Math.Clamp(v * 255f, 0f, 255f);
+                float v = outputSpan[i];
+                if (v < min) min = v;
+                if (v > max) max = v;
+            }
+            float range = Math.Max(1e-6f, max - min);
+            for (int i = 0; i < maskBytes.Length; i++)
+            {
+                float v = (outputSpan[i] - min) / range;
+                maskBytes[i] = (byte)Math.Clamp(v * 255f, 0f, 255f);
+            }
+        }
+        else
+        {
+            float min = float.MaxValue, max = float.MinValue;
+            for (int i = 0; i < maskBytes.Length; i++)
+            {
+                float v = output.GetValue(i);
+                if (v < min) min = v;
+                if (v > max) max = v;
+            }
+            float range = Math.Max(1e-6f, max - min);
+            for (int i = 0; i < maskBytes.Length; i++)
+            {
+                float v = (output.GetValue(i) - min) / range;
+                maskBytes[i] = (byte)Math.Clamp(v * 255f, 0f, 255f);
             }
         }
 

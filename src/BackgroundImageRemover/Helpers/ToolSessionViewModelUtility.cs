@@ -33,7 +33,7 @@ public static class ToolSessionViewModelUtility
         }
 
         using var bgra = result.ToBgra(alpha);
-        bitmap = bgra.ToBitmapSource();
+        bitmap = bgra.ToFrozenBitmapSource();
         return true;
     }
 

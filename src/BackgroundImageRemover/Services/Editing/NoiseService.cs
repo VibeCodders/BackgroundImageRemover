@@ -34,8 +34,6 @@ public static class NoiseService
 
         var result = input.Clone();
         var rng = new Random();
-        int rows = input.Rows;
-        int cols = input.Cols;
         int channels = input.Channels();
 
         double saltProb = strength / 2.0;
@@ -43,33 +41,37 @@ public static class NoiseService
 
         if (channels == 1)
         {
-            PixelLoop.ForEach(rows, cols, (y, x) =>
+            byte[] data = PixelLoop.GetData<byte>(result);
+            for (int i = 0; i < data.Length; i++)
             {
                 double r = rng.NextDouble();
                 if (r < saltProb)
                 {
-                    result.Set<byte>(y, x, 255);
+                    data[i] = 255;
                 }
                 else if (r < saltProb + pepperProb)
                 {
-                    result.Set<byte>(y, x, 0);
+                    data[i] = 0;
                 }
-            });
+            }
+            PixelLoop.SetData(result, data);
         }
         else
         {
-            PixelLoop.ForEach(rows, cols, (y, x) =>
+            Vec3b[] data = PixelLoop.GetData<Vec3b>(result);
+            for (int i = 0; i < data.Length; i++)
             {
                 double r = rng.NextDouble();
                 if (r < saltProb)
                 {
-                    result.Set<Vec3b>(y, x, new Vec3b(255, 255, 255));
+                    data[i] = new Vec3b(255, 255, 255);
                 }
                 else if (r < saltProb + pepperProb)
                 {
-                    result.Set<Vec3b>(y, x, new Vec3b(0, 0, 0));
+                    data[i] = new Vec3b(0, 0, 0);
                 }
-            });
+            }
+            PixelLoop.SetData(result, data);
         }
 
         return result;

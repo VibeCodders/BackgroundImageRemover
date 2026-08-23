@@ -22,29 +22,37 @@ public static class CloneStampService
         opacity = Math.Clamp(opacity, 0.0, 1.0);
         var result = bgr.Clone();
 
-        PixelLoop.ForEach(result, (y, x) =>
+        // Bulk array access: one copy in/out instead of native interop per pixel.
+        byte[] maskData = PixelLoop.GetData<byte>(mask);
+        Vec3b[] dstData = PixelLoop.GetData<Vec3b>(result);
+        int cols = result.Cols;
+        int rows = result.Rows;
+        for (int i = 0; i < dstData.Length; i++)
         {
-            byte maskValue = mask.Get<byte>(y, x);
+            byte maskValue = maskData[i];
             if (maskValue == 0)
             {
-                return;
+                continue;
             }
 
+            int y = i / cols;
+            int x = i % cols;
             int srcY = y - (int)sourceOffset.Y;
             int srcX = x - (int)sourceOffset.X;
-            if (srcY < 0 || srcY >= result.Rows || srcX < 0 || srcX >= result.Cols)
+            if (srcY < 0 || srcY >= rows || srcX < 0 || srcX >= cols)
             {
-                return;
+                continue;
             }
 
             double alpha = maskValue / 255.0 * opacity;
-            Vec3b src = result.Get<Vec3b>(srcY, srcX);
-            Vec3b dst = result.Get<Vec3b>(y, x);
-            result.Set<Vec3b>(y, x, new Vec3b(
+            Vec3b src = dstData[srcY * cols + srcX];
+            Vec3b dst = dstData[i];
+            dstData[i] = new Vec3b(
                 (byte)Math.Round(dst[0] * (1 - alpha) + src[0] * alpha),
                 (byte)Math.Round(dst[1] * (1 - alpha) + src[1] * alpha),
-                (byte)Math.Round(dst[2] * (1 - alpha) + src[2] * alpha)));
-        });
+                (byte)Math.Round(dst[2] * (1 - alpha) + src[2] * alpha));
+        }
+        PixelLoop.SetData(result, dstData);
 
         return result;
     }

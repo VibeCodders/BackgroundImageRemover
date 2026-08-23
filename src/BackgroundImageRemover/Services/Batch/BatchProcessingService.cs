@@ -68,58 +68,86 @@ public sealed class BatchProcessingService : IBatchProcessingService
 
         try
         {
+            // Files are independent (distinct outputs, no shared state), so process them in
+            // parallel. The strategies, loader and exporter are all re-entrant per call (ONNX
+            // sessions serialize their own runs, GrabCut guards its cached mask with a lock).
+            // A bounded degree keeps memory in check and avoids oversubscribing CPU-bound
+            // strategies that already use all cores. Counters are locked so progress stays
+            // coherent when several files finish at once.
             int failed = 0;
             int skipped = 0;
-            for (int i = 0; i < inputFiles.Count; i++)
-            {
-                ct.ThrowIfCancellationRequested();
-                string file = inputFiles[i];
-                string baseName = Path.GetFileNameWithoutExtension(file);
-                string suffix = exportOptions is { ExportJpeg: true } ? "_cutout.jpg" : exportOptions is { ExportWebp: true } ? "_cutout.webp" : "_cutout.png";
-                string outPath = Path.Combine(outputFolder, baseName + suffix);
+            int completed = 0;
+            var gate = new object();
+            int maxDegree = Math.Clamp(Environment.ProcessorCount, 1, 4);
 
-                // With SkipExisting, files whose cutout already exists are left untouched so a
-                // batch can be re-run to fill in only the missing outputs (e.g. after adding
-                // new files to the input folder).
-                if (exportOptions is { SkipExisting: true } && File.Exists(outPath))
+            await Parallel.ForEachAsync(inputFiles,
+                new ParallelOptions { MaxDegreeOfParallelism = maxDegree, CancellationToken = ct },
+                async (file, fileCt) =>
                 {
-                    skipped++;
-                    progress?.Report(new BatchProgress(i + 1, inputFiles.Count, file, failed, skipped));
-                    continue;
-                }
+                    string baseName = Path.GetFileNameWithoutExtension(file);
+                    string suffix = exportOptions is { ExportJpeg: true } ? "_cutout.jpg" : exportOptions is { ExportWebp: true } ? "_cutout.webp" : "_cutout.png";
+                    string outPath = Path.Combine(outputFolder, baseName + suffix);
 
-                progress?.Report(new BatchProgress(i, inputFiles.Count, file, failed, skipped));
-
-                try
-                {
-                    using var loaded = await _loader.LoadAsync(file, ct);
-                    using var result = await strategy.RunFullAsync(loaded.FullBgr, context, ct);
-
-                    if (exportOptions is { ExportJpeg: true })
+                    lock (gate)
                     {
-                        using var composited = CompositeForJpeg(result.Bgra, exportOptions, loaded.FullBgr, backgroundImage);
-                        await _exporter.ExportJpgAsync(composited, outPath, exportOptions.JpegQuality, ct);
+                        progress?.Report(new BatchProgress(completed, inputFiles.Count, file, failed, skipped));
                     }
-                    else if (exportOptions is { ExportWebp: true })
+
+                    // With SkipExisting, files whose cutout already exists are left untouched so a
+                    // batch can be re-run to fill in only the missing outputs (e.g. after adding
+                    // new files to the input folder).
+                    if (exportOptions is { SkipExisting: true } && File.Exists(outPath))
                     {
-                        // WebP keeps the transparency like PNG but is typically much smaller.
-                        await _exporter.ExportWebpAsync(result.Bgra, outPath, exportOptions.JpegQuality, ct);
+                        lock (gate)
+                        {
+                            skipped++;
+                            completed++;
+                            progress?.Report(new BatchProgress(completed, inputFiles.Count, file, failed, skipped));
+                        }
+                        return;
                     }
-                    else
+
+                    try
                     {
-                        await _exporter.ExportPngAsync(result.Bgra, outPath, ct);
+                        using var loaded = await _loader.LoadAsync(file, fileCt);
+                        using var result = await strategy.RunFullAsync(loaded.FullBgr, context, fileCt);
+
+                        if (exportOptions is { ExportJpeg: true })
+                        {
+                            using var composited = CompositeForJpeg(result.Bgra, exportOptions, loaded.FullBgr, backgroundImage);
+                            await _exporter.ExportJpgAsync(composited, outPath, exportOptions.JpegQuality, fileCt);
+                        }
+                        else if (exportOptions is { ExportWebp: true })
+                        {
+                            // WebP keeps the transparency like PNG but is typically much smaller.
+                            await _exporter.ExportWebpAsync(result.Bgra, outPath, exportOptions.JpegQuality, fileCt);
+                        }
+                        else
+                        {
+                            await _exporter.ExportPngAsync(result.Bgra, outPath, fileCt);
+                        }
                     }
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch
-                {
-                    // Skip files that fail to load/process; the batch continues with the rest.
-                    failed++;
-                }
-            }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch
+                    {
+                        // Skip files that fail to load/process; the batch continues with the rest.
+                        lock (gate)
+                        {
+                            failed++;
+                        }
+                    }
+                    finally
+                    {
+                        lock (gate)
+                        {
+                            completed++;
+                            progress?.Report(new BatchProgress(completed, inputFiles.Count, file, failed, skipped));
+                        }
+                    }
+                });
 
             progress?.Report(new BatchProgress(inputFiles.Count, inputFiles.Count, string.Empty, failed, skipped));
         }

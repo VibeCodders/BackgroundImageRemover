@@ -54,17 +54,22 @@ public static class FxService
         var c = color ?? new Vec3b(80, 120, 255); // warm orange-red in BGR
         var result = bgr.Clone();
         float maxDist = MathF.Sqrt(bgr.Width * bgr.Width + bgr.Height * bgr.Height);
-        PixelLoop.ForEach(bgr, (y, x) =>
+        int cols = bgr.Cols;
+        Vec3b[] data = PixelLoop.GetData<Vec3b>(result);
+        for (int i = 0; i < data.Length; i++)
         {
+            int x = i % cols;
+            int y = i / cols;
             float d = MathF.Sqrt(x * x + y * y) / maxDist;
             float falloff = MathF.Pow(1.0f - d, 2.0f);
             float amount = (float)strength * falloff;
-            var px = result.At<Vec3b>(y, x);
+            var px = data[i];
             px.Item0 = (byte)Math.Min(255, px.Item0 + c.Item0 * amount);
             px.Item1 = (byte)Math.Min(255, px.Item1 + c.Item1 * amount);
             px.Item2 = (byte)Math.Min(255, px.Item2 + c.Item2 * amount);
-            result.Set(y, x, px);
-        });
+            data[i] = px;
+        }
+        PixelLoop.SetData(result, data);
         return result;
     }
 
@@ -129,15 +134,22 @@ public static class FxService
     {
         using var mapX = new Mat(channel.Size(), MatType.CV_32FC1);
         using var mapY = new Mat(channel.Size(), MatType.CV_32FC1);
-        PixelLoop.ForEach(channel, (y, x) =>
+        float[] mapXData = PixelLoop.GetData<float>(mapX);
+        float[] mapYData = PixelLoop.GetData<float>(mapY);
+        int cols = channel.Cols;
+        for (int i = 0; i < mapXData.Length; i++)
         {
+            int x = i % cols;
+            int y = i / cols;
             float dx = x - cx;
             float dy = y - cy;
             float norm = maxR > 0 ? MathF.Sqrt(dx * dx + dy * dy) / maxR : 0;
             float scale = 1.0f + strength * 0.06f * norm;
-            mapX.Set(y, x, cx + dx * scale);
-            mapY.Set(y, x, cy + dy * scale);
-        });
+            mapXData[i] = cx + dx * scale;
+            mapYData[i] = cy + dy * scale;
+        }
+        PixelLoop.SetData(mapX, mapXData);
+        PixelLoop.SetData(mapY, mapYData);
 
         var result = new Mat();
         Cv2.Remap(channel, result, mapX, mapY, InterpolationFlags.Linear, BorderTypes.Constant, Scalar.All(0));

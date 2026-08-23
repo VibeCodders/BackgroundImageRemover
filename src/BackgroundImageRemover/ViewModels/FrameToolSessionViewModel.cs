@@ -258,7 +258,7 @@ namespace BackgroundImageRemover.ViewModels;
         try
         {
             using var result = BuildFramedBgra();
-            ResultBitmap = result.ToBitmapSource();
+            ResultBitmap = result.ToFrozenBitmapSource();
             IsDirty = BorderThickness > 0 || CornerRadius > 0 || PaddingLeft + PaddingTop + PaddingRight + PaddingBottom > 0
                 || InnerBorderThickness > 0 || OuterShadowEnabled || UseMatColor
                 || GradientBorderEnabled || BevelEnabled || PolaroidEnabled || VignetteEnabled

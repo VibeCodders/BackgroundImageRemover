@@ -104,15 +104,15 @@ public static class ImageProcessingHelper
                         using var shiftPositive = new Mat();
                         Cv2.Add(hFloat, Scalar.All(360.0), shiftPositive);
 
-                        for (int r = 0; r < channels[0].Rows; r++)
+                        float[] shiftedData = PixelLoop.GetData<float>(shiftPositive);
+                        byte[] hueData = PixelLoop.GetData<byte>(channels[0]);
+                        for (int i = 0; i < shiftedData.Length; i++)
                         {
-                            for (int c = 0; c < channels[0].Cols; c++)
-                            {
-                                float val = shiftPositive.At<float>(r, c) % 180f;
-                                if (val < 0) val += 180f;
-                                channels[0].Set(r, c, (byte)val);
-                            }
+                            float val = shiftedData[i] % 180f;
+                            if (val < 0) val += 180f;
+                            hueData[i] = (byte)val;
                         }
+                        PixelLoop.SetData(channels[0], hueData);
 
                         // Saturation multiplier
                         if (Math.Abs(adjustments.Saturation - 1.0) > 1e-4)
@@ -335,19 +335,21 @@ public static class ImageProcessingHelper
         float centerX = size.Width / 2.0f;
         float centerY = size.Height / 2.0f;
         float maxDistance = MathF.Sqrt(centerX * centerX + centerY * centerY);
+        int cols = size.Width;
 
-        for (int r = 0; r < size.Height; r++)
+        float[] data = PixelLoop.GetData<float>(mask);
+        for (int i = 0; i < data.Length; i++)
         {
+            int c = i % cols;
+            int r = i / cols;
+            float dx = c - centerX;
             float dy = r - centerY;
-            for (int c = 0; c < size.Width; c++)
-            {
-                float dx = c - centerX;
-                float dist = MathF.Sqrt(dx * dx + dy * dy) / maxDistance;
-                // Cosine smooth roll-off
-                float factor = 1.0f - (float)strength * MathF.Pow(dist, 1.8f);
-                mask.Set(r, c, Math.Clamp(factor, 0.0f, 1.0f));
-            }
+            float dist = MathF.Sqrt(dx * dx + dy * dy) / maxDistance;
+            // Cosine smooth roll-off
+            float factor = 1.0f - (float)strength * MathF.Pow(dist, 1.8f);
+            data[i] = Math.Clamp(factor, 0.0f, 1.0f);
         }
+        PixelLoop.SetData(mask, data);
 
         return mask;
     }

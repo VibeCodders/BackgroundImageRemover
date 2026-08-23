@@ -125,7 +125,7 @@ public sealed class PreviewRunner : IDisposable
 
             _lastPreviewResult?.Dispose();
             _lastPreviewResult = result;
-            _setResult(result.Bgra.ToBitmapSource());
+            _setResult(result.Bgra.ToFrozenBitmapSource());
             _onPreviewCompleted();
         }
         catch (OperationCanceledException)

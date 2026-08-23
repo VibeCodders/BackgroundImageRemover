@@ -44,16 +44,21 @@ public static class DuotoneService
         {
             var dark = new Vec3b(darkColor[0], darkColor[1], darkColor[2]);
             var light = new Vec3b(lightColor[0], lightColor[1], lightColor[2]);
-            PixelLoop.ForEach(h, w, (y, x) =>
+
+            // Bulk array access: one copy in/out instead of native interop per pixel.
+            byte[] grayData = PixelLoop.GetData<byte>(gray);
+            Vec3b[] srcData = PixelLoop.GetData<Vec3b>(bgr);
+            var dstData = new Vec3b[srcData.Length];
+            for (int i = 0; i < srcData.Length; i++)
             {
-                double lum = gray.Get<byte>(y, x) / 255.0;
+                double lum = grayData[i] / 255.0;
                 double z = (lum - midpoint) / transition;
                 double f = SmoothStep(-0.5, 0.5, z);
 
                 var target = PixelColor.Blend(dark, light, f);
-                var original = bgr.Get<Vec3b>(y, x);
-                result.Set(y, x, PixelColor.Blend(original, target, strength));
-            });
+                dstData[i] = PixelColor.Blend(srcData[i], target, strength);
+            }
+            PixelLoop.SetData(result, dstData);
 
             return result;
         }

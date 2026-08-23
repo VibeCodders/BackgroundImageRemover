@@ -29,8 +29,11 @@ public static class VignetteService
 
         // Build a radial falloff mask (0 at center, strength at corners).
         var mask = new Mat(h, w, MatType.CV_32FC1, Scalar.All(0));
-        PixelLoop.ForEach(h, w, (y, x) =>
+        float[] maskData = PixelLoop.GetData<float>(mask);
+        for (int i = 0; i < maskData.Length; i++)
         {
+            int x = i % w;
+            int y = i / w;
             double dx = (x - cx) / (w / 2.0);
             double dy = (y - cy) / (h / 2.0);
             // Roundness blends between elliptical (0) and circular (1).
@@ -39,8 +42,9 @@ public static class VignetteService
             double t = Math.Clamp(dist / radius, 0.0, 1.0);
             // Feather softens the transition.
             t = Math.Pow(t, 1.0 + feather * 2.0);
-            mask.Set(y, x, (float)(t * strength));
-        });
+            maskData[i] = (float)(t * strength);
+        }
+        PixelLoop.SetData(mask, maskData);
 
         try
         {

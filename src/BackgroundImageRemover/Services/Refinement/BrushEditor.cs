@@ -43,6 +43,9 @@ public static class BrushEditor
 
         double hardRadius = radius * Math.Clamp(hardness, 0.0, 0.99);
 
+        // MatIndexer gives direct pointer access (no per-pixel native interop). The stamp
+        // region is small, so a whole-Mat GetArray/SetArray round-trip would be wasteful.
+        var indexer = alpha.GetGenericIndexer<byte>();
         for (int y = minY; y <= maxY; y++)
         {
             for (int x = minX; x <= maxX; x++)
@@ -58,11 +61,11 @@ public static class BrushEditor
                     : 1.0 - (dist - hardRadius) / Math.Max(1e-6, radius - hardRadius);
                 falloff *= Math.Clamp(opacity, 0.0, 1.0);
 
-                byte current = alpha.Get<byte>(y, x);
+                byte current = indexer[y, x];
                 byte updated = mode == BrushMode.Restore
                     ? (byte)Math.Clamp(current + falloff * 255, 0, 255)
                     : (byte)Math.Clamp(current - falloff * 255, 0, 255);
-                alpha.Set(y, x, updated);
+                indexer[y, x] = updated;
             }
         }
     }

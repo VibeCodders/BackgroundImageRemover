@@ -93,6 +93,7 @@ public partial class CloneStampToolSessionViewModel : ToolSessionViewModelBase, 
         int x2 = Math.Min(mask.Cols - 1, (int)center.X + r);
         int y2 = Math.Min(mask.Rows - 1, (int)center.Y + r);
 
+        var indexer = mask.GetGenericIndexer<byte>();
         for (int y = y1; y <= y2; y++)
         {
             for (int x = x1; x <= x2; x++)
@@ -112,7 +113,7 @@ public partial class CloneStampToolSessionViewModel : ToolSessionViewModelBase, 
                     double t = (dist - r * Hardness) / (r * (1 - Hardness));
                     val = 1.0 - t * t;
                 }
-                mask.Set<byte>(y, x, (byte)Math.Clamp(val * 255, 0, 255));
+                indexer[y, x] = (byte)Math.Clamp(val * 255, 0, 255);
             }
         }
         return mask;

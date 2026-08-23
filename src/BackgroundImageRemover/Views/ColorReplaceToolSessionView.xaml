@@ -11,6 +11,7 @@
 
 <controls:ToolSessionPanel Title="Color Replace" Description="Click the image to pick the target color, or choose it below." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:ColorPickerField Header="Target color" SelectedColor="{Binding TargetColor}" />
 
@@ -20,6 +21,7 @@
 <controls:SliderField Header="Softness" Value="{Binding Softness}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
 <CheckBox Content="Preserve luminance" IsChecked="{Binding PreserveLuminance}" Margin="0,0,0,16" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

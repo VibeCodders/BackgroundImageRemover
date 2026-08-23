@@ -11,9 +11,11 @@
 
 <controls:ToolSessionPanel Title="Oil Paint" Description="Replaces each area with the dominant colour of its neighbourhood, like thick brush strokes." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Brush size" Value="{Binding BrushSize}" Minimum="1" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True"  />
 <controls:SliderField Header="Detail" Value="{Binding Detail}" Minimum="2" Maximum="32" TickFrequency="1" IsSnapToTickEnabled="True"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

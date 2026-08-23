@@ -12,6 +12,7 @@
 
 <controls:ToolSessionPanel Title="Hue / Saturation"  ResetLabel="↺ Reset All">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <CheckBox Content="Whole image" IsChecked="{Binding WholeImage}" Margin="0,0,0,8" />
                     <CheckBox Content="Paint mode" IsChecked="{Binding PaintMode}" Margin="0,0,0,8" />
@@ -26,6 +27,7 @@
                         <Button Content="↺ Reset" Command="{Binding ResetCommand}" Padding="8,4" />
                     </StackPanel>
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

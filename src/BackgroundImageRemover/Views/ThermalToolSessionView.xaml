@@ -11,11 +11,13 @@
 
 <controls:ToolSessionPanel Title="Thermal" Description="Maps image brightness onto a blue-to-red heat palette, like an infrared camera view." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Intensity" Value="{Binding Intensity}" Minimum="0" Maximum="2" SmallChange="0.05" ValueFormat="{}{0:0.0}"  />
 <CheckBox Content="Invert (cold = bright)" IsChecked="{Binding Invert}" Margin="0,2,0,16"
                               Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

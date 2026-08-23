@@ -11,10 +11,12 @@
 
 <controls:ToolSessionPanel Title="Rotate" Description="Rotate by an arbitrary angle around the image center." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Angle" Value="{Binding Angle}" Minimum="-360" Maximum="360" SmallChange="1" ValueFormat="{}{0:0}°"  />
 <CheckBox Content="Expand canvas to fit the rotated image" IsChecked="{Binding Expand}" Margin="0,0,0,16" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

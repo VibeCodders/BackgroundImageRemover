@@ -11,6 +11,7 @@
 
 <controls:ToolSessionPanel Title="Gradient" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Shape" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding GradientKinds}" SelectedItem="{Binding Kind}" Margin="0,0,0,12" />
@@ -24,6 +25,7 @@
 </StackPanel>
 
                     <controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

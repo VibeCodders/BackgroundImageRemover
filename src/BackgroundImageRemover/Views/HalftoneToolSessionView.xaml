@@ -11,6 +11,7 @@
 
 <controls:ToolSessionPanel Title="Halftone" Description="Renders the image as dots on a white background; darker areas get bigger dots, like a printed photograph." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:ColorPickerField Header="Dot color" SelectedColor="{Binding DotColor}" />
 
@@ -18,6 +19,7 @@
 <CheckBox Content="Invert (light = big dots)" IsChecked="{Binding Invert}" Margin="0,2,0,16"
                               Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

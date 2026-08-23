@@ -12,6 +12,7 @@
 
 <controls:ToolSessionPanel Title="Clone Stamp" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Source point:" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
@@ -24,6 +25,7 @@
                     <controls:SliderField Header="Brush size" Value="{Binding BrushRadius}" Minimum="2" Maximum="150" ValueFormat="{}{0:0}px"  />
 <controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0.05" Maximum="1" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
 <controls:SliderField Header="Hardness" Value="{Binding Hardness}" Minimum="0" Maximum="0.95" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

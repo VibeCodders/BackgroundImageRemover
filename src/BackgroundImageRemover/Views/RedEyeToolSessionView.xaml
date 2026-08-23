@@ -12,10 +12,12 @@
 
 <controls:ToolSessionPanel Title="Red Eye Removal" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Brush radius" Value="{Binding Radius}" Minimum="5" Maximum="80" ValueFormat="{}{0:0}px"  />
 <TextBlock Text="Click on a red eye to remove it." Foreground="{DynamicResource Theme.MutedForegroundBrush}" Margin="0,8,0,0" TextWrapping="Wrap" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

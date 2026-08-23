@@ -21,6 +21,7 @@
 <!-- Side Adjustments Panel -->
         <controls:ToolSessionPanel Title="Color &amp; Visual Filters"  ShowReset="False">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <!-- Brightness -->
                     <controls:SliderField Header="Brightness" Value="{Binding AdjBrightness}" Minimum="-100" Maximum="100" SmallChange="1" LargeChange="10" ValueFormat="{}{0:0}"  />
@@ -74,7 +75,8 @@
 
                     <Button Content="↺ Reset to Default" Command="{Binding ResetAdjustmentsCommand}"
                             Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </controls:ToolSessionPanel.Panel>
+                </StackPanel>
+</controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>
 

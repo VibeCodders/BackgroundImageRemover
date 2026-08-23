@@ -11,6 +11,7 @@
 
 <controls:ToolSessionPanel Title="Transform" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Quick flips &amp; rotations" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <UniformGrid Columns="2">
@@ -136,6 +137,7 @@
                     </Grid>
                     <Button Content="Apply tile" Command="{Binding ApplyTileCommand}" Margin="0,0,0,16" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

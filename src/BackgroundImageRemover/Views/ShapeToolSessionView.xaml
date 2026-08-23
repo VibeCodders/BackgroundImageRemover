@@ -12,6 +12,7 @@
 
 <controls:ToolSessionPanel Title="Shape" Description="Drag on the left image to place the shape; drag inside it to move, drag its corners to resize, drag the handle above it to rotate (hold Shift to snap to 5° steps). The controls below let you fine-tune." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Shape type" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding ShapeKinds}" SelectedItem="{Binding ShapeKind}" Margin="0,0,0,8" />
@@ -33,8 +34,12 @@
                                                Visibility="{Binding FillEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <controls:SliderField Header="Fill opacity" Value="{Binding FillOpacity}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
+        <controls:ToolSessionPanel.StatusBarContent>
+            <TextBlock x:Name="CursorPositionLabel" Margin="12,0,0,0" />
+        </controls:ToolSessionPanel.StatusBarContent>
         <controls:ToolSessionPanel.Preview>
 
 

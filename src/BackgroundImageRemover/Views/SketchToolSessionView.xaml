@@ -11,10 +11,12 @@
 
 <controls:ToolSessionPanel Title="Sketch" Description="Converts the image into a pencil sketch (luminance divided by its own blur)." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Softness" Value="{Binding BlurRadius}" Minimum="1" Maximum="50" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
 <CheckBox Content="Invert (dark lines on light paper)" IsChecked="{Binding Invert}" Margin="0,0,0,16" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

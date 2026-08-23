@@ -12,6 +12,7 @@
 
 <controls:ToolSessionPanel Title="Crop" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Aspect ratio" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding AspectPresets}" DisplayMemberPath="Label" SelectedItem="{Binding SelectedAspect}" Margin="0,0,0,12" />
@@ -59,6 +60,7 @@
                         <Button Content="↻ 90°" Command="{Binding Rotate90ClockwiseCommand}" Margin="4,0,0,0" />
                     </UniformGrid>
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

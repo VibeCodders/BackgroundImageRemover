@@ -86,6 +86,19 @@ public partial class ToolSessionPanel : UserControl
         DependencyProperty.Register(nameof(ResetLabel), typeof(string), typeof(ToolSessionPanel), new PropertyMetadata("↺ Reset"));
 
     /// <summary>
+    /// Optional extra content appended to the status bar after the status message
+    /// (e.g. a live cursor-position label); null renders nothing.
+    /// </summary>
+    public object? StatusBarContent
+    {
+        get => GetValue(StatusBarContentProperty);
+        set => SetValue(StatusBarContentProperty, value);
+    }
+
+    public static readonly DependencyProperty StatusBarContentProperty =
+        DependencyProperty.Register(nameof(StatusBarContent), typeof(object), typeof(ToolSessionPanel), new PropertyMetadata(null));
+
+    /// <summary>
     /// When false the built-in status bar is hidden; tools with custom status content
     /// (e.g. busy indicators) render their own StatusBar in the view instead.
     /// </summary>

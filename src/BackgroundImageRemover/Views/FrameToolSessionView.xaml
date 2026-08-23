@@ -19,6 +19,7 @@
 
 <controls:ToolSessionPanel Title="Frame &amp; Border" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Border thickness" Value="{Binding BorderThickness}" Minimum="0" Maximum="200" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
 <controls:ColorPickerField Header="Border color" SelectedColor="{Binding BorderColor}" />
@@ -99,6 +100,7 @@
 <controls:ColorPickerField Header="Vignette color" SelectedColor="{Binding VignetteColor}" />
                     </StackPanel>
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

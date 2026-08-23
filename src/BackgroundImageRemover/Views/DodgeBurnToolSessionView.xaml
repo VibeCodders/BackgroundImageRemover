@@ -12,6 +12,7 @@
 
 <controls:ToolSessionPanel Title="Dodge / Burn"  ResetLabel="↺ Reset All">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <RadioButton Content="Dodge (lighten)" IsChecked="{Binding Dodge}" Margin="0,0,0,4" />
                     <RadioButton Content="Burn (darken)" IsChecked="{Binding Dodge, Converter={StaticResource InverseBoolToVisibilityConverter}}" Margin="0,0,0,8" />
@@ -27,6 +28,7 @@
                         <Button Content="↺ Reset" Command="{Binding ResetCommand}" Padding="8,4" />
                     </StackPanel>
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

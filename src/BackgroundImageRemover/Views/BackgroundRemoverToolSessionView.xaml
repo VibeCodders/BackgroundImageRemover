@@ -42,6 +42,7 @@
         <!-- Side Controls Panel -->
         <controls:ToolSessionPanel Title="Removal Strategy" PanelWidth="330" ShowStatusBar="False">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
                     <ComboBox ItemsSource="{Binding Source={StaticResource StrategyKindValues}}"
                               SelectedItem="{Binding SelectedStrategy}"
                               Margin="0,0,0,4" />
@@ -279,7 +280,8 @@
                         <TextBlock Text="Opacity" />
                         <Slider Minimum="0" Maximum="1" Value="{Binding ParentDocument.ExportShadowOpacity}" TickFrequency="0.05" />
                     </StackPanel>
-                </controls:ToolSessionPanel.Panel>
+                </StackPanel>
+</controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>
 

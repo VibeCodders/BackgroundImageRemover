@@ -21,6 +21,7 @@
 
 <controls:ToolSessionPanel Title="Heal &amp; Repair"  ShowReset="False">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Paint blemishes on the image, then heal:" FontWeight="SemiBold" Margin="0,0,0,4" />
 
@@ -38,6 +39,7 @@
 <controls:SliderField Header="Scratch removal" Value="{Binding RemoveScratchesStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
 <controls:SliderField Header="Surface smooth" Value="{Binding SurfaceSmoothStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
 <controls:SliderField Header="Detail enhance" Value="{Binding DetailEnhanceStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

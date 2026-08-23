@@ -32,6 +32,7 @@
 
 <controls:ToolSessionPanel Title="Resize"  ShowReset="False">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Mode" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource ResizeModeValues}}" SelectedItem="{Binding Mode}" Margin="0,0,0,12" />
@@ -89,7 +90,8 @@
                         <Button Content="1024 wide" Command="{Binding PresetWidth1024Command}" Margin="0,0,4,0" />
                         <Button Content="1920 wide" Command="{Binding PresetWidth1920Command}" Margin="4,0,0,0" />
                     </UniformGrid>
-                </controls:ToolSessionPanel.Panel>
+                </StackPanel>
+</controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>
 

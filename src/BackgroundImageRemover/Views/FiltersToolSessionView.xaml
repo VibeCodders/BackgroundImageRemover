@@ -21,6 +21,7 @@
 
 <controls:ToolSessionPanel Title="Artistic Filters" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
                     <TextBlock Text="Filter" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource FilterKindValues}}" SelectedItem="{Binding SelectedFilter}" Margin="0,0,0,12" />
 
@@ -32,6 +33,7 @@
                         <controls:SliderField Header="Levels" Value="{Binding PosterizeLevels}" Minimum="2" Maximum="16" TickFrequency="1" IsSnapToTickEnabled="True"  />
 </StackPanel>
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

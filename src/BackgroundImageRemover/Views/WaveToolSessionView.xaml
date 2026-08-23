@@ -11,10 +11,12 @@
 
 <controls:ToolSessionPanel Title="Wave" Description="Displaces the pixels with a sine wave; the angle rotates the direction of the ridges." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Amplitude" Value="{Binding Amplitude}" Minimum="0" Maximum="60" SmallChange="1" ValueFormat="{}{0:0}px"  />
 <controls:SliderField Header="Wavelength" Value="{Binding Wavelength}" Minimum="10" Maximum="400" SmallChange="5" ValueFormat="{}{0:0}px"  />
 <controls:SliderField Header="Angle" Value="{Binding Angle}" Minimum="0" Maximum="360" TickFrequency="5" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}°"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

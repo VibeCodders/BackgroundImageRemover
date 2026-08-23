@@ -12,12 +12,14 @@
 
 <controls:ToolSessionPanel Title="Lasso Select" PanelWidth="280" Description="Draw a freehand outline on the left. The area inside becomes the cutout -- toggle Invert to keep the outside instead."  ShowReset="False">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <CheckBox Content="Invert (keep outside)" IsChecked="{Binding InvertSelection}" Margin="0,0,0,12" />
 
                     <controls:SliderField Header="Edge feather" Value="{Binding FeatherPixels}" Minimum="0" Maximum="40"  />
 <Button Content="Clear selection" Command="{Binding ClearSelectionCommand}" />
-                </controls:ToolSessionPanel.Panel>
+                </StackPanel>
+</controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>
 

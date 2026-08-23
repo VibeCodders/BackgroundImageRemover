@@ -11,6 +11,7 @@
 
 <controls:ToolSessionPanel Title="Bokeh" Description="Scatters soft blurred circles over the image for a dreamy depth-of-field look." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:ColorPickerField Header="Circle color" SelectedColor="{Binding Color}" />
 
@@ -18,6 +19,7 @@
 <controls:SliderField Header="Count" Value="{Binding Count}" Minimum="0" Maximum="400" TickFrequency="10"  />
 <controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
 <controls:SliderField Header="Edge blur" Value="{Binding Blur}" Minimum="0" Maximum="24" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

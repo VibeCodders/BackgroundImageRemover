@@ -32,6 +32,7 @@
 
 <controls:ToolSessionPanel Title="Overlay (logo / sticker)"  ShowReset="False">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <Button Content="Choose overlay image..." Command="{Binding PickOverlayCommand}" Margin="0,0,0,12" />
 
@@ -73,7 +74,8 @@
                         <controls:SliderField Header="Shadow offset" Value="{Binding ShadowOffset}" Minimum="0" Maximum="40" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
 <controls:SliderField Header="Shadow opacity" Value="{Binding ShadowOpacity}" Minimum="0" Maximum="1" ValueFormat="{}{0:P0}"  />
 </StackPanel>
-                </controls:ToolSessionPanel.Panel>
+                </StackPanel>
+</controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>
 

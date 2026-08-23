@@ -14,6 +14,7 @@
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusMessage}" />
             </StatusBarItem>
+            <ContentControl Content="{Binding StatusBarContent, RelativeSource={RelativeSource AncestorType=UserControl}}" />
         </StatusBar>
 
         <!-- Shared right-side tool panel: title, optional description, content and reset button. -->

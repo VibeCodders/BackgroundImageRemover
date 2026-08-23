@@ -11,10 +11,12 @@
 
 <controls:ToolSessionPanel Title="Cartoon" Description="Smooths the image into flat colors and adds dark outlines for a cartoon look." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Smoothness" Value="{Binding Smoothness}" Minimum="1" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True"  />
 <controls:SliderField Header="Color levels" Value="{Binding QuantizeLevels}" Minimum="2" Maximum="32" TickFrequency="1" IsSnapToTickEnabled="True"  />
 <controls:SliderField Header="Outline strength" Value="{Binding EdgeThreshold}" Minimum="0" Maximum="40" TickFrequency="1" IsSnapToTickEnabled="True"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

@@ -12,6 +12,7 @@
 
 <controls:ToolSessionPanel Title="Color Picker" Description="Click on the image to sample a color."  ShowReset="False">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <CheckBox Content="Average sample" IsChecked="{Binding AverageSample}" Margin="0,0,0,8" />
                     <controls:SliderField Header="Brush size" Value="{Binding BrushRadius}" Minimum="1" Maximum="50" ValueFormat="{}{0:0}px"  />
@@ -27,7 +28,8 @@
                         <Button Content="Copy Hex" Command="{Binding CopyHexCommand}" Padding="8,4" Margin="0,0,8,0" />
                         <Button Content="Copy RGB" Command="{Binding CopyRgbCommand}" Padding="8,4" />
                     </StackPanel>
-                </controls:ToolSessionPanel.Panel>
+                </StackPanel>
+</controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>
 

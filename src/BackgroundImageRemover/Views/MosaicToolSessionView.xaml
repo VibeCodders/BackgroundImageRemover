@@ -26,6 +26,7 @@
 
 <controls:ToolSessionPanel Title="Mosaic" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <CheckBox Content="Paint region with brush" IsChecked="{Binding PaintMode}" Margin="0,0,0,8" />
 
@@ -65,6 +66,7 @@
                     <controls:ColorPickerField Header="Fill color" SelectedColor="{Binding FillColor}"
                                                Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidFill}" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

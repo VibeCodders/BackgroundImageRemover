@@ -27,6 +27,7 @@
 
 <controls:ToolSessionPanel Title="Levels" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Channel" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource LevelsChannelValues}}" SelectedItem="{Binding Channel}" Margin="0,0,0,12" />
@@ -52,6 +53,7 @@
                     <CheckBox Content="Equalize (CLAHE)" IsChecked="{Binding EqualizeEnabled}" Margin="0,0,0,4" />
                     <CheckBox Content="Invert (negative)" IsChecked="{Binding InvertEnabled}" Margin="0,0,0,12" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

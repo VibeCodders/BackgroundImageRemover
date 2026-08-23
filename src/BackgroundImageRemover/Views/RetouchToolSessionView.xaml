@@ -22,6 +22,7 @@
 <!-- Side Controls Panel -->
         <controls:ToolSessionPanel Title="Retouch Tools" PanelWidth="280"  ShowReset="False">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Tool Selection:" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <UniformGrid Columns="2" Margin="0,0,0,12">
@@ -79,7 +80,8 @@
 <controls:SliderField Header="Chromatic aberration" Value="{Binding ChromaticAberration}" Minimum="0" Maximum="2" SmallChange="0.05" ValueFormat="{}{0:0.00}"  />
 <CheckBox Content="Auto contrast" IsChecked="{Binding AutoContrast}" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <CheckBox Content="Auto white balance" IsChecked="{Binding AutoWhiteBalance}" FontWeight="SemiBold" />
-                </controls:ToolSessionPanel.Panel>
+                </StackPanel>
+</controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>
 

@@ -11,6 +11,7 @@
 
 <controls:ToolSessionPanel Title="Duotone" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Presets" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ItemsControl ItemsSource="{Binding Presets}" Margin="0,0,0,12">
@@ -41,6 +42,7 @@
 
                     <controls:SliderField Header="Midpoint" Value="{Binding Midpoint}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
 <controls:SliderField Header="Strength" Value="{Binding Strength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

@@ -11,6 +11,7 @@
 
 <controls:ToolSessionPanel Title="Cinematic Effects" >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Bloom" Value="{Binding BloomStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
 <controls:SliderField Header="Glow" Value="{Binding GlowStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
@@ -19,6 +20,7 @@
 <TextBlock Text="Bokeh" FontWeight="SemiBold" Margin="0,8,0,4" />
                     <controls:SliderField Header="Count" Value="{Binding BokehCount}" Minimum="0" Maximum="200" TickFrequency="5" IsSnapToTickEnabled="True"  />
 <controls:SliderField Header="Size" Value="{Binding BokehSize}" Minimum="1" Maximum="80" ValueFormat="{}{0:0}px"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

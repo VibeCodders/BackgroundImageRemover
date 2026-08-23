@@ -21,6 +21,7 @@
 
 <controls:ToolSessionPanel Title="Perspective Correction" PanelWidth="320"  ResetLabel="↺ Reset corners">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Top-left" FontWeight="SemiBold" />
                     <Grid Margin="0,0,0,8">
@@ -81,6 +82,7 @@
                     <TextBlock Text="Interpolation" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource ResampleMethodValues}}" SelectedItem="{Binding Method}" Margin="0,0,0,16" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

@@ -27,6 +27,7 @@
 
 <controls:ToolSessionPanel Title="Emoji Overlay" Description="Choose a decorative emoji and position it on the image." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Emoji" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource EmojiKindValues}}" SelectedItem="{Binding SelectedEmoji}" Margin="0,0,0,12" />
@@ -45,6 +46,7 @@
                     </DockPanel>
 
                     <controls:SliderField Header="Margin" Value="{Binding Margin}" Minimum="0" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px" Visibility="{Binding ScatterMode, Converter={StaticResource InverseBoolToVisibilityConverter}}"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

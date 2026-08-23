@@ -27,6 +27,7 @@
 
 <controls:ToolSessionPanel Title="Text Watermark"  ShowReset="False">
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <TextBlock Text="Text" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
@@ -64,7 +65,8 @@
 </StackPanel>
 
                     <Button Content="✕ Clear text" Command="{Binding ClearTextCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
-                </controls:ToolSessionPanel.Panel>
+                </StackPanel>
+</controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>
 

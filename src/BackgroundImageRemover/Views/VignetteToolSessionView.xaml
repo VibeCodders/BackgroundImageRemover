@@ -11,12 +11,14 @@
 
 <controls:ToolSessionPanel Title="Vignette" Description="Adjust the vignette effect on the image." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Strength" Value="{Binding Strength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
 <controls:SliderField Header="Roundness" Value="{Binding Roundness}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
 <controls:SliderField Header="Feather" Value="{Binding Feather}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
 <CheckBox Content="Invert (lighten edges)" IsChecked="{Binding Invert}" Margin="0,0,0,16" />
 
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

@@ -11,10 +11,12 @@
 
 <controls:ToolSessionPanel Title="Glow" Description="Bright areas radiate a soft halo of light, like a lens bloom." >
         <controls:ToolSessionPanel.Panel>
+<StackPanel>
 
                     <controls:SliderField Header="Brightness threshold" Value="{Binding Threshold}" Minimum="0" Maximum="255" TickFrequency="5"  />
 <controls:SliderField Header="Glow radius" Value="{Binding Radius}" Minimum="0" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
 <controls:SliderField Header="Strength" Value="{Binding Strength}" Minimum="0" Maximum="2" SmallChange="0.1" ValueFormat="{}{0:0.0}x"  />
+</StackPanel>
 </controls:ToolSessionPanel.Panel>
 
         <controls:ToolSessionPanel.Preview>

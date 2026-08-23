@@ -5,32 +5,32 @@ using Xunit;
 using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
-public class HalftoneServiceTests
+public class HalftoneServiceTests : ServiceTestBase
 {
     [Fact]
     public void Apply_PreservesSizeAndType()
     {
-        using var input = new Mat(16, 16, MatType.CV_8UC3, new Scalar(40, 90, 140));
+        using var input = CreateTestInput(16, 16, new Scalar(40, 90, 140));
         using var result = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), false);
 
-        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
+        AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
     public void Apply_WithDarkArea_ChangesPixels()
     {
-        using var input = new Mat(16, 16, MatType.CV_8UC3, new Scalar(250, 250, 250));
+        using var input = CreateTestInput(16, 16, new Scalar(250, 250, 250));
         Cv2.Rectangle(input, new Rect(2, 2, 8, 8), new Scalar(10, 10, 10), -1);
 
         using var result = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), false);
 
-        ServiceTestHelper.AssertChangesPixels(input, result);
+        AssertChangesPixels(input, result);
     }
 
     [Fact]
     public void Apply_UniformWhite_ProducesBlankWhiteCanvas()
     {
-        using var input = new Mat(16, 16, MatType.CV_8UC3, new Scalar(255, 255, 255));
+        using var input = CreateTestInput(16, 16, new Scalar(255, 255, 255));
         using var result = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), false);
 
         // Nothing dark → no dots → the whole canvas stays white.
@@ -46,24 +46,24 @@ public class HalftoneServiceTests
     [Fact]
     public void Apply_Invert_ChangesResult()
     {
-        using var input = new Mat(16, 16, MatType.CV_8UC3, new Scalar(250, 250, 250));
+        using var input = CreateTestInput(16, 16, new Scalar(250, 250, 250));
         Cv2.Rectangle(input, new Rect(2, 2, 8, 8), new Scalar(10, 10, 10), -1);
 
         using var normal = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), false);
         using var inverted = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), true);
 
-        ServiceTestHelper.AssertChangesPixels(normal, inverted);
+        AssertChangesPixels(normal, inverted);
     }
 
     [Fact]
     public void Apply_DifferentDotColor_ChangesResult()
     {
-        using var input = new Mat(16, 16, MatType.CV_8UC3, new Scalar(250, 250, 250));
+        using var input = CreateTestInput(16, 16, new Scalar(250, 250, 250));
         Cv2.Rectangle(input, new Rect(2, 2, 8, 8), new Scalar(10, 10, 10), -1);
 
         using var black = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 20), false);
         using var red = HalftoneService.Apply(input, 4, new Vec3b(20, 20, 220), false);
 
-        ServiceTestHelper.AssertChangesPixels(black, red);
+        AssertChangesPixels(black, red);
     }
 }

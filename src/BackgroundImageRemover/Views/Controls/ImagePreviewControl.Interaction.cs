@@ -12,18 +12,8 @@ public partial class ImagePreviewControl
 {
     private void RootGrid_MouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (ImageSource is null)
+        if (_zoom.HandleMouseWheel(e.GetPosition(OverlayCanvas), e.Delta))
         {
-            return;
-        }
-
-        var cursor = e.GetPosition(OverlayCanvas);
-        if (ViewInteractionHelper.ComputeZoom(cursor, e.Delta, ZoomScale.ScaleX, new Point(PanTranslate.X, PanTranslate.Y), 1.0, 8.0, out var newScale, out var newTranslate))
-        {
-            ZoomScale.ScaleX = newScale;
-            ZoomScale.ScaleY = newScale;
-            PanTranslate.X = newTranslate.X;
-            PanTranslate.Y = newTranslate.Y;
             e.Handled = true;
         }
     }
@@ -41,7 +31,7 @@ public partial class ImagePreviewControl
             return;
         }
 
-        if (TryStartPan(e))
+        if (_pan.TryStart(e, e.GetPosition(this), PanTranslate, RootGrid))
         {
             return;
         }
@@ -97,12 +87,8 @@ public partial class ImagePreviewControl
         RaiseCursorImagePosition(e);
         UpdateBrushCursorHover(e);
 
-        if (_panStart is { } panStart && IsPanButtonDown(e))
+        if (_pan.Move(e, e.GetPosition(this), PanTranslate))
         {
-            var p = ViewInteractionHelper.ComputePan(panStart, _panStartTranslate, e.GetPosition(this));
-            PanTranslate.X = p.X;
-            PanTranslate.Y = p.Y;
-            e.Handled = true;
             return;
         }
 
@@ -169,7 +155,7 @@ public partial class ImagePreviewControl
     {
         bool isBrush = Mode == InteractionMode.Brush;
         bool isErase = Mode is InteractionMode.EraseForeground or InteractionMode.EraseBackground;
-        if ((!isBrush && !isErase) || ImageSource is null || _dragStart is not null || _panStart is not null)
+        if ((!isBrush && !isErase) || ImageSource is null || _dragStart is not null || _pan.IsActive)
         {
             BrushCursorPreview.Visibility = Visibility.Collapsed;
             return;
@@ -201,11 +187,8 @@ public partial class ImagePreviewControl
 
     private void RootGrid_MouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (_panStart is not null && e.ChangedButton == _panButton)
+        if (_pan.End(e, RootGrid))
         {
-            _panStart = null;
-            RootGrid.ReleaseMouseCapture();
-            e.Handled = true;
             return;
         }
 
@@ -654,48 +637,4 @@ public partial class ImagePreviewControl
         StrokeEnd?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>
-    /// Starts a pan when the gesture matches: middle-drag, right-drag, or Ctrl+left-drag.
-    /// Returns true when a pan was started. Checked before the tool-specific handling so
-    /// Ctrl+left-drag pans instead of drawing a rect, scribbling or brushing.
-    /// </summary>
-    private bool TryStartPan(MouseButtonEventArgs e)
-    {
-        MouseButton? panButton = GetPanButton(e);
-        if (panButton is not { } pb)
-        {
-            return false;
-        }
-
-        _panButton = pb;
-        _panStart = e.GetPosition(this);
-        _panStartTranslate = new Point(PanTranslate.X, PanTranslate.Y);
-        RootGrid.CaptureMouse();
-        e.Handled = true;
-        return true;
-    }
-
-    private static MouseButton? GetPanButton(MouseButtonEventArgs e)
-    {
-        if (e.ChangedButton == MouseButton.Middle)
-        {
-            return MouseButton.Middle;
-        }
-        if (e.ChangedButton == MouseButton.Right)
-        {
-            return MouseButton.Right;
-        }
-        if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-        {
-            return MouseButton.Left;
-        }
-        return null;
-    }
-
-    private bool IsPanButtonDown(MouseEventArgs e) => _panButton switch
-    {
-        MouseButton.Left => e.LeftButton == MouseButtonState.Pressed,
-        MouseButton.Right => e.RightButton == MouseButtonState.Pressed,
-        _ => e.MiddleButton == MouseButtonState.Pressed,
-    };
 }

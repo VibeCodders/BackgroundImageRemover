@@ -67,12 +67,8 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
     partial void OnOutputHeightChanged(int value) => RefreshResult();
     partial void OnMethodChanged(ResampleMethod value) => RefreshResult();
 
-    private static InterpolationFlags ToInterpolation(ResampleMethod method) => method switch
-    {
-        ResampleMethod.Nearest => InterpolationFlags.Nearest,
-        ResampleMethod.Linear => InterpolationFlags.Linear,
-        _ => InterpolationFlags.Lanczos4
-    };
+    private static InterpolationFlags ToInterpolation(ResampleMethod method)
+        => ResampleMethodHelper.ToInterpolationFlags(method);
 
     protected override void OnReset()
     {

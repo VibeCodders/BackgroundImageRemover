@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -74,11 +75,6 @@ public static class ResizeService
         return ResizePercent(src, scale, method);
     }
 
-    private static InterpolationFlags ToFlags(ResampleMethod method) => method switch
-    {
-        ResampleMethod.Nearest => InterpolationFlags.Nearest,
-        ResampleMethod.Linear => InterpolationFlags.Linear,
-        ResampleMethod.Cubic => InterpolationFlags.Cubic,
-        _ => InterpolationFlags.Lanczos4
-    };
+    private static InterpolationFlags ToFlags(ResampleMethod method)
+        => ResampleMethodHelper.ToInterpolationFlags(method);
 }

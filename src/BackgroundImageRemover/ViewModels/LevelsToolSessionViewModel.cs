@@ -85,7 +85,7 @@ public partial class LevelsToolSessionViewModel : PreviewToolSessionViewModelBas
         return current;
     }
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         BlackPoint = 0.0;
         WhitePoint = 255.0;
@@ -97,6 +97,5 @@ public partial class LevelsToolSessionViewModel : PreviewToolSessionViewModelBas
         AutoWhiteBalanceEnabled = false;
         EqualizeEnabled = false;
         InvertEnabled = false;
-        RefreshPreview();
     }
 }

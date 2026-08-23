@@ -146,7 +146,7 @@ public partial class ShapeToolSessionViewModel : PreviewToolSessionViewModelBase
         SizeHeight = Math.Clamp(height / h * 100.0, 1.0, 100.0);
     }
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         ShapeKind = ShapeKind.Rectangle;
         PositionX = 20;
@@ -159,6 +159,5 @@ public partial class ShapeToolSessionViewModel : PreviewToolSessionViewModelBase
         Rotation = 0;
         FillEnabled = false;
         FillOpacity = 0.5;
-        RefreshPreview();
     }
 }

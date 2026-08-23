@@ -116,8 +116,7 @@ public partial class OverlayToolSessionViewModel : ToolSessionViewModelBase
         // the window while large overlay PNGs were being read from disk.
         var loaded = await _imageLoader.LoadAsync(path);
         _overlayBgra?.Dispose();
-        using var alpha = loaded.FullAlpha?.Clone()
-            ?? new Mat(loaded.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
+        using var alpha = loaded.GetWorkingAlpha();
         _overlayBgra = loaded.FullBgr.ToBgra(alpha);
         loaded.Dispose();
         OverlayPath = path;

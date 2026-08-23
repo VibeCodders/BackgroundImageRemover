@@ -58,6 +58,36 @@ public class ScribbleManager : IDisposable
     }
 
     /// <summary>
+    /// Starts a new stroke at the given point, painting or erasing depending on the mode.
+    /// </summary>
+    public void Start(WpfPoint point, InteractionMode mode)
+    {
+        if (IsEraseMode(mode))
+        {
+            StartErase(point, FromInteractionMode(mode));
+        }
+        else
+        {
+            StartStroke(point, FromInteractionMode(mode));
+        }
+    }
+
+    /// <summary>
+    /// Continues a stroke to the given point, painting or erasing depending on the mode.
+    /// </summary>
+    public void Move(WpfPoint point, InteractionMode mode)
+    {
+        if (IsEraseMode(mode))
+        {
+            MoveErase(point, FromInteractionMode(mode));
+        }
+        else
+        {
+            MoveStroke(point, FromInteractionMode(mode));
+        }
+    }
+
+    /// <summary>
     /// Starts a new scribble stroke at the given point.
     /// </summary>
     public void StartStroke(WpfPoint point, ScribbleMode mode)

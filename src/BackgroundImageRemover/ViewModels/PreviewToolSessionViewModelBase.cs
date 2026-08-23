@@ -29,6 +29,22 @@ public abstract partial class PreviewToolSessionViewModelBase : ToolSessionViewM
     protected virtual bool IsEffectActive => false;
 
     /// <summary>
+    /// Restores the tool's default parameters via <see cref="OnResetDefaults"/> and then refreshes
+    /// the preview. The shared refresh is guaranteed to run after the defaults are applied, so
+    /// subclasses cannot forget to repaint the preview when the Reset command runs.
+    /// </summary>
+    protected override void OnReset()
+    {
+        OnResetDefaults();
+        RefreshPreview();
+    }
+
+    /// <summary>Restores the tool's default parameter values. Called by the shared Reset command before the preview refresh.</summary>
+    protected virtual void OnResetDefaults()
+    {
+    }
+
+    /// <summary>
     /// Builds and displays the live preview. Called by subclasses whenever a parameter changes.
     /// The preview and the final apply share the exact same <see cref="ApplyEffect"/> implementation,
     /// so there is no possibility of the two drifting out of sync.

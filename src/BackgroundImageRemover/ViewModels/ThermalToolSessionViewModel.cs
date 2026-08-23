@@ -33,10 +33,9 @@ public partial class ThermalToolSessionViewModel : PreviewToolSessionViewModelBa
     protected override Mat ApplyEffect(Mat bgr)
         => ThermalService.Apply(bgr, Intensity, Invert);
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         Intensity = 1.0;
         Invert = false;
-        RefreshPreview();
     }
 }

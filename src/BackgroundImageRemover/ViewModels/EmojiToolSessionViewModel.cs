@@ -102,7 +102,7 @@ public partial class EmojiToolSessionViewModel : PreviewToolSessionViewModelBase
         return EmojiOverlayService.Render(bgr, SelectedEmoji, new Point((int)pos.X, (int)pos.Y), EmojiSize, color, Opacity);
     }
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         SelectedEmoji = EmojiOverlayService.EmojiKind.Star;
         EmojiSize = 48;
@@ -114,6 +114,5 @@ public partial class EmojiToolSessionViewModel : PreviewToolSessionViewModelBase
         MaxSize = 60;
         Anchor = TextAnchor.BottomRight;
         Margin = 20;
-        RefreshPreview();
     }
 }

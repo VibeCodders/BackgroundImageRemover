@@ -202,15 +202,7 @@ public partial class DocumentViewModel
         if (_preview is null) return;
         ScribbleManager.EnsureMats(_preview.Bgr.Size());
 
-        var scribbleMode = ScribbleManager.FromInteractionMode(OriginalMode);
-        if (ScribbleManager.IsEraseMode(OriginalMode))
-        {
-            ScribbleManager.StartErase(imagePoint, scribbleMode);
-        }
-        else
-        {
-            ScribbleManager.StartStroke(imagePoint, scribbleMode);
-        }
+        ScribbleManager.Start(imagePoint, OriginalMode);
 
         GrabCut.HasScribbles = ScribbleManager.HasScribbles;
         RefreshScribbleOverlay();
@@ -218,15 +210,7 @@ public partial class DocumentViewModel
 
     public void OnOriginalStrokeMove(WpfPoint imagePoint)
     {
-        var scribbleMode = ScribbleManager.FromInteractionMode(OriginalMode);
-        if (ScribbleManager.IsEraseMode(OriginalMode))
-        {
-            ScribbleManager.MoveErase(imagePoint, scribbleMode);
-        }
-        else
-        {
-            ScribbleManager.MoveStroke(imagePoint, scribbleMode);
-        }
+        ScribbleManager.Move(imagePoint, OriginalMode);
 
         GrabCut.HasScribbles = ScribbleManager.HasScribbles;
         RefreshScribbleOverlay();

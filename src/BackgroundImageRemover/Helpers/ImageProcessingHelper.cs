@@ -194,11 +194,7 @@ public static class ImageProcessingHelper
             // 5.7 Clarity: local contrast via CLAHE on the Luminance channel, blended with the original.
             if (adjustments.Clarity > 1e-4)
             {
-                using var clarified = ImageProcessingUtility.ApplyClahe(current);
-                var blended = new Mat();
-                Cv2.AddWeighted(current, 1.0 - adjustments.Clarity, clarified, adjustments.Clarity, 0, blended);
-                current.Dispose();
-                current = blended;
+                current = ImageProcessingUtility.BlendInPlace(current, adjustments.Clarity, ImageProcessingUtility.ApplyClahe);
             }
 
             // 5.8 Fade: lift blacks toward mid-gray for a matte film look.
@@ -214,11 +210,7 @@ public static class ImageProcessingHelper
             // 5.9 Monochrome: blend toward a grayscale rendition.
             if (adjustments.Monochrome > 1e-4)
             {
-                using var grayBgr = current.ToGrayBgr();
-                var mono = new Mat();
-                Cv2.AddWeighted(current, 1.0 - adjustments.Monochrome, grayBgr, adjustments.Monochrome, 0, mono);
-                current.Dispose();
-                current = mono;
+                current = ImageProcessingUtility.BlendInPlace(current, adjustments.Monochrome, m => m.ToGrayBgr());
             }
 
             // 5.95 Grain: additive Gaussian noise for a film-like texture.
@@ -239,57 +231,52 @@ public static class ImageProcessingHelper
             // 5.96 Dehaze: local contrast equalization plus a slight saturation lift.
             if (adjustments.Dehaze > 1e-4)
             {
-                using var enhanced = ImageProcessingUtility.ApplyClahe(current);
-                using var hsv = new Mat();
-                Cv2.CvtColor(enhanced, hsv, ColorConversionCodes.BGR2HSV);
-                var sat = Cv2.Split(hsv);
-                try
+                current = ImageProcessingUtility.BlendInPlace(current, adjustments.Dehaze, m =>
                 {
-                    sat[1].ConvertTo(sat[1], MatType.CV_8UC1, 1.15);
-                    Cv2.Merge(sat, hsv);
-                    Cv2.CvtColor(hsv, enhanced, ColorConversionCodes.HSV2BGR);
-                }
-                finally
-                {
-                    foreach (var ch in sat) ch.Dispose();
-                }
-
-                var dehazed = new Mat();
-                Cv2.AddWeighted(current, 1.0 - adjustments.Dehaze, enhanced, adjustments.Dehaze, 0, dehazed);
-                current.Dispose();
-                current = dehazed;
+                    var enhanced = ImageProcessingUtility.ApplyClahe(m);
+                    using var hsv = new Mat();
+                    Cv2.CvtColor(enhanced, hsv, ColorConversionCodes.BGR2HSV);
+                    var sat = Cv2.Split(hsv);
+                    try
+                    {
+                        sat[1].ConvertTo(sat[1], MatType.CV_8UC1, 1.15);
+                        Cv2.Merge(sat, hsv);
+                        Cv2.CvtColor(hsv, enhanced, ColorConversionCodes.HSV2BGR);
+                    }
+                    finally
+                    {
+                        foreach (var ch in sat) ch.Dispose();
+                    }
+                    return enhanced;
+                });
             }
 
             // 5.97 Soften: edge-preserving bilateral smoothing.
             if (adjustments.Soften > 1e-4)
             {
-                using var softened = new Mat();
-                Cv2.BilateralFilter(current, softened, 5, adjustments.Soften * 120.0, adjustments.Soften * 60.0);
-                var blended = new Mat();
-                Cv2.AddWeighted(current, 1.0 - adjustments.Soften, softened, adjustments.Soften, 0, blended);
-                current.Dispose();
-                current = blended;
+                current = ImageProcessingUtility.BlendInPlace(current, adjustments.Soften, m =>
+                {
+                    var softened = new Mat();
+                    Cv2.BilateralFilter(m, softened, 5, adjustments.Soften * 120.0, adjustments.Soften * 60.0);
+                    return softened;
+                });
             }
 
             // 5.98 Sepia tone blend.
             if (adjustments.SepiaTone > 1e-4)
             {
-                using var sepia = ImageProcessingUtility.ApplySepia(current);
-                var blended = new Mat();
-                Cv2.AddWeighted(current, 1.0 - adjustments.SepiaTone, sepia, adjustments.SepiaTone, 0, blended);
-                current.Dispose();
-                current = blended;
+                current = ImageProcessingUtility.BlendInPlace(current, adjustments.SepiaTone, ImageProcessingUtility.ApplySepia);
             }
 
             // 5.99 Invert blend.
             if (adjustments.InvertAmount > 1e-4)
             {
-                using var inverted = new Mat();
-                Cv2.BitwiseNot(current, inverted);
-                var blended = new Mat();
-                Cv2.AddWeighted(current, 1.0 - adjustments.InvertAmount, inverted, adjustments.InvertAmount, 0, blended);
-                current.Dispose();
-                current = blended;
+                current = ImageProcessingUtility.BlendInPlace(current, adjustments.InvertAmount, m =>
+                {
+                    var inverted = new Mat();
+                    Cv2.BitwiseNot(m, inverted);
+                    return inverted;
+                });
             }
 
             // 5.995 Posterize.

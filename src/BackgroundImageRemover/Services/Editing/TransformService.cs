@@ -146,19 +146,7 @@ public static class TransformService
 
     /// <summary>Expands the canvas by the given per-side padding, filling the new area with <paramref name="fill"/>.</summary>
     public static Mat Pad(Mat img, int left, int top, int right, int bottom, Scalar fill)
-    {
-        left = Math.Max(0, left);
-        top = Math.Max(0, top);
-        right = Math.Max(0, right);
-        bottom = Math.Max(0, bottom);
-
-        int newWidth = img.Width + left + right;
-        int newHeight = img.Height + top + bottom;
-        var result = new Mat(newHeight, newWidth, img.Type(), fill);
-        using var dst = new Mat(result, new Rect(left, top, img.Width, img.Height));
-        img.CopyTo(dst);
-        return result;
-    }
+        => EditingGuard.ExpandCanvas(img, left, top, right, bottom, fill);
 
     /// <summary>Resizes to fit inside the given box while preserving aspect ratio (never upscales above the box).</summary>
     public static Mat ResizeToFit(Mat img, int maxWidth, int maxHeight)

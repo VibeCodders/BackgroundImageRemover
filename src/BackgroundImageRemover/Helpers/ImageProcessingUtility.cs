@@ -95,6 +95,22 @@ public static class ImageProcessingUtility
         return result;
     }
 
+    /// <summary>
+    /// Blends <paramref name="baseImage"/> toward the result of <paramref name="effect"/> by
+    /// <paramref name="amount"/> (0..1) and disposes the input, returning the blended Mat.
+    /// Ownership of <paramref name="baseImage"/> transfers to this method, so it must not be
+    /// used afterwards. Eliminates the repeated "apply effect + AddWeighted + dispose input"
+    /// boilerplate in pipelines (e.g. <see cref="ImageProcessingHelper.ApplyAdjustments"/>).
+    /// </summary>
+    public static Mat BlendInPlace(Mat baseImage, double amount, Func<Mat, Mat> effect)
+    {
+        using var effectImage = effect(baseImage);
+        var result = new Mat();
+        Cv2.AddWeighted(baseImage, 1.0 - amount, effectImage, amount, 0, result);
+        baseImage.Dispose();
+        return result;
+    }
+
     public static Mat AdjustSaturation(Mat bgr, double boost)
     {
         return AdjustSaturationByMultiplier(bgr, 1.0 + boost);

@@ -37,11 +37,10 @@ public partial class CartoonToolSessionViewModel : PreviewToolSessionViewModelBa
     protected override Mat ApplyEffect(Mat bgr)
         => CartoonService.Apply(bgr, Smoothness, QuantizeLevels, EdgeThreshold);
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         Smoothness = 8;
         QuantizeLevels = 8;
         EdgeThreshold = 12;
-        RefreshPreview();
     }
 }

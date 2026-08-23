@@ -166,9 +166,8 @@ namespace BackgroundImageRemover.ViewModels;
 
     private Mat BuildFramedBgra()
     {
-        using var srcAlpha = _sourceImage!.FullAlpha?.Clone()
-            ?? new Mat(_sourceImage.FullBgr.Size(), MatType.CV_8UC1, new Scalar(255));
-        using var bgra = _sourceImage.FullBgr.ToBgra(srcAlpha);
+        using var srcAlpha = _sourceImage!.GetWorkingAlpha();
+        using var bgra = _sourceImage!.FullBgr.ToBgra(srcAlpha);
 
         Mat current = UseMatColor
             ? FrameService.AddPaddingWithColor(

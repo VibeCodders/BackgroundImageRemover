@@ -42,11 +42,10 @@ public partial class FiltersToolSessionViewModel : PreviewToolSessionViewModelBa
     protected override Mat ApplyEffect(Mat bgr)
         => FilterService.Apply(bgr, SelectedFilter, Intensity, PosterizeLevels);
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         SelectedFilter = FilterKind.None;
         Intensity = 1.0;
         PosterizeLevels = 4;
-        RefreshPreview();
     }
 }

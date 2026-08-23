@@ -46,9 +46,8 @@ public partial class CompareImageControl : UserControl
         set => SetValue(DividerPositionProperty, value);
     }
 
-    private Point? _panStart;
-    private Point _panStartTranslate;
-    private MouseButton _panButton = MouseButton.Middle;
+    private readonly PanGesture _pan = new();
+    private readonly ZoomController _zoom;
     private bool _draggingDivider;
 
     public CompareImageControl()
@@ -56,17 +55,17 @@ public partial class CompareImageControl : UserControl
         InitializeComponent();
         ZoomScale.Changed += (_, _) => UpdateZoomHud();
         ZoomPanHost.SizeChanged += (_, _) => UpdateZoomHud();
+        _zoom = new ZoomController(
+            ZoomScale,
+            PanTranslate,
+            () => new Size(ZoomPanHost.ActualWidth, ZoomPanHost.ActualHeight),
+            () => AfterSource is not null || BeforeSource is not null,
+            () => ImagePixelScale,
+            UpdateZoomHud);
     }
 
     /// <summary>Restores the fit-to-window view.</summary>
-    public void ResetView()
-    {
-        ZoomScale.ScaleX = 1;
-        ZoomScale.ScaleY = 1;
-        PanTranslate.X = 0;
-        PanTranslate.Y = 0;
-        UpdateZoomHud();
-    }
+    public void ResetView() => _zoom.ResetView();
 
     /// <summary>
     /// Number of image pixels per control DIP for the currently displayed bitmap at the
@@ -165,45 +164,16 @@ public partial class CompareImageControl : UserControl
             return;
         }
 
-        switch (e.Key)
+        if (_zoom.HandleKeyDown(e.Key))
         {
-            case Key.OemPlus:
-            case Key.Add:
-                ZoomBy(1.1);
-                e.Handled = true;
-                break;
-            case Key.OemMinus:
-            case Key.Subtract:
-                ZoomBy(1.0 / 1.1);
-                e.Handled = true;
-                break;
-            case Key.D0:
-            case Key.NumPad0:
-                ResetView();
-                e.Handled = true;
-                break;
-            case Key.D1:
-            case Key.NumPad1:
-                ZoomActual();
-                e.Handled = true;
-                break;
+            e.Handled = true;
         }
     }
 
     private void RootGrid_MouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (!ImageSourceAvailable())
+        if (_zoom.HandleMouseWheel(e.GetPosition(ZoomPanHost), e.Delta))
         {
-            return;
-        }
-
-        var cursor = e.GetPosition(ZoomPanHost);
-        if (ViewInteractionHelper.ComputeZoom(cursor, e.Delta, ZoomScale.ScaleX, new Point(PanTranslate.X, PanTranslate.Y), 1.0, 8.0, out var newScale, out var newTranslate))
-        {
-            ZoomScale.ScaleX = newScale;
-            ZoomScale.ScaleY = newScale;
-            PanTranslate.X = newTranslate.X;
-            PanTranslate.Y = newTranslate.Y;
             e.Handled = true;
         }
     }
@@ -219,124 +189,29 @@ public partial class CompareImageControl : UserControl
             return;
         }
 
-        TryStartPan(e);
+        _pan.TryStart(e, e.GetPosition(this), PanTranslate, RootGrid);
     }
 
     private void RootGrid_MouseMove(object sender, MouseEventArgs e)
     {
-        if (_panStart is { } panStart && IsPanButtonDown(e))
-        {
-            var p = ViewInteractionHelper.ComputePan(panStart, _panStartTranslate, e.GetPosition(this));
-            PanTranslate.X = p.X;
-            PanTranslate.Y = p.Y;
-            e.Handled = true;
-        }
+        _pan.Move(e, e.GetPosition(this), PanTranslate);
     }
 
     private void RootGrid_MouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (_panStart is not null && e.ChangedButton == _panButton)
-        {
-            _panStart = null;
-            RootGrid.ReleaseMouseCapture();
-            e.Handled = true;
-        }
+        _pan.End(e, RootGrid);
     }
 
     private void RootGrid_MouseLeave(object sender, MouseEventArgs e)
     {
-        if (_panStart is not null && !IsPanButtonDown(e))
-        {
-            _panStart = null;
-            RootGrid.ReleaseMouseCapture();
-        }
+        _pan.CancelIfButtonReleased(e, RootGrid);
     }
-
-    /// <summary>
-    /// Starts a pan when the gesture matches: middle-drag, right-drag, or Ctrl+left-drag.
-    /// Returns true when a pan was started.
-    /// </summary>
-    private bool TryStartPan(MouseButtonEventArgs e)
-    {
-        MouseButton? panButton = GetPanButton(e);
-        if (panButton is not { } pb)
-        {
-            return false;
-        }
-
-        _panButton = pb;
-        _panStart = e.GetPosition(this);
-        _panStartTranslate = new Point(PanTranslate.X, PanTranslate.Y);
-        RootGrid.CaptureMouse();
-        e.Handled = true;
-        return true;
-    }
-
-    private static MouseButton? GetPanButton(MouseButtonEventArgs e)
-    {
-        if (e.ChangedButton == MouseButton.Middle)
-        {
-            return MouseButton.Middle;
-        }
-        if (e.ChangedButton == MouseButton.Right)
-        {
-            return MouseButton.Right;
-        }
-        if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-        {
-            return MouseButton.Left;
-        }
-        return null;
-    }
-
-    private bool IsPanButtonDown(MouseEventArgs e) => _panButton switch
-    {
-        MouseButton.Left => e.LeftButton == MouseButtonState.Pressed,
-        MouseButton.Right => e.RightButton == MouseButtonState.Pressed,
-        _ => e.MiddleButton == MouseButtonState.Pressed,
-    };
 
     private bool ImageSourceAvailable() => AfterSource is not null || BeforeSource is not null;
 
-    private void ZoomBy(double factor)
-    {
-        if (!ImageSourceAvailable())
-        {
-            return;
-        }
-
-        var center = new Point(ZoomPanHost.ActualWidth / 2, ZoomPanHost.ActualHeight / 2);
-        int wheelDelta = factor >= 1 ? 120 : -120;
-        if (ViewInteractionHelper.ComputeZoom(center, wheelDelta, ZoomScale.ScaleX, new Point(PanTranslate.X, PanTranslate.Y), 1.0, 8.0, out var newScale, out var newTranslate))
-        {
-            ZoomScale.ScaleX = newScale;
-            ZoomScale.ScaleY = newScale;
-            PanTranslate.X = newTranslate.X;
-            PanTranslate.Y = newTranslate.Y;
-            UpdateZoomHud();
-        }
-    }
-
-    private void ZoomActual()
-    {
-        if (!ImageSourceAvailable())
-        {
-            return;
-        }
-
-        double oneToOne = ImagePixelScale;
-        if (oneToOne <= 0)
-        {
-            return;
-        }
-        ZoomScale.ScaleX = oneToOne;
-        ZoomScale.ScaleY = oneToOne;
-        UpdateZoomHud();
-    }
-
     private void ZoomFit_Click(object sender, RoutedEventArgs e) => ResetView();
 
-    private void ZoomActual_Click(object sender, RoutedEventArgs e) => ZoomActual();
+    private void ZoomActual_Click(object sender, RoutedEventArgs e) => _zoom.ZoomActual();
 
     private void UpdateZoomHud()
     {

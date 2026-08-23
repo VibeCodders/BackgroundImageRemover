@@ -13,13 +13,11 @@ namespace BackgroundImageRemover.ViewModels;
 /// <summary>
 /// Dedicated Tool Tab for Brush and Magic Wand retouching on alpha / pixels.
 /// </summary>
-public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBrushStrokeSession
+public partial class RetouchToolSessionViewModel : WorkingCopyToolSessionViewModelBase, IBrushStrokeSession
 {
     private readonly MatEditSession _editSession = new();
     private readonly DispatcherTimer _brushRefreshTimer;
     private readonly BrushStrokeController _strokes = new();
-
-    private Mat? _workingBgr;
 
     public override string ToolBadge => "🖌 Retouch";
     public override string AccentColor => "#8E24AA";
@@ -87,7 +85,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
         _brushRefreshTimer.Tick += (_, _) =>
         {
             _brushRefreshTimer.Stop();
-            RefreshResultBitmap();
+            RefreshResult();
         };
 
         InitFromParent();
@@ -97,7 +95,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
     {
         InitSourceAlpha();
         _workingBgr = CloneWorkingBgr();
-        RefreshResultBitmap();
+        RefreshResult();
         StatusMessage = "Use Brush or Magic Wand to refine foreground & edges.";
     }
 
@@ -122,7 +120,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
     public void OnStrokeEnd()
     {
         _brushRefreshTimer.Stop();
-        RefreshResultBitmap();
+        RefreshResult();
         _strokes.End();
     }
 
@@ -145,7 +143,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
             return;
         }
 
-        RefreshResultBitmap();
+        RefreshResult();
         _brushRefreshTimer.Start();
     }
 
@@ -156,22 +154,22 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
         IsDirty = true;
         RefreshUndoRedoState();
         MagicWandService.Apply(_workingBgr, _workingAlpha, imagePoint, MagicWandTolerance, add: BrushMode == BrushMode.Restore);
-        RefreshResultBitmap();
+        RefreshResult();
     }
 
-    partial void OnDehazeChanged(double value) => RefreshResultBitmap();
-    partial void OnDefringeChanged(bool value) => RefreshResultBitmap();
-    partial void OnBlurBackgroundRadiusChanged(int value) => RefreshResultBitmap();
-    partial void OnSharpenStrengthChanged(double value) => RefreshResultBitmap();
-    partial void OnColorBoostChanged(double value) => RefreshResultBitmap();
-    partial void OnRemoveDustKernelChanged(int value) => RefreshResultBitmap();
-    partial void OnSurfaceBlurChanged(double value) => RefreshResultBitmap();
-    partial void OnAutoContrastChanged(bool value) => RefreshResultBitmap();
-    partial void OnAutoWhiteBalanceChanged(bool value) => RefreshResultBitmap();
-    partial void OnChromaticAberrationChanged(double value) => RefreshResultBitmap();
+    partial void OnDehazeChanged(double value) => RefreshResult();
+    partial void OnDefringeChanged(bool value) => RefreshResult();
+    partial void OnBlurBackgroundRadiusChanged(int value) => RefreshResult();
+    partial void OnSharpenStrengthChanged(double value) => RefreshResult();
+    partial void OnColorBoostChanged(double value) => RefreshResult();
+    partial void OnRemoveDustKernelChanged(int value) => RefreshResult();
+    partial void OnSurfaceBlurChanged(double value) => RefreshResult();
+    partial void OnAutoContrastChanged(bool value) => RefreshResult();
+    partial void OnAutoWhiteBalanceChanged(bool value) => RefreshResult();
+    partial void OnChromaticAberrationChanged(double value) => RefreshResult();
 
     /// <summary>Applies the whole-image retouch effects on top of the brush/wand alpha edits.</summary>
-    private Mat BuildResultBgr()
+    protected override Mat BuildResult()
     {
         bool owns = true;
         var result = _workingBgr!.Clone();
@@ -188,12 +186,6 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
         return result;
     }
 
-    private void RefreshResultBitmap()
-    {
-        if (_workingBgr is null || _workingAlpha is null) return;
-        using var result = BuildResultBgr();
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
-    }
 
     private void RefineAlpha(Func<Mat, Mat> refine)
     {
@@ -204,7 +196,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
         _workingAlpha = refined;
         IsDirty = true;
         RefreshUndoRedoState();
-        RefreshResultBitmap();
+        RefreshResult();
     }
 
     [RelayCommand]
@@ -228,7 +220,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
         if (!_editSession.Undo(ref _workingAlpha)) return;
         IsDirty = true;
         RefreshUndoRedoState();
-        RefreshResultBitmap();
+        RefreshResult();
     }
 
     [RelayCommand(CanExecute = nameof(CanRedoExecute))]
@@ -237,7 +229,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
         if (!_editSession.Redo(ref _workingAlpha)) return;
         IsDirty = true;
         RefreshUndoRedoState();
-        RefreshResultBitmap();
+        RefreshResult();
     }
 
     private void RefreshUndoRedoState()
@@ -252,7 +244,7 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
     {
         if (_workingBgr is not null && _workingAlpha is not null)
         {
-            using var resultBgr = BuildResultBgr();
+            using var resultBgr = BuildResult();
             ApplyAndClose(resultBgr.Clone(), "Retouch & Brush");
         }
         else
@@ -265,7 +257,6 @@ public partial class RetouchToolSessionViewModel : ToolSessionViewModelBase, IBr
     public override void Dispose()
     {
         _brushRefreshTimer.Stop();
-        _workingBgr?.Dispose();
         _editSession.Dispose();
         base.Dispose();
     }

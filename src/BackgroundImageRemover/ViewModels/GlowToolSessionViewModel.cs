@@ -37,11 +37,10 @@ public partial class GlowToolSessionViewModel : PreviewToolSessionViewModelBase
     protected override Mat ApplyEffect(Mat bgr)
         => GlowService.Apply(bgr, Threshold, Radius, Strength);
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         Threshold = 180;
         Radius = 20;
         Strength = 0.8;
-        RefreshPreview();
     }
 }

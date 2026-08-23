@@ -64,13 +64,12 @@ public partial class ColorReplaceToolSessionViewModel : PreviewToolSessionViewMo
         StatusMessage = $"Target color sampled at ({x}, {y}).";
     }
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         TargetColor = WpfColor.FromRgb(255, 0, 0);
         ReplacementColor = WpfColor.FromRgb(0, 255, 0);
         Tolerance = 0.25;
         Softness = 0.4;
         PreserveLuminance = true;
-        RefreshPreview();
     }
 }

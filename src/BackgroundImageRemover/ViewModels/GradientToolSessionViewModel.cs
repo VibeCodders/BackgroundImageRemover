@@ -58,13 +58,12 @@ public partial class GradientToolSessionViewModel : PreviewToolSessionViewModelB
     protected override Mat ApplyEffect(Mat bgr)
         => GradientService.Apply(bgr, Kind, ColorA.ToVec3b(), ColorB.ToVec3b(), Angle, Opacity);
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         Kind = GradientKind.Linear;
         ColorA = WpfColor.FromRgb(255, 0, 0);
         ColorB = WpfColor.FromRgb(0, 0, 255);
         Angle = 90;
         Opacity = 0.6;
-        RefreshPreview();
     }
 }

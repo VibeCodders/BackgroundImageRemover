@@ -10,10 +10,9 @@ using WpfPoint = System.Windows.Point;
 namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>Dedicated Tool Tab for healing blemishes (inpaint brush) and repairing dust/scratches.</summary>
-public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool, IBrushStrokeSession
+public partial class HealToolSessionViewModel : WorkingCopyToolSessionViewModelBase, ITool, IBrushStrokeSession
 {
     private readonly BrushStrokeController _strokes = new();
-    private Mat? _workingBgr;
     private Mat? _healMask;
 
     public override string ToolBadge => "🩹 Heal";
@@ -97,7 +96,7 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool,
         RefreshResult();
     }
 
-    private Mat BuildResult()
+    protected override Mat BuildResult()
     {
         bool owns = true;
         var result = _workingBgr!.Clone();
@@ -109,13 +108,6 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool,
         return result;
     }
 
-    private void RefreshResult()
-    {
-        if (!EnsureSourceAlpha()) return;
-        using var result = BuildResult();
-        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
-    }
-
     public override Task ApplyAsync()
     {
         ApplyAndClose(_workingBgr is not null && _workingAlpha is not null ? BuildResult() : null, "Heal");
@@ -124,7 +116,6 @@ public partial class HealToolSessionViewModel : ToolSessionViewModelBase, ITool,
 
     public override void Dispose()
     {
-        _workingBgr?.Dispose();
         _healMask?.Dispose();
         base.Dispose();
     }

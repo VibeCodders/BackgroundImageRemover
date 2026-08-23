@@ -115,9 +115,8 @@ public partial class ImagePreviewControl : UserControl
     public event EventHandler? MagicWandShortcutInvoked;
 
     private Point? _dragStart;
-    private Point? _panStart;
-    private Point _panStartTranslate;
-    private MouseButton _panButton = MouseButton.Middle;
+    private readonly PanGesture _pan = new();
+    private readonly ZoomController _zoom;
     private Polyline? _activeStrokeVisual;
 
     private enum EditGrab { None, New, Move, ResizeTL, ResizeTR, ResizeBL, ResizeBR, Rotate }
@@ -132,16 +131,18 @@ public partial class ImagePreviewControl : UserControl
         InitializeComponent();
         ZoomScale.Changed += (_, _) => UpdateZoomHud();
         ZoomPanHost.SizeChanged += (_, _) => UpdateZoomHud();
+        _zoom = new ZoomController(
+            ZoomScale,
+            PanTranslate,
+            () => new Size(OverlayCanvas.ActualWidth, OverlayCanvas.ActualHeight),
+            () => ImageSource is not null,
+            () => ImagePixelScale,
+            UpdateZoomHud,
+            minScale: 0.05,
+            maxScale: 32.0);
     }
 
-    public void ResetView()
-    {
-        ZoomScale.ScaleX = 1;
-        ZoomScale.ScaleY = 1;
-        PanTranslate.X = 0;
-        PanTranslate.Y = 0;
-        UpdateZoomHud();
-    }
+    public void ResetView() => _zoom.ResetView();
 
     /// <summary>Keeps the zoom HUD in sync: hidden until an image is shown, then showing the zoom percent.</summary>
     private void UpdateZoomHud()
@@ -170,25 +171,7 @@ public partial class ImagePreviewControl : UserControl
             return;
         }
 
-        switch (key)
-        {
-            case Key.OemPlus:
-            case Key.Add:
-                ZoomBy(1.1);
-                break;
-            case Key.OemMinus:
-            case Key.Subtract:
-                ZoomBy(1.0 / 1.1);
-                break;
-            case Key.D0:
-            case Key.NumPad0:
-                ResetView();
-                break;
-            case Key.D1:
-            case Key.NumPad1:
-                ZoomActual_Click(this, new RoutedEventArgs());
-                break;
-        }
+        _zoom.HandleKeyDown(key);
     }
 
     private void RootGrid_KeyDown(object sender, KeyEventArgs e)
@@ -219,45 +202,7 @@ public partial class ImagePreviewControl : UserControl
         }
     }
 
-    /// <summary>Zooms the view around the center of the viewport by the given factor.</summary>
-    private void ZoomBy(double factor)
-    {
-        if (ImageSource is null)
-        {
-            return;
-        }
-
-        var center = new Point(OverlayCanvas.ActualWidth / 2, OverlayCanvas.ActualHeight / 2);
-        var currentTranslate = new Point(PanTranslate.X, PanTranslate.Y);
-        int wheelDelta = factor >= 1 ? 120 : -120;
-        if (ViewInteractionHelper.ComputeZoom(center, wheelDelta, ZoomScale.ScaleX, currentTranslate, 0.05, 32.0, out var newScale, out var newTranslate))
-        {
-            ZoomScale.ScaleX = newScale;
-            ZoomScale.ScaleY = newScale;
-            PanTranslate.X = newTranslate.X;
-            PanTranslate.Y = newTranslate.Y;
-            UpdateZoomHud();
-        }
-    }
-
-    private void ZoomActual_Click(object sender, RoutedEventArgs e)
-    {
-        if (ImageSource is null)
-        {
-            return;
-        }
-
-        // 1:1 means one image pixel per DIP: at ZoomScale == 1 the image is fit to the
-        // control, so the required scale is the fit pixels-per-DIP ratio.
-        double oneToOne = ImagePixelScale;
-        if (oneToOne <= 0)
-        {
-            return;
-        }
-        ZoomScale.ScaleX = oneToOne;
-        ZoomScale.ScaleY = oneToOne;
-        UpdateZoomHud();
-    }
+    private void ZoomActual_Click(object sender, RoutedEventArgs e) => _zoom.ZoomActual();
 
     private static void OnImageSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {

@@ -39,11 +39,10 @@ public partial class HalftoneToolSessionViewModel : PreviewToolSessionViewModelB
     protected override Mat ApplyEffect(Mat bgr)
         => HalftoneService.Apply(bgr, CellSize, DotColor.ToVec3b(), Invert);
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         CellSize = 6;
         DotColor = WpfColor.FromRgb(20, 20, 20);
         Invert = false;
-        RefreshPreview();
     }
 }

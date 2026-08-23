@@ -41,12 +41,11 @@ public partial class VignetteToolSessionViewModel : PreviewToolSessionViewModelB
     protected override Mat ApplyEffect(Mat bgr)
         => VignetteService.Apply(bgr, Strength, Roundness, Feather, Invert);
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         Strength = 0.3;
         Roundness = 0.5;
         Feather = 0.5;
         Invert = false;
-        RefreshPreview();
     }
 }

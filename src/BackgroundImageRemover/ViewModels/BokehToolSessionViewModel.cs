@@ -47,13 +47,12 @@ public partial class BokehToolSessionViewModel : PreviewToolSessionViewModelBase
     protected override Mat ApplyEffect(Mat bgr)
         => BokehService.Apply(bgr, Color.ToVec3b(), Radius, Count, Opacity, Blur);
 
-    protected override void OnReset()
+    protected override void OnResetDefaults()
     {
         Color = WpfColor.FromRgb(255, 255, 255);
         Radius = 14;
         Count = 100;
         Opacity = 0.9;
         Blur = 6;
-        RefreshPreview();
     }
 }

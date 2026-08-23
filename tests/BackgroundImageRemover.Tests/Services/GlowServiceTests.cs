@@ -5,57 +5,57 @@ using Xunit;
 using BackgroundImageRemover.Tests.Helpers;
 namespace BackgroundImageRemover.Tests.Services;
 
-public class GlowServiceTests
+public class GlowServiceTests : ServiceTestBase
 {
     [Fact]
     public void Apply_PreservesSizeAndType()
     {
-        using var input = new Mat(10, 12, MatType.CV_8UC3, new Scalar(40, 90, 140));
+        using var input = CreateTestInput(10, 12, new Scalar(40, 90, 140));
         using var result = GlowService.Apply(input, 128, 3, 0.8);
 
-        ServiceTestHelper.AssertPreservesSizeAndType(input, result);
+        AssertPreservesSizeAndType(input, result);
     }
 
     [Fact]
     public void Apply_StrengthZero_ReturnsClone()
     {
-        using var input = new Mat(12, 12, MatType.CV_8UC3, new Scalar(40, 90, 140));
+        using var input = CreateTestInput(12, 12, new Scalar(40, 90, 140));
         Cv2.Circle(input, new Point(6, 6), 3, new Scalar(255, 255, 255), -1);
 
         using var result = GlowService.Apply(input, 128, 3, 0);
 
-        ServiceTestHelper.AssertNoChange(input, result);
+        AssertNoChange(input, result);
     }
 
     [Fact]
     public void Apply_BrightArea_ChangesPixels()
     {
-        using var input = new Mat(16, 16, MatType.CV_8UC3, new Scalar(40, 90, 140));
+        using var input = CreateTestInput(16, 16, new Scalar(40, 90, 140));
         Cv2.Circle(input, new Point(8, 8), 3, new Scalar(255, 255, 255), -1);
 
         using var result = GlowService.Apply(input, 128, 3, 0.8);
 
-        ServiceTestHelper.AssertChangesPixels(input, result);
+        AssertChangesPixels(input, result);
     }
 
     [Fact]
     public void Apply_NoBrightPixels_ReturnsClone()
     {
-        using var input = new Mat(12, 12, MatType.CV_8UC3, new Scalar(40, 90, 140));
+        using var input = CreateTestInput(12, 12, new Scalar(40, 90, 140));
         using var result = GlowService.Apply(input, 200, 3, 0.8);
 
-        ServiceTestHelper.AssertNoChange(input, result);
+        AssertNoChange(input, result);
     }
 
     [Fact]
     public void Apply_HigherStrength_IncreasesEffect()
     {
-        using var input = new Mat(16, 16, MatType.CV_8UC3, new Scalar(40, 90, 140));
+        using var input = CreateTestInput(16, 16, new Scalar(40, 90, 140));
         Cv2.Circle(input, new Point(8, 8), 3, new Scalar(255, 255, 255), -1);
 
         using var weak = GlowService.Apply(input, 128, 3, 0.2);
         using var strong = GlowService.Apply(input, 128, 3, 1.5);
 
-        ServiceTestHelper.AssertChangesPixels(weak, strong);
+        AssertChangesPixels(weak, strong);
     }
 }

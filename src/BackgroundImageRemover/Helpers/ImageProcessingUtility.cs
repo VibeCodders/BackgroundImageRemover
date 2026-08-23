@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Services.Compositing;
+using CommunityToolkit.HighPerformance;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Helpers;
@@ -12,71 +13,71 @@ public static class ImageProcessingUtility
     public const double StrengthLowerBound = 0.0;
     public const double StrengthUpperBound = 1.0;
 
+    /// <summary>
+    /// Alpha-composites <paramref name="overlayBgra"/> over <paramref name="baseBgra"/>,
+    /// scaled by <paramref name="opacity"/> (0..1). Single-pass over zero-copy
+    /// <see cref="Span2D{T}"/> views: the previous version materialized ~11 intermediate
+    /// CV_32F Mats. Blend math is identical (<c>result = base*(1-a) + overlay*a</c> with
+    /// <c>a = overlayAlpha*opacity/255</c>) and the result alpha stays the base alpha.
+    /// </summary>
     public static Mat CompositeOverBgra(Mat baseBgra, Mat overlayBgra, double opacity)
     {
-        using var bsplit = ChannelSplit.Of(baseBgra);
-        using var osplit = ChannelSplit.Of(overlayBgra);
-        using var a = new Mat();
-        osplit[3].ConvertTo(a, MatType.CV_32FC1, opacity / 255.0);
+        var baseSpan = baseBgra.AsSpan2D<Vec4b>();
+        var ovSpan = overlayBgra.AsSpan2D<Vec4b>();
+        float op = (float)opacity;
 
-        var channels = new Mat[4];
-        try
+        var result = new Mat(baseBgra.Size(), MatType.CV_8UC4);
+        var dstSpan = result.AsSpan2D<Vec4b>();
+        for (int y = 0; y < dstSpan.Height; y++)
         {
-            for (int i = 0; i < 3; i++)
+            for (int x = 0; x < dstSpan.Width; x++)
             {
-                using var baseF = new Mat();
-                bsplit[i].ConvertTo(baseF, MatType.CV_32FC1);
-                using var overF = new Mat();
-                osplit[i].ConvertTo(overF, MatType.CV_32FC1);
-                using var inv = new Mat();
-                Cv2.Subtract(new Mat(a.Size(), a.Type(), Scalar.All(1.0)), a, inv);
-                using var baseWeighted = baseF.Mul(inv).ToMat();
-                using var overWeighted = overF.Mul(a).ToMat();
-                channels[i] = (baseWeighted + overWeighted).ToMat();
-            }
-
-            channels[3] = new Mat();
-            bsplit[3].ConvertTo(channels[3], MatType.CV_32FC1);
-            var merged = new Mat();
-            Cv2.Merge(channels, merged);
-            using (merged)
-            {
-                var result = new Mat();
-                merged.ConvertTo(result, MatType.CV_8UC4);
-                return result;
+                var b = baseSpan[y, x];
+                var o = ovSpan[y, x];
+                float a = o.Item3 * op / 255f;
+                float inv = 1f - a;
+                dstSpan[y, x] = new Vec4b(
+                    BlendByte(o.Item0, b.Item0, inv, a),
+                    BlendByte(o.Item1, b.Item1, inv, a),
+                    BlendByte(o.Item2, b.Item2, inv, a),
+                    b.Item3);
             }
         }
-        finally
-        {
-            foreach (var ch in channels) ch?.Dispose();
-        }
+        return result;
     }
 
+    /// <summary>
+    /// Alpha-composites <paramref name="overlayRoi"/> onto <paramref name="dstRoi"/> in place,
+    /// scaled by <paramref name="opacity"/> (0..1). Single-pass over zero-copy
+    /// <see cref="Span2D{T}"/> views; the previous version materialized ~8 intermediate
+    /// CV_32F Mats per call (text overlay and shape/mosaic stamping call it per block).
+    /// </summary>
     public static Mat AlphaComposite(Mat dstRoi, Mat overlayRoi, double opacity)
     {
-        using var channels = ChannelSplit.Of(overlayRoi);
-        using var alpha = new Mat();
-        channels[3].ConvertTo(alpha, MatType.CV_32FC1, opacity / 255.0);
-
-        using var overlayBgr = new Mat();
-        Cv2.Merge(new[] { channels[0], channels[1], channels[2] }, overlayBgr);
-
-        using var overlayF = new Mat();
-        overlayBgr.ConvertTo(overlayF, MatType.CV_32FC3);
-        using var baseF = new Mat();
-        dstRoi.ConvertTo(baseF, MatType.CV_32FC3);
-
-        using var alpha3 = new Mat();
-        Cv2.CvtColor(alpha, alpha3, ColorConversionCodes.GRAY2BGR);
-
-        using var fgWeighted = overlayF.Mul(alpha3).ToMat();
-        using var oneMinus = new Mat();
-        Cv2.Subtract(new Mat(alpha3.Size(), alpha3.Type(), Scalar.All(1.0)), alpha3, oneMinus);
-        using var bgWeighted = baseF.Mul(oneMinus).ToMat();
-
-        using var blended = (fgWeighted + bgWeighted).ToMat();
-        blended.ConvertTo(dstRoi, MatType.CV_8UC3);
+        var dstSpan = dstRoi.AsSpan2D<Vec3b>();
+        var ovSpan = overlayRoi.AsSpan2D<Vec4b>();
+        float op = (float)opacity;
+        for (int y = 0; y < dstSpan.Height; y++)
+        {
+            for (int x = 0; x < dstSpan.Width; x++)
+            {
+                var d = dstSpan[y, x];
+                var o = ovSpan[y, x];
+                float a = o.Item3 * op / 255f;
+                float inv = 1f - a;
+                dstSpan[y, x] = new Vec3b(
+                    BlendByte(o.Item0, d.Item0, inv, a),
+                    BlendByte(o.Item1, d.Item1, inv, a),
+                    BlendByte(o.Item2, d.Item2, inv, a));
+            }
+        }
         return dstRoi;
+    }
+
+    private static byte BlendByte(byte fg, byte bg, float inv, float a)
+    {
+        float v = fg * a + bg * inv;
+        return (byte)Math.Clamp(Math.Round(v, MidpointRounding.AwayFromZero), 0, 255);
     }
 
     public static Mat BlendLinear(Mat a, Mat b, double t)

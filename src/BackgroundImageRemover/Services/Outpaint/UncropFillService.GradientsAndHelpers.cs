@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -238,53 +239,61 @@ public sealed partial class UncropFillService
         int h = sourceBgr.Height;
         featherPx = Math.Max(1, Math.Min(featherPx, Math.Min(w, h) / 4));
 
+        // Single-pass blend over zero-copy views: the previous version built a float alpha mask
+        // and ~7 intermediate CV_32FC3 Mats (a full-image float pass each). Blend math is
+        // identical: result = source*factor + existing*(1-factor) near the edges, existing
+        // (already-filled) content elsewhere.
         ct.ThrowIfCancellationRequested();
-        using var alphaMask = new Mat(h, w, MatType.CV_32FC1, Scalar.All(1.0));
+        var srcSpan = sourceBgr.AsSpan2D<Vec3b>();
+        var dstSpan = resultCanvas.AsSpan2D<Vec3b>();
+        int ox = padding.Left;
+        int oy = padding.Top;
+        bool padL = padding.Left > 0, padR = padding.Right > 0, padT = padding.Top > 0, padB = padding.Bottom > 0;
+
         for (int y = 0; y < h; y++)
         {
             if (y % 16 == 0) ct.ThrowIfCancellationRequested();
+            int distTop = y;
+            int distBottom = h - 1 - y;
             for (int x = 0; x < w; x++)
             {
                 int distLeft = x;
                 int distRight = w - 1 - x;
-                int distTop = y;
-                int distBottom = h - 1 - y;
 
                 int minDist = int.MaxValue;
-                if (padding.Left > 0) minDist = Math.Min(minDist, distLeft);
-                if (padding.Right > 0) minDist = Math.Min(minDist, distRight);
-                if (padding.Top > 0) minDist = Math.Min(minDist, distTop);
-                if (padding.Bottom > 0) minDist = Math.Min(minDist, distBottom);
+                if (padL) minDist = Math.Min(minDist, distLeft);
+                if (padR) minDist = Math.Min(minDist, distRight);
+                if (padT) minDist = Math.Min(minDist, distTop);
+                if (padB) minDist = Math.Min(minDist, distBottom);
 
+                // The alpha mask is 1.0 everywhere except the feather band, so the whole
+                // interior is overwritten with the source; only the band blends with the
+                // pre-existing (background) content.
+                var src = srcSpan[y, x];
+                Vec3b val;
                 if (minDist < featherPx)
                 {
                     float factor = (float)minDist / featherPx;
-                    alphaMask.Set(y, x, factor);
+                    float inv = 1f - factor;
+                    var cur = dstSpan[oy + y, ox + x];
+                    val = new Vec3b(
+                        BlendByte(src.Item0, cur.Item0, inv, factor),
+                        BlendByte(src.Item1, cur.Item1, inv, factor),
+                        BlendByte(src.Item2, cur.Item2, inv, factor));
                 }
+                else
+                {
+                    val = src;
+                }
+                dstSpan[oy + y, ox + x] = val;
             }
         }
-
         ct.ThrowIfCancellationRequested();
-        using var interiorRoi = new Mat(resultCanvas, new Rect(padding.Left, padding.Top, w, h));
-        using var source32F = new Mat();
-        using var interior32F = new Mat();
-        sourceBgr.ConvertTo(source32F, MatType.CV_32FC3);
-        interiorRoi.ConvertTo(interior32F, MatType.CV_32FC3);
+    }
 
-        using var alpha3 = new Mat();
-        Cv2.CvtColor(alphaMask, alpha3, ColorConversionCodes.GRAY2BGR);
-
-        using var ones3 = new Mat(alpha3.Size(), MatType.CV_32FC3, Scalar.All(1.0));
-        using var invAlpha = new Mat();
-        Cv2.Subtract(ones3, alpha3, invAlpha);
-
-        using var blendedSource = new Mat();
-        using var blendedInterior = new Mat();
-        Cv2.Multiply(source32F, alpha3, blendedSource);
-        Cv2.Multiply(interior32F, invAlpha, blendedInterior);
-
-        using var blendedTotal = new Mat();
-        Cv2.Add(blendedSource, blendedInterior, blendedTotal);
-        blendedTotal.ConvertTo(interiorRoi, MatType.CV_8UC3);
+    private static byte BlendByte(byte fg, byte bg, float inv, float a)
+    {
+        float v = fg * a + bg * inv;
+        return (byte)Math.Clamp(Math.Round(v, MidpointRounding.AwayFromZero), 0, 255);
     }
 }

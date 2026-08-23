@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Compositing;
@@ -200,17 +201,19 @@ public static class BackgroundCompositingService
         // Build the x/y ramps efficiently using row/column repetition instead of a
         // pixel-per-pixel Set loop (O(width+height) instead of O(width*height)).
         using var xRow = new Mat(1, size.Width, MatType.CV_32FC1);
+        var xSpan = xRow.AsSpan2D<float>();
         for (int x = 0; x < size.Width; x++)
         {
-            xRow.Set(0, x, (float)x);
+            xSpan[0, x] = x;
         }
         using var xRamp = new Mat();
         Cv2.Repeat(xRow, size.Height, 1, xRamp);
 
         using var yCol = new Mat(size.Height, 1, MatType.CV_32FC1);
+        var ySpan = yCol.AsSpan2D<float>();
         for (int y = 0; y < size.Height; y++)
         {
-            yCol.Set(y, 0, (float)y);
+            ySpan[y, 0] = y;
         }
         using var yRamp = new Mat();
         Cv2.Repeat(yCol, 1, size.Width, yRamp);
@@ -359,31 +362,38 @@ public static class BackgroundCompositingService
         return result;
     }
 
+    /// <summary>
+    /// Composites a BGRA cutout onto an opaque BGR background in a single pass over zero-copy
+    /// <see cref="Span2D{T}"/> views: <c>result = fg*a + bg*(1-a)</c>. The previous version
+    /// materialized ~9 intermediate CV_32F Mats (a full-image float pass each) for every export.
+    /// </summary>
     private static Mat CompositeOntoBgr(Mat bgra, Mat backgroundBgr)
     {
-        using var split = ChannelSplit.Of(bgra);
-        using var alphaF = new Mat();
-        split[3].ConvertTo(alphaF, MatType.CV_32FC1, 1.0 / 255.0);
+        var fgSpan = bgra.AsSpan2D<Vec4b>();
+        var bgSpan = backgroundBgr.AsSpan2D<Vec3b>();
 
-        using var foregroundBgr = new Mat();
-        Cv2.Merge(new[] { split[0], split[1], split[2] }, foregroundBgr);
-
-        using var alpha3 = new Mat();
-        Cv2.CvtColor(alphaF, alpha3, ColorConversionCodes.GRAY2BGR);
-
-        using var fgF = new Mat();
-        foregroundBgr.ConvertTo(fgF, MatType.CV_32FC3);
-        using var bgF = new Mat();
-        backgroundBgr.ConvertTo(bgF, MatType.CV_32FC3);
-
-        using var fgWeighted = fgF.Mul(alpha3).ToMat();
-        using var oneMinusAlpha = new Mat();
-        Cv2.Subtract(new Mat(alpha3.Size(), alpha3.Type(), Scalar.All(1.0)), alpha3, oneMinusAlpha);
-        using var bgWeighted = bgF.Mul(oneMinusAlpha).ToMat();
-
-        using var blended = (fgWeighted + bgWeighted).ToMat();
-        var result = new Mat();
-        blended.ConvertTo(result, MatType.CV_8UC3);
+        var result = new Mat(bgra.Size(), MatType.CV_8UC3);
+        var dstSpan = result.AsSpan2D<Vec3b>();
+        for (int y = 0; y < dstSpan.Height; y++)
+        {
+            for (int x = 0; x < dstSpan.Width; x++)
+            {
+                float a = fgSpan[y, x].Item3 / 255f;
+                float inv = 1f - a;
+                var fg = fgSpan[y, x];
+                var bg = bgSpan[y, x];
+                dstSpan[y, x] = new Vec3b(
+                    BlendByte(fg.Item0, bg.Item0, inv, a),
+                    BlendByte(fg.Item1, bg.Item1, inv, a),
+                    BlendByte(fg.Item2, bg.Item2, inv, a));
+            }
+        }
         return result;
+    }
+
+    private static byte BlendByte(byte fg, byte bg, float inv, float a)
+    {
+        float v = fg * a + bg * inv;
+        return (byte)Math.Clamp(Math.Round(v, MidpointRounding.AwayFromZero), 0, 255);
     }
 }

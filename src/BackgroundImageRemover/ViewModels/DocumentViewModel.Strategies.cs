@@ -52,33 +52,6 @@ public partial class DocumentViewModel
     /// foreground/background scribbles (resized to full resolution) are included in the
     /// context so they feed the same single mask computation the preview used.
     /// </summary>
-    private async Task<RemovalResult> RunStrategyFullAsync(IBackgroundRemovalStrategy strategy, CancellationToken ct)
-    {
-        if (_loadedImage is null || _preview is null)
-        {
-            throw new InvalidOperationException("No image loaded.");
-        }
-
-        // Full-res scribble copies must stay alive for the whole background run. Declaring
-        // them with "using var" inside the if would dispose them at the closing brace --
-        // before RunFullAsync even starts -- which surfaced as "Cannot access a disposed
-        // object" on apply/export. They are declared here, in the method scope.
-        using var fgFull = SelectedStrategy == StrategyKind.GrabCut && ScribbleManager.HasScribbles
-            ? ScribbleManager.ForegroundScribble?.ResizeScribble(_loadedImage.FullBgr.Size())
-            : null;
-        using var bgFull = SelectedStrategy == StrategyKind.GrabCut && ScribbleManager.HasScribbles
-            ? ScribbleManager.BackgroundScribble?.ResizeScribble(_loadedImage.FullBgr.Size())
-            : null;
-        var context = BuildContext(_preview.ScaleFactor, fgFull, bgFull);
-
-        // Snapshot the source on the UI thread: the run happens on a worker and undo/redo or
-        // loading another image can dispose _loadedImage mid-run -- the run must never read
-        // the live Mat after that (it previously surfaced as "Cannot access a disposed
-        // object" on apply/export).
-        using var fullBgr = _loadedImage.FullBgr.Clone();
-        return await strategy.RunFullAsync(fullBgr, context, ct);
-    }
-
     /// <summary>True when the working result is authoritative and must be kept as-is on export.</summary>
     private bool IsWorkingResultAuthoritative => _workingResultIsLoadedCutout || _workingResultHandEdited;
 
@@ -99,33 +72,17 @@ public partial class DocumentViewModel
             return false;
         }
 
-        _processCts?.Cancel();
-        var cts = new CancellationTokenSource();
-        _processCts = cts;
-
-        try
-        {
-            IsBusy = true;
-            BusyMessage = "Processing at full resolution...";
-            var result = await RunStrategyFullAsync(strategy, cts.Token);
-            SetWorkingResult(result);
-            return true;
-        }
-        catch (OperationCanceledException)
-        {
-            StatusMessage = "Processing cancelled.";
-            return false;
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Processing failed: {ex.Message}";
-            _log.Error("Full-resolution processing failed", ex);
-            return false;
-        }
-        finally
-        {
-            IsBusy = false;
-        }
+        return await _fullRes.RunAsync(
+            strategy,
+            busyMessage: "Processing at full resolution...",
+            cancelledStatus: "Processing cancelled.",
+            failureStatusPrefix: "Processing failed",
+            onFailure: ex => _log.Error("Full-resolution processing failed", ex),
+            handleResult: result =>
+            {
+                SetWorkingResult(result);
+                return true;
+            });
     }
 
     private void SetWorkingResult(RemovalResult result)

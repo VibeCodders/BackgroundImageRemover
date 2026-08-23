@@ -30,7 +30,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     private readonly SamStrategy _samStrategy;
 
     private readonly PreviewRunner _previews;
-    private CancellationTokenSource? _processCts;
+    private readonly FullResRunner _fullRes;
 
     private PreviewImage? _preview;
 
@@ -194,6 +194,16 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
             bitmap => ResultBitmap = bitmap,
             message => StatusMessage = message,
             () => IsDirty = true);
+
+        _fullRes = new FullResRunner(
+            () => _sourceImage,
+            () => _preview,
+            () => SelectedStrategy,
+            () => ScribbleManager,
+            (scale, fg, bg) => BuildContext(scale, fg, bg),
+            value => IsBusy = value,
+            message => BusyMessage = message,
+            message => StatusMessage = message);
 
         // Subscribe to scribble manager events so the overlay stays in sync with the masks.
         ScribbleManager.StrokeUndone += (_, _) => RefreshScribbleOverlay();
@@ -377,8 +387,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
     public override void Dispose()
     {
         _previews.Dispose();
-        _processCts?.Cancel();
-        _processCts?.Dispose();
+        _fullRes.Dispose();
         _preview?.Dispose();
         _samEmbedding = null;
         ScribbleManager.Dispose();

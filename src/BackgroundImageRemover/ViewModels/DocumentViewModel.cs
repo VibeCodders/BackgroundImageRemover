@@ -51,7 +51,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private readonly DocumentEditHistory _history = new();
 
     private readonly PreviewRunner _previews;
-    private CancellationTokenSource? _processCts;
+    private readonly FullResRunner _fullRes;
     private CancellationTokenSource? _uncropCts;
 
     private LoadedImage? _loadedImage;
@@ -563,6 +563,16 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
             () => { },
             () => IsImageLoaded && ResultMode == InteractionMode.None);
 
+        _fullRes = new FullResRunner(
+            () => _loadedImage,
+            () => _preview,
+            () => SelectedStrategy,
+            () => ScribbleManager,
+            (scale, fg, bg) => BuildContext(scale, fg, bg),
+            value => IsBusy = value,
+            message => BusyMessage = message,
+            message => StatusMessage = message);
+
         // Subscribe to scribble manager events so the overlay stays in sync with the masks.
         _scribbleManager.StrokeUndone += (_, _) => RefreshScribbleOverlay();
         _scribbleManager.StrokeRedone += (_, _) => RefreshScribbleOverlay();
@@ -758,8 +768,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     {
         // Stop pending work so no background task keeps touching Mats after the tab closes.
         _previews.Dispose();
-        _processCts?.Cancel();
-        _processCts?.Dispose();
+        _fullRes.Dispose();
         _brushRefreshTimer?.Stop();
         _uncropCts?.Cancel();
         _uncropCts?.Dispose();

@@ -117,8 +117,7 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        InitSourceAlpha();
-        _workingBgr = CloneWorkingBgr();
+        _workingBgr = CloneSourceWorkingBgr();
 
         OriginalBitmap = _workingBgr.ToBitmapSource(_workingAlpha!);
         ResultBitmap = OriginalBitmap;

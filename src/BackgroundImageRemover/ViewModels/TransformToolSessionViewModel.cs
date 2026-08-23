@@ -143,8 +143,7 @@ public partial class TransformToolSessionViewModel : BgraToolSessionViewModelBas
     protected override void OnReset()
     {
         if (_sourceImage is null) return;
-        WorkingBgra?.Dispose();
-        WorkingBgra = _sourceImage.FullBgr.ToBgra(_workingAlpha!);
+        ResetWorkingBgra();
         Angle = 0.0;
         ScalePercent = 100.0;
         SkewX = 0.0;
@@ -166,9 +165,7 @@ public partial class TransformToolSessionViewModel : BgraToolSessionViewModelBas
     private void ApplyTransform(Func<Mat, Mat> transform)
     {
         if (WorkingBgra is null) return;
-        using var transformed = transform(WorkingBgra);
-        WorkingBgra.Dispose();
-        WorkingBgra = transformed.Clone();
+        ReplaceWorkingBgra(transform(WorkingBgra));
         RefreshPreview();
     }
 

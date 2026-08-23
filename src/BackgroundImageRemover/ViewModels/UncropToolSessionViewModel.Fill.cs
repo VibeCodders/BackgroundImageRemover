@@ -1,6 +1,5 @@
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Onnx;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp.WpfExtensions;
@@ -166,8 +165,7 @@ public partial class UncropToolSessionViewModel
 
         if (_resultSession.Result is not null)
         {
-            var (bgr, alpha) = BackgroundCompositingService.SplitBgra(_resultSession.Result);
-            _parentDocument.ApplyToolResult(bgr, alpha, "Uncrop Fill");
+            ApplyBgra(_resultSession.Result, "Uncrop Fill");
         }
 
         _shell.CloseTabDirect(this);

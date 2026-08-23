@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Compositing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
@@ -259,6 +260,35 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
             _parentDocument.ApplyToolResult(bgr, _workingAlpha.Clone(), operationName);
         }
         _shell.CloseTabDirect(this);
+    }
+
+    /// <summary>
+    /// Splits a BGRA result into BGR + alpha and applies both to the parent document (ownership
+    /// of the split Mats transfers to the document). The tool tab stays open — call
+    /// <see cref="ApplyBgraAndClose"/> when the tab should close too.
+    /// </summary>
+    protected void ApplyBgra(Mat bgra, string operationName)
+    {
+        var (bgr, alpha) = BackgroundCompositingService.SplitBgra(bgra);
+        _parentDocument.ApplyToolResult(bgr, alpha, operationName);
+    }
+
+    /// <summary>Splits a BGRA result, applies it to the parent document and closes the tool tab.</summary>
+    protected void ApplyBgraAndClose(Mat bgra, string operationName)
+    {
+        ApplyBgra(bgra, operationName);
+        _shell.CloseTabDirect(this);
+    }
+
+    /// <summary>
+    /// Captures the current document state and returns an independent mutable clone of the
+    /// full-resolution BGR, ready to be assigned to the tool's working copy. Callers own the
+    /// returned Mat. Eliminates the duplicated init + clone pair in the working-copy tools.
+    /// </summary>
+    protected Mat CloneSourceWorkingBgr()
+    {
+        InitSourceAlpha();
+        return CloneWorkingBgr();
     }
 
     public virtual void Dispose()

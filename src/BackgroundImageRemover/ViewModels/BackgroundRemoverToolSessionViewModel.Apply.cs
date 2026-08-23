@@ -1,5 +1,3 @@
-using BackgroundImageRemover.Services.Compositing;
-
 namespace BackgroundImageRemover.ViewModels;
 
 public partial class BackgroundRemoverToolSessionViewModel
@@ -27,9 +25,8 @@ public partial class BackgroundRemoverToolSessionViewModel
             onFailure: ex => _log.Error("Failed to apply background removal", ex),
             handleResult: result =>
             {
-                var (bgr, alpha) = BackgroundCompositingService.SplitBgra(result.Bgra);
+                ApplyBgra(result.Bgra, $"Remove Background ({SelectedStrategy})");
                 result.Dispose();
-                _parentDocument.ApplyToolResult(bgr, alpha, $"Remove Background ({SelectedStrategy})");
                 return true;
             });
 

@@ -103,8 +103,7 @@ public partial class RetouchToolSessionViewModel : WorkingCopyToolSessionViewMod
 
     private void InitFromParent()
     {
-        InitSourceAlpha();
-        _workingBgr = CloneWorkingBgr();
+        _workingBgr = CloneSourceWorkingBgr();
         RefreshResult();
         StatusMessage = "Use Brush or Magic Wand to refine foreground & edges.";
     }

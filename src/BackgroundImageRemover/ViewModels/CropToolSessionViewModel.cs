@@ -122,8 +122,7 @@ public partial class CropToolSessionViewModel : BgraToolSessionViewModelBase
         var rotated = clockwise
             ? TransformService.Rotate90Clockwise(WorkingBgra)
             : TransformService.Rotate90CounterClockwise(WorkingBgra);
-        WorkingBgra.Dispose();
-        WorkingBgra = rotated;
+        ReplaceWorkingBgra(rotated);
         SourceBitmap = WorkingBgra.ToFrozenBitmapSource();
         SelectedAspect = UncropAspectPresets.Free;
         Angle = 0.0;

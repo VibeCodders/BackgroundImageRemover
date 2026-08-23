@@ -111,8 +111,7 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
 
     private void InitFromParent()
     {
-        InitSourceAlpha();
-        _workingBgr = CloneWorkingBgr();
+        _workingBgr = CloneSourceWorkingBgr();
         RefreshPreview();
         StatusMessage = "Choose a background for the cutout.";
     }
@@ -280,8 +279,7 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
                 using var subject = BuildSubjectBgra();
                 if (BackgroundMode == ExportBackgroundMode.Transparent)
                 {
-                    var (bgr, alpha) = BackgroundCompositingService.SplitBgra(subject);
-                    _parentDocument.ApplyToolResult(bgr, alpha, "Compose");
+                    ApplyBgra(subject, "Compose");
                 }
                 else
                 {

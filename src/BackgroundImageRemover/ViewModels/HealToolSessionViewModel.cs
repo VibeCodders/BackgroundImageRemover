@@ -59,8 +59,7 @@ public partial class HealToolSessionViewModel : WorkingCopyToolSessionViewModelB
 
     private void InitFromParent()
     {
-        InitSourceAlpha();
-        _workingBgr = CloneWorkingBgr();
+        _workingBgr = CloneSourceWorkingBgr();
         _healMask = new Mat(_workingBgr.Size(), MatType.CV_8UC1, Scalar.All(0));
         SourceBitmap = _workingBgr.ToBitmapSource(_workingAlpha!);
         RefreshResult();

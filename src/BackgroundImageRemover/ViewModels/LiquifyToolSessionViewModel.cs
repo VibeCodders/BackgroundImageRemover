@@ -49,9 +49,7 @@ public partial class LiquifyToolSessionViewModel : BgraToolSessionViewModelBase
     private void ApplyWarp()
     {
         if (WorkingBgra is null) return;
-        using var warped = LiquifyService.Warp(WorkingBgra, new Point(CenterX, CenterY), Radius, Strength, Mode);
-        WorkingBgra.Dispose();
-        WorkingBgra = warped.Clone();
+        ReplaceWorkingBgra(LiquifyService.Warp(WorkingBgra, new Point(CenterX, CenterY), Radius, Strength, Mode));
         IsDirty = true;
         RefreshResult();
     }
@@ -59,8 +57,7 @@ public partial class LiquifyToolSessionViewModel : BgraToolSessionViewModelBase
     protected override void OnReset()
     {
         if (_sourceImage is null) return;
-        WorkingBgra?.Dispose();
-        WorkingBgra = _sourceImage.FullBgr.ToBgra(_workingAlpha!);
+        ResetWorkingBgra();
         CenterX = WorkingBgra.Width / 2;
         CenterY = WorkingBgra.Height / 2;
         Radius = 60;

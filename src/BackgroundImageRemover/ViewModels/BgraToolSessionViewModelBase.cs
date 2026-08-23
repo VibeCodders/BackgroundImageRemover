@@ -1,6 +1,5 @@
 using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
-using BackgroundImageRemover.Services.Compositing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
@@ -37,8 +36,25 @@ public abstract partial class BgraToolSessionViewModelBase : ToolSessionViewMode
     protected void InitWorkingBgra()
     {
         InitSourceAlpha();
-        _workingBgra = _sourceImage!.FullBgr.ToBgra(_workingAlpha!);
-        SourceBitmap = _workingBgra.ToFrozenBitmapSource();
+        ResetWorkingBgra();
+        SourceBitmap = _workingBgra!.ToFrozenBitmapSource();
+    }
+
+    /// <summary>
+    /// Replaces the working BGRA copy with <paramref name="newBgra"/>, disposing the previous
+    /// one. Takes ownership of <paramref name="newBgra"/> (the caller must not dispose it).
+    /// Eliminates the copy-pasted dispose + reassign pair in the transform tools.
+    /// </summary>
+    protected void ReplaceWorkingBgra(Mat newBgra)
+    {
+        _workingBgra?.Dispose();
+        _workingBgra = newBgra;
+    }
+
+    /// <summary>Replaces the working BGRA copy with a fresh fusion of the pristine source and its alpha.</summary>
+    protected void ResetWorkingBgra()
+    {
+        ReplaceWorkingBgra(_sourceImage!.FullBgr.ToBgra(_workingAlpha!));
     }
 
     /// <summary>Updates <see cref="ToolSessionViewModelBase.ResultBitmap"/> from the current BGRA copy.</summary>
@@ -56,19 +72,14 @@ public abstract partial class BgraToolSessionViewModelBase : ToolSessionViewMode
     /// working BGRA copy itself (e.g. after cropping or rotating).
     /// </summary>
     protected void ApplyBgraResult(Mat bgra, string operationName)
-    {
-        var (bgr, alpha) = BackgroundCompositingService.SplitBgra(bgra);
-        _parentDocument.ApplyToolResult(bgr, alpha, operationName);
-        _shell.CloseTabDirect(this);
-    }
+        => ApplyBgraAndClose(bgra, operationName);
 
     /// <summary>Applies the working BGRA copy directly (split into BGR + alpha) and closes the tab.</summary>
     protected Task ApplyWorkingBgraAsync(string operationName)
     {
         if (_workingBgra is not null)
         {
-            var (bgr, alpha) = BackgroundCompositingService.SplitBgra(_workingBgra);
-            _parentDocument.ApplyToolResult(bgr, alpha, operationName);
+            ApplyBgra(_workingBgra, operationName);
         }
         _shell.CloseTabDirect(this);
         return Task.CompletedTask;

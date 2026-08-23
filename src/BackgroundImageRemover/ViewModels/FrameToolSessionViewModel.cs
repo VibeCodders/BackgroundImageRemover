@@ -1,7 +1,6 @@
 using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -301,10 +300,7 @@ namespace BackgroundImageRemover.ViewModels;
         }
 
         using var framed = BuildFramedBgra();
-        var (bgr, alpha) = BackgroundCompositingService.SplitBgra(framed);
-        _parentDocument.ApplyToolResult(bgr, alpha, "Frame");
-
-        _shell.CloseTabDirect(this);
+        ApplyBgraAndClose(framed, "Frame");
         return Task.CompletedTask;
     }
 }

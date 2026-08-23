@@ -46,4 +46,32 @@ public static class MaskHelpers
         Cv2.DrawContours(mask, single, -1, Scalar.All(255), thickness: -1);
         return mask;
     }
+
+    /// <summary>
+    /// Flood-fills <paramref name="bgr"/> in Lab space (so <paramref name="tolerance"/> behaves
+    /// as a perceptual color distance) from each seed on a shared mask and returns the interior
+    /// mask with the flooded pixels set to 255. This is the repeated "flood the background from
+    /// the border" setup used by FloodFill, MagicWand and Inpaint — including the 2px larger
+    /// working mask OpenCV's FloodFill requires.
+    /// </summary>
+    public static Mat FloodFillBorderMask(Mat bgr, Point[] seeds, double tolerance)
+    {
+        using var lab = new Mat();
+        Cv2.CvtColor(bgr, lab, ColorConversionCodes.BGR2Lab);
+
+        var diff = new Scalar(Math.Max(1, tolerance));
+        var flags = FloodFillFlags.Link8 | FloodFillFlags.MaskOnly | (FloodFillFlags)(255 << 8);
+
+        // FloodFill's mask must be 2px larger than the image on every side.
+        using var floodMask = new Mat(bgr.Height + 2, bgr.Width + 2, MatType.CV_8UC1, Scalar.All(0));
+        foreach (var seed in seeds)
+        {
+            Cv2.FloodFill(lab, floodMask, seed, Scalar.All(255), out _, diff, diff, flags);
+        }
+
+        using var interior = new Mat(floodMask, new Rect(1, 1, bgr.Width, bgr.Height));
+        var mask = new Mat(bgr.Size(), MatType.CV_8UC1, Scalar.All(0));
+        interior.CopyTo(mask);
+        return mask;
+    }
 }

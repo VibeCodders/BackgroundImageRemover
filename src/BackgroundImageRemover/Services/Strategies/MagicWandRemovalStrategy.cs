@@ -23,22 +23,10 @@ public sealed class MagicWandRemovalStrategy : StrategyBase
             return mask;
         }
 
-        using var lab = new Mat();
-        Cv2.CvtColor(bgr, lab, ColorConversionCodes.BGR2Lab);
-
-        var diff = new Scalar(Math.Max(1, context.MagicWandTolerance));
-        var flags = FloodFillFlags.Link8 | FloodFillFlags.MaskOnly | (FloodFillFlags)(255 << 8);
-
-        // FloodFill's mask must be 2px larger than the image on each side.
-        using var floodMask = new Mat(bgr.Height + 2, bgr.Width + 2, MatType.CV_8UC1, Scalar.All(0));
-        Cv2.FloodFill(lab, floodMask, s, Scalar.All(255), out _, diff, diff, flags);
+        using var background = MaskHelpers.FloodFillBorderMask(bgr, new[] { s }, context.MagicWandTolerance);
         ct.ThrowIfCancellationRequested();
 
-        using var region = new Mat(floodMask, new Rect(1, 1, bgr.Width, bgr.Height));
-        mask.SetTo(new Scalar(0), region);
-
-        // The blurred mask is the strategy's output: ownership transfers to the caller, so it
-        // must not be disposed here (unlike the `using` temporaries above).
+        Cv2.BitwiseNot(background, mask);
         return MaskHelpers.Feather(mask);
     }
 }

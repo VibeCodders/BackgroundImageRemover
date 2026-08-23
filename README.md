@@ -52,6 +52,9 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 - Adjustment parameters are now clamped to valid ranges in `DocumentViewModel.Adjustments.cs` to prevent crashes from out-of-range values
 - Degenerate images no longer crash the geometry/resize/trim helpers: `GeometryHelper.ClampToSize`, `CropService.CenteredRectForSize`/`CropMargins` and `ResizeService` (all methods) now return safe empty results instead of throwing inside `Math.Clamp` or dividing by zero on 0-sized sources, and `ChromaKeyStrategy.DetectDominantBorderColor` no longer touches `At(0,0)` on an empty Mat — pinned by new `GeometryHelperTests`, `CropServiceTests`, `ResizeServiceTests` and the ChromaKey empty-image test
 - The strategies' repeated mask feather (Gaussian blur + dispose) and the identical "keep largest filled region" contour step are now the shared `MaskHelpers.Feather`/`MaskHelpers.KeepLargestFilledRegion` (used by Otsu, EdgeContour, KMeans, MagicWand, FloodFill and GrabCut), covered by `MaskHelpersTests`
+- **Inpaint tool fixed**: it used a flood-fill mask fill value of 0, so the background mask came out all-zero and the tool returned a fully transparent image; and the returned mask was the background instead of the subject. It now floods with 255 and returns the inverted (subject) mask, pinned by the new `InpaintStrategyTests`
+- The three border-flood strategies (FloodFill, MagicWand, Inpaint) share `MaskHelpers.FloodFillBorderMask` (Lab-space flood from border seeds with OpenCV's required 2px working mask) instead of each re-rolling the setup
+- `ColorPickerService.Sample`/`SampleAverage` no longer throw on empty images, and the untested services now have coverage: new `RedEyeServiceTests`, `LiquifyServiceTests` (all 7 warp modes), `VignetteServiceTests`, `TiltShiftServiceTests`, `HealServiceTests`, `ColorPickerServiceTests` and flood-fill `MaskHelpersTests` — every test runs on degenerate (0×0 / 1×1) inputs too
 
 ### Build
 

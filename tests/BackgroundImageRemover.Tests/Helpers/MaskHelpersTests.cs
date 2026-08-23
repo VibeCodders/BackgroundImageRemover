@@ -110,4 +110,44 @@ public class MaskHelpersTests
         Assert.Equal(255, binary.At<byte>(15, 15)); // input unchanged
         Assert.Equal(255, result.At<byte>(15, 15));
     }
+
+    // ------------------------------------------------------------------ FloodFillBorderMask
+
+    [Fact]
+    public void FloodFillBorderMask_UniformImage_FloodsEverything()
+    {
+        using var bgr = new Mat(40, 40, MatType.CV_8UC3, new Scalar(120, 120, 120));
+        var seeds = new[] { new Point(0, 0), new Point(39, 39) };
+
+        using var mask = MaskHelpers.FloodFillBorderMask(bgr, seeds, tolerance: 20);
+
+        Assert.Equal(255, mask.At<byte>(20, 20));
+        Assert.Equal(255, mask.At<byte>(0, 0));
+    }
+
+    [Fact]
+    public void FloodFillBorderMask_SubjectInCenter_FloodsOnlyTheBackground()
+    {
+        using var bgr = new Mat(60, 60, MatType.CV_8UC3, new Scalar(210, 210, 210));
+        using (var subject = new Mat(bgr, new Rect(25, 25, 10, 10)))
+        {
+            subject.SetTo(new Scalar(30, 30, 30));
+        }
+
+        using var mask = MaskHelpers.FloodFillBorderMask(bgr, new[] { new Point(0, 0) }, tolerance: 20);
+
+        Assert.Equal(255, mask.At<byte>(5, 5));    // border: background
+        Assert.Equal(0, mask.At<byte>(30, 30));    // subject center: not flooded
+    }
+
+    [Fact]
+    public void FloodFillBorderMask_OneByOneImage_DoesNotCrash()
+    {
+        using var bgr = new Mat(1, 1, MatType.CV_8UC3, new Scalar(100, 100, 100));
+
+        using var mask = MaskHelpers.FloodFillBorderMask(bgr, new[] { new Point(0, 0) }, tolerance: 20);
+
+        Assert.Equal(new Size(1, 1), mask.Size());
+        Assert.Equal(255, mask.At<byte>(0, 0));
+    }
 }

@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -15,9 +16,6 @@ public sealed class InpaintStrategy : StrategyBase
 
     protected override Mat ComputeMask(Mat bgr, StrategyContext context, CancellationToken ct)
     {
-        // Start from a full-opacity (255) mask: every pixel is foreground until we prove otherwise.
-        var mask = new Mat(bgr.Size(), MatType.CV_8UC1, Scalar.All(255));
-
         // Determine which pixels are "known background" (i.e. the region to in-paint).
         // The Inpaint strategy reuses the shared mask-cleanup pipeline, so we seed the mask
         // with an estimate of the background and let the post-processing refine it.
@@ -29,11 +27,12 @@ public sealed class InpaintStrategy : StrategyBase
         double radius = Math.Max(1.0, context.InpaintRadius);
         Cv2.Inpaint(bgr, bgMask, inpainted, radius, InpaintMethod.NS);
 
-        // The mask we return is the background region (inverted so 255 = keep).
-        // The shared post-processing in StrategyBase will invert/cleanup as configured.
-        var backgroundMask = new Mat();
-        bgMask.CopyTo(backgroundMask);
-        return backgroundMask;
+        // The strategy's mask contract is 255 = subject (keep): invert the background mask.
+        // (Regression: this used to return the background mask as-is, so the tool kept the
+        // background and removed the subject — or, with the old 0 fill value, removed everything.)
+        var subjectMask = new Mat();
+        Cv2.BitwiseNot(bgMask, subjectMask);
+        return subjectMask;
     }
 
     /// <summary>
@@ -43,14 +42,6 @@ public sealed class InpaintStrategy : StrategyBase
     /// </summary>
     private static Mat EstimateBackgroundMask(Mat bgr, StrategyContext context)
     {
-        using var lab = new Mat();
-        Cv2.CvtColor(bgr, lab, ColorConversionCodes.BGR2Lab);
-
-        // FloodFill's mask must be 2px larger than the image on each side.
-        using var floodMask = new Mat(bgr.Height + 2, bgr.Width + 2, MatType.CV_8UC1, Scalar.All(0));
-        var diff = new Scalar(Math.Max(1, context.InpaintTolerance));
-        var flags = FloodFillFlags.Link8 | FloodFillFlags.MaskOnly | (FloodFillFlags)(0 << 8);
-
         // Seed from the four corners; any connected border region is treated as background.
         var seeds = new[]
         {
@@ -60,15 +51,6 @@ public sealed class InpaintStrategy : StrategyBase
             new Point(bgr.Width - 1, bgr.Height - 1)
         };
 
-        foreach (var seed in seeds)
-        {
-            Cv2.FloodFill(lab, floodMask, seed, Scalar.All(255), out _, diff, diff, flags);
-        }
-
-        // Extract the inner region (drop the 1px border added by FloodFill).
-        var region = new Mat(floodMask, new Rect(1, 1, bgr.Width, bgr.Height));
-        var mask = new Mat(bgr.Size(), MatType.CV_8UC1, Scalar.All(0));
-        region.CopyTo(mask);
-        return mask;
+        return MaskHelpers.FloodFillBorderMask(bgr, seeds, context.InpaintTolerance);
     }
 }

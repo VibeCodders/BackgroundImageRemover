@@ -5,17 +5,29 @@ namespace BackgroundImageRemover.Services.Editing;
 /// <summary>Samples pixel colors from a BGR image at a given coordinate.</summary>
 public static class ColorPickerService
 {
-    /// <summary>Returns the BGR color at <paramref name="x"/>, <paramref name="y"/> (clamped to image bounds).</summary>
+    /// <summary>Returns the BGR color at <paramref name="x"/>, <paramref name="y"/> (clamped to image bounds).
+    /// An empty image yields a zero color instead of crashing inside Math.Clamp.</summary>
     public static Vec3b Sample(Mat bgr, int x, int y)
     {
+        if (bgr.Width <= 0 || bgr.Height <= 0)
+        {
+            return default;
+        }
+
         x = Math.Clamp(x, 0, bgr.Width - 1);
         y = Math.Clamp(y, 0, bgr.Height - 1);
         return bgr.At<Vec3b>(y, x);
     }
 
-    /// <summary>Returns the average BGR color within a square region of the given <paramref name="radius"/> centered on (x, y).</summary>
+    /// <summary>Returns the average BGR color within a square region of the given <paramref name="radius"/> centered on (x, y).
+    /// An empty image yields a zero color instead of crashing inside Math.Clamp.</summary>
     public static Vec3b SampleAverage(Mat bgr, int x, int y, int radius)
     {
+        if (bgr.Width <= 0 || bgr.Height <= 0)
+        {
+            return default;
+        }
+
         int r = Math.Max(1, radius);
         int x0 = Math.Clamp(x - r, 0, bgr.Width - 1);
         int y0 = Math.Clamp(y - r, 0, bgr.Height - 1);

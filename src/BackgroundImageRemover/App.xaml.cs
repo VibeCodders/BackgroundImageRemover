@@ -35,6 +35,13 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Some GPU/driver combinations (notably NVIDIA Optimus hybrid-graphics laptops) fail to
+        // composite WPF's hardware-accelerated bitmap surfaces correctly, rendering loaded images
+        // and previews as solid black while vector UI (buttons, text, borders) still draws fine.
+        // Forcing software rendering sidesteps the broken hardware path; the app is a 2D image
+        // editor, so the performance cost is negligible next to correctness.
+        System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+
         var services = new ServiceCollection();
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();

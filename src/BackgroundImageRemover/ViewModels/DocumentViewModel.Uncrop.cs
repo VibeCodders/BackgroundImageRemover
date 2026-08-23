@@ -69,9 +69,7 @@ public partial class DocumentViewModel
 
             var preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
             _preview = preview;
-            PreviewBitmap = _loadedImage.FullAlpha is { } a
-                ? preview.Bgr.BuildPreviewWithAlpha(a)
-                : preview.Bgr.ToBitmapSource();
+            PreviewBitmap = preview.Bgr.ToPreviewBitmap(_loadedImage.FullAlpha);
 
             // The uncrop expanded the canvas: keep the status-bar dimensions in sync.
             ImageWidth = _loadedImage.FullBgr.Width;

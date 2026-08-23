@@ -286,9 +286,7 @@ public partial class DocumentViewModel
             loaded = await _projectService.LoadAsync(path);
             preview = _downscaler.CreatePreview(loaded.OriginalBgr);
 
-            var previewBitmap = loaded.OriginalAlpha is not null
-                ? preview.Bgr.BuildPreviewWithAlpha(loaded.OriginalAlpha)
-                : preview.Bgr.ToBitmapSource();
+            var previewBitmap = preview.Bgr.ToPreviewBitmap(loaded.OriginalAlpha);
 
             // Restore settings while IsImageLoaded is still false so strategy-change handlers
             // don't kick off spurious previews; the saved working result is authoritative.

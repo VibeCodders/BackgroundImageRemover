@@ -89,7 +89,7 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
     {
         if (!EnsureSourceAlpha()) return;
         using var result = BuildResult(_sourceImage!.FullBgr);
-        ResultBitmap = result.ToBitmapSource(_workingAlpha!);
+        ResultBitmap = result.ToResultBitmap(_workingAlpha);
         IsDirty = IsEffectActive;
     }
 

@@ -63,23 +63,56 @@ public static class TestDoubles
     }
 }
 
-/// <summary>Loads a solid-color image of a configurable size.</summary>
+/// <summary>
+/// Loads a configurable synthetic image: a solid-color background of a given size, an optional
+/// alpha channel (uniform fill value; null = no alpha) and an optional shape-painting callback
+/// (subject rectangle, blur, ...) applied to the BGR pixels. Replaces the per-file
+/// Alpha/Plain/Subject image loaders in the view-model tests.
+/// </summary>
 public sealed class TestImageLoader : IImageLoaderService
 {
     private readonly int _width;
     private readonly int _height;
+    private readonly Scalar _background;
+    private readonly byte? _alphaValue;
+    private readonly Action<Mat>? _draw;
 
+    /// <summary>Solid BGR(10,20,30) image without alpha, for the common "plain photo" case.</summary>
     public TestImageLoader(int width, int height)
+        : this(width, height, new Scalar(10, 20, 30))
+    {
+    }
+
+    /// <param name="background">Solid BGR fill color of the image.</param>
+    /// <param name="alphaValue">When set, the image carries a single-channel alpha filled with this
+    /// value (0 = fully transparent cutout); when null, the image has no alpha channel.</param>
+    /// <param name="draw">Optional callback that paints shapes (subject rectangle, blur, ...) into the
+    /// BGR Mat right after creation. Invoked on a fresh Mat for every load.</param>
+    public TestImageLoader(int width, int height, Scalar background, byte? alphaValue = null, Action<Mat>? draw = null)
     {
         _width = width;
         _height = height;
+        _background = background;
+        _alphaValue = alphaValue;
+        _draw = draw;
     }
 
-    private LoadedImage Create() => new("photo.jpg", new Mat(_height, _width, MatType.CV_8UC3, new Scalar(10, 20, 30)));
+    private LoadedImage Create(string name) => new(name, CreateBgr(), CreateAlpha());
 
-    public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default) => Task.FromResult(Create());
-    public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default) => Task.FromResult(Create());
-    public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png") => Task.FromResult(Create());
+    private Mat CreateBgr()
+    {
+        var bgr = new Mat(_height, _width, MatType.CV_8UC3, _background);
+        _draw?.Invoke(bgr);
+        return bgr;
+    }
+
+    private Mat? CreateAlpha() => _alphaValue is { } value
+        ? new Mat(_height, _width, MatType.CV_8UC1, new Scalar(value))
+        : null;
+
+    public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default) => Task.FromResult(Create(path));
+    public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default) => Task.FromResult(Create(sourceName));
+    public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png") => Task.FromResult(Create(sourceName));
 }
 
 /// <summary>Shell with a no-op <c>CloseTabDirect</c> for tool-session tests.</summary>

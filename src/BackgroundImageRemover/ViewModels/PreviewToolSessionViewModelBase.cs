@@ -57,7 +57,7 @@ public abstract partial class PreviewToolSessionViewModelBase : ToolSessionViewM
         }
 
         using var result = ApplyEffect(_sourceImage.FullBgr);
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
+        ResultBitmap = result.ToResultBitmap(_workingAlpha);
         IsDirty = IsEffectActive;
     }
 

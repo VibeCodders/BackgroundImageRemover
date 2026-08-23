@@ -2,9 +2,7 @@ using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using BackgroundImageRemover.Helpers;
-
 using BackgroundImageRemover.Models;
-using BackgroundImageRemover.Services.Compositing;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.Logging;
 using BackgroundImageRemover.Services.Onnx;
@@ -15,7 +13,6 @@ using BackgroundImageRemover.ViewModels.StrategyViewModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
-using OpenCvSharp.WpfExtensions;
 using WpfPoint = System.Windows.Point;
 
 namespace BackgroundImageRemover.ViewModels;
@@ -279,10 +276,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         var preview = _downscaler.CreatePreview(_sourceImage!.FullBgr);
         _preview = preview;
 
-        bool isActualCutout = BackgroundCompositingService.HasMeaningfulTransparency(_sourceImage.FullAlpha);
-        PreviewBitmap = isActualCutout
-            ? preview.Bgr.BuildPreviewWithAlpha(_sourceImage.FullAlpha!)
-            : preview.Bgr.ToBitmapSource();
+        PreviewBitmap = preview.Bgr.ToPreviewBitmap(_sourceImage.FullAlpha);
 
         ChromaKey.DetectedColorBgr = ChromaKeyStrategy.DetectDominantBorderColor(_preview.Bgr);
         Onnx.IsModelReady = _onnxStrategy.IsReady(Onnx.SelectedModel);

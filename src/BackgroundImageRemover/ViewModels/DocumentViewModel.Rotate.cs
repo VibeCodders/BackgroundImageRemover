@@ -61,9 +61,7 @@ public partial class DocumentViewModel
 
         _preview?.Dispose();
         _preview = _downscaler.CreatePreview(_loadedImage.FullBgr);
-        PreviewBitmap = _loadedImage.FullAlpha is { } fullAlpha
-            ? _preview.Bgr.BuildPreviewWithAlpha(fullAlpha)
-            : _preview.Bgr.ToBitmapSource();
+        PreviewBitmap = _preview.Bgr.ToPreviewBitmap(_loadedImage.FullAlpha);
 
         ImageWidth = _loadedImage.FullBgr.Width;
         ImageHeight = _loadedImage.FullBgr.Height;

@@ -206,13 +206,7 @@ public partial class DocumentViewModel
     }
 
     private void RefreshResultBitmapFromWorking()
-    {
-        if (_workingBgr is null || _workingAlpha is null)
-        {
-            return;
-        }
-        ResultBitmap = _workingBgr.ToBitmapSource(_workingAlpha);
-    }
+        => ResultBitmap = _workingBgr.ToResultBitmap(_workingAlpha);
 
     private void DisposeWorkingResult()
     {

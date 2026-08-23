@@ -1,3 +1,7 @@
+using System.Threading;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
@@ -104,5 +108,100 @@ public sealed class MatExtensionsTests
         var result = image.GetWorkingAlpha();
 
         Assert.Equal(255, result.At<byte>(0, 0));
+    }
+
+    [Fact]
+    public void ToResultBitmap_NullBgr_ReturnsNull()
+    {
+        using var alpha = new Mat(10, 10, MatType.CV_8UC1, new Scalar(255));
+
+        Assert.Null(((Mat?)null).ToResultBitmap(alpha));
+    }
+
+    [Fact]
+    public void ToResultBitmap_NullAlpha_ReturnsNull()
+    {
+        using var bgr = new Mat(10, 10, MatType.CV_8UC3, new Scalar(10, 20, 30));
+
+        Assert.Null(bgr.ToResultBitmap(null));
+    }
+
+    [Fact]
+    public void ToResultBitmap_ValidPair_PreservesAlpha()
+    {
+        using var bgr = new Mat(10, 10, MatType.CV_8UC3, new Scalar(10, 20, 30));
+        using var alpha = new Mat(10, 10, MatType.CV_8UC1, new Scalar(128));
+
+        Assert.Equal((byte)128, SampleAlphaOnSta(() => bgr.ToResultBitmap(alpha), 0, 0));
+    }
+
+    [Fact]
+    public void ToPreviewBitmap_OpaqueAlpha_RendersPlain()
+    {
+        // A uniformly opaque alpha is not meaningful transparency: the plain BGR path runs,
+        // which produces a 3-channel bitmap (opaque by construction, no alpha channel).
+        using var bgr = new Mat(10, 10, MatType.CV_8UC3, new Scalar(10, 20, 30));
+        using var opaqueAlpha = new Mat(20, 20, MatType.CV_8UC1, Scalar.All(255));
+
+        Assert.Equal(PixelFormats.Bgr24, FormatOnSta(() => bgr.ToPreviewBitmap(opaqueAlpha)));
+    }
+
+    [Fact]
+    public void ToPreviewBitmap_MeaningfulAlpha_PreservesTransparency()
+    {
+        // Preview 10x10 built from a 20x20 alpha with a fully transparent 2x2 block in the
+        // center: the preview pixel (5,5) is the area-average of that block and must be 0,
+        // while the corner pixel stays opaque.
+        using var bgr = new Mat(10, 10, MatType.CV_8UC3, new Scalar(10, 20, 30));
+        using var alpha = new Mat(20, 20, MatType.CV_8UC1, Scalar.All(255));
+        alpha.Set(10, 10, (byte)0);
+        alpha.Set(10, 11, (byte)0);
+        alpha.Set(11, 10, (byte)0);
+        alpha.Set(11, 11, (byte)0);
+
+        Assert.Equal((byte)255, SampleAlphaOnSta(() => bgr.ToPreviewBitmap(alpha), 0, 0));
+        Assert.Equal((byte)0, SampleAlphaOnSta(() => bgr.ToPreviewBitmap(alpha), 5, 5));
+    }
+
+    [Fact]
+    public void ToPreviewBitmap_NullAlpha_RendersPlain()
+    {
+        using var bgr = new Mat(10, 10, MatType.CV_8UC3, new Scalar(10, 20, 30));
+
+        Assert.Equal(PixelFormats.Bgr24, FormatOnSta(() => bgr.ToPreviewBitmap(null)));
+    }
+
+    /// <summary>Creates a BitmapSource on an STA thread and samples the alpha byte of one pixel.
+    /// WPF bitmaps are thread-affine, so creation and sampling must share the thread.</summary>
+    private static byte SampleAlphaOnSta(Func<BitmapSource?> create, int x, int y)
+    {
+        byte alpha = 0;
+        var thread = new Thread(() =>
+        {
+            var bitmap = create()!;
+            var buffer = new byte[4];
+            bitmap.CopyPixels(new Int32Rect(x, y, 1, 1), buffer, 4, 0);
+            alpha = buffer[3];
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(20)), "STA bitmap sample thread timed out");
+        return alpha;
+    }
+
+    /// <summary>Creates a BitmapSource on an STA thread and returns its pixel format.
+    /// WPF bitmaps are thread-affine, so creation must happen on the STA thread.</summary>
+    private static PixelFormat FormatOnSta(Func<BitmapSource?> create)
+    {
+        PixelFormat format = PixelFormats.Default;
+        var thread = new Thread(() =>
+        {
+            var bitmap = create()!;
+            format = bitmap.Format;
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(20)), "STA bitmap format thread timed out");
+        return format;
     }
 }

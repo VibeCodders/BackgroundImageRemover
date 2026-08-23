@@ -34,7 +34,7 @@ public abstract partial class WorkingCopyToolSessionViewModelBase : ToolSessionV
         }
 
         using var result = BuildResult();
-        ResultBitmap = result.ToBitmapSource(_workingAlpha);
+        ResultBitmap = result.ToResultBitmap(_workingAlpha);
     }
 
     public override void Dispose()

@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Compositing;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
 
@@ -164,6 +165,23 @@ public static class MatExtensions
     }
 
     /// <summary>
+    /// Builds the display bitmap for a preview-resolution BGR Mat, showing the full-resolution
+    /// alpha channel when it carries meaningful transparency (a real cutout) and rendering the
+    /// plain BGR otherwise. Eliminates the repeated
+    /// <c>isCutout ? BuildPreviewWithAlpha : ToBitmapSource</c> ternary scattered across the
+    /// document load/duplicate/project/rotate/uncrop flows and tool-session initialization.
+    /// </summary>
+    public static System.Windows.Media.Imaging.BitmapSource ToPreviewBitmap(this Mat previewBgr, Mat? fullAlpha)
+    {
+        ArgumentNullException.ThrowIfNull(previewBgr);
+        if (fullAlpha is not null && BackgroundCompositingService.HasMeaningfulTransparency(fullAlpha))
+        {
+            return previewBgr.BuildPreviewWithAlpha(fullAlpha);
+        }
+        return previewBgr.ToBitmapSource();
+    }
+
+    /// <summary>
     /// Composites a 3-channel BGR Mat with a single-channel alpha Mat into a BGRA
     /// <see cref="System.Windows.Media.Imaging.BitmapSource"/>, eliminating the repeated
     /// BGR→BGRA conversion + alpha-channel replacement boilerplate across ViewModels.
@@ -175,6 +193,21 @@ public static class MatExtensions
 
         using var bgra = bgr.ToBgra(alpha);
         return bgra.ToBitmapSource();
+    }
+
+    /// <summary>
+    /// Renders a BGR + alpha working pair into a <see cref="System.Windows.Media.Imaging.BitmapSource"/>,
+    /// or null when either Mat is missing. Shared "reconstruct the result bitmap from the working
+    /// pair" flow: the document's <c>RefreshResultBitmapFromWorking</c> and every tool-session
+    /// <c>RefreshResult</c>/<c>RefreshPreview</c> use it instead of re-checking nullability.
+    /// </summary>
+    public static System.Windows.Media.Imaging.BitmapSource? ToResultBitmap(this Mat? bgr, Mat? alpha)
+    {
+        if (bgr is null || alpha is null)
+        {
+            return null;
+        }
+        return bgr.ToBitmapSource(alpha);
     }
 
     /// <summary>

@@ -265,9 +265,7 @@ public partial class DocumentViewModel
         _preview = preview;
 
         bool isActualCutout = BackgroundCompositingService.HasMeaningfulTransparency(_loadedImage.FullAlpha);
-        PreviewBitmap = isActualCutout
-            ? preview.Bgr.BuildPreviewWithAlpha(_loadedImage.FullAlpha!)
-            : preview.Bgr.ToBitmapSource();
+        PreviewBitmap = preview.Bgr.ToPreviewBitmap(_loadedImage.FullAlpha);
         ResultBitmap = null;
         IsImageLoaded = true;
         IsCutout = isActualCutout;

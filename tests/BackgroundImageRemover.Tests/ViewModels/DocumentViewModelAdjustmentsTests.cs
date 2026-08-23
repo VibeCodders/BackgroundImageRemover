@@ -27,7 +27,7 @@ public class DocumentViewModelAdjustmentsTests
     [Fact]
     public async Task ApplyAdjustments_RecordsUndoStepAndPreservesSourceAlpha()
     {
-        var doc = CreateDocument(new AlphaImageLoader());
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0));
 
         await doc.LoadImageAsync("cutout.png");
 
@@ -56,7 +56,7 @@ public class DocumentViewModelAdjustmentsTests
     [Fact]
     public async Task ApplyAdjustments_OnPlainPhoto_CreatesUndoableWorkingResult()
     {
-        var doc = CreateDocument(new PlainImageLoader());
+        var doc = CreateDocument(new TestImageLoader(4, 4));
         await doc.LoadImageAsync("photo.jpg");
         Assert.False(doc.HasWorkingResult);
 
@@ -71,7 +71,7 @@ public class DocumentViewModelAdjustmentsTests
     [Fact]
     public async Task ApplyAdjustments_WithIdentityValues_DoesNothing()
     {
-        var doc = CreateDocument(new PlainImageLoader());
+        var doc = CreateDocument(new TestImageLoader(4, 4));
         await doc.LoadImageAsync("photo.jpg");
 
         await doc.ApplyAdjustmentsCommand.ExecuteAsync(null);
@@ -84,7 +84,7 @@ public class DocumentViewModelAdjustmentsTests
     public async Task ExportJpg_UsesConfiguredJpegQuality()
     {
         var exporter = new RecordingImageExportService();
-        var doc = CreateDocument(new AlphaImageLoader(), exporter, new FakeDialogServiceWithJpgPath("out.jpg"));
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0), exporter, new FakeDialogServiceWithJpgPath("out.jpg"));
         await doc.LoadImageAsync("cutout.png");
         Assert.True(doc.HasWorkingResult); // the loaded cutout is adopted as the working result
 
@@ -101,7 +101,7 @@ public class DocumentViewModelAdjustmentsTests
     public async Task ExportJpg_DefaultsToHighQuality()
     {
         var exporter = new RecordingImageExportService();
-        var doc = CreateDocument(new AlphaImageLoader(), exporter, new FakeDialogServiceWithJpgPath("out.jpg"));
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0), exporter, new FakeDialogServiceWithJpgPath("out.jpg"));
         await doc.LoadImageAsync("cutout.png");
 
         await doc.ExportJpgCommand.ExecuteAsync(null);
@@ -114,7 +114,7 @@ public class DocumentViewModelAdjustmentsTests
     public async Task ExportWebp_Transparent_UsesConfiguredQualityAndWritesWebp()
     {
         var exporter = new RecordingImageExportService();
-        var doc = CreateDocument(new AlphaImageLoader(), exporter, new FakeDialogServiceWithWebpPath("out.webp"));
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0), exporter, new FakeDialogServiceWithWebpPath("out.webp"));
         await doc.LoadImageAsync("cutout.png");
         Assert.True(doc.HasWorkingResult); // the loaded cutout is adopted as the working result
 
@@ -131,7 +131,7 @@ public class DocumentViewModelAdjustmentsTests
     public async Task ExportWebp_WithSolidBackground_CompositesAndWritesWebp()
     {
         var exporter = new RecordingImageExportService();
-        var doc = CreateDocument(new AlphaImageLoader(), exporter, new FakeDialogServiceWithWebpPath("out.webp"));
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0), exporter, new FakeDialogServiceWithWebpPath("out.webp"));
         await doc.LoadImageAsync("cutout.png");
 
         doc.ExportBackgroundMode = ExportBackgroundMode.SolidColor;
@@ -146,7 +146,7 @@ public class DocumentViewModelAdjustmentsTests
     public async Task ExportWebp_Cropped_TrimsAndWritesWebp()
     {
         var exporter = new RecordingImageExportService();
-        var doc = CreateDocument(new AlphaImageLoader(), exporter, new FakeDialogServiceWithWebpPath("out.webp"));
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0), exporter, new FakeDialogServiceWithWebpPath("out.webp"));
         await doc.LoadImageAsync("cutout.png");
 
         await doc.ExportWebpCroppedCommand.ExecuteAsync(null);
@@ -166,7 +166,7 @@ public class DocumentViewModelAdjustmentsTests
         settings.Current.LastExportDropShadowEnabled = true;
         settings.Current.LastExportShadowOffset = 20;
 
-        var doc = CreateDocument(new AlphaImageLoader(), settings: settings);
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0), settings: settings);
 
         Assert.Equal(ExportBackgroundMode.Gradient, doc.ExportBackgroundMode);
         Assert.Equal(System.Windows.Media.Color.FromRgb(255, 0, 0), doc.ExportGradientTopColor);
@@ -184,7 +184,7 @@ public class DocumentViewModelAdjustmentsTests
         settings.Current.LastExportGradientTopColor = "garbage";
         settings.Current.LastExportJpegQuality = 0;
 
-        var doc = CreateDocument(new AlphaImageLoader(), settings: settings);
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0), settings: settings);
 
         Assert.Equal(ExportBackgroundMode.Transparent, doc.ExportBackgroundMode);
         Assert.Equal(System.Windows.Media.Color.FromRgb(255, 255, 255), doc.ExportGradientTopColor);
@@ -196,7 +196,7 @@ public class DocumentViewModelAdjustmentsTests
     {
         var settings = new FakeSettingsService();
         var doc = CreateDocument(
-            new AlphaImageLoader(),
+            new TestImageLoader(4, 4, alphaValue: 0),
             exporter: new RecordingImageExportService(),
             dialogs: new FakeDialogServiceWithJpgPath("out.jpg"),
             settings: settings);
@@ -229,7 +229,7 @@ public class DocumentViewModelAdjustmentsTests
             var settings = new FakeSettingsService();
             var dialogs = new BatchFolderDialogService(inputDir, outputDir);
             var doc = CreateDocument(
-                new AlphaImageLoader(),
+                new TestImageLoader(4, 4, alphaValue: 0),
                 settings: settings,
                 dialogs: dialogs,
                 strategies: new IBackgroundRemovalStrategy[] { new ChromaKeyStrategy() });
@@ -253,7 +253,7 @@ public class DocumentViewModelAdjustmentsTests
     [Fact]
     public async Task FilePath_IsExposedAfterLoad()
     {
-        var doc = CreateDocument(new AlphaImageLoader());
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0));
         Assert.Null(doc.FilePath);
 
         await doc.LoadImageAsync("cutout.png");
@@ -274,7 +274,7 @@ public class DocumentViewModelAdjustmentsTests
             var settings = new FakeSettingsService();
             var dialogs = new BatchFolderDialogService(inputDir, inputDir);
             var doc = CreateDocument(
-                new AlphaImageLoader(),
+                new TestImageLoader(4, 4, alphaValue: 0),
                 settings: settings,
                 dialogs: dialogs,
                 strategies: new IBackgroundRemovalStrategy[] { new ChromaKeyStrategy() },
@@ -332,7 +332,7 @@ public class DocumentViewModelAdjustmentsTests
     public async Task OpenFile_OnDirtyDocument_WithCancel_KeepsCurrentImage()
     {
         var dialogs = new OpenDialogService("other.png", CloseDocumentResult.Cancel);
-        var doc = CreateDocument(new AlphaImageLoader(), dialogs: dialogs);
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0), dialogs: dialogs);
         await doc.LoadImageAsync("cutout.png");
         MakeDirty(doc);
         Assert.True(doc.IsDirty);
@@ -349,7 +349,7 @@ public class DocumentViewModelAdjustmentsTests
     public async Task OpenFile_OnDirtyDocument_WithDiscard_ReplacesImage()
     {
         var dialogs = new OpenDialogService("other.png", CloseDocumentResult.Discard);
-        var doc = CreateDocument(new AlphaImageLoader(), dialogs: dialogs);
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0), dialogs: dialogs);
         await doc.LoadImageAsync("cutout.png");
         MakeDirty(doc);
 
@@ -364,7 +364,7 @@ public class DocumentViewModelAdjustmentsTests
     public async Task OpenFile_OnCleanDocument_ReplacesWithoutPrompt()
     {
         var dialogs = new OpenDialogService("other.png", CloseDocumentResult.Cancel);
-        var doc = CreateDocument(new AlphaImageLoader(), dialogs: dialogs);
+        var doc = CreateDocument(new TestImageLoader(4, 4, alphaValue: 0), dialogs: dialogs);
         await doc.LoadImageAsync("cutout.png");
 
         await doc.OpenFileCommand.ExecuteAsync(null);
@@ -482,40 +482,5 @@ public class DocumentViewModelAdjustmentsTests
         public override string? ShowSaveWebpDialog(string? suggestedFileName, string title = "Export WebP", string? initialDirectory = null) => _webpPath;
     }
 
-    private sealed class AlphaImageLoader : IImageLoaderService
-    {
-        public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
-        {
-            var bgr = new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30));
-            var alpha = new Mat(4, 4, MatType.CV_8UC1, new Scalar(0));
-            return Task.FromResult(new LoadedImage(path, bgr, alpha));
-        }
-
-        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-        {
-            var bgr = new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30));
-            var alpha = new Mat(4, 4, MatType.CV_8UC1, new Scalar(0));
-            return Task.FromResult(new LoadedImage(sourceName, bgr, alpha));
-        }
-
-        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-        {
-            var bgr = new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30));
-            var alpha = new Mat(4, 4, MatType.CV_8UC1, new Scalar(0));
-            return Task.FromResult(new LoadedImage(sourceName, bgr, alpha));
-        }
-    }
-
-    private sealed class PlainImageLoader : IImageLoaderService
-    {
-        public Task<LoadedImage> LoadAsync(string path, CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(path, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
-
-        public Task<LoadedImage> LoadFromBytesAsync(byte[] imageBytes, string sourceName = "pasted_image.png", CancellationToken ct = default)
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
-
-        public Task<LoadedImage> LoadFromBitmapSourceAsync(System.Windows.Media.Imaging.BitmapSource bitmapSource, string sourceName = "clipboard_image.png")
-            => Task.FromResult(new LoadedImage(sourceName, new Mat(4, 4, MatType.CV_8UC3, new Scalar(10, 20, 30))));
-    }
-
 }
+

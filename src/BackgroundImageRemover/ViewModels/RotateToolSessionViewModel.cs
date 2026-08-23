@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
 
-namespace BackgroundImageRemover.ViewModels.Tools;
+namespace BackgroundImageRemover.ViewModels;
 
 /// <summary>
 /// Dedicated tool tab for arbitrary-angle rotation of the current document. The rotation

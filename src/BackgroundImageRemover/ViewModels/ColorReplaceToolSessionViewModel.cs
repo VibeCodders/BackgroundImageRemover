@@ -29,12 +29,6 @@ public partial class ColorReplaceToolSessionViewModel : PreviewToolSessionViewMo
     [ObservableProperty]
     private bool _preserveLuminance = true;
 
-    [ObservableProperty]
-    private bool _isTargetColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isReplacementColorPickerOpen;
-
     protected override string OperationName => "Color Replace";
 
     protected override bool IsEffectActive => Tolerance > 1e-4;

@@ -40,12 +40,6 @@ public partial class MosaicToolSessionViewModel : MaskToolSessionViewModelBase
     [ObservableProperty]
     private WpfColor _fillColor = WpfColor.FromRgb(0, 0, 0);
 
-    [ObservableProperty]
-    private bool _isFillColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _hasPaintedMask;
-
     public InteractionMode PreviewMode => PaintMode ? InteractionMode.Brush : InteractionMode.DrawRect;
 
     protected override string OperationName => "Mosaic";
@@ -70,12 +64,6 @@ public partial class MosaicToolSessionViewModel : MaskToolSessionViewModelBase
         SelectedRegion = rect;
         WholeImage = false;
         RefreshResult();
-    }
-
-    public override void OnBrushStrokeEnd()
-    {
-        base.OnBrushStrokeEnd();
-        HasPaintedMask = _paintedMask is not null && Cv2.CountNonZero(_paintedMask) > 0;
     }
 
     protected override void RefreshResult()
@@ -145,7 +133,6 @@ public partial class MosaicToolSessionViewModel : MaskToolSessionViewModelBase
         WholeImage = true;
         PaintMode = false;
         _paintedMask?.SetTo(Scalar.All(0));
-        HasPaintedMask = false;
         CellSize = 16;
         BlurRadius = 20;
         Mode = MosaicMode.Pixelate;

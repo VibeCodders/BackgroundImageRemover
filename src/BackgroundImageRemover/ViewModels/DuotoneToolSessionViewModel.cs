@@ -28,12 +28,6 @@ public partial class DuotoneToolSessionViewModel : PreviewToolSessionViewModelBa
     [ObservableProperty]
     private double _strength = 1.0;
 
-    [ObservableProperty]
-    private bool _isDarkColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isLightColorPickerOpen;
-
     /// <summary>Ready-made dark/light color pairs for one-click application.</summary>
     public IReadOnlyList<DuotonePreset> Presets { get; } =
     [

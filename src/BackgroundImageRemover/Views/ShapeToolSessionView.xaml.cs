@@ -88,16 +88,6 @@ public partial class ShapeToolSessionView : UserControl
             (int)Math.Round(vm.SizeHeight / 100.0 * h));
     }
 
-    private void ChooseStrokeColorButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel is { } vm) vm.IsStrokeColorPickerOpen = !vm.IsStrokeColorPickerOpen;
-    }
-
-    private void ChooseFillColorButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel is { } vm) vm.IsFillColorPickerOpen = !vm.IsFillColorPickerOpen;
-    }
-
     private void ShapePreview_RectSelected(object? sender, OpenCvSharp.Rect rect)
     {
         ViewModel?.OnRectSelected(rect.X, rect.Y, rect.Width, rect.Height);

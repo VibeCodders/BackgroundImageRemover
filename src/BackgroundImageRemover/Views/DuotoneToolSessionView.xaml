@@ -54,27 +54,9 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <TextBlock Text="Dark color" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Rectangle Width="24" Height="24" Fill="{Binding DarkColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseDarkColorButton" Content="Choose color..." Margin="8,0,0,0" Click="ChooseDarkColorButton_Click" />
-                        <Popup IsOpen="{Binding IsDarkColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseDarkColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding DarkColor}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Dark color" SelectedColor="{Binding DarkColor}" />
 
-                    <TextBlock Text="Light color" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Rectangle Width="24" Height="24" Fill="{Binding LightColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseLightColorButton" Content="Choose color..." Margin="8,0,0,0" Click="ChooseLightColorButton_Click" />
-                        <Popup IsOpen="{Binding IsLightColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseLightColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding LightColor}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Light color" SelectedColor="{Binding LightColor}" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Midpoint" FontWeight="SemiBold" DockPanel.Dock="Left" />

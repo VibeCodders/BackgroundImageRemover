@@ -1,4 +1,3 @@
-using System.Windows;
 using System.Windows.Controls;
 using BackgroundImageRemover.ViewModels;
 
@@ -12,11 +11,6 @@ public partial class PenToolSessionView : UserControl
     public PenToolSessionView()
     {
         InitializeComponent();
-    }
-
-    private void ChooseColorButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel is { } vm) vm.IsColorPickerOpen = !vm.IsColorPickerOpen;
     }
 
     private void PenPreview_StrokeStart(object? sender, System.Windows.Point e)

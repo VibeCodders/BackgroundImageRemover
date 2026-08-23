@@ -28,12 +28,6 @@ public partial class GradientToolSessionViewModel : PreviewToolSessionViewModelB
     [ObservableProperty]
     private double _opacity = 0.6;
 
-    [ObservableProperty]
-    private bool _isColorAPickerOpen;
-
-    [ObservableProperty]
-    private bool _isColorBPickerOpen;
-
     protected override string OperationName => "Gradient";
 
     protected override bool IsEffectActive => Opacity > 1e-4;

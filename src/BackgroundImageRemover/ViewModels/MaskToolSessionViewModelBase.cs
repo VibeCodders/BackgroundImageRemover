@@ -44,8 +44,8 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
         RefreshResult();
     }
 
-    /// <summary>True when the painted mask has any non-zero pixels.</summary>
-    protected bool HasPaintedMask => _paintedMask is not null && Cv2.CountNonZero(_paintedMask) > 0;
+    /// <summary>True when the painted mask has any non-zero pixels (raises change notification after painting).</summary>
+    public bool HasPaintedMask => _paintedMask is not null && Cv2.CountNonZero(_paintedMask) > 0;
 
     protected bool IsEffectActive => WholeImage || (PaintMode && HasPaintedMask);
 
@@ -61,6 +61,7 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
     public virtual void OnBrushStrokeEnd()
     {
         _strokes.End();
+        OnPropertyChanged(nameof(HasPaintedMask));
         RefreshResult();
     }
 
@@ -74,6 +75,7 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
     private void ClearMask()
     {
         _paintedMask?.SetTo(Scalar.All(0));
+        OnPropertyChanged(nameof(HasPaintedMask));
         RefreshResult();
     }
 

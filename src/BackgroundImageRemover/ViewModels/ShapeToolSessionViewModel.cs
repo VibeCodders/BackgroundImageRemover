@@ -62,12 +62,6 @@ public partial class ShapeToolSessionViewModel : PreviewToolSessionViewModelBase
     [ObservableProperty]
     private double _fillOpacity = 0.5;
 
-    [ObservableProperty]
-    private bool _isStrokeColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isFillColorPickerOpen;
-
     protected override string OperationName => "Shape";
 
     protected override bool IsEffectActive => StrokeWidth > 0 || FillEnabled;

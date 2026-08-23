@@ -34,27 +34,9 @@
                     <TextBlock Text="Click the image to pick the target color, or choose it below." Margin="0,0,0,12"
                                Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
 
-                    <TextBlock Text="Target color" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Rectangle Width="24" Height="24" Fill="{Binding TargetColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseTargetColorButton" Content="Choose color..." Margin="8,0,0,0" Click="ChooseTargetColorButton_Click" />
-                        <Popup IsOpen="{Binding IsTargetColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseTargetColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding TargetColor}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Target color" SelectedColor="{Binding TargetColor}" />
 
-                    <TextBlock Text="Replacement color" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Rectangle Width="24" Height="24" Fill="{Binding ReplacementColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseReplacementColorButton" Content="Choose color..." Margin="8,0,0,0" Click="ChooseReplacementColorButton_Click" />
-                        <Popup IsOpen="{Binding IsReplacementColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseReplacementColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding ReplacementColor}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Replacement color" SelectedColor="{Binding ReplacementColor}" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Tolerance" FontWeight="SemiBold" DockPanel.Dock="Left" />

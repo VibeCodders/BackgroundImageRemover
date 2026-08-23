@@ -34,27 +34,9 @@
                     <TextBlock Text="Shape" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding GradientKinds}" SelectedItem="{Binding Kind}" Margin="0,0,0,12" />
 
-                    <TextBlock Text="Color A" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Rectangle Width="24" Height="24" Fill="{Binding ColorA, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseColorAButton" Content="Choose color..." Margin="8,0,0,0" Click="ChooseColorAButton_Click" />
-                        <Popup IsOpen="{Binding IsColorAPickerOpen}" PlacementTarget="{Binding ElementName=ChooseColorAButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding ColorA}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Color A" SelectedColor="{Binding ColorA}" />
 
-                    <TextBlock Text="Color B" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Rectangle Width="24" Height="24" Fill="{Binding ColorB, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseColorBButton" Content="Choose color..." Margin="8,0,0,0" Click="ChooseColorBButton_Click" />
-                        <Popup IsOpen="{Binding IsColorBPickerOpen}" PlacementTarget="{Binding ElementName=ChooseColorBButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding ColorB}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Color B" SelectedColor="{Binding ColorB}" />
 
                     <StackPanel Visibility="{Binding IsLinear, Converter={StaticResource BoolToVisibilityConverter}}">
                         <DockPanel Margin="0,4,0,0">

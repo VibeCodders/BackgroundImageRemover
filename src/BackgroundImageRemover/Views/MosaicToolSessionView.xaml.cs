@@ -23,9 +23,4 @@ public partial class MosaicToolSessionView : UserControl
         => ViewModel?.OnBrushStrokeMove(e, ViewInteractionHelper.BrushPixelRadius(sender, ViewModel.BrushRadius));
 
     private void MosaicPreview_StrokeEnd(object? sender, EventArgs e) => ViewModel?.OnBrushStrokeEnd();
-
-    private void ChooseFillColorButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel is { } vm) vm.IsFillColorPickerOpen = !vm.IsFillColorPickerOpen;
-    }
 }

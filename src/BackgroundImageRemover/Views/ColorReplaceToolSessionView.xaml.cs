@@ -16,16 +16,6 @@ public partial class ColorReplaceToolSessionView : UserControl
         InitializeComponent();
     }
 
-    private void ChooseTargetColorButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel is { } vm) vm.IsTargetColorPickerOpen = !vm.IsTargetColorPickerOpen;
-    }
-
-    private void ChooseReplacementColorButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel is { } vm) vm.IsReplacementColorPickerOpen = !vm.IsReplacementColorPickerOpen;
-    }
-
     private void Preview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (ViewModel is not { } vm || Preview.ImageSource is null)

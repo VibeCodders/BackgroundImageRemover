@@ -30,9 +30,6 @@ public partial class PenToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private WpfColor _color = WpfColor.FromRgb(30, 30, 30);
 
-    [ObservableProperty]
-    private bool _isColorPickerOpen;
-
     private readonly List<PenStroke> _strokes = new();
     private PenStroke? _current;
 

@@ -93,29 +93,13 @@
                     </DockPanel>
                     <Slider Minimum="0" Maximum="40" Value="{Binding StrokeWidth}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,4" />
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Rectangle Width="24" Height="24" Fill="{Binding StrokeColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseStrokeColorButton" Content="Stroke color..." Margin="8,0,0,0" Click="ChooseStrokeColorButton_Click" />
-                        <Popup IsOpen="{Binding IsStrokeColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseStrokeColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding StrokeColor}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Stroke color" SelectedColor="{Binding StrokeColor}" />
 
                     <CheckBox Content="Fill shape" IsChecked="{Binding FillEnabled}" Margin="0,0,0,8" FontWeight="SemiBold"
                               Visibility="{Binding SupportsFill, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8"
-                                Visibility="{Binding FillEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <Rectangle Width="24" Height="24" Fill="{Binding FillColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseFillColorButton" Content="Fill color..." Margin="8,0,0,0" Click="ChooseFillColorButton_Click" />
-                        <Popup IsOpen="{Binding IsFillColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseFillColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding FillColor}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Fill color" SelectedColor="{Binding FillColor}"
+                                               Visibility="{Binding FillEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Fill opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />

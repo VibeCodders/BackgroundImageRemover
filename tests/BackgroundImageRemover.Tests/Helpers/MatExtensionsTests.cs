@@ -164,6 +164,25 @@ public sealed class MatExtensionsTests
     }
 
     [Fact]
+    public void ToPreviewBitmap_NearlyOpaquePixels_StillUseCompositePath()
+    {
+        // HasMeaningfulTransparency treats ANY pixel below 255 as meaningful transparency, so
+        // a handful of almost-opaque (254) pixels still route through the composite path
+        // (Bgra32) with the alpha preserved -- only a uniformly opaque alpha takes the flat
+        // Bgr24 path (see ToPreviewBitmap_OpaqueAlpha_RendersPlain).
+        using var bgr = new Mat(10, 10, MatType.CV_8UC3, new Scalar(10, 20, 30));
+        using var alpha = new Mat(20, 20, MatType.CV_8UC1, Scalar.All(255));
+        alpha.Set(2, 2, (byte)254);
+        alpha.Set(2, 3, (byte)254);
+        alpha.Set(3, 2, (byte)254);
+        alpha.Set(3, 3, (byte)254);
+
+        Assert.Equal(PixelFormats.Bgra32, FormatOnSta(() => bgr.ToPreviewBitmap(alpha)));
+        // Preview pixel (1,1) is the 2x2 area-average of alpha pixels (2..3, 2..3): exactly 254.
+        Assert.Equal((byte)254, SampleAlphaOnSta(() => bgr.ToPreviewBitmap(alpha), 1, 1));
+    }
+
+    [Fact]
     public void ToPreviewBitmap_NullAlpha_RendersPlain()
     {
         using var bgr = new Mat(10, 10, MatType.CV_8UC3, new Scalar(10, 20, 30));

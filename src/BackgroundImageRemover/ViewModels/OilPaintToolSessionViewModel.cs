@@ -27,8 +27,8 @@ public partial class OilPaintToolSessionViewModel : PreviewToolSessionViewModelB
         RefreshPreview();
     }
 
-    partial void OnBrushSizeChanged(int value) => RefreshPreview();
-    partial void OnDetailChanged(int value) => RefreshPreview();
+    partial void OnBrushSizeChanged(int value) => RequestRefresh();
+    partial void OnDetailChanged(int value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => OilPaintService.Apply(bgr, BrushSize, Detail);

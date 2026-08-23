@@ -80,10 +80,13 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
     }
 
     /// <summary>
-    /// Builds the preview result and updates the bitmap. Called on every parameter change.
-    /// Concrete here: subclasses only implement <see cref="ApplyEffect"/> (and optionally
-    /// <see cref="ApplyEffectToRegion"/>), so the whole-image / painted-mask / unchanged
-    /// branching lives in one place instead of being copy-pasted in every mask tool.
+    /// Builds the preview result and updates the bitmap synchronously. Used by programmatic
+    /// refresh points (mask stamping, Reset) and by tests; slider/parameter changes route
+    /// through <see cref="ToolSessionViewModelBase.RequestRefresh"/> instead, which debounces
+    /// the per-tick storm (see <see cref="RefreshAsync"/>). Concrete here: subclasses only
+    /// implement <see cref="ApplyEffect"/> (and optionally <see cref="ApplyEffectToRegion"/>),
+    /// so the whole-image / painted-mask / unchanged branching lives in one place instead of
+    /// being copy-pasted in every mask tool.
     /// </summary>
     protected virtual void RefreshResult()
     {
@@ -91,6 +94,17 @@ public abstract partial class MaskToolSessionViewModelBase : ToolSessionViewMode
         using var result = BuildResult(_sourceImage!.FullBgr);
         ResultBitmap = result.ToResultBitmap(_workingAlpha);
         IsDirty = IsEffectActive;
+    }
+
+    /// <summary>
+    /// The mask tools' debounced refresh stays synchronous (the painted-mask branching reads
+    /// live VM state), but coalescing the slider ticks into a single run after the value settles
+    /// removes the per-tick full-resolution pass on the UI thread.
+    /// </summary>
+    protected override Task RefreshAsync()
+    {
+        RefreshResult();
+        return Task.CompletedTask;
     }
 
     /// <summary>

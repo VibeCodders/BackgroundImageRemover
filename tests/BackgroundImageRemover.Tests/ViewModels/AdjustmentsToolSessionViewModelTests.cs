@@ -31,7 +31,7 @@ public sealed class AdjustmentsToolSessionViewModelTests
             vm.AdjBrightness = 50;
             Assert.Same(original, vm.ResultBitmap); // debounce: not applied synchronously
 
-            PumpDispatcher(TimeSpan.FromMilliseconds(600));
+            WaitUntil(() => vm.IsDirty && !ReferenceEquals(original, vm.ResultBitmap));
 
             Assert.True(vm.IsDirty);
             Assert.NotSame(original, vm.ResultBitmap);
@@ -51,7 +51,7 @@ public sealed class AdjustmentsToolSessionViewModelTests
             vm.AdjBrightness = 10;
             vm.AdjBrightness = 40;
             vm.AdjBrightness = 70;
-            PumpDispatcher(TimeSpan.FromMilliseconds(600));
+            WaitUntil(() => vm.IsDirty);
 
             Assert.True(vm.IsDirty);
             Assert.Equal(new Vec4b(80, 90, 100, 255), PreviewPixel(vm, 0, 0));
@@ -67,11 +67,11 @@ public sealed class AdjustmentsToolSessionViewModelTests
             var original = vm.ResultBitmap;
 
             vm.AdjBrightness = 50;
-            PumpDispatcher(TimeSpan.FromMilliseconds(600));
+            WaitUntil(() => !ReferenceEquals(original, vm.ResultBitmap));
             Assert.NotSame(original, vm.ResultBitmap);
 
             vm.AdjBrightness = 0; // identity again
-            PumpDispatcher(TimeSpan.FromMilliseconds(600));
+            WaitUntil(() => ReferenceEquals(original, vm.ResultBitmap));
 
             Assert.False(vm.IsDirty);
             Assert.Same(original, vm.ResultBitmap);
@@ -128,5 +128,24 @@ public sealed class AdjustmentsToolSessionViewModelTests
         };
         stop.Start();
         Dispatcher.PushFrame(frame);
+    }
+
+    /// <summary>
+    /// Pumps the STA dispatcher until <paramref name="condition"/> holds or a generous deadline
+    /// passes. Polling (rather than a fixed sleep) keeps the test robust when the parallel test
+    /// runner starves the debounce/worker threads.
+    /// </summary>
+    private static void WaitUntil(Func<bool> condition)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (condition())
+            {
+                return;
+            }
+            PumpDispatcher(TimeSpan.FromMilliseconds(25));
+        }
+        Assert.Fail($"Condition not met within 10s: {condition.Method.Name}");
     }
 }

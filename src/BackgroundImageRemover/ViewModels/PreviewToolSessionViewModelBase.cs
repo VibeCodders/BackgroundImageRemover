@@ -45,8 +45,11 @@ public abstract partial class PreviewToolSessionViewModelBase : ToolSessionViewM
     }
 
     /// <summary>
-    /// Builds and displays the live preview. Called by subclasses whenever a parameter changes.
-    /// The preview and the final apply share the exact same <see cref="ApplyEffect"/> implementation,
+    /// Builds and displays the live preview synchronously. Used by programmatic refresh points
+    /// (Reset, initialization) and by tests; slider/parameter changes route through
+    /// <see cref="ToolSessionViewModelBase.RequestRefresh"/> instead, which debounces and runs the
+    /// same <see cref="ApplyEffect"/> off the UI thread (see <see cref="RefreshAsync"/>). The
+    /// preview and the final apply share the exact same <see cref="ApplyEffect"/> implementation,
     /// so there is no possibility of the two drifting out of sync.
     /// </summary>
     protected void RefreshPreview()
@@ -59,6 +62,39 @@ public abstract partial class PreviewToolSessionViewModelBase : ToolSessionViewM
         using var result = ApplyEffect(_sourceImage.FullBgr);
         ResultBitmap = result.ToResultBitmap(_workingAlpha);
         IsDirty = IsEffectActive;
+    }
+
+    /// <summary>
+    /// Debounced asynchronous refresh: snapshots the inputs on the UI thread, runs
+    /// <see cref="ApplyEffect"/> at full resolution off the UI thread (so dragging a slider never
+    /// freezes the UI), then renders the frozen bitmap on the dispatcher. A newer request cancels
+    /// the previous run, so the displayed preview always matches the last parameter values.
+    /// </summary>
+    protected override async Task RefreshAsync()
+    {
+        if (_sourceImage is null || _workingAlpha is null)
+        {
+            return;
+        }
+
+        var token = BeginRefresh();
+        using var sourceBgr = _sourceImage.FullBgr.Clone();
+        using var sourceAlpha = _workingAlpha.Clone();
+        try
+        {
+            using var result = await Task.Run(() => ApplyEffect(sourceBgr), token);
+            token.ThrowIfCancellationRequested();
+            ResultBitmap = result.ToResultBitmap(sourceAlpha);
+            IsDirty = IsEffectActive;
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a newer refresh or a reset; keep the previous preview.
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Preview failed: {ex.Message}";
+        }
     }
 
     /// <summary>Applies the current effect to the parent document and closes the tool tab.</summary>

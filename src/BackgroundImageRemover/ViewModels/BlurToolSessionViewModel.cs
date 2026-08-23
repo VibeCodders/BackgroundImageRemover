@@ -32,9 +32,9 @@ public partial class BlurToolSessionViewModel : MaskToolSessionViewModelBase
         StatusMessage = "Choose whole-image or paint a region to blur, then apply.";
     }
 
-    partial void OnBlurRadiusChanged(double value) => RefreshResult();
-    partial void OnMotionBlurChanged(bool value) => RefreshResult();
-    partial void OnMotionAngleChanged(double value) => RefreshResult();
+    partial void OnBlurRadiusChanged(double value) => RequestRefresh();
+    partial void OnMotionBlurChanged(bool value) => RequestRefresh();
+    partial void OnMotionAngleChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat src)
     {

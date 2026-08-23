@@ -27,8 +27,8 @@ public partial class SketchToolSessionViewModel : PreviewToolSessionViewModelBas
         RefreshPreview();
     }
 
-    partial void OnBlurRadiusChanged(int value) => RefreshPreview();
-    partial void OnInvertChanged(bool value) => RefreshPreview();
+    partial void OnBlurRadiusChanged(int value) => RequestRefresh();
+    partial void OnInvertChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => SketchService.Apply(bgr, BlurRadius, Invert);

@@ -50,10 +50,10 @@ public partial class GradientToolSessionViewModel : PreviewToolSessionViewModelB
         RefreshPreview();
     }
 
-    partial void OnColorAChanged(WpfColor value) => RefreshPreview();
-    partial void OnColorBChanged(WpfColor value) => RefreshPreview();
-    partial void OnAngleChanged(double value) => RefreshPreview();
-    partial void OnOpacityChanged(double value) => RefreshPreview();
+    partial void OnColorAChanged(WpfColor value) => RequestRefresh();
+    partial void OnColorBChanged(WpfColor value) => RequestRefresh();
+    partial void OnAngleChanged(double value) => RequestRefresh();
+    partial void OnOpacityChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => GradientService.Apply(bgr, Kind, ColorA.ToVec3b(), ColorB.ToVec3b(), Angle, Opacity);

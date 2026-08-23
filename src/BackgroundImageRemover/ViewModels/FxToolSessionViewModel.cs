@@ -42,12 +42,12 @@ public partial class FxToolSessionViewModel : PreviewToolSessionViewModelBase
         RefreshPreview();
     }
 
-    partial void OnGlowStrengthChanged(double value) => RefreshPreview();
-    partial void OnBloomStrengthChanged(double value) => RefreshPreview();
-    partial void OnLightLeakStrengthChanged(double value) => RefreshPreview();
-    partial void OnChromaticAberrationStrengthChanged(double value) => RefreshPreview();
-    partial void OnBokehCountChanged(int value) => RefreshPreview();
-    partial void OnBokehSizeChanged(double value) => RefreshPreview();
+    partial void OnGlowStrengthChanged(double value) => RequestRefresh();
+    partial void OnBloomStrengthChanged(double value) => RequestRefresh();
+    partial void OnLightLeakStrengthChanged(double value) => RequestRefresh();
+    partial void OnChromaticAberrationStrengthChanged(double value) => RequestRefresh();
+    partial void OnBokehCountChanged(int value) => RequestRefresh();
+    partial void OnBokehSizeChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
     {

@@ -51,10 +51,10 @@ public partial class DuotoneToolSessionViewModel : PreviewToolSessionViewModelBa
         RefreshPreview();
     }
 
-    partial void OnDarkColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnLightColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnMidpointChanged(double value) => RefreshPreview();
-    partial void OnStrengthChanged(double value) => RefreshPreview();
+    partial void OnDarkColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnLightColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnMidpointChanged(double value) => RequestRefresh();
+    partial void OnStrengthChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => DuotoneService.Apply(bgr, DarkColor.ToVec3b(), LightColor.ToVec3b(), Midpoint, Strength);

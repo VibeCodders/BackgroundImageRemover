@@ -157,16 +157,16 @@ public partial class RetouchToolSessionViewModel : WorkingCopyToolSessionViewMod
         RefreshResult();
     }
 
-    partial void OnDehazeChanged(double value) => RefreshResult();
-    partial void OnDefringeChanged(bool value) => RefreshResult();
-    partial void OnBlurBackgroundRadiusChanged(int value) => RefreshResult();
-    partial void OnSharpenStrengthChanged(double value) => RefreshResult();
-    partial void OnColorBoostChanged(double value) => RefreshResult();
-    partial void OnRemoveDustKernelChanged(int value) => RefreshResult();
-    partial void OnSurfaceBlurChanged(double value) => RefreshResult();
-    partial void OnAutoContrastChanged(bool value) => RefreshResult();
-    partial void OnAutoWhiteBalanceChanged(bool value) => RefreshResult();
-    partial void OnChromaticAberrationChanged(double value) => RefreshResult();
+    partial void OnDehazeChanged(double value) => RequestRefresh();
+    partial void OnDefringeChanged(bool value) => RequestRefresh();
+    partial void OnBlurBackgroundRadiusChanged(int value) => RequestRefresh();
+    partial void OnSharpenStrengthChanged(double value) => RequestRefresh();
+    partial void OnColorBoostChanged(double value) => RequestRefresh();
+    partial void OnRemoveDustKernelChanged(int value) => RequestRefresh();
+    partial void OnSurfaceBlurChanged(double value) => RequestRefresh();
+    partial void OnAutoContrastChanged(bool value) => RequestRefresh();
+    partial void OnAutoWhiteBalanceChanged(bool value) => RequestRefresh();
+    partial void OnChromaticAberrationChanged(double value) => RequestRefresh();
 
     /// <summary>Applies the whole-image retouch effects on top of the brush/wand alpha edits.</summary>
     protected override Mat BuildResult()

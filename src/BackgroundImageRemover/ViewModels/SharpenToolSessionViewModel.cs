@@ -26,7 +26,7 @@ public partial class SharpenToolSessionViewModel : MaskToolSessionViewModelBase
         StatusMessage = "Choose whole-image or paint a region to sharpen, then apply.";
     }
 
-    partial void OnStrengthChanged(double value) => RefreshResult();
+    partial void OnStrengthChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat src) => SharpenService.SharpenAll(src, Strength);
 

@@ -36,11 +36,11 @@ public partial class TiltShiftToolSessionViewModel : PreviewToolSessionViewModel
         RefreshPreview();
     }
 
-    partial void OnFocusCenterChanged(double value) => RefreshPreview();
-    partial void OnFocusWidthChanged(double value) => RefreshPreview();
-    partial void OnBlurRadiusChanged(double value) => RefreshPreview();
-    partial void OnVerticalChanged(bool value) => RefreshPreview();
-    partial void OnSaturationBoostChanged(double value) => RefreshPreview();
+    partial void OnFocusCenterChanged(double value) => RequestRefresh();
+    partial void OnFocusWidthChanged(double value) => RequestRefresh();
+    partial void OnBlurRadiusChanged(double value) => RequestRefresh();
+    partial void OnVerticalChanged(bool value) => RequestRefresh();
+    partial void OnSaturationBoostChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => TiltShiftService.Apply(bgr, FocusCenter, FocusWidth, BlurRadius, Vertical, SaturationBoost);

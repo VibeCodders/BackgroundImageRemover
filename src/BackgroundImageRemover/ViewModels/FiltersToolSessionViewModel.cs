@@ -35,9 +35,9 @@ public partial class FiltersToolSessionViewModel : PreviewToolSessionViewModelBa
         RefreshPreview();
     }
 
-    partial void OnSelectedFilterChanged(FilterKind value) => RefreshPreview();
-    partial void OnIntensityChanged(double value) => RefreshPreview();
-    partial void OnPosterizeLevelsChanged(int value) => RefreshPreview();
+    partial void OnSelectedFilterChanged(FilterKind value) => RequestRefresh();
+    partial void OnIntensityChanged(double value) => RequestRefresh();
+    partial void OnPosterizeLevelsChanged(int value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => FilterService.Apply(bgr, SelectedFilter, Intensity, PosterizeLevels);

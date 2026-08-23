@@ -62,16 +62,16 @@ public partial class LevelsToolSessionViewModel : PreviewToolSessionViewModelBas
         RefreshPreview();
     }
 
-    partial void OnBlackPointChanged(double value) => RefreshPreview();
-    partial void OnWhitePointChanged(double value) => RefreshPreview();
-    partial void OnGammaChanged(double value) => RefreshPreview();
-    partial void OnChannelChanged(LevelsChannel value) => RefreshPreview();
-    partial void OnOutputBlackChanged(double value) => RefreshPreview();
-    partial void OnOutputWhiteChanged(double value) => RefreshPreview();
-    partial void OnAutoLevelsEnabledChanged(bool value) => RefreshPreview();
-    partial void OnAutoWhiteBalanceEnabledChanged(bool value) => RefreshPreview();
-    partial void OnEqualizeEnabledChanged(bool value) => RefreshPreview();
-    partial void OnInvertEnabledChanged(bool value) => RefreshPreview();
+    partial void OnBlackPointChanged(double value) => RequestRefresh();
+    partial void OnWhitePointChanged(double value) => RequestRefresh();
+    partial void OnGammaChanged(double value) => RequestRefresh();
+    partial void OnChannelChanged(LevelsChannel value) => RequestRefresh();
+    partial void OnOutputBlackChanged(double value) => RequestRefresh();
+    partial void OnOutputWhiteChanged(double value) => RequestRefresh();
+    partial void OnAutoLevelsEnabledChanged(bool value) => RequestRefresh();
+    partial void OnAutoWhiteBalanceEnabledChanged(bool value) => RequestRefresh();
+    partial void OnEqualizeEnabledChanged(bool value) => RequestRefresh();
+    partial void OnInvertEnabledChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
     {

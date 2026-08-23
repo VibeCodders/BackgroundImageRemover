@@ -39,11 +39,11 @@ public partial class ColorReplaceToolSessionViewModel : PreviewToolSessionViewMo
         RefreshPreview();
     }
 
-    partial void OnTargetColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnReplacementColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnToleranceChanged(double value) => RefreshPreview();
-    partial void OnSoftnessChanged(double value) => RefreshPreview();
-    partial void OnPreserveLuminanceChanged(bool value) => RefreshPreview();
+    partial void OnTargetColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnReplacementColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnToleranceChanged(double value) => RequestRefresh();
+    partial void OnSoftnessChanged(double value) => RequestRefresh();
+    partial void OnPreserveLuminanceChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => ColorReplaceService.Apply(bgr, TargetColor.ToVec3b(), ReplacementColor.ToVec3b(),

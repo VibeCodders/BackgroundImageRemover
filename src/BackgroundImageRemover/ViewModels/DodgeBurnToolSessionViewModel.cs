@@ -26,8 +26,8 @@ public partial class DodgeBurnToolSessionViewModel : MaskToolSessionViewModelBas
         StatusMessage = "Dodge (lighten) or Burn (darken) a region, then apply.";
     }
 
-    partial void OnDodgeChanged(bool value) => RefreshResult();
-    partial void OnStrengthChanged(double value) => RefreshResult();
+    partial void OnDodgeChanged(bool value) => RequestRefresh();
+    partial void OnStrengthChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat src) => DodgeBurnService.DodgeBurnAll(src, Dodge, Strength);
 

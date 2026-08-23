@@ -29,9 +29,9 @@ public partial class HueSatToolSessionViewModel : MaskToolSessionViewModelBase
         StatusMessage = "Adjust hue, saturation and value, then apply.";
     }
 
-    partial void OnHueShiftChanged(double value) => RefreshResult();
-    partial void OnSaturationChanged(double value) => RefreshResult();
-    partial void OnValueChanged(double value) => RefreshResult();
+    partial void OnHueShiftChanged(double value) => RequestRefresh();
+    partial void OnSaturationChanged(double value) => RequestRefresh();
+    partial void OnValueChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat src) => HueSatService.AdjustHueSat(src, HueShift, Saturation, Value);
 

@@ -61,12 +61,12 @@ public partial class HealToolSessionViewModel : WorkingCopyToolSessionViewModelB
         StatusMessage = "Paint over blemishes, then apply the heal.";
     }
 
-    partial void OnRemoveDustKernelChanged(int value) => RefreshResult();
-    partial void OnRemoveScratchesStrengthChanged(double value) => RefreshResult();
-    partial void OnSurfaceSmoothStrengthChanged(double value) => RefreshResult();
-    partial void OnDetailEnhanceStrengthChanged(double value) => RefreshResult();
-    partial void OnHealRadiusChanged(double value) => RefreshResult();
-    partial void OnInpaintMethodChanged(InpaintTypes value) => RefreshResult();
+    partial void OnRemoveDustKernelChanged(int value) => RequestRefresh();
+    partial void OnRemoveScratchesStrengthChanged(double value) => RequestRefresh();
+    partial void OnSurfaceSmoothStrengthChanged(double value) => RequestRefresh();
+    partial void OnDetailEnhanceStrengthChanged(double value) => RequestRefresh();
+    partial void OnHealRadiusChanged(double value) => RequestRefresh();
+    partial void OnInpaintMethodChanged(InpaintTypes value) => RequestRefresh();
 
     public void OnStrokeStart(WpfPoint imagePoint, double pixelRadius)
         => _strokes.Begin(imagePoint, pixelRadius, StampMask);

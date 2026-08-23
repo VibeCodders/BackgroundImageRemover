@@ -30,9 +30,9 @@ public partial class GlowToolSessionViewModel : PreviewToolSessionViewModelBase
         RefreshPreview();
     }
 
-    partial void OnThresholdChanged(int value) => RefreshPreview();
-    partial void OnRadiusChanged(int value) => RefreshPreview();
-    partial void OnStrengthChanged(double value) => RefreshPreview();
+    partial void OnThresholdChanged(int value) => RequestRefresh();
+    partial void OnRadiusChanged(int value) => RequestRefresh();
+    partial void OnStrengthChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => GlowService.Apply(bgr, Threshold, Radius, Strength);

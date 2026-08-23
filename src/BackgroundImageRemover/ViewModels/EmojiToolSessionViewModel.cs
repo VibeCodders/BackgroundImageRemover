@@ -57,16 +57,16 @@ public partial class EmojiToolSessionViewModel : PreviewToolSessionViewModelBase
         RefreshPreview();
     }
 
-    partial void OnSelectedEmojiChanged(EmojiOverlayService.EmojiKind value) => RefreshPreview();
-    partial void OnEmojiSizeChanged(int value) => RefreshPreview();
-    partial void OnEmojiColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnOpacityChanged(double value) => RefreshPreview();
-    partial void OnScatterModeChanged(bool value) => RefreshPreview();
-    partial void OnScatterCountChanged(int value) => RefreshPreview();
-    partial void OnMinSizeChanged(int value) => RefreshPreview();
-    partial void OnMaxSizeChanged(int value) => RefreshPreview();
-    partial void OnAnchorChanged(TextAnchor value) => RefreshPreview();
-    partial void OnMarginChanged(int value) => RefreshPreview();
+    partial void OnSelectedEmojiChanged(EmojiOverlayService.EmojiKind value) => RequestRefresh();
+    partial void OnEmojiSizeChanged(int value) => RequestRefresh();
+    partial void OnEmojiColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnOpacityChanged(double value) => RequestRefresh();
+    partial void OnScatterModeChanged(bool value) => RequestRefresh();
+    partial void OnScatterCountChanged(int value) => RequestRefresh();
+    partial void OnMinSizeChanged(int value) => RequestRefresh();
+    partial void OnMaxSizeChanged(int value) => RequestRefresh();
+    partial void OnAnchorChanged(TextAnchor value) => RequestRefresh();
+    partial void OnMarginChanged(int value) => RequestRefresh();
 
     private Point ComputeEmojiPosition(Mat image)
     {

@@ -1,7 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Logging;
@@ -17,8 +16,6 @@ namespace BackgroundImageRemover.ViewModels;
 public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
 {
     private readonly IFileLogService _log;
-    private readonly DispatcherTimer _debounceTimer;
-    private CancellationTokenSource? _previewCts;
     private Mat? _workingBgr;
 
     public override string ToolBadge => "✨ Adjustments";
@@ -115,10 +112,6 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
         : base(shell, parentDocument)
     {
         _log = log;
-        // Slider drags fire a change per tick; coalesce them into a single preview run after
-        // the value settles (same debounce approach as PreviewRunner).
-        _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(80) };
-        _debounceTimer.Tick += (_, _) => _ = RunPreviewAsync();
         InitFromParent();
     }
 
@@ -190,12 +183,9 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     {
         if (!EnsureSourceAlpha()) return;
 
-        var adjustments = BuildAdjustments();
-
-        if (adjustments.IsIdentity)
+        if (BuildAdjustments().IsIdentity)
         {
-            _debounceTimer.Stop();
-            CancelInFlight();
+            CancelRefresh();
             ResultBitmap = OriginalBitmap;
             IsDirty = false;
             return;
@@ -203,9 +193,9 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
 
         // Debounce: rapid slider movement coalesces into one run after the value settles,
         // instead of running the full-res adjustment pipeline synchronously on the UI thread
-        // for every tick (which froze the UI while dragging).
-        _debounceTimer.Stop();
-        _debounceTimer.Start();
+        // for every tick (which froze the UI while dragging). The shared base machinery then
+        // runs <see cref="RefreshAsync"/>.
+        RequestRefresh();
     }
 
     /// <summary>
@@ -213,9 +203,8 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
     /// in-flight preview. Inputs are snapshotted on the UI thread first so the worker never
     /// touches Mats the UI could dispose mid-run.
     /// </summary>
-    private async Task RunPreviewAsync()
+    protected override async Task RefreshAsync()
     {
-        _debounceTimer.Stop();
         if (!EnsureSourceAlpha() || _sourceImage is null || _workingAlpha is null)
         {
             return;
@@ -229,11 +218,7 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
             return;
         }
 
-        CancelInFlight();
-        var cts = new CancellationTokenSource();
-        _previewCts = cts;
-        var token = cts.Token;
-
+        var token = BeginRefresh();
         using var sourceBgr = _sourceImage.FullBgr.Clone();
         using var sourceAlpha = _workingAlpha.Clone();
         try
@@ -251,13 +236,6 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
         {
             _log.Error("Adjustment preview failed", ex);
         }
-    }
-
-    private void CancelInFlight()
-    {
-        _previewCts?.Cancel();
-        _previewCts?.Dispose();
-        _previewCts = null;
     }
 
     [RelayCommand]
@@ -313,8 +291,6 @@ public partial class AdjustmentsToolSessionViewModel : ToolSessionViewModelBase
 
     public override void Dispose()
     {
-        _debounceTimer.Stop();
-        CancelInFlight();
         _workingBgr?.Dispose();
         base.Dispose();
     }

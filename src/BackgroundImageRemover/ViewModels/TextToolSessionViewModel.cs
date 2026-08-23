@@ -87,27 +87,27 @@ public partial class TextToolSessionViewModel : PreviewToolSessionViewModelBase
         RefreshPreview();
     }
 
-    partial void OnTextChanged(string? value) => RefreshPreview();
-    partial void OnFontSizeChanged(int value) => RefreshPreview();
-    partial void OnColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnOpacityChanged(double value) => RefreshPreview();
-    partial void OnAnchorChanged(TextAnchor value) => RefreshPreview();
-    partial void OnMarginChanged(int value) => RefreshPreview();
-    partial void OnRotationChanged(double value) => RefreshPreview();
-    partial void OnOutlineThicknessChanged(int value) => RefreshPreview();
-    partial void OnOutlineColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnBoldChanged(bool value) => RefreshPreview();
-    partial void OnShadowOffsetChanged(int value) => RefreshPreview();
-    partial void OnShadowOpacityChanged(double value) => RefreshPreview();
-    partial void OnShadowColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnShadowBlurChanged(double value) => RefreshPreview();
-    partial void OnLetterSpacingChanged(double value) => RefreshPreview();
-    partial void OnLineSpacingChanged(int value) => RefreshPreview();
-    partial void OnAutoFitWidthChanged(bool value) => RefreshPreview();
-    partial void OnBackgroundPlateChanged(bool value) => RefreshPreview();
-    partial void OnPlateColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnPlateOpacityChanged(double value) => RefreshPreview();
-    partial void OnPlatePaddingChanged(int value) => RefreshPreview();
+    partial void OnTextChanged(string? value) => RequestRefresh();
+    partial void OnFontSizeChanged(int value) => RequestRefresh();
+    partial void OnColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnOpacityChanged(double value) => RequestRefresh();
+    partial void OnAnchorChanged(TextAnchor value) => RequestRefresh();
+    partial void OnMarginChanged(int value) => RequestRefresh();
+    partial void OnRotationChanged(double value) => RequestRefresh();
+    partial void OnOutlineThicknessChanged(int value) => RequestRefresh();
+    partial void OnOutlineColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnBoldChanged(bool value) => RequestRefresh();
+    partial void OnShadowOffsetChanged(int value) => RequestRefresh();
+    partial void OnShadowOpacityChanged(double value) => RequestRefresh();
+    partial void OnShadowColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnShadowBlurChanged(double value) => RequestRefresh();
+    partial void OnLetterSpacingChanged(double value) => RequestRefresh();
+    partial void OnLineSpacingChanged(int value) => RequestRefresh();
+    partial void OnAutoFitWidthChanged(bool value) => RequestRefresh();
+    partial void OnBackgroundPlateChanged(bool value) => RequestRefresh();
+    partial void OnPlateColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnPlateOpacityChanged(double value) => RequestRefresh();
+    partial void OnPlatePaddingChanged(int value) => RequestRefresh();
 
     private TextOverlayOptions BuildOptions() => new()
     {

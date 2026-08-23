@@ -98,18 +98,18 @@ public partial class ShapeToolSessionViewModel : PreviewToolSessionViewModelBase
         RefreshPreview();
     }
 
-    partial void OnPositionXChanged(double value) => RefreshPreview();
-    partial void OnPositionYChanged(double value) => RefreshPreview();
-    partial void OnSizeWidthChanged(double value) => RefreshPreview();
-    partial void OnSizeHeightChanged(double value) => RefreshPreview();
-    partial void OnStrokeWidthChanged(int value) => RefreshPreview();
-    partial void OnStrokeColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnSegmentsChanged(int value) => RefreshPreview();
-    partial void OnStarRatioChanged(double value) => RefreshPreview();
-    partial void OnRotationChanged(double value) => RefreshPreview();
-    partial void OnFillEnabledChanged(bool value) => RefreshPreview();
-    partial void OnFillColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnFillOpacityChanged(double value) => RefreshPreview();
+    partial void OnPositionXChanged(double value) => RequestRefresh();
+    partial void OnPositionYChanged(double value) => RequestRefresh();
+    partial void OnSizeWidthChanged(double value) => RequestRefresh();
+    partial void OnSizeHeightChanged(double value) => RequestRefresh();
+    partial void OnStrokeWidthChanged(int value) => RequestRefresh();
+    partial void OnStrokeColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnSegmentsChanged(int value) => RequestRefresh();
+    partial void OnStarRatioChanged(double value) => RequestRefresh();
+    partial void OnRotationChanged(double value) => RequestRefresh();
+    partial void OnFillEnabledChanged(bool value) => RequestRefresh();
+    partial void OnFillColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnFillOpacityChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
     {

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net.Http;
 using System.Windows;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Autosave;
@@ -18,6 +19,8 @@ using BackgroundImageRemover.ViewModels;
 using BackgroundImageRemover.ViewModels.Tools;
 using BackgroundImageRemover.Views;
 using Microsoft.Extensions.DependencyInjection;
+using Polly;
+using Polly.Retry;
 
 namespace BackgroundImageRemover;
 
@@ -129,7 +132,19 @@ public partial class App : Application
 
     private static void ConfigureServices(ServiceCollection services)
     {
-        services.AddHttpClient<IModelCacheService, ModelCacheService>();
+        // Model downloads are large (tens to hundreds of MB) and run on first use; a transient
+        // network blip would otherwise kill the whole download and force a manual retry. Retry
+        // with exponential backoff + jitter (no attempt/total timeouts, which would abort long
+        // streams); user cancellation is never retried by Polly.
+        services.AddHttpClient<IModelCacheService, ModelCacheService>()
+            .AddResilienceHandler("model-download", builder =>
+                builder.AddRetry(new RetryStrategyOptions<HttpResponseMessage>
+                {
+                    MaxRetryAttempts = 3,
+                    Delay = TimeSpan.FromSeconds(1),
+                    BackoffType = DelayBackoffType.Exponential,
+                    UseJitter = true
+                }));
 
         services.AddSingleton<IImageLoaderService, ImageLoaderService>();
         services.AddSingleton<IImageExportService, ImageExportService>();

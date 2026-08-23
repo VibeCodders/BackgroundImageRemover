@@ -1,6 +1,9 @@
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -20,6 +23,9 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
     // Shared snapshot and working-alpha state used by most tool session view models.
     protected LoadedImage? _sourceImage;
     protected Mat? _workingAlpha;
+
+    private DispatcherTimer? _refreshDebounce;
+    private CancellationTokenSource? _refreshCts;
 
     public DocumentViewModel ParentDocument => _parentDocument;
 
@@ -113,6 +119,56 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
     }
 
     /// <summary>
+    /// Coalesces rapid parameter changes (slider drags, color picker spins) into a single
+    /// asynchronous refresh: the debounce timer restarts on every call and only fires after the
+    /// value settles, so a drag runs the full-resolution effect once instead of once per tick
+    /// on the UI thread (which froze the UI while dragging). Subclasses override
+    /// <see cref="RefreshAsync"/> to do the actual work.
+    /// </summary>
+    protected void RequestRefresh()
+    {
+        if (_refreshDebounce is null)
+        {
+            _refreshDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(80) };
+            _refreshDebounce.Tick += (_, _) => _ = RefreshCoreAsync();
+        }
+        _refreshDebounce.Stop();
+        _refreshDebounce.Start();
+    }
+
+    private async Task RefreshCoreAsync()
+    {
+        _refreshDebounce?.Stop();
+        await RefreshAsync();
+    }
+
+    /// <summary>
+    /// Runs the tool's debounced preview refresh. The base implementation is a no-op; the
+    /// effect-tool bases (and the Adjustments tool) override it with their own compute.
+    /// </summary>
+    protected virtual Task RefreshAsync() => Task.CompletedTask;
+
+    /// <summary>Cancels any in-flight asynchronous refresh.</summary>
+    protected void CancelRefresh()
+    {
+        _refreshCts?.Cancel();
+        _refreshCts?.Dispose();
+        _refreshCts = null;
+    }
+
+    /// <summary>
+    /// Starts a new refresh generation (cancelling the previous one) and returns its token, so
+    /// a superseded run never overwrites a newer result. Call from <see cref="RefreshAsync"/>.
+    /// </summary>
+    protected CancellationToken BeginRefresh()
+    {
+        CancelRefresh();
+        var cts = new CancellationTokenSource();
+        _refreshCts = cts;
+        return cts.Token;
+    }
+
+    /// <summary>
     /// Clones the full-resolution BGR source into an independent mutable working copy.
     /// Callers must own and dispose the returned Mat.
     /// </summary>
@@ -134,6 +190,8 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
 
     public virtual void Dispose()
     {
+        _refreshDebounce?.Stop();
+        CancelRefresh();
         _sourceImage?.Dispose();
         _workingAlpha?.Dispose();
     }

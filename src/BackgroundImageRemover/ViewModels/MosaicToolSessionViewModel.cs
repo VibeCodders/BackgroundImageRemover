@@ -51,13 +51,13 @@ public partial class MosaicToolSessionViewModel : MaskToolSessionViewModelBase
         StatusMessage = "Choose mosaic or blur, then paint or select a region.";
     }
 
-    partial void OnCellSizeChanged(int value) => RefreshResult();
-    partial void OnBlurRadiusChanged(int value) => RefreshResult();
-    partial void OnModeChanged(MosaicMode value) => RefreshResult();
-    partial void OnInvertRegionChanged(bool value) => RefreshResult();
-    partial void OnStrengthChanged(double value) => RefreshResult();
-    partial void OnJitterChanged(int value) => RefreshResult();
-    partial void OnFillColorChanged(WpfColor value) => RefreshResult();
+    partial void OnCellSizeChanged(int value) => RequestRefresh();
+    partial void OnBlurRadiusChanged(int value) => RequestRefresh();
+    partial void OnModeChanged(MosaicMode value) => RequestRefresh();
+    partial void OnInvertRegionChanged(bool value) => RequestRefresh();
+    partial void OnStrengthChanged(double value) => RequestRefresh();
+    partial void OnJitterChanged(int value) => RequestRefresh();
+    partial void OnFillColorChanged(WpfColor value) => RequestRefresh();
 
     public void OnRectSelected(Rect rect)
     {

@@ -25,7 +25,9 @@ public abstract partial class WorkingCopyToolSessionViewModelBase : ToolSessionV
     /// <summary>Builds the final BGR result from the working copy. Used for both preview and apply.</summary>
     protected abstract Mat BuildResult();
 
-    /// <summary>Refreshes the preview bitmap from the working copy. Called on every parameter change.</summary>
+    /// <summary>Refreshes the preview bitmap from the working copy synchronously. Used by
+    /// programmatic refresh points and tests; slider/parameter changes route through
+    /// <see cref="ToolSessionViewModelBase.RequestRefresh"/> (debounced, see <see cref="RefreshAsync"/>).</summary>
     protected void RefreshResult()
     {
         if (_workingBgr is null || _workingAlpha is null)
@@ -35,6 +37,13 @@ public abstract partial class WorkingCopyToolSessionViewModelBase : ToolSessionV
 
         using var result = BuildResult();
         ResultBitmap = result.ToResultBitmap(_workingAlpha);
+    }
+
+    /// <summary>Debounced refresh: coalesces slider ticks into a single run of <see cref="RefreshResult"/>.</summary>
+    protected override Task RefreshAsync()
+    {
+        RefreshResult();
+        return Task.CompletedTask;
     }
 
     public override void Dispose()

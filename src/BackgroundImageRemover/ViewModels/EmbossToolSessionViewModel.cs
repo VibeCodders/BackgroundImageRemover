@@ -30,9 +30,9 @@ public partial class EmbossToolSessionViewModel : PreviewToolSessionViewModelBas
         RefreshPreview();
     }
 
-    partial void OnAngleChanged(double value) => RefreshPreview();
-    partial void OnStrengthChanged(double value) => RefreshPreview();
-    partial void OnGrayscaleChanged(bool value) => RefreshPreview();
+    partial void OnAngleChanged(double value) => RequestRefresh();
+    partial void OnStrengthChanged(double value) => RequestRefresh();
+    partial void OnGrayscaleChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => EmbossService.Apply(bgr, Angle, Strength, Grayscale);

@@ -32,9 +32,9 @@ public partial class HalftoneToolSessionViewModel : PreviewToolSessionViewModelB
         RefreshPreview();
     }
 
-    partial void OnCellSizeChanged(int value) => RefreshPreview();
-    partial void OnDotColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnInvertChanged(bool value) => RefreshPreview();
+    partial void OnCellSizeChanged(int value) => RequestRefresh();
+    partial void OnDotColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnInvertChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => HalftoneService.Apply(bgr, CellSize, DotColor.ToVec3b(), Invert);

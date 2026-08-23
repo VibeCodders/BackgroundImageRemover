@@ -30,9 +30,9 @@ public partial class WaveToolSessionViewModel : PreviewToolSessionViewModelBase
         RefreshPreview();
     }
 
-    partial void OnAmplitudeChanged(double value) => RefreshPreview();
-    partial void OnWavelengthChanged(double value) => RefreshPreview();
-    partial void OnAngleChanged(double value) => RefreshPreview();
+    partial void OnAmplitudeChanged(double value) => RequestRefresh();
+    partial void OnWavelengthChanged(double value) => RequestRefresh();
+    partial void OnAngleChanged(double value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => WaveService.Apply(bgr, Amplitude, Wavelength, Angle);

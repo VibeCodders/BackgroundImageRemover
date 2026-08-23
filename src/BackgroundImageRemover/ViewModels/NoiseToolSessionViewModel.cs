@@ -26,8 +26,8 @@ public partial class NoiseToolSessionViewModel : MaskToolSessionViewModelBase
         StatusMessage = "Add Gaussian or salt-and-pepper noise, then apply.";
     }
 
-    partial void OnNoiseStrengthChanged(double value) => RefreshResult();
-    partial void OnGaussianNoiseChanged(bool value) => RefreshResult();
+    partial void OnNoiseStrengthChanged(double value) => RequestRefresh();
+    partial void OnGaussianNoiseChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat src)
     {

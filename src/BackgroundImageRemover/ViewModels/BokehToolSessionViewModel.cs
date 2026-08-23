@@ -38,11 +38,11 @@ public partial class BokehToolSessionViewModel : PreviewToolSessionViewModelBase
         RefreshPreview();
     }
 
-    partial void OnColorChanged(WpfColor value) => RefreshPreview();
-    partial void OnRadiusChanged(int value) => RefreshPreview();
-    partial void OnCountChanged(int value) => RefreshPreview();
-    partial void OnOpacityChanged(double value) => RefreshPreview();
-    partial void OnBlurChanged(int value) => RefreshPreview();
+    partial void OnColorChanged(WpfColor value) => RequestRefresh();
+    partial void OnRadiusChanged(int value) => RequestRefresh();
+    partial void OnCountChanged(int value) => RequestRefresh();
+    partial void OnOpacityChanged(double value) => RequestRefresh();
+    partial void OnBlurChanged(int value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => BokehService.Apply(bgr, Color.ToVec3b(), Radius, Count, Opacity, Blur);

@@ -33,10 +33,10 @@ public partial class VignetteToolSessionViewModel : PreviewToolSessionViewModelB
         RefreshPreview();
     }
 
-    partial void OnStrengthChanged(double value) => RefreshPreview();
-    partial void OnRoundnessChanged(double value) => RefreshPreview();
-    partial void OnFeatherChanged(double value) => RefreshPreview();
-    partial void OnInvertChanged(bool value) => RefreshPreview();
+    partial void OnStrengthChanged(double value) => RequestRefresh();
+    partial void OnRoundnessChanged(double value) => RequestRefresh();
+    partial void OnFeatherChanged(double value) => RequestRefresh();
+    partial void OnInvertChanged(bool value) => RequestRefresh();
 
     protected override Mat ApplyEffect(Mat bgr)
         => VignetteService.Apply(bgr, Strength, Roundness, Feather, Invert);

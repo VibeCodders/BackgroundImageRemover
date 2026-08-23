@@ -37,6 +37,9 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 - **Cartoon**: cartoon look — bilateral smoothing for flat colors, per-channel quantization and dark adaptive-threshold outlines (adjustable smoothness, levels and edge strength)
 - **Glow**: bloom around bright areas (luminance threshold, blur radius and strength) — dim images keep a neutral preview until the threshold is lowered
 - **Wave**: sinusoidal ripple distortion with amplitude, wavelength and ridge angle
+- **Thermal**: heatmap palette (blue→cyan→green→yellow→red) mapped onto image luminance with adjustable intensity and an optional invert (cold = bright)
+- **Oil Paint**: flat dominant colours in brush-sized neighbourhoods (brush size + detail levels) for a painted look
+- **Halftone**: renders the image as dots on white whose size follows local brightness, with a selectable dot color and optional invert
 - New tools are registered **data-driven**: one factory registration in `App.xaml.cs` (metadata + session factory via the shared `ToolDefinition` / `StrategyToolDefinition` classes), a session view model, a data-templated view, an icon and unit tests — the palette and tab dispatch pick them up automatically. The modal tool-session chrome (badge + title + Cancel/Apply bar) is the shared `ToolSessionHeader` control, and color fields reuse the shared `ColorPickerField` control (swatch + popup picker) instead of per-tool picker boilerplate
 
 #### Logging improvements (new)

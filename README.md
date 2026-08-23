@@ -31,7 +31,7 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 - **Gradient**: overlay a linear (angle-selectable) or radial two-color gradient onto the image
 - **Color Replace**: replace a target color (and close hues via tolerance/softness) with another color, optionally preserving the original luminance; click the preview to pick the target color
 - **Duotone**: map image brightness onto a two-color palette with adjustable midpoint and strength, plus ready-made preset palettes (Mono, Black & Gold, Navy & Amber, Violet & Cyan, ...)
-- New tools follow the existing `IToolDefinition` convention: one definition class, a session view model, a data-templated view, an icon, DI registration and unit tests — the palette and tab dispatch pick them up automatically
+- New tools are registered **data-driven**: one factory registration in `App.xaml.cs` (metadata + session factory via the shared `ToolDefinition` / `StrategyToolDefinition` classes), a session view model, a data-templated view, an icon and unit tests — the palette and tab dispatch pick them up automatically. Color fields reuse the shared `ColorPickerField` control (swatch + popup picker) instead of per-tool picker boilerplate
 
 #### Logging improvements (new)
 - `FileLogService` now supports severity levels: `Debug`, `Info`, `Warning`, `Error`

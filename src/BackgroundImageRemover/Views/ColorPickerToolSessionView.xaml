@@ -23,13 +23,8 @@
                                Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
 
                     <CheckBox Content="Average sample" IsChecked="{Binding AverageSample}" Margin="0,0,0,8" />
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Brush size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BrushRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="50" Value="{Binding BrushRadius}" Margin="0,2,0,12" />
-
-                    <Border Background="{DynamicResource Theme.PanelHeaderBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,1,0,0" Padding="8,8" CornerRadius="4">
+                    <controls:SliderField Header="Brush size" Value="{Binding BrushRadius}" Minimum="1" Maximum="50" ValueFormat="{}{0:0}px"  />
+<Border Background="{DynamicResource Theme.PanelHeaderBackground}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,1,0,0" Padding="8,8" CornerRadius="4">
                         <Rectangle Width="40" Height="40" Fill="{Binding HexColor}" Stroke="{DynamicResource Theme.BorderBrush}" StrokeThickness="1" />
                     </Border>
 

@@ -23,31 +23,11 @@
 
                     <controls:ColorPickerField Header="Circle color" SelectedColor="{Binding Color}" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Radius, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="2" Maximum="60" Value="{Binding Radius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Count" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Count}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="400" Value="{Binding Count}" TickFrequency="10" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Opacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding Opacity}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Edge blur" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Blur, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="24" Value="{Binding Blur}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,16" />
-
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
+                    <controls:SliderField Header="Radius" Value="{Binding Radius}" Minimum="2" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<controls:SliderField Header="Count" Value="{Binding Count}" Minimum="0" Maximum="400" TickFrequency="10"  />
+<controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Edge blur" Value="{Binding Blur}" Minimum="0" Maximum="24" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

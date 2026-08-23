@@ -66,8 +66,7 @@ public partial class DuotoneToolSessionViewModel : PreviewToolSessionViewModelBa
         LightColor = preset.Light;
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         DarkColor = WpfColor.FromRgb(20, 20, 80);
         LightColor = WpfColor.FromRgb(255, 200, 40);

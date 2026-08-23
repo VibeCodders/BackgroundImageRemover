@@ -65,8 +65,7 @@ public partial class DodgeBurnToolSessionViewModel : MaskToolSessionViewModelBas
         return src.Clone();
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         Dodge = true;
         Strength = 0.3;

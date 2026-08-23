@@ -21,13 +21,8 @@
                     <TextBlock Text="Converts the image into a pencil sketch (luminance divided by its own blur)." Margin="0,0,0,12"
                                Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Softness" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="50" Value="{Binding BlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <CheckBox Content="Invert (dark lines on light paper)" IsChecked="{Binding Invert}" Margin="0,0,0,16" />
+                    <controls:SliderField Header="Softness" Value="{Binding BlurRadius}" Minimum="1" Maximum="50" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<CheckBox Content="Invert (dark lines on light paper)" IsChecked="{Binding Invert}" Margin="0,0,0,16" />
 
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>

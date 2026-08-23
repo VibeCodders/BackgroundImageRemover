@@ -23,27 +23,10 @@
                     <CheckBox Content="Paint mode" IsChecked="{Binding PaintMode}" Margin="0,0,0,8" />
                     <CheckBox Content="Motion blur" IsChecked="{Binding MotionBlur}" Margin="0,0,0,8" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Blur radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="100" Value="{Binding BlurRadius}" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0" Visibility="{Binding MotionBlur, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Motion angle" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding MotionAngle, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="180" Value="{Binding MotionAngle}" Margin="0,2,0,8"
-                            Visibility="{Binding MotionBlur, Converter={StaticResource BoolToVisibilityConverter}}" />
-
-                    <DockPanel Margin="0,4,0,0" Visibility="{Binding PaintMode, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Brush size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BrushRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="2" Maximum="150" Value="{Binding BrushRadius}" Margin="0,2,0,8"
-                            Visibility="{Binding PaintMode, Converter={StaticResource BoolToVisibilityConverter}}" />
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12"
+                    <controls:SliderField Header="Blur radius" Value="{Binding BlurRadius}" Minimum="1" Maximum="100" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Motion angle" Value="{Binding MotionAngle}" Minimum="0" Maximum="180" ValueFormat="{}{0:0}°" Visibility="{Binding MotionBlur, Converter={StaticResource BoolToVisibilityConverter}}"  />
+<controls:SliderField Header="Brush size" Value="{Binding BrushRadius}" Minimum="2" Maximum="150" ValueFormat="{}{0:0}px" Visibility="{Binding PaintMode, Converter={StaticResource BoolToVisibilityConverter}}"  />
+<StackPanel Orientation="Horizontal" Margin="0,0,0,12"
                                 Visibility="{Binding PaintMode, Converter={StaticResource BoolToVisibilityConverter}}">
                         <Button Content="✕ Clear mask" Command="{Binding ClearMaskCommand}" Padding="8,4" Margin="0,0,8,0" />
                         <Button Content="↺ Reset" Command="{Binding ResetCommand}" Padding="8,4" />

@@ -69,8 +69,7 @@ public partial class HueSatToolSessionViewModel : MaskToolSessionViewModelBase
         return src.Clone();
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         HueShift = 0;
         Saturation = 1;

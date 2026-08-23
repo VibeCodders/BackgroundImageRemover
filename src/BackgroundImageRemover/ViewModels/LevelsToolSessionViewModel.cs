@@ -85,8 +85,7 @@ public partial class LevelsToolSessionViewModel : PreviewToolSessionViewModelBas
         return current;
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         BlackPoint = 0.0;
         WhitePoint = 255.0;

@@ -23,13 +23,8 @@
 
                     <CheckBox Content="Invert (keep outside)" IsChecked="{Binding InvertSelection}" Margin="0,0,0,12" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Edge feather" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding FeatherPixels}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="40" Value="{Binding FeatherPixels}" Margin="0,2,0,12" />
-
-                    <Button Content="Clear selection" Command="{Binding ClearSelectionCommand}" />
+                    <controls:SliderField Header="Edge feather" Value="{Binding FeatherPixels}" Minimum="0" Maximum="40"  />
+<Button Content="Clear selection" Command="{Binding ClearSelectionCommand}" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

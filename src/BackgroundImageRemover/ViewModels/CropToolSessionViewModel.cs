@@ -151,8 +151,7 @@ public partial class CropToolSessionViewModel : BgraToolSessionViewModelBase
         RefreshResult();
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         if (WorkingBgra is null) return;
         SelectedAspect = UncropAspectPresets.Free;

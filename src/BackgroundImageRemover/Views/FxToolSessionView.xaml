@@ -18,44 +18,14 @@
                 <StackPanel>
                     <TextBlock Text="Cinematic Effects" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Bloom" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BloomStrength, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding BloomStrength}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Glow" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding GlowStrength, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding GlowStrength}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Light leak" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding LightLeakStrength, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding LightLeakStrength}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Chromatic aberration" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ChromaticAberrationStrength, StringFormat='{}{0:0.00}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="2" Value="{Binding ChromaticAberrationStrength}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <TextBlock Text="Bokeh" FontWeight="SemiBold" Margin="0,8,0,4" />
-                    <DockPanel>
-                        <TextBlock Text="Count" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BokehCount}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="200" Value="{Binding BokehCount}" TickFrequency="5" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
-
-                    <DockPanel>
-                        <TextBlock Text="Size" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BokehSize, StringFormat='{}{0:0}px'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="80" Value="{Binding BokehSize}" Margin="0,0,0,16" />
-
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
+                    <controls:SliderField Header="Bloom" Value="{Binding BloomStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Glow" Value="{Binding GlowStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Light leak" Value="{Binding LightLeakStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Chromatic aberration" Value="{Binding ChromaticAberrationStrength}" Minimum="0" Maximum="2" SmallChange="0.05" ValueFormat="{}{0:0.00}"  />
+<TextBlock Text="Bokeh" FontWeight="SemiBold" Margin="0,8,0,4" />
+                    <controls:SliderField Header="Count" Value="{Binding BokehCount}" Minimum="0" Maximum="200" TickFrequency="5" IsSnapToTickEnabled="True"  />
+<controls:SliderField Header="Size" Value="{Binding BokehSize}" Minimum="1" Maximum="80" ValueFormat="{}{0:0}px"  />
+<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

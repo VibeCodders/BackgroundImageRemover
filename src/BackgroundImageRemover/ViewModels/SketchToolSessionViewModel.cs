@@ -33,8 +33,7 @@ public partial class SketchToolSessionViewModel : PreviewToolSessionViewModelBas
     protected override Mat ApplyEffect(Mat bgr)
         => SketchService.Apply(bgr, BlurRadius, Invert);
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         BlurRadius = 7;
         Invert = false;

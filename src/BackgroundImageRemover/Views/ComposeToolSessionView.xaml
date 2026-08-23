@@ -54,91 +54,37 @@
                     <RadioButton Content="Blur (portrait)" GroupName="ComposeBg" Margin="0,0,0,4"
                                  IsChecked="{Binding BackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Blur}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding BackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Blur}">
-                        <DockPanel>
-                            <TextBlock Text="Blur radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="50" Value="{Binding BlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" />
-                    </StackPanel>
+                        <controls:SliderField Header="Blur radius" Value="{Binding BlurRadius}" Minimum="0" Maximum="50" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px"  />
+</StackPanel>
 
                     <RadioButton Content="Gradient" GroupName="ComposeBg" Margin="0,0,0,4"
                                  IsChecked="{Binding BackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Gradient}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding BackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Gradient}">
                         <controls:ColorPickerField Header="Top color" SelectedColor="{Binding GradientTopColor}" />
                         <controls:ColorPickerField Header="Bottom color" SelectedColor="{Binding GradientBottomColor}" />
-                        <DockPanel Margin="0,6,0,0">
-                            <TextBlock Text="Angle" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding GradientAngle, StringFormat='{}{0:0}°'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="360" Value="{Binding GradientAngle}" TickFrequency="15" />
-                    </StackPanel>
+                        <controls:SliderField Header="Angle" Value="{Binding GradientAngle}" Minimum="0" Maximum="360" TickFrequency="15" ValueFormat="{}{0:0}°"  />
+</StackPanel>
 
                     <Separator Margin="0,8,0,12" />
                     <CheckBox Content="Drop shadow" IsChecked="{Binding DropShadowEnabled}" FontWeight="SemiBold" Margin="0,0,0,8" />
                     <StackPanel Visibility="{Binding DropShadowEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <DockPanel>
-                            <TextBlock Text="Distance" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowDistance, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="60" Value="{Binding ShadowDistance}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
-                        <DockPanel>
-                            <TextBlock Text="Direction" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowAngle, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="360" Value="{Binding ShadowAngle}" TickFrequency="15" Margin="0,0,0,8" />
-                        <DockPanel>
-                            <TextBlock Text="Blur" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowBlur, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="40" Value="{Binding ShadowBlur}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
-                        <DockPanel>
-                            <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" TickFrequency="0.05" />
-                        <controls:ColorPickerField Header="Shadow color" SelectedColor="{Binding ShadowColor}" Margin="0,8,0,0" />
+                        <controls:SliderField Header="Distance" Value="{Binding ShadowDistance}" Minimum="0" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Direction" Value="{Binding ShadowAngle}" Minimum="0" Maximum="360" TickFrequency="15" ValueFormat="{}{0:0}°"  />
+<controls:SliderField Header="Blur" Value="{Binding ShadowBlur}" Minimum="0" Maximum="40" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Opacity" Value="{Binding ShadowOpacity}" Minimum="0" Maximum="1" TickFrequency="0.05" ValueFormat="{}{0:P0}"  />
+<controls:ColorPickerField Header="Shadow color" SelectedColor="{Binding ShadowColor}" Margin="0,8,0,0" />
                     </StackPanel>
 
                     <Separator Margin="0,12,0,12" />
                     <TextBlock Text="Subject placement" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
-                    <DockPanel>
-                        <TextBlock Text="Scale" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SubjectScale, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="10" Maximum="400" Value="{Binding SubjectScale}" Margin="0,0,0,8" />
-
-                    <DockPanel>
-                        <TextBlock Text="Rotation" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SubjectRotation, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-180" Maximum="180" Value="{Binding SubjectRotation}" Margin="0,0,0,8" />
-
-                    <DockPanel>
-                        <TextBlock Text="Offset X" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SubjectOffsetX, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-200" Maximum="200" Value="{Binding SubjectOffsetX}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
-
-                    <DockPanel>
-                        <TextBlock Text="Offset Y" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SubjectOffsetY, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-200" Maximum="200" Value="{Binding SubjectOffsetY}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
-
-                    <DockPanel>
-                        <TextBlock Text="Canvas padding" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BackgroundPadding, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="300" Value="{Binding BackgroundPadding}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
-
-                    <DockPanel>
-                        <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SubjectOpacity, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="100" Value="{Binding SubjectOpacity}" TickFrequency="5" Margin="0,0,0,8" />
-
-                    <UniformGrid Columns="2" Margin="0,0,0,4">
+                    <controls:SliderField Header="Scale" Value="{Binding SubjectScale}" Minimum="10" Maximum="400" ValueFormat="{}{0:0}%"  />
+<controls:SliderField Header="Rotation" Value="{Binding SubjectRotation}" Minimum="-180" Maximum="180" ValueFormat="{}{0:0}°"  />
+<controls:SliderField Header="Offset X" Value="{Binding SubjectOffsetX}" Minimum="-200" Maximum="200" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Offset Y" Value="{Binding SubjectOffsetY}" Minimum="-200" Maximum="200" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Canvas padding" Value="{Binding BackgroundPadding}" Minimum="0" Maximum="300" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Opacity" Value="{Binding SubjectOpacity}" Minimum="0" Maximum="100" TickFrequency="5" ValueFormat="{}{0:0}%"  />
+<UniformGrid Columns="2" Margin="0,0,0,4">
                         <CheckBox Content="Flip H" IsChecked="{Binding SubjectFlipHorizontal}" Margin="0,0,4,0" />
                         <CheckBox Content="Flip V" IsChecked="{Binding SubjectFlipVertical}" Margin="4,0,0,0" />
                     </UniformGrid>

@@ -48,32 +48,14 @@
                     </UniformGrid>
 
                     <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Brush}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Brush Size:" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BrushRadius, StringFormat='{}{0:0} px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="2" Maximum="150" Value="{Binding BrushRadius}" Margin="0,2,0,8" />
-
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Hardness:" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BrushHardness, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="0.95" Value="{Binding BrushHardness}" Margin="0,2,0,8" />
-
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Opacity:" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BrushOpacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0.05" Maximum="1" Value="{Binding BrushOpacity}" Margin="0,2,0,12" />
-                    </StackPanel>
+                        <controls:SliderField Header="Brush Size:" Value="{Binding BrushRadius}" Minimum="2" Maximum="150" ValueFormat="{}{0:0} px"  />
+<controls:SliderField Header="Hardness:" Value="{Binding BrushHardness}" Minimum="0" Maximum="0.95" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Opacity:" Value="{Binding BrushOpacity}" Minimum="0.05" Maximum="1" ValueFormat="{}{0:P0}"  />
+</StackPanel>
 
                     <StackPanel Visibility="{Binding ResultMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=MagicWand}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Tolerance:" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding MagicWandTolerance, StringFormat='{}{0:0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="1" Maximum="100" Value="{Binding MagicWandTolerance}" Margin="0,2,0,12" />
-                    </StackPanel>
+                        <controls:SliderField Header="Tolerance:" Value="{Binding MagicWandTolerance}" Minimum="1" Maximum="100" ValueFormat="{}{0:0}"  />
+</StackPanel>
 
                     <Separator Margin="0,8,0,12" />
                     <StackPanel Orientation="Horizontal">
@@ -91,54 +73,19 @@
                     <Separator Margin="0,12,0,12" />
                     <TextBlock Text="Whole-image effects" FontWeight="SemiBold" Margin="0,0,0,8" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Dehaze" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Dehaze, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding Dehaze}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Blur background" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BlurBackgroundRadius, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="50" Value="{Binding BlurBackgroundRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Sharpen subject" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SharpenStrength, StringFormat='{}{0:0.00}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="2" Value="{Binding SharpenStrength}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Color boost" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ColorBoost, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding ColorBoost}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <CheckBox Content="Defringe edges" IsChecked="{Binding Defringe}" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <controls:SliderField Header="Dehaze" Value="{Binding Dehaze}" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Blur background" Value="{Binding BlurBackgroundRadius}" Minimum="0" Maximum="50" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<controls:SliderField Header="Sharpen subject" Value="{Binding SharpenStrength}" Minimum="0" Maximum="2" SmallChange="0.05" LargeChange="0.2" ValueFormat="{}{0:0.00}"  />
+<controls:SliderField Header="Color boost" Value="{Binding ColorBoost}" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<CheckBox Content="Defringe edges" IsChecked="{Binding Defringe}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
                     <Separator Margin="0,8,0,12" />
                     <TextBlock Text="Repair" FontWeight="SemiBold" Margin="0,0,0,8" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Dust removal" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding RemoveDustKernel}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="15" Value="{Binding RemoveDustKernel}" TickFrequency="2" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Surface blur" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SurfaceBlur, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding SurfaceBlur}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Chromatic aberration" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ChromaticAberration, StringFormat='{}{0:0.00}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="2" Value="{Binding ChromaticAberration}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <CheckBox Content="Auto contrast" IsChecked="{Binding AutoContrast}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <controls:SliderField Header="Dust removal" Value="{Binding RemoveDustKernel}" Minimum="0" Maximum="15" TickFrequency="2" IsSnapToTickEnabled="True"  />
+<controls:SliderField Header="Surface blur" Value="{Binding SurfaceBlur}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Chromatic aberration" Value="{Binding ChromaticAberration}" Minimum="0" Maximum="2" SmallChange="0.05" ValueFormat="{}{0:0.00}"  />
+<CheckBox Content="Auto contrast" IsChecked="{Binding AutoContrast}" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <CheckBox Content="Auto white balance" IsChecked="{Binding AutoWhiteBalance}" FontWeight="SemiBold" />
                 </StackPanel>
             </ScrollViewer>

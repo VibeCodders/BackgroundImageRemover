@@ -21,13 +21,8 @@
                     <TextBlock Text="Maps image brightness onto a blue-to-red heat palette, like an infrared camera view." Margin="0,0,0,12"
                                Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Intensity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Intensity, StringFormat='{}{0:0.0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="2" Value="{Binding Intensity}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <CheckBox Content="Invert (cold = bright)" IsChecked="{Binding Invert}" Margin="0,2,0,16"
+                    <controls:SliderField Header="Intensity" Value="{Binding Intensity}" Minimum="0" Maximum="2" SmallChange="0.05" ValueFormat="{}{0:0.0}"  />
+<CheckBox Content="Invert (cold = bright)" IsChecked="{Binding Invert}" Margin="0,2,0,16"
                               Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />

@@ -37,25 +37,10 @@
                     <TextBlock Text="Channel" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource LevelsChannelValues}}" SelectedItem="{Binding Channel}" Margin="0,0,0,12" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Black point" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BlackPoint, StringFormat='{}{0:0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="254" Value="{Binding BlackPoint}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="White point" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding WhitePoint, StringFormat='{}{0:0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="255" Value="{Binding WhitePoint}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Gamma" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Gamma, StringFormat='{}{0:0.00}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.1" Maximum="4" Value="{Binding Gamma}" Margin="0,2,0,16" />
-
-                    <TextBlock Text="Output levels" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <controls:SliderField Header="Black point" Value="{Binding BlackPoint}" Minimum="0" Maximum="254" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}"  />
+<controls:SliderField Header="White point" Value="{Binding WhitePoint}" Minimum="1" Maximum="255" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}"  />
+<controls:SliderField Header="Gamma" Value="{Binding Gamma}" Minimum="0.1" Maximum="4" ValueFormat="{}{0:0.00}"  />
+<TextBlock Text="Output levels" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" Margin="0,0,8,0">

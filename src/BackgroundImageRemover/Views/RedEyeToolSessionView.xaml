@@ -19,13 +19,8 @@
                 <StackPanel>
                     <TextBlock Text="Red Eye Removal" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Brush radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Radius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="5" Maximum="80" Value="{Binding Radius}" Margin="0,2,0,8" />
-
-                    <TextBlock Text="Click on a red eye to remove it." Foreground="{DynamicResource Theme.MutedForegroundBrush}" Margin="0,8,0,0" TextWrapping="Wrap" />
+                    <controls:SliderField Header="Brush radius" Value="{Binding Radius}" Minimum="5" Maximum="80" ValueFormat="{}{0:0}px"  />
+<TextBlock Text="Click on a red eye to remove it." Foreground="{DynamicResource Theme.MutedForegroundBrush}" Margin="0,8,0,0" TextWrapping="Wrap" />
 
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Margin="0,8,0,0" />
                 </StackPanel>

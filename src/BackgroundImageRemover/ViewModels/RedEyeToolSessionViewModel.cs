@@ -44,8 +44,7 @@ public partial class RedEyeToolSessionViewModel : ToolSessionViewModelBase
         ResultBitmap = _sourceImage!.FullBgr.ToBitmapSource(_workingAlpha!);
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         Radius = 15;
         RefreshResult();

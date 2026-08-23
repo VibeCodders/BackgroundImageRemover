@@ -37,8 +37,7 @@ public partial class EmbossToolSessionViewModel : PreviewToolSessionViewModelBas
     protected override Mat ApplyEffect(Mat bgr)
         => EmbossService.Apply(bgr, Angle, Strength, Grayscale);
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         Angle = 135;
         Strength = 1.0;

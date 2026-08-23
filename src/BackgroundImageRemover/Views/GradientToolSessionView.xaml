@@ -26,20 +26,11 @@
                     <controls:ColorPickerField Header="Color B" SelectedColor="{Binding ColorB}" />
 
                     <StackPanel Visibility="{Binding IsLinear, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Angle" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding Angle, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="360" Value="{Binding Angle}" TickFrequency="5" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-                    </StackPanel>
+                        <controls:SliderField Header="Angle" Value="{Binding Angle}" Minimum="0" Maximum="360" TickFrequency="5" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}°"  />
+</StackPanel>
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Opacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding Opacity}" SmallChange="0.05" Margin="0,2,0,16" />
-
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
+                    <controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

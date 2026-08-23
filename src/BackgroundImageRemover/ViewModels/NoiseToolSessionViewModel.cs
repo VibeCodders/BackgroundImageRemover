@@ -75,8 +75,7 @@ public partial class NoiseToolSessionViewModel : MaskToolSessionViewModelBase
         return src.Clone();
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         NoiseStrength = 20;
         GaussianNoise = true;

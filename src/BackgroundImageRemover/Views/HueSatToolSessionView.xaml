@@ -22,32 +22,11 @@
                     <CheckBox Content="Whole image" IsChecked="{Binding WholeImage}" Margin="0,0,0,8" />
                     <CheckBox Content="Paint mode" IsChecked="{Binding PaintMode}" Margin="0,0,0,8" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Hue shift" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding HueShift, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-180" Maximum="180" Value="{Binding HueShift}" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Saturation" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Saturation, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="2" Value="{Binding Saturation}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Value (brightness)" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Value, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="2" Value="{Binding Value}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0" Visibility="{Binding PaintMode, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Brush size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BrushRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="2" Maximum="150" Value="{Binding BrushRadius}" Margin="0,2,0,8"
-                            Visibility="{Binding PaintMode, Converter={StaticResource BoolToVisibilityConverter}}" />
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12"
+                    <controls:SliderField Header="Hue shift" Value="{Binding HueShift}" Minimum="-180" Maximum="180" ValueFormat="{}{0:0}°"  />
+<controls:SliderField Header="Saturation" Value="{Binding Saturation}" Minimum="0" Maximum="2" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Value (brightness)" Value="{Binding Value}" Minimum="0" Maximum="2" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Brush size" Value="{Binding BrushRadius}" Minimum="2" Maximum="150" ValueFormat="{}{0:0}px" Visibility="{Binding PaintMode, Converter={StaticResource BoolToVisibilityConverter}}"  />
+<StackPanel Orientation="Horizontal" Margin="0,0,0,12"
                                 Visibility="{Binding PaintMode, Converter={StaticResource BoolToVisibilityConverter}}">
                         <Button Content="✕ Clear mask" Command="{Binding ClearMaskCommand}" Padding="8,4" Margin="0,0,8,0" />
                         <Button Content="↺ Reset" Command="{Binding ResetCommand}" Padding="8,4" />

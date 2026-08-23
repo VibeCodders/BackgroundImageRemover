@@ -44,31 +44,11 @@
                     <TextBlock Text="Position" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource TextAnchorValues}}" SelectedItem="{Binding Anchor}" Margin="0,0,0,12" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Scale" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Scale, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.01" Maximum="2" Value="{Binding Scale}" Margin="0,2,0,12" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Opacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding Opacity}" Margin="0,2,0,12" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Margin" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Margin, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="200" Value="{Binding Margin}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Rotation" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Rotation, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,2,0,12" />
-
-                    <CheckBox Content="Flip horizontally" IsChecked="{Binding FlipHorizontal}" Margin="0,0,0,4" />
+                    <controls:SliderField Header="Scale" Value="{Binding Scale}" Minimum="0.01" Maximum="2" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0" Maximum="1" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Margin" Value="{Binding Margin}" Minimum="0" Maximum="200" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<controls:SliderField Header="Rotation" Value="{Binding Rotation}" Minimum="-180" Maximum="180" ValueFormat="{}{0:0}°"  />
+<CheckBox Content="Flip horizontally" IsChecked="{Binding FlipHorizontal}" Margin="0,0,0,4" />
                     <CheckBox Content="Flip vertically" IsChecked="{Binding FlipVertical}" Margin="0,0,0,12" />
 
                     <TextBlock Text="Blend mode" FontWeight="SemiBold" Margin="0,0,0,4" />
@@ -96,18 +76,9 @@
                     <CheckBox Content="Drop shadow" IsChecked="{Binding DropShadow}" Margin="0,0,0,8" />
 
                     <StackPanel Visibility="{Binding DropShadow, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Shadow offset" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowOffset, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="40" Value="{Binding ShadowOffset}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Shadow opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" Margin="0,2,0,12" />
-                    </StackPanel>
+                        <controls:SliderField Header="Shadow offset" Value="{Binding ShadowOffset}" Minimum="0" Maximum="40" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<controls:SliderField Header="Shadow opacity" Value="{Binding ShadowOpacity}" Minimum="0" Maximum="1" ValueFormat="{}{0:P0}"  />
+</StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Border>

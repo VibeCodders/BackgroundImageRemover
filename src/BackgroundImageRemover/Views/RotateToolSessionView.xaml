@@ -21,13 +21,8 @@
                     <TextBlock Text="Rotate by an arbitrary angle around the image center." Margin="0,0,0,12"
                                Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Angle" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Angle, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-360" Maximum="360" Value="{Binding Angle}" SmallChange="1" Margin="0,2,0,8" />
-
-                    <CheckBox Content="Expand canvas to fit the rotated image" IsChecked="{Binding Expand}" Margin="0,0,0,16" />
+                    <controls:SliderField Header="Angle" Value="{Binding Angle}" Minimum="-360" Maximum="360" SmallChange="1" ValueFormat="{}{0:0}°"  />
+<CheckBox Content="Expand canvas to fit the rotated image" IsChecked="{Binding Expand}" Margin="0,0,0,16" />
 
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>

@@ -37,8 +37,7 @@ public partial class WaveToolSessionViewModel : PreviewToolSessionViewModelBase
     protected override Mat ApplyEffect(Mat bgr)
         => WaveService.Apply(bgr, Amplitude, Wavelength, Angle);
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         Amplitude = 12;
         Wavelength = 80;

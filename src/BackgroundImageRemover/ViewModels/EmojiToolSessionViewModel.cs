@@ -102,8 +102,7 @@ public partial class EmojiToolSessionViewModel : PreviewToolSessionViewModelBase
         return EmojiOverlayService.Render(bgr, SelectedEmoji, new Point((int)pos.X, (int)pos.Y), EmojiSize, color, Opacity);
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         SelectedEmoji = EmojiOverlayService.EmojiKind.Star;
         EmojiSize = 48;

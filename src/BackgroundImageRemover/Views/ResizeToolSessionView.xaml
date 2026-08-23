@@ -58,12 +58,8 @@
                     </StackPanel>
 
                     <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Percent}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Percent" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding Percent, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="1" Maximum="400" Value="{Binding Percent}" Margin="0,2,0,12" />
-                    </StackPanel>
+                        <controls:SliderField Header="Percent" Value="{Binding Percent}" Minimum="1" Maximum="400" ValueFormat="{}{0:0}%"  />
+</StackPanel>
 
                     <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=FitWithin|FillTo}">
                         <TextBlock Text="Fit / fill box (px)" FontWeight="SemiBold" Margin="0,0,0,4" />

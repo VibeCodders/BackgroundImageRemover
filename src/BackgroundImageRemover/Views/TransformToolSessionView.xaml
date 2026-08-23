@@ -27,32 +27,16 @@
                         <Button Content="↻ Rotate 180°" Command="{Binding Rotate180Command}" Grid.ColumnSpan="2" Margin="0,0,0,12" />
                     </UniformGrid>
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Rotate angle" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Angle, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-180" Maximum="180" Value="{Binding Angle}" Margin="0,2,0,4" />
-                    <Button Content="Apply rotation" Command="{Binding RotateByAngleCommand}" Margin="0,0,0,12" />
+                    <controls:SliderField Header="Rotate angle" Value="{Binding Angle}" Minimum="-180" Maximum="180" ValueFormat="{}{0:0}°"  />
+<Button Content="Apply rotation" Command="{Binding RotateByAngleCommand}" Margin="0,0,0,12" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Scale" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ScalePercent, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="10" Maximum="400" Value="{Binding ScalePercent}" Margin="0,2,0,4" />
-                    <Button Content="Apply scale" Command="{Binding ResizeCommand}" Margin="0,0,0,16" />
+                    <controls:SliderField Header="Scale" Value="{Binding ScalePercent}" Minimum="10" Maximum="400" ValueFormat="{}{0:0}%"  />
+<Button Content="Apply scale" Command="{Binding ResizeCommand}" Margin="0,0,0,16" />
 
                     <TextBlock Text="Skew" FontWeight="SemiBold" Margin="0,4,0,4" />
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Horizontal" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SkewX, StringFormat='{}{0:0}°'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-45" Maximum="45" Value="{Binding SkewX}" Margin="0,0,0,4" />
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Vertical" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SkewY, StringFormat='{}{0:0}°'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-45" Maximum="45" Value="{Binding SkewY}" Margin="0,0,0,4" />
-                    <Button Content="Apply skew" Command="{Binding ApplySkewCommand}" Margin="0,0,0,16" />
+                    <controls:SliderField Header="Horizontal" Value="{Binding SkewX}" Minimum="-45" Maximum="45" ValueFormat="{}{0:0}°"  />
+<controls:SliderField Header="Vertical" Value="{Binding SkewY}" Minimum="-45" Maximum="45" ValueFormat="{}{0:0}°"  />
+<Button Content="Apply skew" Command="{Binding ApplySkewCommand}" Margin="0,0,0,16" />
 
                     <TextBlock Text="Exact size (px)" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <Grid Margin="0,0,0,4">

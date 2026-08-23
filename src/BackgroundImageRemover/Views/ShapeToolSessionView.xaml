@@ -28,59 +28,15 @@
                     <TextBlock Text="Shape type" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding ShapeKinds}" SelectedItem="{Binding ShapeKind}" Margin="0,0,0,8" />
 
-                    <DockPanel Margin="0,4,0,0"
-                               Visibility="{Binding IsPointShapes, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Sides / points" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Segments, StringFormat='{}{0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="3" Maximum="20" Value="{Binding Segments}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,4"
-                            Visibility="{Binding IsPointShapes, Converter={StaticResource BoolToVisibilityConverter}}" />
-
-                    <DockPanel Margin="0,4,0,0"
-                               Visibility="{Binding IsStar, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Inner radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding StarRatio, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.05" Maximum="0.95" Value="{Binding StarRatio}" SmallChange="0.05" Margin="0,2,0,12"
-                            Visibility="{Binding IsStar, Converter={StaticResource BoolToVisibilityConverter}}" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Position X" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding PositionX, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="100" Value="{Binding PositionX}" SmallChange="1" Margin="0,2,0,4" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Position Y" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding PositionY, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="100" Value="{Binding PositionY}" SmallChange="1" Margin="0,2,0,4" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Width" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SizeWidth, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="100" Value="{Binding SizeWidth}" SmallChange="1" Margin="0,2,0,4" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Height" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SizeHeight, StringFormat='{}{0:0}%'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="100" Value="{Binding SizeHeight}" SmallChange="1" Margin="0,2,0,4" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Rotation" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Rotation, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="360" Value="{Binding Rotation}" SmallChange="1" Margin="0,2,0,12" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Stroke width" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding StrokeWidth, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="40" Value="{Binding StrokeWidth}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,4" />
-
-                    <controls:ColorPickerField Header="Stroke color" SelectedColor="{Binding StrokeColor}" />
+                    <controls:SliderField Header="Sides / points" Value="{Binding Segments}" Minimum="3" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}" Visibility="{Binding IsPointShapes, Converter={StaticResource BoolToVisibilityConverter}}"  />
+<controls:SliderField Header="Inner radius" Value="{Binding StarRatio}" Minimum="0.05" Maximum="0.95" SmallChange="0.05" ValueFormat="{}{0:P0}" Visibility="{Binding IsStar, Converter={StaticResource BoolToVisibilityConverter}}"  />
+<controls:SliderField Header="Position X" Value="{Binding PositionX}" Minimum="0" Maximum="100" SmallChange="1" ValueFormat="{}{0:0}%"  />
+<controls:SliderField Header="Position Y" Value="{Binding PositionY}" Minimum="0" Maximum="100" SmallChange="1" ValueFormat="{}{0:0}%"  />
+<controls:SliderField Header="Width" Value="{Binding SizeWidth}" Minimum="1" Maximum="100" SmallChange="1" ValueFormat="{}{0:0}%"  />
+<controls:SliderField Header="Height" Value="{Binding SizeHeight}" Minimum="1" Maximum="100" SmallChange="1" ValueFormat="{}{0:0}%"  />
+<controls:SliderField Header="Rotation" Value="{Binding Rotation}" Minimum="0" Maximum="360" SmallChange="1" ValueFormat="{}{0:0}°"  />
+<controls:SliderField Header="Stroke width" Value="{Binding StrokeWidth}" Minimum="0" Maximum="40" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<controls:ColorPickerField Header="Stroke color" SelectedColor="{Binding StrokeColor}" />
 
                     <CheckBox Content="Fill shape" IsChecked="{Binding FillEnabled}" Margin="0,0,0,8" FontWeight="SemiBold"
                               Visibility="{Binding SupportsFill, Converter={StaticResource BoolToVisibilityConverter}}" />
@@ -88,13 +44,8 @@
                     <controls:ColorPickerField Header="Fill color" SelectedColor="{Binding FillColor}"
                                                Visibility="{Binding FillEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Fill opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding FillOpacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding FillOpacity}" SmallChange="0.05" Margin="0,2,0,16" />
-
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
+                    <controls:SliderField Header="Fill opacity" Value="{Binding FillOpacity}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

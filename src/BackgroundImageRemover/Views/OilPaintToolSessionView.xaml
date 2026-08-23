@@ -21,19 +21,9 @@
                     <TextBlock Text="Replaces each area with the dominant colour of its neighbourhood, like thick brush strokes." Margin="0,0,0,12"
                                Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Brush size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BrushSize}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="10" Value="{Binding BrushSize}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Detail" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Detail}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="2" Maximum="32" Value="{Binding Detail}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,16" />
-
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
+                    <controls:SliderField Header="Brush size" Value="{Binding BrushSize}" Minimum="1" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True"  />
+<controls:SliderField Header="Detail" Value="{Binding Detail}" Minimum="2" Maximum="32" TickFrequency="1" IsSnapToTickEnabled="True"  />
+<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

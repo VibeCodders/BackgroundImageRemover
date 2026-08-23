@@ -72,13 +72,8 @@
             <RadioButton Content="JPEG — blurred original" GroupName="BatchFormat" Margin="0,0,0,8"
                          IsChecked="{Binding OutputKind, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=JpegBlur}" />
 
-            <DockPanel Margin="0,0,0,4">
-                <TextBlock Text="Image quality" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                <TextBlock Text="{Binding JpegQuality, StringFormat='{}{0:0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-            </DockPanel>
-            <Slider Minimum="50" Maximum="100" Value="{Binding JpegQuality}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,12" />
-
-            <CheckBox Content="Skip files whose output already exists" IsChecked="{Binding SkipExisting}" Margin="0,0,0,16"
+            <controls:SliderField Header="Image quality" Value="{Binding JpegQuality}" Minimum="50" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}"  />
+<CheckBox Content="Skip files whose output already exists" IsChecked="{Binding SkipExisting}" Margin="0,0,0,16"
                       ToolTip="Re-running a batch will only process files that have no cutout yet in the output folder" />
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

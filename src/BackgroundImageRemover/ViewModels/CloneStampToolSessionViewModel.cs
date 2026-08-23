@@ -118,8 +118,7 @@ public partial class CloneStampToolSessionViewModel : ToolSessionViewModelBase
         return mask;
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         BrushRadius = 20;
         Opacity = 1;

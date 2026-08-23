@@ -47,8 +47,7 @@ public partial class BokehToolSessionViewModel : PreviewToolSessionViewModelBase
     protected override Mat ApplyEffect(Mat bgr)
         => BokehService.Apply(bgr, Color.ToVec3b(), Radius, Count, Opacity, Blur);
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         Color = WpfColor.FromRgb(255, 255, 255);
         Radius = 14;

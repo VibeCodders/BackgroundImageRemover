@@ -25,19 +25,9 @@
 
                     <controls:ColorPickerField Header="Replacement color" SelectedColor="{Binding ReplacementColor}" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Tolerance" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Tolerance, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding Tolerance}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Softness" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Softness, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding Softness}" SmallChange="0.05" Margin="0,2,0,12" />
-
-                    <CheckBox Content="Preserve luminance" IsChecked="{Binding PreserveLuminance}" Margin="0,0,0,16" />
+                    <controls:SliderField Header="Tolerance" Value="{Binding Tolerance}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Softness" Value="{Binding Softness}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<CheckBox Content="Preserve luminance" IsChecked="{Binding PreserveLuminance}" Margin="0,0,0,16" />
 
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>

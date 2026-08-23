@@ -56,8 +56,7 @@ public partial class LiquifyToolSessionViewModel : BgraToolSessionViewModelBase
         RefreshResult();
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         if (_sourceImage is null) return;
         WorkingBgra?.Dispose();

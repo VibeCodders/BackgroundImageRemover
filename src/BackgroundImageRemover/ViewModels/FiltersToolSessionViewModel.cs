@@ -42,8 +42,7 @@ public partial class FiltersToolSessionViewModel : PreviewToolSessionViewModelBa
     protected override Mat ApplyEffect(Mat bgr)
         => FilterService.Apply(bgr, SelectedFilter, Intensity, PosterizeLevels);
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         SelectedFilter = FilterKind.None;
         Intensity = 1.0;

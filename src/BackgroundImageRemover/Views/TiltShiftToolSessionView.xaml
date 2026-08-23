@@ -26,31 +26,11 @@
                 <StackPanel>
                     <TextBlock Text="Miniature Effect" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Focus center" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding FocusCenter, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding FocusCenter}" SmallChange="0.01" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Focus width" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding FocusWidth, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding FocusWidth}" SmallChange="0.01" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Blur radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="60" Value="{Binding BlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Saturation boost" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SaturationBoost, StringFormat='{}{0:0.00}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-1" Maximum="2" Value="{Binding SaturationBoost}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <CheckBox Content="Vertical band" IsChecked="{Binding Vertical}" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <controls:SliderField Header="Focus center" Value="{Binding FocusCenter}" Minimum="0" Maximum="1" SmallChange="0.01" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Focus width" Value="{Binding FocusWidth}" Minimum="0" Maximum="1" SmallChange="0.01" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Blur radius" Value="{Binding BlurRadius}" Minimum="0" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Saturation boost" Value="{Binding SaturationBoost}" Minimum="-1" Maximum="2" SmallChange="0.05" ValueFormat="{}{0:0.00}"  />
+<CheckBox Content="Vertical band" IsChecked="{Binding Vertical}" FontWeight="SemiBold" Margin="0,0,0,16" />
 
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>

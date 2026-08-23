@@ -68,8 +68,7 @@ public partial class RotateToolSessionViewModel : BgraToolSessionViewModelBase
         ApplyBgraResult(rotated, "Rotate");
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         Angle = 0.0;
         Expand = true;

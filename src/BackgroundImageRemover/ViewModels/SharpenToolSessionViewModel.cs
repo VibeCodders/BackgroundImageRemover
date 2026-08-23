@@ -64,8 +64,7 @@ public partial class SharpenToolSessionViewModel : MaskToolSessionViewModelBase
         return src.Clone();
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         BrushRadius = 40;
         Strength = 0.5;

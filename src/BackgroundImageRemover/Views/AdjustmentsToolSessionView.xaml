@@ -31,167 +31,52 @@
                     <TextBlock Text="Color &amp; Visual Filters" FontSize="15" FontWeight="Bold" Margin="0,0,0,8" Foreground="{DynamicResource Theme.ForegroundBrush}" />
 
                     <!-- Brightness -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Brightness" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjBrightness, StringFormat='{}{0:0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-100" Maximum="100" Value="{Binding AdjBrightness}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
-
-                    <!-- Contrast -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Contrast" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjContrast, StringFormat='{}{0:0.00}x'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.1" Maximum="3.0" Value="{Binding AdjContrast}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
-
-                    <!-- Saturation -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Saturation" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjSaturation, StringFormat='{}{0:0.00}x'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="3.0" Value="{Binding AdjSaturation}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
-
-                    <!-- Hue Shift -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Hue Shift (°)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjHueShift, StringFormat='{}{0:0}°'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-180" Maximum="180" Value="{Binding AdjHueShift}" SmallChange="1" LargeChange="15" Margin="0,2,0,8" />
-
-                    <!-- Color Temperature -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Temperature (Cool ↔ Warm)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjTemperature, StringFormat='{}{0:0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-100" Maximum="100" Value="{Binding AdjTemperature}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
-
-                    <!-- Tint -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Tint (Green ↔ Magenta)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjTint, StringFormat='{}{0:0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-100" Maximum="100" Value="{Binding AdjTint}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
-
-                    <!-- Vignette -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Vignette" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjVignette, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjVignette}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Blur -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Blur Radius" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjBlurRadius, StringFormat='{}{0}px'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="50" Value="{Binding AdjBlurRadius}" SmallChange="1" LargeChange="5" Margin="0,2,0,8" />
-
-                    <!-- Sharpen -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Sharpen Strength" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjSharpenStrength, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="3.0" Value="{Binding AdjSharpenStrength}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
-
-                    <!-- Exposure (gamma) -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Exposure (gamma)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjExposure, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.2" Maximum="3.0" Value="{Binding AdjExposure}" SmallChange="0.05" LargeChange="0.2" Margin="0,2,0,8" />
-
-                    <!-- Highlights -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Highlights" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjHighlights, StringFormat='{}{0:0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-100" Maximum="100" Value="{Binding AdjHighlights}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
-
-                    <!-- Shadows -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Shadows" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjShadows, StringFormat='{}{0:0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-100" Maximum="100" Value="{Binding AdjShadows}" SmallChange="1" LargeChange="10" Margin="0,2,0,8" />
-
-                    <!-- Denoise -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Denoise" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjDenoise, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjDenoise}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Vibrance -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Vibrance" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjVibrance, StringFormat='{}{0:0.00}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-1" Maximum="1" Value="{Binding AdjVibrance}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Clarity -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Clarity" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjClarity, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjClarity}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Fade -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Fade (matte film)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjFade, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjFade}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Grain -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Grain" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjGrain, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjGrain}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Monochrome -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Monochrome" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjMonochrome, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjMonochrome}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Dehaze -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Dehaze" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjDehaze, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjDehaze}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Soften -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Soften (skin)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjSoften, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjSoften}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Sepia tone -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Sepia tone" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjSepiaTone, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjSepiaTone}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Invert -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Invert" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjInvertAmount, StringFormat='{}{0:P0}'}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.0" Maximum="1.0" Value="{Binding AdjInvertAmount}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <!-- Posterize -->
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Posterize levels (0 = off)" FontSize="12" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding AdjPosterizeLevels}" FontSize="12" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="16" Value="{Binding AdjPosterizeLevels}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <CheckBox Content="✨ Auto-enhance (one click)" IsChecked="{Binding AdjAutoEnhance}" Margin="0,0,0,12" FontWeight="SemiBold" />
+                    <controls:SliderField Header="Brightness" Value="{Binding AdjBrightness}" Minimum="-100" Maximum="100" SmallChange="1" LargeChange="10" ValueFormat="{}{0:0}"  />
+<!-- Contrast -->
+                    <controls:SliderField Header="Contrast" Value="{Binding AdjContrast}" Minimum="0.1" Maximum="3.0" SmallChange="0.05" LargeChange="0.2" ValueFormat="{}{0:0.00}x"  />
+<!-- Saturation -->
+                    <controls:SliderField Header="Saturation" Value="{Binding AdjSaturation}" Minimum="0.0" Maximum="3.0" SmallChange="0.05" LargeChange="0.2" ValueFormat="{}{0:0.00}x"  />
+<!-- Hue Shift -->
+                    <controls:SliderField Header="Hue Shift (°)" Value="{Binding AdjHueShift}" Minimum="-180" Maximum="180" SmallChange="1" LargeChange="15" ValueFormat="{}{0:0}°"  />
+<!-- Color Temperature -->
+                    <controls:SliderField Header="Temperature (Cool ↔ Warm)" Value="{Binding AdjTemperature}" Minimum="-100" Maximum="100" SmallChange="1" LargeChange="10" ValueFormat="{}{0:0}"  />
+<!-- Tint -->
+                    <controls:SliderField Header="Tint (Green ↔ Magenta)" Value="{Binding AdjTint}" Minimum="-100" Maximum="100" SmallChange="1" LargeChange="10" ValueFormat="{}{0:0}"  />
+<!-- Vignette -->
+                    <controls:SliderField Header="Vignette" Value="{Binding AdjVignette}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<!-- Blur -->
+                    <controls:SliderField Header="Blur Radius" Value="{Binding AdjBlurRadius}" Minimum="0" Maximum="50" SmallChange="1" LargeChange="5" ValueFormat="{}{0}px"  />
+<!-- Sharpen -->
+                    <controls:SliderField Header="Sharpen Strength" Value="{Binding AdjSharpenStrength}" Minimum="0.0" Maximum="3.0" SmallChange="0.05" LargeChange="0.2" ValueFormat="{}{0:0.00}"  />
+<!-- Exposure (gamma) -->
+                    <controls:SliderField Header="Exposure (gamma)" Value="{Binding AdjExposure}" Minimum="0.2" Maximum="3.0" SmallChange="0.05" LargeChange="0.2" ValueFormat="{}{0:0.00}"  />
+<!-- Highlights -->
+                    <controls:SliderField Header="Highlights" Value="{Binding AdjHighlights}" Minimum="-100" Maximum="100" SmallChange="1" LargeChange="10" ValueFormat="{}{0:0}"  />
+<!-- Shadows -->
+                    <controls:SliderField Header="Shadows" Value="{Binding AdjShadows}" Minimum="-100" Maximum="100" SmallChange="1" LargeChange="10" ValueFormat="{}{0:0}"  />
+<!-- Denoise -->
+                    <controls:SliderField Header="Denoise" Value="{Binding AdjDenoise}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<!-- Vibrance -->
+                    <controls:SliderField Header="Vibrance" Value="{Binding AdjVibrance}" Minimum="-1" Maximum="1" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:0.00}"  />
+<!-- Clarity -->
+                    <controls:SliderField Header="Clarity" Value="{Binding AdjClarity}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<!-- Fade -->
+                    <controls:SliderField Header="Fade (matte film)" Value="{Binding AdjFade}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<!-- Grain -->
+                    <controls:SliderField Header="Grain" Value="{Binding AdjGrain}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<!-- Monochrome -->
+                    <controls:SliderField Header="Monochrome" Value="{Binding AdjMonochrome}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<!-- Dehaze -->
+                    <controls:SliderField Header="Dehaze" Value="{Binding AdjDehaze}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<!-- Soften -->
+                    <controls:SliderField Header="Soften (skin)" Value="{Binding AdjSoften}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<!-- Sepia tone -->
+                    <controls:SliderField Header="Sepia tone" Value="{Binding AdjSepiaTone}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<!-- Invert -->
+                    <controls:SliderField Header="Invert" Value="{Binding AdjInvertAmount}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<!-- Posterize -->
+                    <controls:SliderField Header="Posterize levels (0 = off)" Value="{Binding AdjPosterizeLevels}" Minimum="0" Maximum="16" TickFrequency="1" IsSnapToTickEnabled="True"  />
+<CheckBox Content="✨ Auto-enhance (one click)" IsChecked="{Binding AdjAutoEnhance}" Margin="0,0,0,12" FontWeight="SemiBold" />
 
                     <CheckBox Content="Split Compare view" IsChecked="{Binding IsCompareMode}" Margin="0,0,0,12" FontWeight="SemiBold" />
 

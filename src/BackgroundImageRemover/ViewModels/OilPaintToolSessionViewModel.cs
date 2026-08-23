@@ -33,8 +33,7 @@ public partial class OilPaintToolSessionViewModel : PreviewToolSessionViewModelB
     protected override Mat ApplyEffect(Mat bgr)
         => OilPaintService.Apply(bgr, BrushSize, Detail);
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         BrushSize = 3;
         Detail = 8;

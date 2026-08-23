@@ -61,8 +61,7 @@ public partial class FxToolSessionViewModel : PreviewToolSessionViewModelBase
         return result;
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         GlowStrength = BloomStrength = LightLeakStrength = ChromaticAberrationStrength = 0;
         BokehCount = 0;

@@ -21,25 +21,10 @@
                     <TextBlock Text="Displaces the pixels with a sine wave; the angle rotates the direction of the ridges." Margin="0,0,0,12"
                                Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Amplitude" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Amplitude, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="60" Value="{Binding Amplitude}" SmallChange="1" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Wavelength" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Wavelength, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="10" Maximum="400" Value="{Binding Wavelength}" SmallChange="5" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Angle" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Angle, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="360" Value="{Binding Angle}" TickFrequency="5" IsSnapToTickEnabled="True" Margin="0,2,0,16" />
-
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
+                    <controls:SliderField Header="Amplitude" Value="{Binding Amplitude}" Minimum="0" Maximum="60" SmallChange="1" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Wavelength" Value="{Binding Wavelength}" Minimum="10" Maximum="400" SmallChange="5" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Angle" Value="{Binding Angle}" Minimum="0" Maximum="360" TickFrequency="5" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}°"  />
+<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

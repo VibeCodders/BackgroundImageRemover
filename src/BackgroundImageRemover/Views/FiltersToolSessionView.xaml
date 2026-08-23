@@ -31,20 +31,12 @@
                     <ComboBox ItemsSource="{Binding Source={StaticResource FilterKindValues}}" SelectedItem="{Binding SelectedFilter}" Margin="0,0,0,12" />
 
                     <StackPanel Visibility="{Binding HasEffect, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Intensity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding Intensity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="1" Value="{Binding Intensity}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,12" />
-                    </StackPanel>
+                        <controls:SliderField Header="Intensity" Value="{Binding Intensity}" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+</StackPanel>
 
                     <StackPanel Visibility="{Binding SelectedFilter, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Posterize}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Levels" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding PosterizeLevels}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="2" Maximum="16" Value="{Binding PosterizeLevels}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-                    </StackPanel>
+                        <controls:SliderField Header="Levels" Value="{Binding PosterizeLevels}" Minimum="2" Maximum="16" TickFrequency="1" IsSnapToTickEnabled="True"  />
+</StackPanel>
 
                     <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>

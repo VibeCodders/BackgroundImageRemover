@@ -146,8 +146,7 @@ public partial class ShapeToolSessionViewModel : PreviewToolSessionViewModelBase
         SizeHeight = Math.Clamp(height / h * 100.0, 1.0, 100.0);
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         ShapeKind = ShapeKind.Rectangle;
         PositionX = 20;

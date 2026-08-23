@@ -22,13 +22,8 @@
                     <TextBlock Text="Drag on the image to draw freehand." Margin="0,0,0,12"
                                Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding PenWidth, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="100" Value="{Binding PenWidth}" SmallChange="1" Margin="0,2,0,12" />
-
-                    <controls:ColorPickerField Header="Color" SelectedColor="{Binding Color}" />
+                    <controls:SliderField Header="Size" Value="{Binding PenWidth}" Minimum="1" Maximum="100" SmallChange="1" ValueFormat="{}{0:0}px"  />
+<controls:ColorPickerField Header="Color" SelectedColor="{Binding Color}" />
 
                     <Button Content="✕ Clear all strokes" Command="{Binding ClearCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>

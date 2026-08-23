@@ -126,8 +126,7 @@ public partial class MosaicToolSessionViewModel : MaskToolSessionViewModelBase
         _ => MosaicService.Pixelate(src, region, CellSize)
     };
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         SelectedRegion = null;
         WholeImage = true;

@@ -79,6 +79,18 @@ public abstract partial class ToolSessionViewModelBase : ObservableObject, ITool
         _shell.CloseTabDirect(this);
     }
 
+    /// <summary>Shared "↺ Reset" command: restores the tool's default parameters.</summary>
+    [RelayCommand]
+    private void Reset() => OnReset();
+
+    /// <summary>
+    /// Restores default parameter values and refreshes the preview. Tool view models override
+    /// this with their own parameter defaults; the base implementation is a no-op.
+    /// </summary>
+    protected virtual void OnReset()
+    {
+    }
+
     /// <summary>
     /// Captures the current document state into <see cref="_sourceImage"/> and initialises
     /// <see cref="_workingAlpha"/> from it (cloned alpha, or a fully-opaque Mat if the source

@@ -41,8 +41,7 @@ public partial class VignetteToolSessionViewModel : PreviewToolSessionViewModelB
     protected override Mat ApplyEffect(Mat bgr)
         => VignetteService.Apply(bgr, Strength, Roundness, Feather, Invert);
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         Strength = 0.3;
         Roundness = 0.5;

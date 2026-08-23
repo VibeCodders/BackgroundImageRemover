@@ -45,8 +45,7 @@ public partial class TiltShiftToolSessionViewModel : PreviewToolSessionViewModel
     protected override Mat ApplyEffect(Mat bgr)
         => TiltShiftService.Apply(bgr, FocusCenter, FocusWidth, BlurRadius, Vertical, SaturationBoost);
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         FocusCenter = 0.5;
         FocusWidth = 0.35;

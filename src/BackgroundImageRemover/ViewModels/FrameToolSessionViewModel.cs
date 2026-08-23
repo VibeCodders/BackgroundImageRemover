@@ -271,8 +271,7 @@ namespace BackgroundImageRemover.ViewModels;
         }
     }
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         BorderThickness = 0;
         BorderOpacity = 1.0;

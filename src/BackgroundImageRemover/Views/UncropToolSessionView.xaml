@@ -79,17 +79,11 @@
                                          IsChecked="{Binding Options.SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect}" />
                         </StackPanel>
 
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.MirrorBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0" Maximum="50" Value="{Binding Options.MirrorBlurRadius}" SmallChange="2" LargeChange="10" />
-                        </DockPanel>
+                        <controls:SliderField Header="Blur radius:" Value="{Binding Options.MirrorBlurRadius}" Minimum="0" Maximum="50" SmallChange="2" LargeChange="10" ValueFormat="{}{0} px"  />
 
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Fade opacity:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.MirrorFadeOpacity, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Options.MirrorFadeOpacity}" SmallChange="0.05" LargeChange="0.2" />
-                        </DockPanel>
+
+                        <controls:SliderField Header="Fade opacity:" Value="{Binding Options.MirrorFadeOpacity}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.2" ValueFormat="{}{0:P0}"  />
+
                     </StackPanel>
 
                     <!-- Inpaint Mode -->
@@ -103,17 +97,11 @@
                                          IsChecked="{Binding Options.SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NavierStokes}" />
                         </StackPanel>
                         
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.InpaintRadius, StringFormat={}{0:F0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="1" Maximum="50" Value="{Binding Options.InpaintRadius}" />
-                        </DockPanel>
+                        <controls:SliderField Header="Radius:" Value="{Binding Options.InpaintRadius}" Minimum="1" Maximum="50" ValueFormat="{}{0:F0} px"  />
 
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blend margin:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0" Maximum="30" Value="{Binding Options.BlendMargin}" />
-                        </DockPanel>
+
+                        <controls:SliderField Header="Blend margin:" Value="{Binding Options.BlendMargin}" Minimum="0" Maximum="30" ValueFormat="{}{0} px"  />
+
 
                         <CheckBox Content="Pre-fill edge colors" Margin="0,2,0,4" IsChecked="{Binding Options.InpaintPreFillEdgeAverage}" />
                     </StackPanel>
@@ -175,17 +163,11 @@
                     <Separator Margin="0,8,0,8" />
                     <TextBlock Text="Finishing" FontWeight="Bold" Margin="0,0,0,4" />
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Corner radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.CornerRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="0" Maximum="400" Value="{Binding Options.CornerRadius}" />
-                    </DockPanel>
+                    <controls:SliderField Header="Corner radius:" Value="{Binding Options.CornerRadius}" Minimum="0" Maximum="400" ValueFormat="{}{0} px"  />
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Border:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.BorderThickness, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="0" Maximum="200" Value="{Binding Options.BorderThickness}" />
-                    </DockPanel>
+
+                    <controls:SliderField Header="Border:" Value="{Binding Options.BorderThickness}" Minimum="0" Maximum="200" ValueFormat="{}{0} px"  />
+
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                         <Button x:Name="UncropBorderColorButton" Padding="4,2" Click="UncropBorderColorButton_Click">
@@ -202,76 +184,43 @@
                         </Popup>
                     </StackPanel>
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Grain:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.GrainAmount, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="0" Maximum="1" Value="{Binding Options.GrainAmount}" />
-                    </DockPanel>
+                    <controls:SliderField Header="Grain:" Value="{Binding Options.GrainAmount}" Minimum="0" Maximum="1" ValueFormat="{}{0:P0}"  />
+
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                         <CheckBox Content="Flip H" IsChecked="{Binding Options.FlipHorizontal}" Margin="0,0,8,0" />
                         <CheckBox Content="Flip V" IsChecked="{Binding Options.FlipVertical}" />
                     </StackPanel>
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Rotate:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.RotateAngle, StringFormat={}{0:F0}°}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="-180" Maximum="180" Value="{Binding Options.RotateAngle}" />
-                    </DockPanel>
+                    <controls:SliderField Header="Rotate:" Value="{Binding Options.RotateAngle}" Minimum="-180" Maximum="180" ValueFormat="{}{0:F0}°"  />
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Vignette:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.Vignette, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="0" Maximum="1" Value="{Binding Options.Vignette}" />
-                    </DockPanel>
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Saturation:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.Saturation, StringFormat={}{0:F2}x}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="0" Maximum="3" Value="{Binding Options.Saturation}" />
-                    </DockPanel>
+                    <controls:SliderField Header="Vignette:" Value="{Binding Options.Vignette}" Minimum="0" Maximum="1" ValueFormat="{}{0:P0}"  />
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Contrast:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.Contrast, StringFormat={}{0:F2}x}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="0.1" Maximum="3" Value="{Binding Options.Contrast}" />
-                    </DockPanel>
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Brightness:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.Brightness, StringFormat={}{0:F0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="-100" Maximum="100" Value="{Binding Options.Brightness}" />
-                    </DockPanel>
+                    <controls:SliderField Header="Saturation:" Value="{Binding Options.Saturation}" Minimum="0" Maximum="3" ValueFormat="{}{0:F2}x"  />
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Sharpen:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.SharpenStrength, StringFormat={}{0:F2}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="0" Maximum="3" Value="{Binding Options.SharpenStrength}" />
-                    </DockPanel>
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Blur:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.FinishBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="0" Maximum="50" Value="{Binding Options.FinishBlurRadius}" />
-                    </DockPanel>
+                    <controls:SliderField Header="Contrast:" Value="{Binding Options.Contrast}" Minimum="0.1" Maximum="3" ValueFormat="{}{0:F2}x"  />
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Temperature:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.Temperature, StringFormat={}{0:F0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="-100" Maximum="100" Value="{Binding Options.Temperature}" />
-                    </DockPanel>
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Tint:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.Tint, StringFormat={}{0:F0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="-100" Maximum="100" Value="{Binding Options.Tint}" />
-                    </DockPanel>
+                    <controls:SliderField Header="Brightness:" Value="{Binding Options.Brightness}" Minimum="-100" Maximum="100" ValueFormat="{}{0:F0}"  />
 
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Denoise:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                        <TextBlock Text="{Binding Options.Denoise, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                        <Slider Minimum="0" Maximum="1" Value="{Binding Options.Denoise}" />
-                    </DockPanel>
+
+                    <controls:SliderField Header="Sharpen:" Value="{Binding Options.SharpenStrength}" Minimum="0" Maximum="3" ValueFormat="{}{0:F2}"  />
+
+
+                    <controls:SliderField Header="Blur:" Value="{Binding Options.FinishBlurRadius}" Minimum="0" Maximum="50" ValueFormat="{}{0} px"  />
+
+
+                    <controls:SliderField Header="Temperature:" Value="{Binding Options.Temperature}" Minimum="-100" Maximum="100" ValueFormat="{}{0:F0}"  />
+
+
+                    <controls:SliderField Header="Tint:" Value="{Binding Options.Tint}" Minimum="-100" Maximum="100" ValueFormat="{}{0:F0}"  />
+
+
+                    <controls:SliderField Header="Denoise:" Value="{Binding Options.Denoise}" Minimum="0" Maximum="1" ValueFormat="{}{0:P0}"  />
+
 
                     <Button Content="Preview fill" Command="{Binding ApplyFillCommand}" Margin="0,14,0,0" Padding="8" FontWeight="Bold" />
                 </StackPanel>

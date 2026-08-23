@@ -30,19 +30,9 @@
 
                     <TextBlock Text="Paint blemishes on the image, then heal:" FontWeight="SemiBold" Margin="0,0,0,4" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Brush size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BrushRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="2" Maximum="150" Value="{Binding BrushRadius}" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Heal radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding HealRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.1" Maximum="30" Value="{Binding HealRadius}" Margin="0,2,0,8" />
-
-                    <TextBlock Text="Method" FontWeight="SemiBold" Margin="0,4,0,4" />
+                    <controls:SliderField Header="Brush size" Value="{Binding BrushRadius}" Minimum="2" Maximum="150" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Heal radius" Value="{Binding HealRadius}" Minimum="0.1" Maximum="30" ValueFormat="{}{0:0}px"  />
+<TextBlock Text="Method" FontWeight="SemiBold" Margin="0,4,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource InpaintMethodValues}}" SelectedItem="{Binding InpaintMethod}" Margin="0,0,0,8" />
 
                     <Button Content="✕ Clear painted mask" Command="{Binding ClearMaskCommand}" Margin="0,0,0,16" />
@@ -50,30 +40,11 @@
                     <Separator Margin="0,0,0,12" />
                     <TextBlock Text="Whole-image repair" FontWeight="SemiBold" Margin="0,0,0,8" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Dust removal" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding RemoveDustKernel}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="15" Value="{Binding RemoveDustKernel}" TickFrequency="2" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Scratch removal" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding RemoveScratchesStrength, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding RemoveScratchesStrength}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Surface smooth" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding SurfaceSmoothStrength, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding SurfaceSmoothStrength}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Detail enhance" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding DetailEnhanceStrength, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding DetailEnhanceStrength}" SmallChange="0.05" />
-                </StackPanel>
+                    <controls:SliderField Header="Dust removal" Value="{Binding RemoveDustKernel}" Minimum="0" Maximum="15" TickFrequency="2" IsSnapToTickEnabled="True"  />
+<controls:SliderField Header="Scratch removal" Value="{Binding RemoveScratchesStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Surface smooth" Value="{Binding SurfaceSmoothStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Detail enhance" Value="{Binding DetailEnhanceStrength}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+</StackPanel>
             </ScrollViewer>
         </Border>
 

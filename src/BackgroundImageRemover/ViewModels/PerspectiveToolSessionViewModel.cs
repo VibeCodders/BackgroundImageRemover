@@ -74,8 +74,7 @@ public partial class PerspectiveToolSessionViewModel : ToolSessionViewModelBase
         _ => InterpolationFlags.Lanczos4
     };
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         if (_sourceImage is null) return;
         var quad = PerspectiveService.DefaultQuad(_sourceImage.FullBgr.Size());

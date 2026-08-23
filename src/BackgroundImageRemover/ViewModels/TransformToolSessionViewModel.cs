@@ -140,8 +140,7 @@ public partial class TransformToolSessionViewModel : BgraToolSessionViewModelBas
     [RelayCommand]
     private void AutoStraighten() => ApplyTransform(m => TransformService.AutoStraighten(m));
 
-    [RelayCommand]
-    private void Reset()
+    protected override void OnReset()
     {
         if (_sourceImage is null) return;
         WorkingBgra?.Dispose();

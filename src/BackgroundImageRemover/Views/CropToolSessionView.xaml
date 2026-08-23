@@ -35,12 +35,8 @@
                     </Grid>
                     <Button Content="Apply margins" Command="{Binding ApplyMarginsCommand}" Margin="0,0,0,12" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Straighten" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Angle, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-45" Maximum="45" Value="{Binding Angle}" Margin="0,2,0,8" />
-                    <Button Content="Auto-straighten (deskew)" Command="{Binding AutoStraightenCommand}" Margin="0,0,0,12" />
+                    <controls:SliderField Header="Straighten" Value="{Binding Angle}" Minimum="-45" Maximum="45" ValueFormat="{}{0:0}°"  />
+<Button Content="Auto-straighten (deskew)" Command="{Binding AutoStraightenCommand}" Margin="0,0,0,12" />
 
                     <TextBlock Text="Trim to color" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <UniformGrid Columns="3" Margin="0,0,0,12">

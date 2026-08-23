@@ -27,25 +27,10 @@
                         <TextBox Text="{Binding SourceY, StringFormat='{}{0:0}'}" Width="60" />
                     </StackPanel>
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Brush size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding BrushRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="2" Maximum="150" Value="{Binding BrushRadius}" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Opacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0.05" Maximum="1" Value="{Binding Opacity}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Hardness" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Hardness, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="0.95" Value="{Binding Hardness}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Margin="0,8,0,0" />
+                    <controls:SliderField Header="Brush size" Value="{Binding BrushRadius}" Minimum="2" Maximum="150" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0.05" Maximum="1" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Hardness" Value="{Binding Hardness}" Minimum="0" Maximum="0.95" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Margin="0,8,0,0" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

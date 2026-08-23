@@ -40,19 +40,9 @@
                     <TextBlock Text="Emoji" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource EmojiKindValues}}" SelectedItem="{Binding SelectedEmoji}" Margin="0,0,0,12" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding EmojiSize, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="8" Maximum="200" Value="{Binding EmojiSize}" TickFrequency="4" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Opacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding Opacity}" SmallChange="0.05" Margin="0,2,0,8" />
-
-                    <TextBlock Text="Color" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <controls:SliderField Header="Size" Value="{Binding EmojiSize}" Minimum="8" Maximum="200" TickFrequency="4" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0" Maximum="1" SmallChange="0.05" ValueFormat="{}{0:P0}"  />
+<TextBlock Text="Color" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <controls:SimpleColorPickerControl SelectedColor="{Binding EmojiColor}" />
 
                     <Separator Margin="0,8,0,0" />
@@ -63,14 +53,8 @@
                         <ComboBox ItemsSource="{Binding Source={StaticResource TextAnchorValues}}" SelectedItem="{Binding Anchor}" Margin="0,0,0,8" />
                     </DockPanel>
 
-                    <DockPanel Margin="0,4,0,0" Visibility="{Binding ScatterMode, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                        <TextBlock Text="Margin" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Margin, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="100" Value="{Binding Margin}" TickFrequency="5" IsSnapToTickEnabled="True" Margin="0,0,0,16"
-                            Visibility="{Binding ScatterMode, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
-
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
+                    <controls:SliderField Header="Margin" Value="{Binding Margin}" Minimum="0" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px" Visibility="{Binding ScatterMode, Converter={StaticResource InverseBoolToVisibilityConverter}}"  />
+<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

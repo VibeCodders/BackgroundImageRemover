@@ -21,25 +21,10 @@
                     <TextBlock Text="Smooths the image into flat colors and adds dark outlines for a cartoon look." Margin="0,0,0,12"
                                Foreground="{DynamicResource Theme.MutedForegroundBrush}" TextWrapping="Wrap" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Smoothness" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Smoothness}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="1" Maximum="20" Value="{Binding Smoothness}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Color levels" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding QuantizeLevels}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="2" Maximum="32" Value="{Binding QuantizeLevels}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Outline strength" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding EdgeThreshold}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="40" Value="{Binding EdgeThreshold}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,16" />
-
-                    <Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
+                    <controls:SliderField Header="Smoothness" Value="{Binding Smoothness}" Minimum="1" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True"  />
+<controls:SliderField Header="Color levels" Value="{Binding QuantizeLevels}" Minimum="2" Maximum="32" TickFrequency="1" IsSnapToTickEnabled="True"  />
+<controls:SliderField Header="Outline strength" Value="{Binding EdgeThreshold}" Minimum="0" Maximum="40" TickFrequency="1" IsSnapToTickEnabled="True"  />
+<Button Content="↺ Reset" Command="{Binding ResetCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>
             </ScrollViewer>
         </Border>

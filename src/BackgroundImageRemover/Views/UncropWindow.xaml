@@ -84,17 +84,11 @@
                                          IsChecked="{Binding Options.SelectedMirrorType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Reflect}" />
                         </StackPanel>
 
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.MirrorBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0" Maximum="50" Value="{Binding Options.MirrorBlurRadius}" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
-                        </DockPanel>
+                        <controls:SliderField Header="Blur radius:" Value="{Binding Options.MirrorBlurRadius}" Minimum="0" Maximum="50" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" ValueFormat="{}{0} px"  />
 
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Fade opacity:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.MirrorFadeOpacity, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0.0" Maximum="1.0" Value="{Binding Options.MirrorFadeOpacity}" SmallChange="0.05" LargeChange="0.2" TickFrequency="0.05" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
-                        </DockPanel>
+
+                        <controls:SliderField Header="Fade opacity:" Value="{Binding Options.MirrorFadeOpacity}" Minimum="0.0" Maximum="1.0" SmallChange="0.05" LargeChange="0.2" TickFrequency="0.05" IsSnapToTickEnabled="False" ValueFormat="{}{0:P0}"  />
+
                     </StackPanel>
 
                     <!-- Inpaint Mode -->
@@ -109,17 +103,11 @@
                                          IsChecked="{Binding Options.SelectedInpaintMethod, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NavierStokes}" />
                         </StackPanel>
 
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.InpaintRadius, StringFormat={}{0:F0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="1" Maximum="50" Value="{Binding Options.InpaintRadius}" SmallChange="1" LargeChange="5" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
-                        </DockPanel>
+                        <controls:SliderField Header="Radius:" Value="{Binding Options.InpaintRadius}" Minimum="1" Maximum="50" SmallChange="1" LargeChange="5" TickFrequency="5" IsSnapToTickEnabled="True" ValueFormat="{}{0:F0} px"  />
 
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blend margin:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0" Maximum="30" Value="{Binding Options.BlendMargin}" SmallChange="1" LargeChange="5" TickFrequency="2" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
-                        </DockPanel>
+
+                        <controls:SliderField Header="Blend margin:" Value="{Binding Options.BlendMargin}" Minimum="0" Maximum="30" SmallChange="1" LargeChange="5" TickFrequency="2" IsSnapToTickEnabled="True" ValueFormat="{}{0} px"  />
+
 
                         <CheckBox Content="Pre-fill edge colors" Margin="0,2,0,4"
                                   IsChecked="{Binding Options.InpaintPreFillEdgeAverage}"
@@ -158,33 +146,20 @@
                         <CheckBox Content="Blurred gradient fill" Margin="0,0,0,4"
                                   IsChecked="{Binding Options.BlurredColorFill}" />
 
-                        <DockPanel Margin="0,0,0,4"
-                                   Visibility="{Binding Options.BlurredColorFill, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.BlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0" Maximum="101" Value="{Binding Options.BlurRadius}" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
-                        </DockPanel>
+                        <controls:SliderField Header="Blur radius:" Value="{Binding Options.BlurRadius}" Minimum="0" Maximum="101" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" ValueFormat="{}{0} px" Visibility="{Binding Options.BlurredColorFill, Converter={StaticResource BoolToVisibilityConverter}}"  />
+
                     </StackPanel>
 
                     <!-- Zoom & Blur Background Mode -->
                     <RadioButton Content="Zoom &amp; Blur background" GroupName="FillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=ZoomBlur}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ZoomBlur}">
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blur radius:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.ZoomBlurRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="1" Maximum="101" Value="{Binding Options.ZoomBlurRadius}" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Zoom scale:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.ZoomScale, StringFormat={}{0:F2}x}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="1.0" Maximum="2.5" Value="{Binding Options.ZoomScale}" SmallChange="0.05" LargeChange="0.25" TickFrequency="0.05" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blend margin:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.BlendMargin, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0" Maximum="30" Value="{Binding Options.BlendMargin}" SmallChange="1" LargeChange="5" TickFrequency="2" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
-                        </DockPanel>
+                        <controls:SliderField Header="Blur radius:" Value="{Binding Options.ZoomBlurRadius}" Minimum="1" Maximum="101" SmallChange="2" LargeChange="10" TickFrequency="2" IsSnapToTickEnabled="False" ValueFormat="{}{0} px"  />
+
+                        <controls:SliderField Header="Zoom scale:" Value="{Binding Options.ZoomScale}" Minimum="1.0" Maximum="2.5" SmallChange="0.05" LargeChange="0.25" TickFrequency="0.05" IsSnapToTickEnabled="False" ValueFormat="{}{0:F2}x"  />
+
+                        <controls:SliderField Header="Blend margin:" Value="{Binding Options.BlendMargin}" Minimum="0" Maximum="30" SmallChange="1" LargeChange="5" TickFrequency="2" IsSnapToTickEnabled="True" ValueFormat="{}{0} px"  />
+
                     </StackPanel>
 
                     <!-- Edge Gradient Mode -->
@@ -194,38 +169,26 @@
                         <TextBlock Text="Gradient style:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" Margin="0,0,0,2" />
                         <ComboBox ItemsSource="{Binding Options.GradientModes}" SelectedItem="{Binding Options.SelectedGradientMode}" Margin="0,0,0,6" />
 
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Noise (dither):" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.GradientNoiseAmount, StringFormat={}{0:P0}}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0.0" Maximum="0.20" Value="{Binding Options.GradientNoiseAmount}" SmallChange="0.01" LargeChange="0.05" TickFrequency="0.01" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
-                        </DockPanel>
+                        <controls:SliderField Header="Noise (dither):" Value="{Binding Options.GradientNoiseAmount}" Minimum="0.0" Maximum="0.20" SmallChange="0.01" LargeChange="0.05" TickFrequency="0.01" IsSnapToTickEnabled="False" ValueFormat="{}{0:P0}"  />
+
                     </StackPanel>
 
                     <!-- Patch Synthesis Mode -->
                     <RadioButton Content="Patch texture synthesis" GroupName="FillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=PatchSynthesis}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=PatchSynthesis}">
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Patch size:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.PatchSize, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="8" Maximum="64" Value="{Binding Options.PatchSize}" SmallChange="4" LargeChange="8" TickFrequency="4" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
-                        </DockPanel>
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Blend overlap:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.PatchBlendOverlap, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="2" Maximum="24" Value="{Binding Options.PatchBlendOverlap}" SmallChange="2" LargeChange="4" TickFrequency="2" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
-                        </DockPanel>
+                        <controls:SliderField Header="Patch size:" Value="{Binding Options.PatchSize}" Minimum="8" Maximum="64" SmallChange="4" LargeChange="8" TickFrequency="4" IsSnapToTickEnabled="True" ValueFormat="{}{0} px"  />
+
+                        <controls:SliderField Header="Blend overlap:" Value="{Binding Options.PatchBlendOverlap}" Minimum="2" Maximum="24" SmallChange="2" LargeChange="4" TickFrequency="2" IsSnapToTickEnabled="True" ValueFormat="{}{0} px"  />
+
                     </StackPanel>
 
                     <!-- Replicate / Clamp Mode -->
                     <RadioButton Content="Edge stretch (Replicate)" GroupName="FillMode" Margin="0,0,0,4"
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Replicate}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Replicate}">
-                        <DockPanel Margin="0,0,0,4">
-                            <TextBlock Text="Smoothing:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" VerticalAlignment="Center" Width="70" />
-                            <TextBlock Text="{Binding Options.ReplicateSmoothRadius, StringFormat={}{0} px}" FontSize="11" DockPanel.Dock="Right" Width="40" TextAlignment="Right" />
-                            <Slider Minimum="0" Maximum="30" Value="{Binding Options.ReplicateSmoothRadius}" SmallChange="2" LargeChange="6" TickFrequency="2" IsSnapToTickEnabled="False" VerticalAlignment="Center" />
-                        </DockPanel>
+                        <controls:SliderField Header="Smoothing:" Value="{Binding Options.ReplicateSmoothRadius}" Minimum="0" Maximum="30" SmallChange="2" LargeChange="6" TickFrequency="2" IsSnapToTickEnabled="False" ValueFormat="{}{0} px"  />
+
                     </StackPanel>
 
                     <!-- Wrap / Tile Mode -->

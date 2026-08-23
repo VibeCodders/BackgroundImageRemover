@@ -36,12 +36,8 @@
                     <CheckBox Content="Paint region with brush" IsChecked="{Binding PaintMode}" Margin="0,0,0,8" />
 
                     <StackPanel Visibility="{Binding PaintMode, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Brush size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BrushRadius, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="2" Maximum="150" Value="{Binding BrushRadius}" Margin="0,2,0,8" />
-                        <Button Content="✕ Clear painted mask" Command="{Binding ClearMaskCommand}" Margin="0,0,0,8" />
+                        <controls:SliderField Header="Brush size" Value="{Binding BrushRadius}" Minimum="2" Maximum="150" ValueFormat="{}{0:0}px"  />
+<Button Content="✕ Clear painted mask" Command="{Binding ClearMaskCommand}" Margin="0,0,0,8" />
                         <TextBlock Text="Paint on the left image to mosaic just the painted area." TextWrapping="Wrap" Foreground="{DynamicResource Theme.MutedForegroundBrush}" Margin="0,0,0,12" />
                     </StackPanel>
 
@@ -57,36 +53,20 @@
                     <CheckBox Content="Mosaic everything outside selection" IsChecked="{Binding InvertRegion}" Margin="0,0,0,8" />
 
                     <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Pixelate|Crystallize}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Cell size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding CellSize, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="2" Maximum="64" Value="{Binding CellSize}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-                    </StackPanel>
+                        <controls:SliderField Header="Cell size" Value="{Binding CellSize}" Minimum="2" Maximum="64" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+</StackPanel>
 
                     <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Blur|Median}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Blur radius" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding BlurRadius, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="1" Maximum="80" Value="{Binding BlurRadius}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-                    </StackPanel>
+                        <controls:SliderField Header="Blur radius" Value="{Binding BlurRadius}" Minimum="1" Maximum="80" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+</StackPanel>
 
                     <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Blur}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Blur strength" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding Strength, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0.05" Maximum="1" Value="{Binding Strength}" Margin="0,2,0,12" />
-                    </StackPanel>
+                        <controls:SliderField Header="Blur strength" Value="{Binding Strength}" Minimum="0.05" Maximum="1" ValueFormat="{}{0:P0}"  />
+</StackPanel>
 
                     <StackPanel Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Crystallize}">
-                        <DockPanel Margin="0,4,0,0">
-                            <TextBlock Text="Crystal jitter" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding Jitter, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="32" Value="{Binding Jitter}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-                    </StackPanel>
+                        <controls:SliderField Header="Crystal jitter" Value="{Binding Jitter}" Minimum="0" Maximum="32" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+</StackPanel>
 
                     <controls:ColorPickerField Header="Fill color" SelectedColor="{Binding FillColor}"
                                                Visibility="{Binding Mode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidFill}" />

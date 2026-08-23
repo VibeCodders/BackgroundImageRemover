@@ -37,91 +37,37 @@
                     <TextBlock Text="Text" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Size" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding FontSize, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="8" Maximum="200" Value="{Binding FontSize}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,12" />
-
-                    <TextBlock Text="Position" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <controls:SliderField Header="Size" Value="{Binding FontSize}" Minimum="8" Maximum="200" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<TextBlock Text="Position" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource TextAnchorValues}}" SelectedItem="{Binding Anchor}" Margin="0,0,0,12" />
 
                     <controls:ColorPickerField Header="Color" SelectedColor="{Binding Color}" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Opacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding Opacity}" SmallChange="0.05" LargeChange="0.1" Margin="0,2,0,12" />
+                    <controls:SliderField Header="Opacity" Value="{Binding Opacity}" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Margin" Value="{Binding Margin}" Minimum="0" Maximum="200" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<controls:SliderField Header="Letter spacing" Value="{Binding LetterSpacing}" Minimum="0" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Line spacing" Value="{Binding LineSpacing}" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<CheckBox Content="Auto-fit to image width" IsChecked="{Binding AutoFitWidth}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Margin" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Margin, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="200" Value="{Binding Margin}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Letter spacing" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding LetterSpacing, StringFormat='{}{0:0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="30" Value="{Binding LetterSpacing}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Line spacing" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding LineSpacing, StringFormat='{}{0}px'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="100" Value="{Binding LineSpacing}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,2,0,8" />
-
-                    <CheckBox Content="Auto-fit to image width" IsChecked="{Binding AutoFitWidth}" FontWeight="SemiBold" Margin="0,0,0,8" />
-
-                    <DockPanel Margin="0,4,0,0">
-                        <TextBlock Text="Rotation" FontWeight="SemiBold" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding Rotation, StringFormat='{}{0:0}°'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="-180" Maximum="180" Value="{Binding Rotation}" Margin="0,2,0,12" />
-
-                    <CheckBox Content="Bold" IsChecked="{Binding Bold}" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <controls:SliderField Header="Rotation" Value="{Binding Rotation}" Minimum="-180" Maximum="180" ValueFormat="{}{0:0}°"  />
+<CheckBox Content="Bold" IsChecked="{Binding Bold}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
                     <TextBlock Text="Outline" FontWeight="SemiBold" Margin="0,4,0,4" />
-                    <DockPanel Margin="0,0,0,4">
-                        <TextBlock Text="Thickness" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding OutlineThickness, StringFormat='{}{0}px'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="10" Value="{Binding OutlineThickness}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,4" />
-                    <controls:ColorPickerField Header="Outline color" SelectedColor="{Binding OutlineColor}" />
+                    <controls:SliderField Header="Thickness" Value="{Binding OutlineThickness}" Minimum="0" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<controls:ColorPickerField Header="Outline color" SelectedColor="{Binding OutlineColor}" />
 
                     <TextBlock Text="Shadow" FontWeight="SemiBold" Margin="0,4,0,4" />
-                    <DockPanel>
-                        <TextBlock Text="Offset" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ShadowOffset, StringFormat='{}{0}px'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="20" Value="{Binding ShadowOffset}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
-                    <DockPanel>
-                        <TextBlock Text="Blur" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ShadowBlur, StringFormat='{}{0:0}px'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="20" Value="{Binding ShadowBlur}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,8" />
-                    <DockPanel>
-                        <TextBlock Text="Opacity" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                    </DockPanel>
-                    <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" TickFrequency="0.05" Margin="0,0,0,8" />
-                    <controls:ColorPickerField Header="Shadow color" SelectedColor="{Binding ShadowColor}" />
+                    <controls:SliderField Header="Offset" Value="{Binding ShadowOffset}" Minimum="0" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+<controls:SliderField Header="Blur" Value="{Binding ShadowBlur}" Minimum="0" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0:0}px"  />
+<controls:SliderField Header="Opacity" Value="{Binding ShadowOpacity}" Minimum="0" Maximum="1" TickFrequency="0.05" ValueFormat="{}{0:P0}"  />
+<controls:ColorPickerField Header="Shadow color" SelectedColor="{Binding ShadowColor}" />
 
                     <CheckBox Content="Background plate" IsChecked="{Binding BackgroundPlate}" FontWeight="SemiBold" Margin="0,0,0,8" />
                     <StackPanel Visibility="{Binding BackgroundPlate, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,12">
                         <controls:ColorPickerField Header="Plate color" SelectedColor="{Binding PlateColor}" />
-                        <DockPanel>
-                            <TextBlock Text="Opacity" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding PlateOpacity, StringFormat='{}{0:P0}'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="1" Value="{Binding PlateOpacity}" TickFrequency="0.05" Margin="0,0,0,8" />
-                        <DockPanel>
-                            <TextBlock Text="Padding" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
-                            <TextBlock Text="{Binding PlatePadding, StringFormat='{}{0}px'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
-                        </DockPanel>
-                        <Slider Minimum="0" Maximum="60" Value="{Binding PlatePadding}" TickFrequency="1" IsSnapToTickEnabled="True" />
-                    </StackPanel>
+                        <controls:SliderField Header="Opacity" Value="{Binding PlateOpacity}" Minimum="0" Maximum="1" TickFrequency="0.05" ValueFormat="{}{0:P0}"  />
+<controls:SliderField Header="Padding" Value="{Binding PlatePadding}" Minimum="0" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True" ValueFormat="{}{0}px"  />
+</StackPanel>
 
                     <Button Content="✕ Clear text" Command="{Binding ClearTextCommand}" Height="30" Background="{DynamicResource Theme.PanelHeaderBackground}" Foreground="{DynamicResource Theme.ForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" />
                 </StackPanel>

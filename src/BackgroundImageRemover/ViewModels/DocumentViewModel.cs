@@ -72,6 +72,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private readonly ScribbleManager _scribbleManager = new();
     internal ScribbleManager ScribbleManager => _scribbleManager; // Expose for partial classes
     private readonly BrushStrokeController _strokes = new();
+    private readonly ModelManager _models;
 
     private SamEmbedding? _samEmbedding;
     private WpfPoint? _samPromptPointPreview;
@@ -507,6 +508,14 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _grabCutStrategy = grabCutStrategy;
         _samStrategy = samStrategy;
         _uncropFillService = uncropFillService;
+
+        _models = new ModelManager(
+            _onnxStrategy,
+            _samStrategy,
+            _log,
+            () => _loadedImage?.FullBgr,
+            error => StatusMessage = $"SAM embedding failed: {error}",
+            RequestPreviewDebounced);
 
         _useGpuForOnnx = settings.Current.UseGpuForOnnx;
         _onnxStrategy.SetUseGpu(_useGpuForOnnx);

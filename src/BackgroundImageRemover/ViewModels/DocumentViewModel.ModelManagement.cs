@@ -7,56 +7,20 @@ namespace BackgroundImageRemover.ViewModels;
 
 public partial class DocumentViewModel
 {
-    private async Task EnsureOnnxReadyAsync()
-    {
-        var model = Onnx.SelectedModel;
-        Onnx.ErrorMessage = null;
-        Onnx.IsDownloading = true;
-
-        var success = await ModelDownloadHelper.EnsureOnnxModelReadyAsync(
-            _onnxStrategy,
-            model,
-            progress => Onnx.DownloadFraction = progress,
-            error => Onnx.ErrorMessage = error,
-            () =>
-            {
-                if (model == Onnx.SelectedModel)
-                {
-                    Onnx.IsModelReady = true;
-                    RequestPreviewDebounced();
-                }
-            },
-            _log,
-            CancellationToken.None);
-
-        Onnx.IsDownloading = false;
-    }
+    private Task EnsureOnnxReadyAsync() => _models.EnsureOnnxReadyAsync(Onnx);
 
     [RelayCommand]
     private Task RetryOnnxDownloadAsync() => EnsureOnnxReadyAsync();
 
-    private async Task EnsureSamReadyAsync()
+    private Task EnsureSamReadyAsync() => _models.EnsureSamReadyAsync(Sam, OnSamReady);
+
+    private void OnSamReady()
     {
-        Sam.ErrorMessage = null;
-        Sam.IsDownloading = true;
-
-        var success = await ModelDownloadHelper.EnsureSamModelReadyAsync(
-            _samStrategy,
-            progress => Sam.DownloadFraction = progress,
-            error => Sam.ErrorMessage = error,
-            () =>
-            {
-                Sam.IsModelReady = true;
-                ExportCommand.NotifyCanExecuteChanged();
-                if (_loadedImage is not null)
-                {
-                    ComputeSamEmbedding();
-                }
-            },
-            _log,
-            CancellationToken.None);
-
-        Sam.IsDownloading = false;
+        ExportCommand.NotifyCanExecuteChanged();
+        if (_loadedImage is not null)
+        {
+            ComputeSamEmbedding();
+        }
     }
 
     [RelayCommand]
@@ -64,15 +28,7 @@ public partial class DocumentViewModel
 
     private void ComputeSamEmbedding()
     {
-        if (_loadedImage is null)
-        {
-            return;
-        }
-        _samEmbedding = ModelDownloadHelper.ComputeSamEmbeddingSafe(
-            _samStrategy,
-            _loadedImage.FullBgr,
-            error => StatusMessage = $"SAM embedding failed: {error}",
-            _log);
+        _samEmbedding = _models.ComputeSamEmbedding();
     }
 
     public void OnOriginalSamPointClicked(OpenCvSharp.Point previewPoint)
@@ -109,11 +65,11 @@ public partial class DocumentViewModel
     /// <summary>Clears all SAM prompt points (both primary and additional).</summary>
     public void ClearSamPromptPoints()
     {
-        _samPromptPointPreview = null;
-        _samPromptPointsPreview?.Clear();
-        Sam.AdditionalPointCount = 0;
-        Sam.HasClickedPoint = false;
-        RequestPreviewDebounced();
+        _models.ClearSamPromptPoints(Sam, () =>
+        {
+            _samPromptPointPreview = null;
+            _samPromptPointsPreview?.Clear();
+        });
     }
 
     public void OnOriginalWandClicked(OpenCvSharp.Point previewPoint)

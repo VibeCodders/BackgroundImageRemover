@@ -42,6 +42,7 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
 
     private readonly ScribbleManager _scribbleManager = new();
     internal ScribbleManager ScribbleManager => _scribbleManager; // Expose for partial classes
+    private readonly ModelManager _models;
 
     private SamEmbedding? _samEmbedding;
     private WpfPoint? _samPromptPointPreview;
@@ -173,6 +174,14 @@ public partial class BackgroundRemoverToolSessionViewModel : ToolSessionViewMode
         _onnxStrategy = onnxStrategy;
         _grabCutStrategy = grabCutStrategy;
         _samStrategy = samStrategy;
+
+        _models = new ModelManager(
+            _onnxStrategy,
+            _samStrategy,
+            _log,
+            () => _sourceImage?.FullBgr,
+            error => Sam.ErrorMessage = error,
+            RequestPreviewDebounced);
 
         // The busy overlay binds IsBusy, and Apply is tracked so its (re)evaluation follows
         // the busy flag like the generated NotifyCanExecuteChangedFor used to.

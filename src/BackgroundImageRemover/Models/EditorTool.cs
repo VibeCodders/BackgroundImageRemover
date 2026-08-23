@@ -38,6 +38,9 @@ public enum EditorTool
     /// <summary>Uncrop with patch texture synthesis fill.</summary>
     UncropPatchSynthesis,
 
+    /// <summary>Uncrop with AI outpainting (LaMa inpainting model).</summary>
+    UncropAiOutpaint,
+
     /// <summary>Direct brush and magic wand pixel retouching.</summary>
     Retouch,
 

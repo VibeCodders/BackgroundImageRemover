@@ -19,6 +19,7 @@ public partial class UncropToolSessionViewModel : ToolSessionViewModelBase
     private readonly IImageLoaderService _imageLoader;
     private readonly IImageExportService _imageExporter;
     private readonly IFileLogService _log;
+    private readonly IAiOutpaintService? _aiOutpaintService;
     private readonly UncropResultSession _resultSession;
     private CancellationTokenSource? _fillCts;
     public override string ToolBadge => "⤢ Uncrop";
@@ -60,7 +61,8 @@ public partial class UncropToolSessionViewModel : ToolSessionViewModelBase
         IImageLoaderService imageLoader,
         IImageExportService imageExporter,
         IFileLogService log,
-        UncropFillMode? initialFillMode = null)
+        UncropFillMode? initialFillMode = null,
+        IAiOutpaintService? aiOutpaintService = null)
         : base(shell, parentDocument)
     {
         _fillService = fillService;
@@ -68,6 +70,7 @@ public partial class UncropToolSessionViewModel : ToolSessionViewModelBase
         _imageLoader = imageLoader;
         _imageExporter = imageExporter;
         _log = log;
+        _aiOutpaintService = aiOutpaintService;
 
         // The busy overlay binds IsBusy, and the Cancel button must stay enabled while busy:
         // re-raise the property and re-evaluate the tracked cancel command on every flip.

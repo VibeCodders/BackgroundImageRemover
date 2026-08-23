@@ -186,10 +186,23 @@
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Wrap}" />
 
                     <!-- AI Outpaint Mode -->
-                    <RadioButton Content="AI outpainting (coming soon)" GroupName="UncropFillMode" Margin="0,0,0,4"
-                                 IsEnabled="False"
-                                 ToolTip="Not available yet: no AI outpainting model is configured in this build."
+                    <RadioButton Content="AI outpainting (LaMa)" GroupName="UncropFillMode" Margin="0,0,0,4"
+                                 ToolTip="AI outpainting with LaMa — the model is downloaded on first use (pick a variant below)."
                                  IsChecked="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=AiOutpaint}" />
+                    <StackPanel Margin="16,0,0,8"
+                                Visibility="{Binding Options.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=AiOutpaint}">
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Model:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}"
+                                       DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
+                            <ComboBox ItemsSource="{Binding Options.AiModels}"
+                                      SelectedItem="{Binding Options.SelectedAiModel}"
+                                      DisplayMemberPath="DisplayName" FontSize="11" Height="24"
+                                      ToolTip="LaMa checkpoint — smaller models download and load faster but can be less accurate." />
+                        </DockPanel>
+                        <CheckBox Content="GPU (DirectML)" FontSize="11" IsChecked="{Binding Options.UseGpu}"
+                                  IsEnabled="{Binding Options.IsGpuSupported}"
+                                  ToolTip="Run LaMa on the GPU via DirectML. Requires a DirectX 12 GPU and a build compiled with -p:UseDirectML=true; falls back to CPU automatically." />
+                    </StackPanel>
 
                     <Separator Margin="0,8,0,8" />
                     <TextBlock Text="Finishing" FontWeight="Bold" Margin="0,0,0,4" />

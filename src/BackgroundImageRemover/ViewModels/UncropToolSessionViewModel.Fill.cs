@@ -1,6 +1,7 @@
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
+using BackgroundImageRemover.Services.Onnx;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp.WpfExtensions;
 
@@ -59,13 +60,15 @@ public partial class UncropToolSessionViewModel
         {
             IsBusy = true;
             CancelFillCommand.NotifyCanExecuteChanged();
-            StatusMessage = "Filling...";
+            StatusMessage = config.FillMode == UncropFillMode.AiOutpaint
+                ? "Preparing AI outpainting model (first use downloads ~200 MB)..."
+                : "Filling...";
 
             // Snapshot the source on the UI thread: the fill runs on a worker and closing the
             // tab mid-run disposes _sourceImage, which would otherwise be read after disposal.
             using var sourceBgr = _sourceImage.FullBgr.Clone();
             using var filledBgr = await UncropOperationHelper.ExecuteUncropAsync(
-                sourceBgr, config, _fillService, ct);
+                sourceBgr, config, _fillService, _aiOutpaintService, DownloadProgress(), ct);
 
             var bgra = UncropOperationHelper.ApplyFinishing(filledBgr, config);
 
@@ -94,6 +97,14 @@ public partial class UncropToolSessionViewModel
             CancelFillCommand.NotifyCanExecuteChanged();
         }
     }
+
+    /// <summary>Reports the first-use model download through the status bar (AI fill only).</summary>
+    private IProgress<ModelDownloadProgress>? DownloadProgress()
+        => Options.SelectedFillMode == UncropFillMode.AiOutpaint
+            ? new Progress<ModelDownloadProgress>(p => StatusMessage = p.FractionComplete is { } f
+                ? $"Downloading AI outpainting model... {f:P0}"
+                : "Downloading AI outpainting model...")
+            : null;
 
     private bool CanUndoExecute() => _resultSession.CanUndo;
     private bool CanRedoExecute() => _resultSession.CanRedo;

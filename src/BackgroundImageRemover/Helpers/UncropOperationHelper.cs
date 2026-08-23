@@ -1,5 +1,6 @@
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Editing;
+using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Outpaint;
 using OpenCvSharp;
 using WpfColor = System.Windows.Media.Color;
@@ -38,6 +39,11 @@ public static class UncropOperationHelper
         public UncropColorSource ColorSource { get; init; } = UncropColorSource.EdgeAverage;
         public WpfColor CustomSolidColor { get; init; } = WpfColor.FromRgb(255, 255, 255);
 
+        // AI outpainting: which LaMa checkpoint to download/run and whether to prefer the GPU
+        // (DirectML) execution provider.
+        public LamaModelVariant AiModelVariant { get; init; } = LamaModelVariant.Large;
+        public bool UseGpu { get; init; }
+
         // Post-fill finishing applied to the whole result.
         public int CornerRadius { get; init; }
         public int BorderThickness { get; init; }
@@ -69,10 +75,28 @@ public static class UncropOperationHelper
         Mat sourceBgr,
         UncropConfig config,
         IUncropFillService fillService,
+        IAiOutpaintService? aiOutpaint = null,
+        IProgress<ModelDownloadProgress>? downloadProgress = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(sourceBgr);
         ArgumentNullException.ThrowIfNull(fillService);
+
+        // AI outpainting downloads the model on first use and then runs a heavy 512² inference
+        // pass, so it stays off the caller's (UI) thread like the synchronous fill modes below.
+        if (config.FillMode == UncropFillMode.AiOutpaint)
+        {
+            if (aiOutpaint is null)
+            {
+                throw new InvalidOperationException("AI outpainting is not available in this build.");
+            }
+            // Task.Run(Func<Task<T>>, ct) runs the lambda on the pool AND unwraps the inner
+            // task, so the download's awaits stay async while the heavy inference runs off
+            // the caller's (UI) thread.
+            return await Task.Run(
+                () => aiOutpaint.OutpaintAsync(sourceBgr, config.Padding, config.AiModelVariant, config.UseGpu, downloadProgress, cancellationToken),
+                cancellationToken);
+        }
 
         var customColor = config.ColorSource == UncropColorSource.CustomColor
             ? new Scalar(config.CustomSolidColor.B, config.CustomSolidColor.G, config.CustomSolidColor.R)
@@ -197,10 +221,12 @@ public static class UncropOperationHelper
     }
 
     /// <summary>
-    /// Checks if an uncrop operation can be executed with the given configuration.
+    /// Checks if an uncrop operation can be executed with the given configuration. AI outpainting
+    /// is enabled whenever padding is set: the model download (first use only) happens inside the
+    /// operation itself, so no extra readiness check is needed here.
     /// </summary>
     public static bool CanExecute(UncropConfig config)
     {
-        return config.FillMode != UncropFillMode.AiOutpaint && !config.Padding.IsZero;
+        return !config.Padding.IsZero;
     }
 }

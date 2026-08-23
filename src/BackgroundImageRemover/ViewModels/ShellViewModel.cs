@@ -59,7 +59,8 @@ public partial class ShellViewModel : ObservableObject
         IUncropFillService uncropFillService,
         IImageLoaderService imageLoader,
         IImageExportService imageExporter,
-        IEnumerable<IToolDefinition>? toolDefinitions = null)
+        IEnumerable<IToolDefinition>? toolDefinitions = null,
+        IAiOutpaintService? aiOutpaintService = null)
     {
         _documentFactory = documentFactory;
         _uncropFactory = uncropFactory;
@@ -72,7 +73,7 @@ public partial class ShellViewModel : ObservableObject
         // services they already pass in -- no test call site needs to change.
         var tools = (toolDefinitions ?? BuildDefaultToolDefinitions(
             downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy,
-            uncropFillService, imageLoader, imageExporter)).ToList();
+            uncropFillService, imageLoader, imageExporter, aiOutpaintService)).ToList();
         _toolsById = tools.ToDictionary(t => t.Id);
         ToolDefinitions = tools
             .Where(t => t.ShowInPalette)
@@ -92,7 +93,8 @@ public partial class ShellViewModel : ObservableObject
         IDownscaleService downscaler, IDialogService dialogs, IFileLogService log,
         IEnumerable<IBackgroundRemovalStrategy> strategies, OnnxStrategy onnxStrategy,
         GrabCutStrategy grabCutStrategy, SamStrategy samStrategy, IUncropFillService uncropFillService,
-        IImageLoaderService imageLoader, IImageExportService imageExporter)
+        IImageLoaderService imageLoader, IImageExportService imageExporter,
+        IAiOutpaintService? aiOutpaintService = null)
     {
         // Data-driven set mirroring the DI registrations in App.xaml.cs. Order matters: the
         // palette sort (category + Order) is stable, so ties keep this registration order.
@@ -110,15 +112,16 @@ public partial class ShellViewModel : ObservableObject
         yield return new StrategyToolDefinition(StrategyKind.Inpaint, 8, "InpaintIcon", "Inpaint", "Inpaint (flood + fill background)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
         yield return new StrategyToolDefinition(StrategyKind.EdgeContour, 9, "EdgeContourIcon", "Edge / Contour", "Edge / Contour (Canny outline + largest region)", downscaler, dialogs, log, strategies, onnxStrategy, grabCutStrategy, samStrategy);
         yield return new ToolDefinition(EditorTool.Uncrop, "Uncrop / Expand", "Uncrop", 0, "UncropIcon", "Uncrop / Expand (U)",
-            (shell, doc) => new UncropToolSessionViewModel(shell, doc, uncropFillService, dialogs, imageLoader, imageExporter, log), shortcut: 'U', opensInlineOnSelect: false);
-        yield return new UncropModeToolDefinition(EditorTool.UncropMirror, UncropFillMode.Mirror, "Uncrop Mirror", 1, "UncropMirrorIcon", "Uncrop with a mirror/reflection fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
-        yield return new UncropModeToolDefinition(EditorTool.UncropInpaint, UncropFillMode.Inpaint, "Uncrop Inpaint", 2, "UncropInpaintIcon", "Uncrop with a content-aware inpainting fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
-        yield return new UncropModeToolDefinition(EditorTool.UncropSolidColor, UncropFillMode.SolidColor, "Uncrop Solid Color", 3, "UncropSolidColorIcon", "Uncrop with a solid color fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
-        yield return new UncropModeToolDefinition(EditorTool.UncropReplicate, UncropFillMode.Replicate, "Uncrop Edge Stretch", 4, "UncropReplicateIcon", "Uncrop with an edge-stretch (replicate) fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
-        yield return new UncropModeToolDefinition(EditorTool.UncropWrap, UncropFillMode.Wrap, "Uncrop Tile / Wrap", 5, "UncropWrapIcon", "Uncrop with a tile / wrap fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
-        yield return new UncropModeToolDefinition(EditorTool.UncropZoomBlur, UncropFillMode.ZoomBlur, "Uncrop Zoom & Blur", 6, "UncropZoomBlurIcon", "Uncrop with a zoom & blur background fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
-        yield return new UncropModeToolDefinition(EditorTool.UncropEdgeGradient, UncropFillMode.EdgeGradient, "Uncrop Edge Gradient", 7, "UncropEdgeGradientIcon", "Uncrop with an edge-gradient fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
-        yield return new UncropModeToolDefinition(EditorTool.UncropPatchSynthesis, UncropFillMode.PatchSynthesis, "Uncrop Patch Synthesis", 8, "UncropPatchSynthesisIcon", "Uncrop with patch texture synthesis fill", uncropFillService, dialogs, imageLoader, imageExporter, log);
+            (shell, doc) => new UncropToolSessionViewModel(shell, doc, uncropFillService, dialogs, imageLoader, imageExporter, log, aiOutpaintService: aiOutpaintService), shortcut: 'U', opensInlineOnSelect: false);
+        yield return new UncropModeToolDefinition(EditorTool.UncropMirror, UncropFillMode.Mirror, "Uncrop Mirror", 1, "UncropMirrorIcon", "Uncrop with a mirror/reflection fill", uncropFillService, dialogs, imageLoader, imageExporter, log, aiOutpaintService);
+        yield return new UncropModeToolDefinition(EditorTool.UncropInpaint, UncropFillMode.Inpaint, "Uncrop Inpaint", 2, "UncropInpaintIcon", "Uncrop with a content-aware inpainting fill", uncropFillService, dialogs, imageLoader, imageExporter, log, aiOutpaintService);
+        yield return new UncropModeToolDefinition(EditorTool.UncropSolidColor, UncropFillMode.SolidColor, "Uncrop Solid Color", 3, "UncropSolidColorIcon", "Uncrop with a solid color fill", uncropFillService, dialogs, imageLoader, imageExporter, log, aiOutpaintService);
+        yield return new UncropModeToolDefinition(EditorTool.UncropReplicate, UncropFillMode.Replicate, "Uncrop Edge Stretch", 4, "UncropReplicateIcon", "Uncrop with an edge-stretch (replicate) fill", uncropFillService, dialogs, imageLoader, imageExporter, log, aiOutpaintService);
+        yield return new UncropModeToolDefinition(EditorTool.UncropWrap, UncropFillMode.Wrap, "Uncrop Tile / Wrap", 5, "UncropWrapIcon", "Uncrop with a tile / wrap fill", uncropFillService, dialogs, imageLoader, imageExporter, log, aiOutpaintService);
+        yield return new UncropModeToolDefinition(EditorTool.UncropZoomBlur, UncropFillMode.ZoomBlur, "Uncrop Zoom & Blur", 6, "UncropZoomBlurIcon", "Uncrop with a zoom & blur background fill", uncropFillService, dialogs, imageLoader, imageExporter, log, aiOutpaintService);
+        yield return new UncropModeToolDefinition(EditorTool.UncropEdgeGradient, UncropFillMode.EdgeGradient, "Uncrop Edge Gradient", 7, "UncropEdgeGradientIcon", "Uncrop with an edge-gradient fill", uncropFillService, dialogs, imageLoader, imageExporter, log, aiOutpaintService);
+        yield return new UncropModeToolDefinition(EditorTool.UncropPatchSynthesis, UncropFillMode.PatchSynthesis, "Uncrop Patch Synthesis", 8, "UncropPatchSynthesisIcon", "Uncrop with patch texture synthesis fill", uncropFillService, dialogs, imageLoader, imageExporter, log, aiOutpaintService);
+        yield return new UncropModeToolDefinition(EditorTool.UncropAiOutpaint, UncropFillMode.AiOutpaint, "Uncrop AI (LaMa)", 9, "UncropAiOutpaintIcon", "AI outpainting with LaMa (downloads ~200 MB on first use)", uncropFillService, dialogs, imageLoader, imageExporter, log, aiOutpaintService);
         yield return new ToolDefinition(EditorTool.Retouch, "Retouch & Brush", "Paint & Retouch", 0, "RetouchIcon", "Retouch & Brush (B)", (shell, doc) => new RetouchToolSessionViewModel(shell, doc), shortcut: 'B', opensInlineOnSelect: false);
         yield return new ToolDefinition(EditorTool.Heal, "Heal", "Paint & Retouch", 1, "HealIcon", "Heal (H)", (shell, doc) => new HealToolSessionViewModel(shell, doc), shortcut: 'H');
         yield return new ToolDefinition(EditorTool.Liquify, "Liquify", "Paint & Retouch", 2, "LiquifyIcon", "Liquify (J)", (shell, doc) => new LiquifyToolSessionViewModel(shell, doc), shortcut: 'J');

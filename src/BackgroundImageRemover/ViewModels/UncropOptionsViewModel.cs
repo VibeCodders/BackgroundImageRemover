@@ -1,5 +1,6 @@
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
+using BackgroundImageRemover.Services.Onnx;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OpenCvSharp;
 using WpfColor = System.Windows.Media.Color;
@@ -90,6 +91,28 @@ public partial class UncropOptionsViewModel : ObservableObject
 
     [ObservableProperty]
     private int _patchBlendOverlap = 8;
+
+    // AI outpainting: selectable LaMa checkpoint and GPU (DirectML) preference.
+    public IReadOnlyList<LamaModelOption> AiModels { get; } = LamaModelFiles.All;
+
+    [ObservableProperty]
+    private LamaModelOption _selectedAiModel = LamaModelFiles.Option(LamaModelVariant.Large);
+
+    [ObservableProperty]
+    private bool _useGpu;
+
+    /// <summary>True when this build includes the DirectML execution provider (see csproj UseDirectML).</summary>
+    public bool IsGpuSupported
+    {
+        get
+        {
+#if DIRECTML_ENABLED
+            return true;
+#else
+            return false;
+#endif
+        }
+    }
 
     // Post-fill finishing options (applied to the whole result).
     [ObservableProperty]
@@ -283,6 +306,8 @@ public partial class UncropOptionsViewModel : ObservableObject
         PatchBlendOverlap = PatchBlendOverlap,
         ColorSource = SelectedColorSource,
         CustomSolidColor = CustomSolidColor,
+        AiModelVariant = SelectedAiModel.Variant,
+        UseGpu = UseGpu,
         CornerRadius = CornerRadius,
         BorderThickness = BorderThickness,
         BorderColor = BorderColor,

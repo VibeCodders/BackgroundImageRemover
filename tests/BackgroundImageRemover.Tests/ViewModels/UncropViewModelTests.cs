@@ -2,6 +2,7 @@ using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.ImageIo;
 using BackgroundImageRemover.Services.Logging;
+using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Outpaint;
 using BackgroundImageRemover.ViewModels;
 using OpenCvSharp;
@@ -83,6 +84,20 @@ public class UncropViewModelTests
 
         public Task ExportWebpAsync(Mat bgra, string destinationPath, int quality = 90, CancellationToken ct = default)
             => Task.CompletedTask;
+    }
+
+    private sealed class FakeAiOutpaintService : IAiOutpaintService
+    {
+        public int Calls { get; private set; }
+
+        public Task<Mat> OutpaintAsync(Mat sourceBgr, CanvasPadding padding, LamaModelVariant model, bool useGpu, IProgress<ModelDownloadProgress>? progress, CancellationToken ct)
+        {
+            Calls++;
+            return Task.FromResult(new Mat(
+                sourceBgr.Height + padding.Top + padding.Bottom,
+                sourceBgr.Width + padding.Left + padding.Right,
+                MatType.CV_8UC3, Scalar.All(255)));
+        }
     }
 
     private sealed class DummyImageExportService : IImageExportService
@@ -249,6 +264,30 @@ public class UncropViewModelTests
 
         Assert.True(vm.IsDirty);
         Assert.NotNull(vm.PreviewResult);
+    }
+
+    [Fact]
+    public async Task ApplyFillAsync_AiOutpaint_UsesTheAiService()
+    {
+        var ai = new FakeAiOutpaintService();
+        using var vm = new UncropViewModel(
+            new DummyUncropFillService(),
+            new DummyDialogService(),
+            new TestImageLoader(100, 100, new Scalar(128, 128, 128)),
+            new DummyImageExportService(),
+            new DummyFileLogService(),
+            ai);
+        await vm.LoadAsync("test_photo.jpg");
+        vm.Options.Padding = new CanvasPadding(10, 10, 10, 10);
+        vm.Options.SelectedFillMode = UncropFillMode.AiOutpaint;
+
+        Assert.True(vm.ApplyFillCommand.CanExecute(null));
+        await vm.ApplyFillCommand.ExecuteAsync(null);
+
+        Assert.True(vm.IsDirty);
+        Assert.NotNull(vm.PreviewResult);
+        Assert.Equal(1, ai.Calls);
+        Assert.StartsWith("Applied AiOutpaint", vm.StatusMessage);
     }
 
     [Fact]

@@ -2,6 +2,7 @@ using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Dialogs;
 using BackgroundImageRemover.Services.ImageIo;
 using BackgroundImageRemover.Services.Logging;
+using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Outpaint;
 
 namespace BackgroundImageRemover.ViewModels.Tools;
@@ -24,6 +25,7 @@ public sealed class UncropModeToolDefinition : EditorToolDefinitionBase
     private readonly IImageLoaderService _imageLoader;
     private readonly IImageExportService _imageExporter;
     private readonly IFileLogService _log;
+    private readonly IAiOutpaintService? _aiOutpaintService;
 
     public UncropModeToolDefinition(
         EditorTool tool,
@@ -36,7 +38,8 @@ public sealed class UncropModeToolDefinition : EditorToolDefinitionBase
         IDialogService dialogs,
         IImageLoaderService imageLoader,
         IImageExportService imageExporter,
-        IFileLogService log)
+        IFileLogService log,
+        IAiOutpaintService? aiOutpaintService = null)
         : base(tool)
     {
         FillMode = fillMode;
@@ -49,6 +52,7 @@ public sealed class UncropModeToolDefinition : EditorToolDefinitionBase
         _imageLoader = imageLoader;
         _imageExporter = imageExporter;
         _log = log;
+        _aiOutpaintService = aiOutpaintService;
     }
 
     /// <summary>The uncrop fill method this toolbar entry stands for.</summary>
@@ -74,5 +78,5 @@ public sealed class UncropModeToolDefinition : EditorToolDefinitionBase
     }
 
     public override IToolSessionTab OpenSession(ShellViewModel shell, DocumentViewModel doc)
-        => new UncropToolSessionViewModel(shell, doc, _fillService, _dialogs, _imageLoader, _imageExporter, _log, FillMode);
+        => new UncropToolSessionViewModel(shell, doc, _fillService, _dialogs, _imageLoader, _imageExporter, _log, FillMode, _aiOutpaintService);
 }

@@ -159,6 +159,25 @@
             </DockPanel>
         </StackPanel>
 
+        <!-- AI Outpaint -->
+        <RadioButton Content="AI outpainting (LaMa)" GroupName="UncropFillModeDoc" Margin="0,0,0,4"
+                     ToolTip="AI outpainting with LaMa — the model is downloaded on first use (pick a variant below)."
+                     IsChecked="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=AiOutpaint}" />
+        <StackPanel Margin="16,0,0,8"
+                    Visibility="{Binding UncropOptions.SelectedFillMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=AiOutpaint}">
+            <DockPanel Margin="0,0,0,4">
+                <TextBlock Text="Model:" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}"
+                           DockPanel.Dock="Left" VerticalAlignment="Center" Width="45" />
+                <ComboBox ItemsSource="{Binding UncropOptions.AiModels}"
+                          SelectedItem="{Binding UncropOptions.SelectedAiModel}"
+                          DisplayMemberPath="DisplayName" FontSize="11" Height="24"
+                          ToolTip="LaMa checkpoint — smaller models download and load faster but can be less accurate." />
+            </DockPanel>
+            <CheckBox Content="GPU (DirectML)" FontSize="11" IsChecked="{Binding UncropOptions.UseGpu}"
+                      IsEnabled="{Binding UncropOptions.IsGpuSupported}"
+                      ToolTip="Run LaMa on the GPU via DirectML. Requires a DirectX 12 GPU and a build compiled with -p:UseDirectML=true; falls back to CPU automatically." />
+        </StackPanel>
+
         <Button Content="Apply Uncrop Fill" Command="{Binding ApplyUncropCommand}"
                 Height="32" FontWeight="SemiBold" Background="{DynamicResource Theme.AccentBackground}" Foreground="{DynamicResource Theme.AccentForeground}" BorderThickness="0" Margin="0,8,0,0" />
         <Button Content="Cancel Fill" Command="{Binding CancelUncropCommand}"

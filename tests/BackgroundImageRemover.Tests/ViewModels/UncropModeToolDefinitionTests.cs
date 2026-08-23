@@ -34,7 +34,8 @@ public class UncropModeToolDefinitionTests
         ("Tool.UncropWrap", EditorTool.UncropWrap, UncropFillMode.Wrap),
         ("Tool.UncropZoomBlur", EditorTool.UncropZoomBlur, UncropFillMode.ZoomBlur),
         ("Tool.UncropEdgeGradient", EditorTool.UncropEdgeGradient, UncropFillMode.EdgeGradient),
-        ("Tool.UncropPatchSynthesis", EditorTool.UncropPatchSynthesis, UncropFillMode.PatchSynthesis)
+        ("Tool.UncropPatchSynthesis", EditorTool.UncropPatchSynthesis, UncropFillMode.PatchSynthesis),
+        ("Tool.UncropAiOutpaint", EditorTool.UncropAiOutpaint, UncropFillMode.AiOutpaint)
     ];
 
     private sealed class UnusedDialogService : IDialogService

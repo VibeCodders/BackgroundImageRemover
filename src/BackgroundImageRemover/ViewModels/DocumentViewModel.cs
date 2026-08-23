@@ -48,6 +48,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
     private readonly GrabCutStrategy _grabCutStrategy;
     private readonly SamStrategy _samStrategy;
     private readonly IUncropFillService _uncropFillService;
+    private readonly IAiOutpaintService? _aiOutpaintService;
     private readonly DocumentEditHistory _history = new();
 
     private readonly PreviewRunner _previews;
@@ -531,7 +532,8 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         OnnxStrategy onnxStrategy,
         GrabCutStrategy grabCutStrategy,
         SamStrategy samStrategy,
-        IUncropFillService uncropFillService)
+        IUncropFillService uncropFillService,
+        IAiOutpaintService? aiOutpaintService = null)
     {
         _imageLoader = imageLoader;
         _imageExporter = imageExporter;
@@ -546,6 +548,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
         _grabCutStrategy = grabCutStrategy;
         _samStrategy = samStrategy;
         _uncropFillService = uncropFillService;
+        _aiOutpaintService = aiOutpaintService;
 
         _models = new ModelManager(
             _onnxStrategy,
@@ -717,6 +720,7 @@ public partial class DocumentViewModel : ObservableObject, IDocumentTab, IDispos
             case EditorTool.UncropZoomBlur:
             case EditorTool.UncropEdgeGradient:
             case EditorTool.UncropPatchSynthesis:
+            case EditorTool.UncropAiOutpaint:
             case EditorTool.None:
             default:
                 OriginalMode = InteractionMode.None;

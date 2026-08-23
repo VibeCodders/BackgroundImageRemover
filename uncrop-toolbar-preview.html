@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Uncrop toolbar icons — preview</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px 28px 40px; background: #141414; color: #e0e0e0; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  h2 { font-size: 13px; margin: 28px 0 10px; color: #aaa; font-weight: 600; border-bottom: 1px solid #2c2c2c; padding-bottom: 6px; }
+  .sub { color: #888; font-size: 11px; margin-bottom: 14px; }
+
+  /* Replica della toolbar: barra scura, categoria, bottoni 48x48 con icona 24x24 */
+  .toolbar { display: flex; flex-direction: column; align-items: stretch; background: #181818; border: 1px solid #333; border-radius: 10px; padding: 4px; width: fit-content; }
+  .toolbar .tools-title { text-align: center; font-weight: 700; font-size: 10px; margin: 8px 0 2px; color: #e0e0e0; }
+  .toolbar .hint { text-align: center; font-style: italic; font-size: 8px; color: #888; margin: 0 4px 12px; max-width: 220px; }
+  .cat-label { text-align: center; font-size: 9px; font-weight: 600; color: #888; margin: 4px 0 6px; }
+  .tool-row { display: flex; flex-wrap: wrap; justify-content: center; max-width: 240px; }
+  .tool-btn { width: 48px; height: 48px; margin: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .tool-btn svg { width: 24px; height: 24px; display: block; }
+  .tool-btn .lbl { position: absolute; bottom: -2px; right: 2px; font-size: 7px; color: #666; }
+  .tool-btn.hover { background: #2a2a2a; }
+  .tool-btn.checked { background: #4a90d9; }
+
+  /* Griglia di confronto: ogni icona a 1x (24) e 4x (96) con etichetta */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px; }
+  .cell { background: #1d1d1d; border: 1px solid #2c2c2c; border-radius: 10px; padding: 14px 10px 10px; text-align: center; }
+  .cell .name { font-size: 11px; font-weight: 600; color: #e0e0e0; margin-bottom: 2px; }
+  .cell .tip { font-size: 9px; color: #888; margin-bottom: 10px; min-height: 22px; }
+  .cell .sizes { display: flex; justify-content: center; align-items: flex-end; gap: 16px; }
+  .cell .s1 { width: 24px; height: 24px; }
+  .cell .s4 { width: 96px; height: 96px; }
+  .cell svg { display: block; }
+  .cell .cap { font-size: 8px; color: #666; margin-top: 8px; }
+
+  /* Tema chiaro */
+  .light { background: #f5f6f8; }
+  .light h2 { color: #555; border-bottom-color: #ddd; }
+  .light .cell { background: #fff; border-color: #e2e4e8; }
+  .light .cell .name { color: #222; }
+  .light .cell .tip { color: #666; }
+  .light .cell .cap { color: #999; }
+  .light .toolbar { background: #f5f6f8; border-color: #d9dce1; }
+  .light .toolbar .tools-title { color: #222; }
+  .light .toolbar .hint { color: #666; }
+  .light .cat-label { color: #666; }
+  .light .tool-btn.hover { background: #e8eaee; }
+  .light .tool-btn.checked { background: #0078d7; }
+
+  .section { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+</style>
+</head>
+<body>
+  <h1>Uncrop — sezione toolbar</h1>
+  <div class="sub">Icone renderizzate con le stesse identiche PathGeometry di <code>StrategyIcons.xaml</code> (fill-rule evenodd, come WPF). 1x = dimensione reale 24&times;24, 4x = ingrandita.</div>
+
+  <h2>Tema scuro — toolbar reale (48&times;48 per bottone)</h2>
+  <div class="section">
+    <div class="toolbar" id="toolbar-dark"></div>
+    <div class="toolbar" id="toolbar-dark-checked"></div>
+  </div>
+
+  <h2>Confronto 1x / 4x — tema scuro</h2>
+  <div class="grid" id="grid-dark"></div>
+
+  <h2 class="light">Tema chiaro — toolbar reale</h2>
+  <div class="section">
+    <div class="toolbar light" id="toolbar-light"></div>
+  </div>
+
+  <h2 class="light">Confronto 1x / 4x — tema chiaro</h2>
+  <div class="grid light" id="grid-light"></div>
+
+<script>
+const A = 'M12,2L15,5H13V9H11V5H9L12,2M12,22L9,19H11V15H13V19H15L12,22M2,12L5,9V11H9V13H5V15L2,12M22,12L19,15V13H15V11H19V9L22,12Z';
+const ICONS = [
+  { key: 'UncropIcon',            name: 'Uncrop',               tip: 'Tool base (U)', d: 'M19,13H13V19H11V13H5V11H11V5H13V11H19V13M12,2L15,5H13V9H11V5H9L12,2M12,22L9,19H11V15H13V19H15L12,22M2,12L5,9V11H9V13H5V15L2,12M22,12L19,15V13H15V11H19V9L22,12Z' },
+  { key: 'UncropMirrorIcon',      name: 'Mirror',              tip: 'Specchia i bordi', d: A + 'M11,10H13V14H11Z' },
+  { key: 'UncropInpaintIcon',     name: 'Inpaint',             tip: 'Heal in-place', d: A + 'M10,11.5H14V12.5H10ZM11,10H13V14H11Z' },
+  { key: 'UncropSolidColorIcon',  name: 'Solid Color',         tip: 'Colore pieno', d: A + 'M11,11H13V13H11Z' },
+  { key: 'UncropReplicateIcon',   name: 'Edge Stretch',        tip: 'Replica i bordi', d: A + 'M10,12L11,10.5V13.5ZM14,12L13,10.5V13.5Z' },
+  { key: 'UncropWrapIcon',        name: 'Tile / Wrap',         tip: 'Piastrelle', d: A + 'M10,10H11V11H10ZM13,10H14V11H13ZM10,13H11V14H10ZM13,13H14V14H13Z' },
+  { key: 'UncropZoomBlurIcon',    name: 'Zoom & Blur',         tip: 'Anello bersaglio', d: A + 'M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10ZM12,10.75A1.25,1.25 0 0,0 10.75,12A1.25,1.25 0 0,0 12,13.25A1.25,1.25 0 0,0 13.25,12A1.25,1.25 0 0,0 12,10.75Z' },
+  { key: 'UncropEdgeGradientIcon',name: 'Edge Gradient',       tip: 'Gradiente d\u2019angolo', d: A + 'M10.5,13.5L13.5,10.5L13.5,13.5Z' },
+  { key: 'UncropPatchSynthesisIcon', name: 'Patch Synthesis',  tip: 'Patch offset', d: A + 'M10,10H11.5V11.5H10ZM12.5,12.5H14V14H12.5Z' },
+  { key: 'UncropAiOutpaintIcon',  name: 'AI Outpaint',         tip: 'LaMa (stella X)', d: A + 'M12,12L14,10L12,11.2L10,10L11.2,12L10,14L12,12.8L14,14Z' }
+];
+
+function svg(d, cls) {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('viewBox', '0 0 24 24');
+  if (cls) s.setAttribute('class', cls);
+  s.setAttribute('fill', 'currentColor');
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', d);
+  p.setAttribute('fill-rule', 'evenodd');
+  s.appendChild(p);
+  return s;
+}
+
+function buildToolbar(hostId, checkedIdx) {
+  const host = document.getElementById(hostId);
+  const t = document.createElement('div'); t.className = 'tools-title'; t.textContent = 'Tools';
+  const hint = document.createElement('div'); hint.className = 'hint'; hint.textContent = 'Click to select \u00b7 middle-click to open';
+  const cat = document.createElement('div'); cat.className = 'cat-label'; cat.textContent = 'UNCROP';
+  const row = document.createElement('div'); row.className = 'tool-row';
+  ICONS.forEach((ic, i) => {
+    const b = document.createElement('div');
+    b.className = 'tool-btn' + (i === checkedIdx ? ' checked' : '');
+    b.title = ic.name;
+    b.appendChild(svg(ic.d));
+    const l = document.createElement('span'); l.className = 'lbl'; l.textContent = i + 1; b.appendChild(l);
+    row.appendChild(b);
+  });
+  t.appendChild(hint); host.appendChild(t); host.appendChild(cat); host.appendChild(row);
+}
+
+function buildGrid(hostId) {
+  const host = document.getElementById(hostId);
+  ICONS.forEach((ic, i) => {
+    const cell = document.createElement('div'); cell.className = 'cell';
+    const name = document.createElement('div'); name.className = 'name'; name.textContent = (i + 1) + '. ' + ic.name;
+    const tip = document.createElement('div'); tip.className = 'tip'; tip.textContent = ic.tip;
+    const sizes = document.createElement('div'); sizes.className = 'sizes';
+    const s1 = svg(ic.d, 's1'); const s4 = svg(ic.d, 's4');
+    sizes.appendChild(s1); sizes.appendChild(s4);
+    const cap = document.createElement('div'); cap.className = 'cap'; cap.textContent = '24px \u00b7 96px';
+    cell.appendChild(name); cell.appendChild(tip); cell.appendChild(sizes); cell.appendChild(cap);
+    host.appendChild(cell);
+  });
+}
+
+buildToolbar('toolbar-dark', -1);
+buildToolbar('toolbar-dark-checked', 9); // voce AI evidenziata come selezionata
+buildToolbar('toolbar-light', -1);
+buildGrid('grid-dark');
+buildGrid('grid-light');
+</script>
+</body>
+</html>

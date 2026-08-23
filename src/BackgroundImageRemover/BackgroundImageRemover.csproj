@@ -17,6 +17,14 @@
     <!-- Runs on any installed .NET runtime >= 9 (9.0/10.0), so machines without the exact
          patch-level .NET 9 Desktop Runtime still launch the app. -->
     <RollForward>LatestMajor</RollForward>
+
+    <!-- GPU acceleration for ONNX models (LaMa outpainting): build with -p:UseDirectML=true to
+         swap the CPU-only runtime for Microsoft.ML.OnnxRuntime.DirectML (the latest published
+         DirectML package is 1.24.4, older than the CPU 1.29.0). The DirectML package still
+         contains the CPU EP, so CPU-only machines keep working; the GPU option is only enabled
+         in the UI for DirectML builds (DIRECTML_ENABLED). -->
+    <UseDirectML Condition="'$(UseDirectML)' == ''">false</UseDirectML>
+    <DefineConstants Condition="'$(UseDirectML)' == 'true'">$(DefineConstants);DIRECTML_ENABLED</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,7 +33,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.19" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.19" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.10.0" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.29.0" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.29.0" Condition="'$(UseDirectML)' != 'true'" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.4" Condition="'$(UseDirectML)' == 'true'" />
     <PackageReference Include="OpenCvSharp4" Version="4.13.0.20260627" />
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.13.0.20260627" />
     <PackageReference Include="OpenCvSharp4.WpfExtensions" Version="4.13.0.20260627" />

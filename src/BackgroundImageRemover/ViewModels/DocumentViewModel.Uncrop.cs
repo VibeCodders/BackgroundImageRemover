@@ -1,6 +1,7 @@
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Compositing;
+using BackgroundImageRemover.Services.Onnx;
 using CommunityToolkit.Mvvm.Input;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
@@ -15,6 +16,14 @@ public partial class DocumentViewModel
     // The busy half of the guard comes from the gate (ApplyUncropCommand is routed through
     // it below); this predicate only answers "is there a valid uncrop configuration".
     private bool CanApplyUncrop() => IsImageLoaded && UncropOptions.CanExecute();
+
+    /// <summary>Reports the first-use model download through the status bar (AI fill only).</summary>
+    private IProgress<ModelDownloadProgress>? DownloadProgress()
+        => UncropOptions.SelectedFillMode == UncropFillMode.AiOutpaint
+            ? new Progress<ModelDownloadProgress>(p => StatusMessage = p.FractionComplete is { } f
+                ? $"Downloading AI outpainting model... {f:P0}"
+                : "Downloading AI outpainting model...")
+            : null;
 
     private bool CanCancelUncrop() => IsBusy && _uncropCts is not null && !_uncropCts.IsCancellationRequested;
 
@@ -48,14 +57,16 @@ public partial class DocumentViewModel
         {
             IsBusy = true;
             CancelUncropCommand.NotifyCanExecuteChanged();
-            StatusMessage = "Applying uncrop expansion...";
+            StatusMessage = config.FillMode == UncropFillMode.AiOutpaint
+                ? "Preparing AI outpainting model (first use downloads ~200 MB)..."
+                : "Applying uncrop expansion...";
 
             // Snapshot the source on the UI thread: the fill runs on a worker and the user
             // can still trigger undo/redo or open another image while it computes, both of
             // which would dispose _loadedImage mid-run.
             using var sourceBgr = _loadedImage.FullBgr.Clone();
             using var filledBgr = await UncropOperationHelper.ExecuteUncropAsync(
-                sourceBgr, config, _uncropFillService, ct);
+                sourceBgr, config, _uncropFillService, _aiOutpaintService, DownloadProgress(), ct);
 
             // Apply finishing (flip, grain, border, rounded corners), then split back to BGR + alpha.
             using var finishedBgra = UncropOperationHelper.ApplyFinishing(filledBgr, config);

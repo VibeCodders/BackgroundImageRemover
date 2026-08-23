@@ -32,7 +32,10 @@ public sealed class VignetteToolSessionViewModelTests
             vm.Strength = 1.0;
             Assert.Same(original, vm.ResultBitmap); // debounce: not applied synchronously
 
-            PumpDispatcher(TimeSpan.FromMilliseconds(600));
+            // Wait (polling the dispatcher) until the debounced off-thread run has rendered the
+            // darkened corner, instead of a fixed sleep that flakes when the CI runner is loaded.
+            WaitUntil(() => !ReferenceEquals(original, vm.ResultBitmap)
+                && PreviewPixel(vm, 0, 0) != new Vec4b(10, 20, 30, 255));
 
             Assert.True(vm.IsDirty);
             Assert.NotSame(original, vm.ResultBitmap);
@@ -47,8 +50,11 @@ public sealed class VignetteToolSessionViewModelTests
         RunOnSta(() =>
         {
             using var vm = CreateVm();
+            // The default 0.3 strength is already an active effect (corners darkened), so wait
+            // for the corner to CHANGE after strength 1.0 is applied through the debounce.
+            var initialCorner = PreviewPixel(vm, 0, 0);
             vm.Strength = 1.0;
-            PumpDispatcher(TimeSpan.FromMilliseconds(600));
+            WaitUntil(() => PreviewPixel(vm, 0, 0) != initialCorner); // strong vignette applied
             var strongCorner = PreviewPixel(vm, 0, 0);
 
             // Reset refreshes synchronously (no debounce): the corner visibly lightens because
@@ -56,11 +62,15 @@ public sealed class VignetteToolSessionViewModelTests
             // active effect for this tool, so IsDirty stays true — unchanged behavior.)
             vm.ResetCommand.Execute(null);
             var defaultCorner = PreviewPixel(vm, 0, 0);
+            var afterResetBitmap = vm.ResultBitmap;
             Assert.NotEqual(strongCorner, defaultCorner);
 
             // The property sets inside Reset arm the debounce again; the pending run must
-            // re-render the same default state (idempotent), not a stale strong vignette.
-            PumpDispatcher(TimeSpan.FromMilliseconds(600));
+            // re-render the same default state (idempotent) as a NEW bitmap instance — not a
+            // stale strong vignette. Wait for that new instance (the debounce run assigns a
+            // fresh BitmapSource even for identical pixels), then pin the pixels.
+            WaitUntil(() => !ReferenceEquals(vm.ResultBitmap, afterResetBitmap)
+                && PreviewPixel(vm, 0, 0) == defaultCorner);
             Assert.Equal(defaultCorner, PreviewPixel(vm, 0, 0));
         });
     }
@@ -115,5 +125,24 @@ public sealed class VignetteToolSessionViewModelTests
         };
         stop.Start();
         Dispatcher.PushFrame(frame);
+    }
+
+    /// <summary>
+    /// Pumps the STA dispatcher until <paramref name="condition"/> holds or a generous deadline
+    /// passes. Polling (rather than a fixed sleep) keeps the test robust when the CI runner is
+    /// loaded and starves the debounce/worker threads.
+    /// </summary>
+    private static void WaitUntil(Func<bool> condition)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (condition())
+            {
+                return;
+            }
+            PumpDispatcher(TimeSpan.FromMilliseconds(25));
+        }
+        Assert.Fail($"Condition not met within 10s: {condition.Method.Name}");
     }
 }

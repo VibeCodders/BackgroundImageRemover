@@ -199,7 +199,9 @@ public sealed class PreviewRunnerTests
             {
                 runner.RequestPreviewDebounced();
             }
-            PumpDispatcher(TimeSpan.FromMilliseconds(500));
+            // Wait until the coalesced run finishes (polling, not a fixed sleep: the CI runner
+            // can starve the debounce timer/worker and 500 ms is not a guarantee).
+            WaitUntil(() => harness.Completed >= 1);
 
             Assert.Equal(1, harness.Strategy.PreviewCalls);
             Assert.NotNull(harness.Result);
@@ -216,12 +218,31 @@ public sealed class PreviewRunnerTests
             using var runner = harness.CreateRunner();
 
             runner.RequestPreviewDebounced();
-            PumpDispatcher(TimeSpan.FromMilliseconds(500));
+            PumpDispatcher(TimeSpan.FromMilliseconds(500)); // negative assertion: just let the debounce window pass
 
             Assert.Equal(0, harness.Strategy.PreviewCalls);
             Assert.Null(harness.Result);
             Assert.Equal(0, harness.Completed);
         });
+    }
+
+    /// <summary>
+    /// Pumps the STA dispatcher until <paramref name="condition"/> holds or a generous deadline
+    /// passes. Polling (rather than a fixed sleep) keeps the test robust when the CI runner is
+    /// loaded and starves the debounce/worker threads.
+    /// </summary>
+    private static void WaitUntil(Func<bool> condition)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (condition())
+            {
+                return;
+            }
+            PumpDispatcher(TimeSpan.FromMilliseconds(25));
+        }
+        Assert.Fail($"Condition not met within 10s: {condition.Method.Name}");
     }
 
     /// <summary>Runs a test body on an STA thread: the runner renders WPF BitmapSources and its

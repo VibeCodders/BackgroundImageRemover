@@ -31,6 +31,12 @@ A WPF desktop application for removing backgrounds from images using AI (ONNX U2
 - **Gradient**: overlay a linear (angle-selectable) or radial two-color gradient onto the image
 - **Color Replace**: replace a target color (and close hues via tolerance/softness) with another color, optionally preserving the original luminance; click the preview to pick the target color
 - **Duotone**: map image brightness onto a two-color palette with adjustable midpoint and strength, plus ready-made preset palettes (Mono, Black & Gold, Navy & Amber, Violet & Cyan, ...)
+- **Sketch**: convert the image into a pencil sketch (luminance divided by its own blur) with adjustable softness and an optional negative inversion
+- **Emboss**: relief filter with a light direction that snaps to 45° steps, adjustable strength, and a classic grayscale mode (or per-channel color emboss)
+- **Bokeh**: scatter soft, blurred circles over the image with a chosen color, radius, count, opacity and edge blur
+- **Cartoon**: cartoon look — bilateral smoothing for flat colors, per-channel quantization and dark adaptive-threshold outlines (adjustable smoothness, levels and edge strength)
+- **Glow**: bloom around bright areas (luminance threshold, blur radius and strength) — dim images keep a neutral preview until the threshold is lowered
+- **Wave**: sinusoidal ripple distortion with amplitude, wavelength and ridge angle
 - New tools are registered **data-driven**: one factory registration in `App.xaml.cs` (metadata + session factory via the shared `ToolDefinition` / `StrategyToolDefinition` classes), a session view model, a data-templated view, an icon and unit tests — the palette and tab dispatch pick them up automatically. The modal tool-session chrome (badge + title + Cancel/Apply bar) is the shared `ToolSessionHeader` control, and color fields reuse the shared `ColorPickerField` control (swatch + popup picker) instead of per-tool picker boilerplate
 
 #### Logging improvements (new)

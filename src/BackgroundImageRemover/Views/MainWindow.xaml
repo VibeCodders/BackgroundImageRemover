@@ -150,6 +150,33 @@
         <DataTemplate DataType="{x:Type vm:PenToolSessionViewModel}">
             <views:PenToolSessionView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SketchToolSessionViewModel}">
+            <views:SketchToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:EmbossToolSessionViewModel}">
+            <views:EmbossToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BokehToolSessionViewModel}">
+            <views:BokehToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CartoonToolSessionViewModel}">
+            <views:CartoonToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:GlowToolSessionViewModel}">
+            <views:GlowToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:WaveToolSessionViewModel}">
+            <views:WaveToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ThermalToolSessionViewModel}">
+            <views:ThermalToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OilPaintToolSessionViewModel}">
+            <views:OilPaintToolSessionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HalftoneToolSessionViewModel}">
+            <views:HalftoneToolSessionView />
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">

@@ -114,5 +114,32 @@ public enum EditorTool
     Duotone,
 
     /// <summary>Freehand drawing (pen/brush) with a configurable color and width.</summary>
-    Pen
+    Pen,
+
+    /// <summary>Pencil-sketch rendering of the image.</summary>
+    Sketch,
+
+    /// <summary>Emboss (relief) filter with adjustable light direction and strength.</summary>
+    Emboss,
+
+    /// <summary>Decorative blurred circles (bokeh) overlaid on the image.</summary>
+    Bokeh,
+
+    /// <summary>Cartoon look: smoothed flat colors with dark outlines.</summary>
+    Cartoon,
+
+    /// <summary>Glow / bloom around the bright areas of the image.</summary>
+    Glow,
+
+    /// <summary>Wavy (ripple) distortion of the image.</summary>
+    Wave,
+
+    /// <summary>Thermal / heatmap palette mapped onto image luminance.</summary>
+    Thermal,
+
+    /// <summary>Oil-painting look: flat dominant colours in brush-sized neighbourhoods.</summary>
+    OilPaint,
+
+    /// <summary>Halftone dot-matrix rendering of the image.</summary>
+    Halftone
 }

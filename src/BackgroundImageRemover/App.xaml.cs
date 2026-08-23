@@ -219,6 +219,15 @@ public partial class App : Application
         services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Filters, "Filters", "Filters & FX", 0, "FiltersIcon", "Filters (F)", (shell, doc) => new FiltersToolSessionViewModel(shell, doc), shortcut: 'F'));
         services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Fx, "FX", "Filters & FX", 1, "FxIcon", "FX (K)", (shell, doc) => new FxToolSessionViewModel(shell, doc), shortcut: 'K'));
         services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.TiltShift, "Tilt-Shift", "Filters & FX", 2, "TiltShiftIcon", "Tilt-Shift (I)", (shell, doc) => new TiltShiftToolSessionViewModel(shell, doc), shortcut: 'I'));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Sketch, "Sketch", "Filters & FX", 3, "SketchIcon", "Pencil sketch effect", (shell, doc) => new SketchToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Emboss, "Emboss", "Filters & FX", 4, "EmbossIcon", "Emboss relief effect", (shell, doc) => new EmbossToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Cartoon, "Cartoon", "Filters & FX", 5, "CartoonIcon", "Cartoon look: flat colors and dark outlines", (shell, doc) => new CartoonToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Glow, "Glow", "Filters & FX", 6, "GlowIcon", "Glow around the bright areas", (shell, doc) => new GlowToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Wave, "Wave", "Filters & FX", 7, "WaveIcon", "Wavy (ripple) distortion", (shell, doc) => new WaveToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Thermal, "Thermal", "Filters & FX", 8, "ThermalIcon", "Thermal heatmap palette", (shell, doc) => new ThermalToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.OilPaint, "Oil Paint", "Filters & FX", 9, "OilPaintIcon", "Oil-painting effect", (shell, doc) => new OilPaintToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Halftone, "Halftone", "Filters & FX", 10, "HalftoneIcon", "Halftone dot-matrix rendering", (shell, doc) => new HalftoneToolSessionViewModel(shell, doc)));
+        services.AddSingleton<IToolDefinition>(_ => new ToolDefinition(EditorTool.Bokeh, "Bokeh", "Drawing", 4, "BokehIcon", "Decorative blurred circles", (shell, doc) => new BokehToolSessionViewModel(shell, doc)));
         services.AddSingleton<IToolDefinition>(sp =>
         {
             var dialogs = sp.GetRequiredService<IDialogService>();

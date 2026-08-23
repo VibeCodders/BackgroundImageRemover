@@ -72,17 +72,25 @@ public sealed class SamInferenceEngine : IDisposable
         padded.GetArray(out Vec3b[] pixels);
         var input = new DenseTensor<float>(new[] { 1, 3, EncoderInputSize, EncoderInputSize });
         // Contiguous [1,3,H,W] tensor: fill the flat buffer directly (CHW layout).
+        // Precompute scale/offset per channel: (px - mean) / std == px * scale - offset.
         var inputSpan = input.Buffer.Span;
         int plane = EncoderInputSize * EncoderInputSize;
+        float[] scale = new float[3];
+        float[] offset = new float[3];
+        for (int c = 0; c < 3; c++)
+        {
+            scale[c] = 1f / Std[c];
+            offset[c] = Mean[c] / Std[c];
+        }
         for (int y = 0; y < EncoderInputSize; y++)
         {
             for (int x = 0; x < EncoderInputSize; x++)
             {
                 var px = pixels[y * EncoderInputSize + x];
                 int i = y * EncoderInputSize + x;
-                inputSpan[i] = (px.Item0 - Mean[0]) / Std[0];
-                inputSpan[plane + i] = (px.Item1 - Mean[1]) / Std[1];
-                inputSpan[2 * plane + i] = (px.Item2 - Mean[2]) / Std[2];
+                inputSpan[i] = px.Item0 * scale[0] - offset[0];
+                inputSpan[plane + i] = px.Item1 * scale[1] - offset[1];
+                inputSpan[2 * plane + i] = px.Item2 * scale[2] - offset[2];
             }
         }
 

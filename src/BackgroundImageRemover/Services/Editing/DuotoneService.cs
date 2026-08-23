@@ -45,20 +45,22 @@ public static class DuotoneService
             var dark = new Vec3b(darkColor[0], darkColor[1], darkColor[2]);
             var light = new Vec3b(lightColor[0], lightColor[1], lightColor[2]);
 
-            // Bulk array access: one copy in/out instead of native interop per pixel.
-            byte[] grayData = PixelLoop.GetData<byte>(gray);
-            Vec3b[] srcData = PixelLoop.GetData<Vec3b>(bgr);
-            var dstData = new Vec3b[srcData.Length];
-            for (int i = 0; i < srcData.Length; i++)
+            // Zero-copy 2D views over the native buffers: no copies in or out.
+            var graySpan = gray.AsSpan2D<byte>();
+            var srcSpan = bgr.AsSpan2D<Vec3b>();
+            var dstSpan = result.AsSpan2D<Vec3b>();
+            for (int y = 0; y < h; y++)
             {
-                double lum = grayData[i] / 255.0;
-                double z = (lum - midpoint) / transition;
-                double f = SmoothStep(-0.5, 0.5, z);
+                for (int x = 0; x < w; x++)
+                {
+                    double lum = graySpan[y, x] / 255.0;
+                    double z = (lum - midpoint) / transition;
+                    double f = SmoothStep(-0.5, 0.5, z);
 
-                var target = PixelColor.Blend(dark, light, f);
-                dstData[i] = PixelColor.Blend(srcData[i], target, strength);
+                    var target = PixelColor.Blend(dark, light, f);
+                    dstSpan[y, x] = PixelColor.Blend(srcSpan[y, x], target, strength);
+                }
             }
-            PixelLoop.SetData(result, dstData);
 
             return result;
         }

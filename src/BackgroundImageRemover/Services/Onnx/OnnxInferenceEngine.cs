@@ -3,6 +3,7 @@ using BackgroundImageRemover.Services.Logging;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using OpenCvSharp;
+using SimdLinq;
 
 namespace BackgroundImageRemover.Services.Onnx;
 
@@ -91,17 +92,26 @@ public sealed class OnnxInferenceEngine : IDisposable
         var input = new DenseTensor<float>(new[] { 1, 3, inputSize, inputSize });
         // The tensor is contiguous [1,3,H,W]: fill its buffer directly (CHW layout), one
         // channel plane at a time, instead of going through the 4-D indexer per pixel.
+        // Precompute scale/offset per channel so each pixel is a multiply-add, not two
+        // divisions: (px / 255 - mean) / std == px * invScale - offset.
         var inputSpan = input.Buffer.Span;
         int plane = inputSize * inputSize;
+        float[] scale = new float[3];
+        float[] offset = new float[3];
+        for (int c = 0; c < 3; c++)
+        {
+            scale[c] = 1f / (255f * definition.Std[c]);
+            offset[c] = definition.Mean[c] / definition.Std[c];
+        }
         for (int y = 0; y < inputSize; y++)
         {
             for (int x = 0; x < inputSize; x++)
             {
                 var px = pixels[y * inputSize + x];
                 int i = y * inputSize + x;
-                inputSpan[i] = (px.Item0 / 255f - definition.Mean[0]) / definition.Std[0];
-                inputSpan[plane + i] = (px.Item1 / 255f - definition.Mean[1]) / definition.Std[1];
-                inputSpan[2 * plane + i] = (px.Item2 / 255f - definition.Mean[2]) / definition.Std[2];
+                inputSpan[i] = px.Item0 * scale[0] - offset[0];
+                inputSpan[plane + i] = px.Item1 * scale[1] - offset[1];
+                inputSpan[2 * plane + i] = px.Item2 * scale[2] - offset[2];
             }
         }
 
@@ -109,19 +119,13 @@ public sealed class OnnxInferenceEngine : IDisposable
         using var results = session.Run(new[] { NamedOnnxValue.CreateFromTensor(inputName, input) });
         var output = results.First().AsTensor<float>();
 
-        // DenseTensor<float> exposes its backing buffer as a span: normalize and rescale in
-        // one pass over the flat data instead of two passes through the 4-D indexer.
+        // DenseTensor<float> exposes its backing buffer as a span: normalize and rescale over
+        // the flat data, using SIMD-accelerated min/max from SimdLinq for the range.
         var maskBytes = new byte[inputSize * inputSize];
         if (output is DenseTensor<float> dense)
         {
             var outputSpan = dense.Buffer.Span;
-            float min = float.MaxValue, max = float.MinValue;
-            for (int i = 0; i < outputSpan.Length; i++)
-            {
-                float v = outputSpan[i];
-                if (v < min) min = v;
-                if (v > max) max = v;
-            }
+            (float min, float max) = outputSpan.MinMax();
             float range = Math.Max(1e-6f, max - min);
             for (int i = 0; i < maskBytes.Length; i++)
             {
@@ -131,17 +135,12 @@ public sealed class OnnxInferenceEngine : IDisposable
         }
         else
         {
-            float min = float.MaxValue, max = float.MinValue;
-            for (int i = 0; i < maskBytes.Length; i++)
-            {
-                float v = output.GetValue(i);
-                if (v < min) min = v;
-                if (v > max) max = v;
-            }
+            float[] fallback = output.ToArray();
+            (float min, float max) = fallback.MinMax();
             float range = Math.Max(1e-6f, max - min);
             for (int i = 0; i < maskBytes.Length; i++)
             {
-                float v = (output.GetValue(i) - min) / range;
+                float v = (fallback[i] - min) / range;
                 maskBytes[i] = (byte)Math.Clamp(v * 255f, 0f, 255f);
             }
         }

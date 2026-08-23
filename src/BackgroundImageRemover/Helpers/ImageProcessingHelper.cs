@@ -104,15 +104,17 @@ public static class ImageProcessingHelper
                         using var shiftPositive = new Mat();
                         Cv2.Add(hFloat, Scalar.All(360.0), shiftPositive);
 
-                        float[] shiftedData = PixelLoop.GetData<float>(shiftPositive);
-                        byte[] hueData = PixelLoop.GetData<byte>(channels[0]);
-                        for (int i = 0; i < shiftedData.Length; i++)
+                        var shiftedSpan = shiftPositive.AsSpan2D<float>();
+                        var hueSpan = channels[0].AsSpan2D<byte>();
+                        for (int r = 0; r < shiftedSpan.Height; r++)
                         {
-                            float val = shiftedData[i] % 180f;
-                            if (val < 0) val += 180f;
-                            hueData[i] = (byte)val;
+                            for (int c = 0; c < shiftedSpan.Width; c++)
+                            {
+                                float val = shiftedSpan[r, c] % 180f;
+                                if (val < 0) val += 180f;
+                                hueSpan[r, c] = (byte)val;
+                            }
                         }
-                        PixelLoop.SetData(channels[0], hueData);
 
                         // Saturation multiplier
                         if (Math.Abs(adjustments.Saturation - 1.0) > 1e-4)
@@ -335,21 +337,20 @@ public static class ImageProcessingHelper
         float centerX = size.Width / 2.0f;
         float centerY = size.Height / 2.0f;
         float maxDistance = MathF.Sqrt(centerX * centerX + centerY * centerY);
-        int cols = size.Width;
 
-        float[] data = PixelLoop.GetData<float>(mask);
-        for (int i = 0; i < data.Length; i++)
+        var span = mask.AsSpan2D<float>();
+        for (int r = 0; r < span.Height; r++)
         {
-            int c = i % cols;
-            int r = i / cols;
-            float dx = c - centerX;
             float dy = r - centerY;
-            float dist = MathF.Sqrt(dx * dx + dy * dy) / maxDistance;
-            // Cosine smooth roll-off
-            float factor = 1.0f - (float)strength * MathF.Pow(dist, 1.8f);
-            data[i] = Math.Clamp(factor, 0.0f, 1.0f);
+            for (int c = 0; c < span.Width; c++)
+            {
+                float dx = c - centerX;
+                float dist = MathF.Sqrt(dx * dx + dy * dy) / maxDistance;
+                // Cosine smooth roll-off
+                float factor = 1.0f - (float)strength * MathF.Pow(dist, 1.8f);
+                span[r, c] = Math.Clamp(factor, 0.0f, 1.0f);
+            }
         }
-        PixelLoop.SetData(mask, data);
 
         return mask;
     }

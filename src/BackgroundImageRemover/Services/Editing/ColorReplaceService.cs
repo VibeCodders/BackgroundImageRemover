@@ -47,48 +47,50 @@ public static class ColorReplaceService
 
         try
         {
-            // Bulk array access: one copy in/out instead of native interop per pixel.
-            Vec3b[] hsvData = PixelLoop.GetData<Vec3b>(hsv);
-            Vec3b[] srcData = PixelLoop.GetData<Vec3b>(bgr);
-            var dstData = new Vec3b[srcData.Length];
-            for (int i = 0; i < srcData.Length; i++)
+            // Zero-copy 2D views over the native buffers: no copies in or out.
+            var hsvSpan = hsv.AsSpan2D<Vec3b>();
+            var srcSpan = bgr.AsSpan2D<Vec3b>();
+            var dstSpan = result.AsSpan2D<Vec3b>();
+            for (int y = 0; y < h; y++)
             {
-                Vec3b px = hsvData[i];
-                double hueDist = Math.Abs(px[0] - tHue);
-                hueDist = Math.Min(hueDist, 180 - hueDist);
-                double sd = Math.Abs(px[1] - tSat) / 255.0;
-                double vd = Math.Abs(px[2] - tVal) / 255.0;
-                double d = Math.Sqrt((hueDist / 180.0) * (hueDist / 180.0) + sd * sd + vd * vd) / Math.Sqrt(3.0);
+                for (int x = 0; x < w; x++)
+                {
+                    Vec3b px = hsvSpan[y, x];
+                    double hueDist = Math.Abs(px[0] - tHue);
+                    hueDist = Math.Min(hueDist, 180 - hueDist);
+                    double sd = Math.Abs(px[1] - tSat) / 255.0;
+                    double vd = Math.Abs(px[2] - tVal) / 255.0;
+                    double d = Math.Sqrt((hueDist / 180.0) * (hueDist / 180.0) + sd * sd + vd * vd) / Math.Sqrt(3.0);
 
-                double factor;
-                if (d <= edgeStart)
-                {
-                    factor = 1.0;
-                }
-                else if (d >= tolerance)
-                {
-                    factor = 0.0;
-                }
-                else
-                {
-                    factor = softness <= EditingGuard.Epsilon ? 1.0 : (tolerance - d) / (tolerance - edgeStart);
-                }
+                    double factor;
+                    if (d <= edgeStart)
+                    {
+                        factor = 1.0;
+                    }
+                    else if (d >= tolerance)
+                    {
+                        factor = 0.0;
+                    }
+                    else
+                    {
+                        factor = softness <= EditingGuard.Epsilon ? 1.0 : (tolerance - d) / (tolerance - edgeStart);
+                    }
 
-                Vec3b original = srcData[i];
-                Vec3b replacement = newColor;
-                if (preserveLuminance && newV > 0)
-                {
-                    double originalV = Math.Max(original[0], Math.Max(original[1], original[2]));
-                    double scale = originalV / newV;
-                    replacement = new Vec3b(
-                        ClampByte(newColor[0] * scale),
-                        ClampByte(newColor[1] * scale),
-                        ClampByte(newColor[2] * scale));
-                }
+                    Vec3b original = srcSpan[y, x];
+                    Vec3b replacement = newColor;
+                    if (preserveLuminance && newV > 0)
+                    {
+                        double originalV = Math.Max(original[0], Math.Max(original[1], original[2]));
+                        double scale = originalV / newV;
+                        replacement = new Vec3b(
+                            ClampByte(newColor[0] * scale),
+                            ClampByte(newColor[1] * scale),
+                            ClampByte(newColor[2] * scale));
+                    }
 
-                dstData[i] = PixelColor.Blend(original, replacement, factor);
+                    dstSpan[y, x] = PixelColor.Blend(original, replacement, factor);
+                }
             }
-            PixelLoop.SetData(result, dstData);
 
             return result;
         }

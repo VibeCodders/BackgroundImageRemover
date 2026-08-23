@@ -71,8 +71,8 @@ public static class HsvPixelAdjuster
     }
 
     /// <summary>
-    /// Adjusts every pixel of an HSV Mat in place using bulk array access (one copy in/out
-    /// instead of native interop per pixel). Semantically identical to calling
+    /// Adjusts every pixel of an HSV Mat in place via a zero-copy 2D view (no copies in/out,
+    /// no native interop per pixel). Semantically identical to calling
     /// <see cref="AdjustPixelInMat"/> for each pixel, but much faster on large images.
     /// </summary>
     public static void AdjustPixelArray(
@@ -80,11 +80,13 @@ public static class HsvPixelAdjuster
         double hueShift, double satMultiplier, double valMultiplier)
     {
         ArgumentNullException.ThrowIfNull(hsvMat);
-        Vec3b[] pixels = PixelLoop.GetData<Vec3b>(hsvMat);
-        for (int i = 0; i < pixels.Length; i++)
+        var hsvSpan = hsvMat.AsSpan2D<Vec3b>();
+        for (int y = 0; y < hsvSpan.Height; y++)
         {
-            AdjustPixel(ref pixels[i], hueShift, satMultiplier, valMultiplier);
+            for (int x = 0; x < hsvSpan.Width; x++)
+            {
+                AdjustPixel(ref hsvSpan[y, x], hueShift, satMultiplier, valMultiplier);
+            }
         }
-        PixelLoop.SetData(hsvMat, pixels);
     }
 }

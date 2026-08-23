@@ -28,20 +28,19 @@ public static class WaveService
 
         using var mapX = new Mat(h, w, MatType.CV_32FC1);
         using var mapY = new Mat(h, w, MatType.CV_32FC1);
-        float[] mapXData = PixelLoop.GetData<float>(mapX);
-        float[] mapYData = PixelLoop.GetData<float>(mapY);
-        for (int i = 0; i < mapXData.Length; i++)
+        var mapXSpan = mapX.AsSpan2D<float>();
+        var mapYSpan = mapY.AsSpan2D<float>();
+        for (int y = 0; y < h; y++)
         {
-            int x = i % w;
-            int y = i / w;
-            // Coordinate along the wave direction.
-            double u = x * cosA + y * sinA;
-            double offset = amplitude * Math.Sin(2.0 * Math.PI * u / wl);
-            mapXData[i] = (float)(x - offset * sinA);
-            mapYData[i] = (float)(y + offset * cosA);
+            for (int x = 0; x < w; x++)
+            {
+                // Coordinate along the wave direction.
+                double u = x * cosA + y * sinA;
+                double offset = amplitude * Math.Sin(2.0 * Math.PI * u / wl);
+                mapXSpan[y, x] = (float)(x - offset * sinA);
+                mapYSpan[y, x] = (float)(y + offset * cosA);
+            }
         }
-        PixelLoop.SetData(mapX, mapXData);
-        PixelLoop.SetData(mapY, mapYData);
 
         var result = new Mat();
         Cv2.Remap(bgr, result, mapX, mapY, InterpolationFlags.Linear, BorderTypes.Replicate);

@@ -136,17 +136,19 @@ public static class FrameService
         var result = new Mat(h, w, MatType.CV_8UC4, Scalar.All(0));
 
         double denom = Math.Max(1, w + h - 2);
-        Vec4b[] data = PixelLoop.GetData<Vec4b>(result);
-        for (int i = 0; i < data.Length; i++)
+        var span = result.AsSpan2D<Vec4b>();
+        for (int y = 0; y < h; y++)
         {
-            double t = (double)(i % w + i / w) / denom;
-            data[i] = new Vec4b(
-                (byte)Math.Round(colorA.Item0 + (colorB.Item0 - colorA.Item0) * t),
-                (byte)Math.Round(colorA.Item1 + (colorB.Item1 - colorA.Item1) * t),
-                (byte)Math.Round(colorA.Item2 + (colorB.Item2 - colorA.Item2) * t),
-                a);
+            for (int x = 0; x < w; x++)
+            {
+                double t = (double)(x + y) / denom;
+                span[y, x] = new Vec4b(
+                    (byte)Math.Round(colorA.Item0 + (colorB.Item0 - colorA.Item0) * t),
+                    (byte)Math.Round(colorA.Item1 + (colorB.Item1 - colorA.Item1) * t),
+                    (byte)Math.Round(colorA.Item2 + (colorB.Item2 - colorA.Item2) * t),
+                    a);
+            }
         }
-        PixelLoop.SetData(result, data);
 
         PasteInner(result, bgra, thickness, thickness);
         return result;
@@ -205,16 +207,16 @@ public static class FrameService
         double cy = (bgra.Height - 1) / 2.0;
         double maxDist = Math.Max(1e-6, Math.Sqrt(cx * cx + cy * cy));
         int w = bgra.Width;
-        float[] factorData = PixelLoop.GetData<float>(factor);
-        for (int i = 0; i < factorData.Length; i++)
+        var factorSpan = factor.AsSpan2D<float>();
+        for (int y = 0; y < factorSpan.Height; y++)
         {
-            int x = i % w;
-            int y = i / w;
-            double d = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / maxDist;
-            double falloff = Math.Clamp((d - 0.35) / 0.65, 0.0, 1.0);
-            factorData[i] = (float)(strength * falloff * falloff);
+            for (int x = 0; x < factorSpan.Width; x++)
+            {
+                double d = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) / maxDist;
+                double falloff = Math.Clamp((d - 0.35) / 0.65, 0.0, 1.0);
+                factorSpan[y, x] = (float)(strength * falloff * falloff);
+            }
         }
-        PixelLoop.SetData(factor, factorData);
 
         using var split = ChannelSplit.Of(bgra);
         // Channel values are on the 0..255 scale (matching chF/baseW below), so the target

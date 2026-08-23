@@ -74,8 +74,9 @@ public static class OilPaintService
                     anchor: new Point(-1, -1), normalize: false, BorderTypes.Replicate);
             }
 
-            // Pick the dominant bin per pixel and take its average colour. Bulk array access:
-            // one copy in/out per bin instead of native interop per pixel per bin.
+            // Pick the dominant bin per pixel and take its average colour. Each bin's counts
+            // and channel sums are float Mats; copy them into flat managed arrays once so the
+            // per-pixel loop indexes plain memory instead of a Mat per bin per pixel.
             var result = new Mat(bgr.Size(), MatType.CV_8UC3);
             var countData = new float[levels][];
             var sumBData = new float[levels][];
@@ -89,7 +90,8 @@ public static class OilPaintService
                 sumRData[b] = PixelLoop.GetData<float>(sumsR[b]);
             }
             Vec3b[] srcData = PixelLoop.GetData<Vec3b>(bgr);
-            var resultData = new Vec3b[srcData.Length];
+            var dstSpan = result.AsSpan2D<Vec3b>();
+            int cols = dstSpan.Width;
             for (int i = 0; i < srcData.Length; i++)
             {
                 int best = 0;
@@ -111,9 +113,8 @@ public static class OilPaintService
                 byte vb = bestCount > 0 ? (byte)Math.Clamp(cb / bestCount, 0, 255) : src.Item0;
                 byte vg = bestCount > 0 ? (byte)Math.Clamp(cg / bestCount, 0, 255) : src.Item1;
                 byte vr = bestCount > 0 ? (byte)Math.Clamp(cr / bestCount, 0, 255) : src.Item2;
-                resultData[i] = new Vec3b(vb, vg, vr);
+                dstSpan[i / cols, i % cols] = new Vec3b(vb, vg, vr);
             }
-            PixelLoop.SetData(result, resultData);
 
             return result;
         }

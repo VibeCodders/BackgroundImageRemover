@@ -22,8 +22,7 @@ public static class HalftoneService
         var result = new Mat(bgr.Size(), MatType.CV_8UC3, Scalar.All(255));
         float maxRadius = cellSize * 0.5f;
         double maxDotR = Math.Max(1.0, maxRadius);
-        byte[] grayData = PixelLoop.GetData<byte>(gray);
-        int grayCols = gray.Cols;
+        var graySpan = gray.AsSpan2D<byte>();
 
         for (int cy = cellSize / 2; cy < bgr.Height; cy += cellSize)
         {
@@ -40,7 +39,7 @@ public static class HalftoneService
                 {
                     for (int x = x0; x < x1; x++)
                     {
-                        lum += grayData[y * grayCols + x];
+                        lum += graySpan[y, x];
                         n++;
                     }
                 }

@@ -29,22 +29,22 @@ public static class VignetteService
 
         // Build a radial falloff mask (0 at center, strength at corners).
         var mask = new Mat(h, w, MatType.CV_32FC1, Scalar.All(0));
-        float[] maskData = PixelLoop.GetData<float>(mask);
-        for (int i = 0; i < maskData.Length; i++)
+        var maskSpan = mask.AsSpan2D<float>();
+        for (int y = 0; y < h; y++)
         {
-            int x = i % w;
-            int y = i / w;
-            double dx = (x - cx) / (w / 2.0);
-            double dy = (y - cy) / (h / 2.0);
-            // Roundness blends between elliptical (0) and circular (1).
-            double r = Math.Sqrt(dx * dx * (1 - roundness) + dy * dy * (1 - roundness) + dx * dx * roundness + dy * dy * roundness);
-            double dist = r * maxRadius * 0.5;
-            double t = Math.Clamp(dist / radius, 0.0, 1.0);
-            // Feather softens the transition.
-            t = Math.Pow(t, 1.0 + feather * 2.0);
-            maskData[i] = (float)(t * strength);
+            for (int x = 0; x < w; x++)
+            {
+                double dx = (x - cx) / (w / 2.0);
+                double dy = (y - cy) / (h / 2.0);
+                // Roundness blends between elliptical (0) and circular (1).
+                double r = Math.Sqrt(dx * dx * (1 - roundness) + dy * dy * (1 - roundness) + dx * dx * roundness + dy * dy * roundness);
+                double dist = r * maxRadius * 0.5;
+                double t = Math.Clamp(dist / radius, 0.0, 1.0);
+                // Feather softens the transition.
+                t = Math.Pow(t, 1.0 + feather * 2.0);
+                maskSpan[y, x] = (float)(t * strength);
+            }
         }
-        PixelLoop.SetData(mask, maskData);
 
         try
         {

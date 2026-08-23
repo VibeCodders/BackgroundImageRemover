@@ -22,37 +22,37 @@ public static class CloneStampService
         opacity = Math.Clamp(opacity, 0.0, 1.0);
         var result = bgr.Clone();
 
-        // Bulk array access: one copy in/out instead of native interop per pixel.
-        byte[] maskData = PixelLoop.GetData<byte>(mask);
-        Vec3b[] dstData = PixelLoop.GetData<Vec3b>(result);
-        int cols = result.Cols;
+        // Zero-copy 2D views over the native buffers: no copies in or out.
+        var maskSpan = mask.AsSpan2D<byte>();
+        var dstSpan = result.AsSpan2D<Vec3b>();
         int rows = result.Rows;
-        for (int i = 0; i < dstData.Length; i++)
+        int cols = result.Cols;
+        for (int y = 0; y < rows; y++)
         {
-            byte maskValue = maskData[i];
-            if (maskValue == 0)
+            for (int x = 0; x < cols; x++)
             {
-                continue;
-            }
+                byte maskValue = maskSpan[y, x];
+                if (maskValue == 0)
+                {
+                    continue;
+                }
 
-            int y = i / cols;
-            int x = i % cols;
-            int srcY = y - (int)sourceOffset.Y;
-            int srcX = x - (int)sourceOffset.X;
-            if (srcY < 0 || srcY >= rows || srcX < 0 || srcX >= cols)
-            {
-                continue;
-            }
+                int srcY = y - (int)sourceOffset.Y;
+                int srcX = x - (int)sourceOffset.X;
+                if (srcY < 0 || srcY >= rows || srcX < 0 || srcX >= cols)
+                {
+                    continue;
+                }
 
-            double alpha = maskValue / 255.0 * opacity;
-            Vec3b src = dstData[srcY * cols + srcX];
-            Vec3b dst = dstData[i];
-            dstData[i] = new Vec3b(
-                (byte)Math.Round(dst[0] * (1 - alpha) + src[0] * alpha),
-                (byte)Math.Round(dst[1] * (1 - alpha) + src[1] * alpha),
-                (byte)Math.Round(dst[2] * (1 - alpha) + src[2] * alpha));
+                double alpha = maskValue / 255.0 * opacity;
+                Vec3b src = dstSpan[srcY, srcX];
+                Vec3b dst = dstSpan[y, x];
+                dstSpan[y, x] = new Vec3b(
+                    (byte)Math.Round(dst[0] * (1 - alpha) + src[0] * alpha),
+                    (byte)Math.Round(dst[1] * (1 - alpha) + src[1] * alpha),
+                    (byte)Math.Round(dst[2] * (1 - alpha) + src[2] * alpha));
+            }
         }
-        PixelLoop.SetData(result, dstData);
 
         return result;
     }

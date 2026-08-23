@@ -1,3 +1,4 @@
+using CommunityToolkit.HighPerformance;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Helpers;
@@ -43,16 +44,6 @@ public static class PixelLoop
     }
 
     /// <summary>
-    /// Writes a flat row-major array back into <paramref name="mat"/> (which must be
-    /// continuous, i.e. not a sub-mat view). Companion to <see cref="GetData{T}"/>.
-    /// </summary>
-    public static void SetData<T>(Mat mat, T[] data) where T : unmanaged
-    {
-        ArgumentNullException.ThrowIfNull(mat);
-        mat.SetArray(data);
-    }
-
-    /// <summary>
     /// Runs <paramref name="action"/> once per (row, column) pair of a
     /// <paramref name="rows"/> × <paramref name="cols"/> grid, in row-major order.
     /// </summary>
@@ -66,5 +57,30 @@ public static class PixelLoop
                 action(y, x);
             }
         }
+    }
+
+    /// <summary>
+    /// Wraps the Mat's native buffer as a zero-copy 2D view (<see cref="Span2D{T}"/> from
+    /// CommunityToolkit.HighPerformance), indexed as <c>[row, column]</c>. No data is copied
+    /// in or out — reads and writes hit the OpenCV memory directly — and the view honors the
+    /// Mat's row stride, so non-continuous views (ROIs) work too. <typeparamref name="T"/> must
+    /// match the Mat's element type (e.g. <see cref="Vec3b"/> for CV_8UC3, byte for CV_8UC1,
+    /// float for CV_32FC1, <see cref="Vec4b"/> for CV_8UC4). The returned view is only valid
+    /// while the Mat is alive; do not use it after the Mat is disposed.
+    /// </summary>
+    public static unsafe Span2D<T> AsSpan2D<T>(this Mat mat) where T : unmanaged
+    {
+        ArgumentNullException.ThrowIfNull(mat);
+        if (mat.IsDisposed || mat.Empty())
+        {
+            return default;
+        }
+
+        int rows = mat.Rows;
+        int cols = mat.Cols;
+        long step = mat.Step();          // bytes per row (parent stride for ROI views)
+        long elemSize = mat.ElemSize();  // bytes per element
+        int padding = (int)((step / elemSize) - cols);
+        return new Span2D<T>((T*)mat.DataPointer, rows, cols, padding);
     }
 }

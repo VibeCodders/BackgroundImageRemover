@@ -21,18 +21,20 @@ public static class HueSatService
     public static Mat AdjustHueSatRegion(Mat bgr, Mat mask, double hueShift, double satMult, double valMult)
     {
         using var hsv = HsvHelper.BgrToHsv(bgr);
-        Vec3b[] pixels = PixelLoop.GetData<Vec3b>(hsv);
-        byte[] maskData = PixelLoop.GetData<byte>(mask);
-        for (int i = 0; i < pixels.Length; i++)
+        var hsvSpan = hsv.AsSpan2D<Vec3b>();
+        var maskSpan = mask.AsSpan2D<byte>();
+        for (int y = 0; y < hsvSpan.Height; y++)
         {
-            if (maskData[i] == 0)
+            for (int x = 0; x < hsvSpan.Width; x++)
             {
-                continue;
-            }
+                if (maskSpan[y, x] == 0)
+                {
+                    continue;
+                }
 
-            HsvPixelAdjuster.AdjustPixel(ref pixels[i], hueShift, satMult, valMult);
+                HsvPixelAdjuster.AdjustPixel(ref hsvSpan[y, x], hueShift, satMult, valMult);
+            }
         }
-        PixelLoop.SetData(hsv, pixels);
 
         return HsvHelper.HsvToBgr(hsv);
     }

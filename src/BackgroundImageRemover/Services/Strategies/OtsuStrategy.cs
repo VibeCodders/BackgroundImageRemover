@@ -1,5 +1,6 @@
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
+using CommunityToolkit.HighPerformance;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Strategies;
@@ -39,29 +40,29 @@ public sealed class OtsuStrategy : StrategyBase
 
     private static bool BorderIsMostlyBright(Mat binary)
     {
-        byte[] data = PixelLoop.GetData<byte>(binary);
-        int cols = binary.Cols;
-        int rows = binary.Rows;
+        var span = binary.AsSpan2D<byte>();
+        int cols = span.Width;
+        int rows = span.Height;
         int bright = 0;
         int dark = 0;
 
         for (int x = 0; x < cols; x++)
         {
-            Count(data, x, 0, cols, ref bright, ref dark);
-            Count(data, x, rows - 1, cols, ref bright, ref dark);
+            Count(span, x, 0, ref bright, ref dark);
+            Count(span, x, rows - 1, ref bright, ref dark);
         }
         for (int y = 0; y < rows; y++)
         {
-            Count(data, 0, y, cols, ref bright, ref dark);
-            Count(data, cols - 1, y, cols, ref bright, ref dark);
+            Count(span, 0, y, ref bright, ref dark);
+            Count(span, cols - 1, y, ref bright, ref dark);
         }
 
         return bright >= dark;
     }
 
-    private static void Count(byte[] data, int x, int y, int cols, ref int bright, ref int dark)
+    private static void Count(Span2D<byte> span, int x, int y, ref int bright, ref int dark)
     {
-        if (data[y * cols + x] > 0)
+        if (span[y, x] > 0)
         {
             bright++;
         }

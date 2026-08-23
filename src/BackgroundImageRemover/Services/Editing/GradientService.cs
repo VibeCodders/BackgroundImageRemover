@@ -1,4 +1,5 @@
 using BackgroundImageRemover.Helpers;
+using CommunityToolkit.HighPerformance;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -48,8 +49,8 @@ public static class GradientService
 
         try
         {
-            float[] maskData = PixelLoop.GetData<float>(mask);
-            Vec3b[] overlayData = PixelLoop.GetData<Vec3b>(overlay);
+            var maskSpan = mask.AsSpan2D<float>();
+            var overlaySpan = overlay.AsSpan2D<Vec3b>();
 
             if (kind == GradientKind.Linear)
             {
@@ -68,13 +69,14 @@ public static class GradientService
                     maxProj = 1;
                 }
 
-                for (int i = 0; i < maskData.Length; i++)
+                for (int y = 0; y < h; y++)
                 {
-                    int x = i % w;
-                    int y = i / w;
-                    double proj = (x - cx) * dirX + (y - cy) * dirY;
-                    double t = (proj / maxProj + 1.0) * 0.5;
-                    WriteGradient(maskData, overlayData, i, Math.Clamp(t, 0.0, 1.0), opacity, colorA, colorB);
+                    for (int x = 0; x < w; x++)
+                    {
+                        double proj = (x - cx) * dirX + (y - cy) * dirY;
+                        double t = (proj / maxProj + 1.0) * 0.5;
+                        WriteGradient(maskSpan, overlaySpan, x, y, Math.Clamp(t, 0.0, 1.0), opacity, colorA, colorB);
+                    }
                 }
             }
             else
@@ -85,17 +87,15 @@ public static class GradientService
                     maxR = 1;
                 }
 
-                for (int i = 0; i < maskData.Length; i++)
+                for (int y = 0; y < h; y++)
                 {
-                    int x = i % w;
-                    int y = i / w;
-                    double dist = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
-                    WriteGradient(maskData, overlayData, i, Math.Clamp(dist / maxR, 0.0, 1.0), opacity, colorA, colorB);
+                    for (int x = 0; x < w; x++)
+                    {
+                        double dist = Math.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                        WriteGradient(maskSpan, overlaySpan, x, y, Math.Clamp(dist / maxR, 0.0, 1.0), opacity, colorA, colorB);
+                    }
                 }
             }
-
-            PixelLoop.SetData(mask, maskData);
-            PixelLoop.SetData(overlay, overlayData);
 
             // Gravity-fill never fails below: BlendByMask builds a fresh Mat.
             var result = bgr.BlendByMask(overlay, mask);
@@ -111,10 +111,10 @@ public static class GradientService
         }
     }
 
-    private static void WriteGradient(float[] maskData, Vec3b[] overlayData, int i, double t, double opacity, Vec3b colorA, Vec3b colorB)
+    private static void WriteGradient(Span2D<float> maskSpan, Span2D<Vec3b> overlaySpan, int x, int y, double t, double opacity, Vec3b colorA, Vec3b colorB)
     {
-        maskData[i] = (float)(t * opacity);
-        overlayData[i] = new Vec3b(
+        maskSpan[y, x] = (float)(t * opacity);
+        overlaySpan[y, x] = new Vec3b(
             (byte)(colorA[0] + (colorB[0] - colorA[0]) * t),
             (byte)(colorA[1] + (colorB[1] - colorA[1]) * t),
             (byte)(colorA[2] + (colorB[2] - colorA[2]) * t));

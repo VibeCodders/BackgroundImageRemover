@@ -54,22 +54,20 @@ public static class FxService
         var c = color ?? new Vec3b(80, 120, 255); // warm orange-red in BGR
         var result = bgr.Clone();
         float maxDist = MathF.Sqrt(bgr.Width * bgr.Width + bgr.Height * bgr.Height);
-        int cols = bgr.Cols;
-        Vec3b[] data = PixelLoop.GetData<Vec3b>(result);
-        for (int i = 0; i < data.Length; i++)
+        var span = result.AsSpan2D<Vec3b>();
+        for (int y = 0; y < span.Height; y++)
         {
-            int x = i % cols;
-            int y = i / cols;
-            float d = MathF.Sqrt(x * x + y * y) / maxDist;
-            float falloff = MathF.Pow(1.0f - d, 2.0f);
-            float amount = (float)strength * falloff;
-            var px = data[i];
-            px.Item0 = (byte)Math.Min(255, px.Item0 + c.Item0 * amount);
-            px.Item1 = (byte)Math.Min(255, px.Item1 + c.Item1 * amount);
-            px.Item2 = (byte)Math.Min(255, px.Item2 + c.Item2 * amount);
-            data[i] = px;
+            for (int x = 0; x < span.Width; x++)
+            {
+                float d = MathF.Sqrt(x * x + y * y) / maxDist;
+                float falloff = MathF.Pow(1.0f - d, 2.0f);
+                float amount = (float)strength * falloff;
+                ref var px = ref span[y, x];
+                px.Item0 = (byte)Math.Min(255, px.Item0 + c.Item0 * amount);
+                px.Item1 = (byte)Math.Min(255, px.Item1 + c.Item1 * amount);
+                px.Item2 = (byte)Math.Min(255, px.Item2 + c.Item2 * amount);
+            }
         }
-        PixelLoop.SetData(result, data);
         return result;
     }
 
@@ -134,22 +132,20 @@ public static class FxService
     {
         using var mapX = new Mat(channel.Size(), MatType.CV_32FC1);
         using var mapY = new Mat(channel.Size(), MatType.CV_32FC1);
-        float[] mapXData = PixelLoop.GetData<float>(mapX);
-        float[] mapYData = PixelLoop.GetData<float>(mapY);
-        int cols = channel.Cols;
-        for (int i = 0; i < mapXData.Length; i++)
+        var mapXSpan = mapX.AsSpan2D<float>();
+        var mapYSpan = mapY.AsSpan2D<float>();
+        for (int y = 0; y < mapXSpan.Height; y++)
         {
-            int x = i % cols;
-            int y = i / cols;
-            float dx = x - cx;
-            float dy = y - cy;
-            float norm = maxR > 0 ? MathF.Sqrt(dx * dx + dy * dy) / maxR : 0;
-            float scale = 1.0f + strength * 0.06f * norm;
-            mapXData[i] = cx + dx * scale;
-            mapYData[i] = cy + dy * scale;
+            for (int x = 0; x < mapXSpan.Width; x++)
+            {
+                float dx = x - cx;
+                float dy = y - cy;
+                float norm = maxR > 0 ? MathF.Sqrt(dx * dx + dy * dy) / maxR : 0;
+                float scale = 1.0f + strength * 0.06f * norm;
+                mapXSpan[y, x] = cx + dx * scale;
+                mapYSpan[y, x] = cy + dy * scale;
+            }
         }
-        PixelLoop.SetData(mapX, mapXData);
-        PixelLoop.SetData(mapY, mapYData);
 
         var result = new Mat();
         Cv2.Remap(channel, result, mapX, mapY, InterpolationFlags.Linear, BorderTypes.Constant, Scalar.All(0));

@@ -41,37 +41,41 @@ public static class NoiseService
 
         if (channels == 1)
         {
-            byte[] data = PixelLoop.GetData<byte>(result);
-            for (int i = 0; i < data.Length; i++)
+            var span = result.AsSpan2D<byte>();
+            for (int y = 0; y < span.Height; y++)
             {
-                double r = rng.NextDouble();
-                if (r < saltProb)
+                for (int x = 0; x < span.Width; x++)
                 {
-                    data[i] = 255;
-                }
-                else if (r < saltProb + pepperProb)
-                {
-                    data[i] = 0;
+                    double r = rng.NextDouble();
+                    if (r < saltProb)
+                    {
+                        span[y, x] = 255;
+                    }
+                    else if (r < saltProb + pepperProb)
+                    {
+                        span[y, x] = 0;
+                    }
                 }
             }
-            PixelLoop.SetData(result, data);
         }
         else
         {
-            Vec3b[] data = PixelLoop.GetData<Vec3b>(result);
-            for (int i = 0; i < data.Length; i++)
+            var span = result.AsSpan2D<Vec3b>();
+            for (int y = 0; y < span.Height; y++)
             {
-                double r = rng.NextDouble();
-                if (r < saltProb)
+                for (int x = 0; x < span.Width; x++)
                 {
-                    data[i] = new Vec3b(255, 255, 255);
-                }
-                else if (r < saltProb + pepperProb)
-                {
-                    data[i] = new Vec3b(0, 0, 0);
+                    double r = rng.NextDouble();
+                    if (r < saltProb)
+                    {
+                        span[y, x] = new Vec3b(255, 255, 255);
+                    }
+                    else if (r < saltProb + pepperProb)
+                    {
+                        span[y, x] = new Vec3b(0, 0, 0);
+                    }
                 }
             }
-            PixelLoop.SetData(result, data);
         }
 
         return result;

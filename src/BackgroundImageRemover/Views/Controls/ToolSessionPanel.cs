@@ -7,12 +7,16 @@ namespace BackgroundImageRemover.Views.Controls;
 /// Shared tool-session layout: the bottom status bar, the right-hand settings panel
 /// (title + optional description + content + reset button) and the preview area.
 /// Replaces the Border/ScrollViewer/StatusBar chrome duplicated across every tool view.
+/// The visual tree lives in the default style template (App.xaml); the view supplies the
+/// <see cref="Panel"/> and <see cref="Preview"/> content, so named elements inside them
+/// stay in the view's own namescope.
 /// </summary>
-public partial class ToolSessionPanel : UserControl
+public class ToolSessionPanel : Control
 {
-    public ToolSessionPanel()
+    static ToolSessionPanel()
     {
-        InitializeComponent();
+        DefaultStyleKeyProperty.OverrideMetadata(typeof(ToolSessionPanel),
+            new FrameworkPropertyMetadata(typeof(ToolSessionPanel)));
     }
 
     /// <summary>Panel title shown above the settings content.</summary>

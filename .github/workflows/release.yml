@@ -72,11 +72,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          gh auth login --with-token <<< "$GH_TOKEN"
           gh release create "${{ steps.tag.outputs.tag }}" \
             "publish/dist/BackgroundImageRemover-win-x64-self-contained.zip" \
             "publish/dist/BackgroundImageRemover-win-x64-framework-dependent.zip" \
-            --target "${{ github.sha }}" \
             --title "Build ${{ steps.tag.outputs.tag }}" \
             --notes "Automated build from commit ${{ github.sha }}"
 

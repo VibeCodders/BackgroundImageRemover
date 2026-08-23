@@ -16,28 +16,7 @@
         </Style>
     </UserControl.Resources>
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <!-- Modal Tool Session Top Bar -->
-        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
-            <DockPanel>
-                <!-- Tool identity badge -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
-                    <Border Background="#FF8E24AA" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
-                        <TextBlock Text="🖌 RETOUCH &amp; BRUSH" Foreground="White" FontWeight="Bold" FontSize="11" />
-                    </Border>
-                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
-                </StackPanel>
-
-                <!-- Actions: Apply (Enter) & Cancel (Esc) -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}"
-                            Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}"
-                            BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
-                    <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}"
-                            Padding="16,6" Background="#FF8E24AA" Foreground="White"
-                            BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
+        <controls:ToolSessionHeader Badge="🖌 RETOUCH &amp; BRUSH" Accent="#FF8E24AA" />
 
         <!-- Status bar -->
         <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">

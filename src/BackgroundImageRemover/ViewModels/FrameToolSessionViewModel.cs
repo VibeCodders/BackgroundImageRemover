@@ -70,15 +70,6 @@ namespace BackgroundImageRemover.ViewModels;
     private double _outerShadowOpacity = 0.5;
 
     [ObservableProperty]
-    private bool _isColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isInnerColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isMatColorPickerOpen;
-
-    [ObservableProperty]
     private bool _gradientBorderEnabled;
 
     [ObservableProperty]
@@ -125,18 +116,6 @@ namespace BackgroundImageRemover.ViewModels;
 
     [ObservableProperty]
     private WpfColor _vignetteColor = WpfColor.FromRgb(0, 0, 0);
-
-    [ObservableProperty]
-    private bool _isGradientColorAPickerOpen;
-
-    [ObservableProperty]
-    private bool _isGradientColorBPickerOpen;
-
-    [ObservableProperty]
-    private bool _isPolaroidColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isVignetteColorPickerOpen;
 
     public FrameToolSessionViewModel(ShellViewModel shell, DocumentViewModel parentDocument)
         : base(shell, parentDocument)

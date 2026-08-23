@@ -97,18 +97,6 @@ public partial class ComposeToolSessionViewModel : ToolSessionViewModelBase
     [ObservableProperty]
     private bool _subjectFlipVertical;
 
-    [ObservableProperty]
-    private bool _isShadowColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isSolidColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isGradientTopColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isGradientBottomColorPickerOpen;
-
     public ComposeToolSessionViewModel(
         ShellViewModel shell,
         DocumentViewModel parentDocument,

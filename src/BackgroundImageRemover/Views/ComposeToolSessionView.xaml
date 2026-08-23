@@ -15,20 +15,7 @@
         </Style>
     </UserControl.Resources>
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
-            <DockPanel>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
-                    <Border Background="#FF0E7490" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
-                        <TextBlock Text="🖼 COMPOSE" Foreground="White" FontWeight="Bold" FontSize="11" />
-                    </Border>
-                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}" Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
-                    <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}" Padding="16,6" Background="#FF0E7490" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
+        <controls:ToolSessionHeader Badge="🖼 COMPOSE" Accent="#FF0E7490" />
 
         <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
@@ -43,16 +30,8 @@
                                  IsChecked="{Binding BackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Transparent}" />
                     <RadioButton Content="Solid color" GroupName="ComposeBg" Margin="0,0,0,4"
                                  IsChecked="{Binding BackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=SolidColor}" />
-                    <StackPanel Orientation="Horizontal" Margin="16,0,0,8"
-                                Visibility="{Binding BackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}">
-                        <Rectangle Width="24" Height="24" Fill="{Binding SolidColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseSolidColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseSolidColorButton_Click" />
-                        <Popup IsOpen="{Binding IsSolidColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseSolidColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding SolidColor}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Solid color" SelectedColor="{Binding SolidColor}" Margin="16,0,0,0"
+                                               Visibility="{Binding BackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SolidColor}" />
 
                     <RadioButton Content="Image" GroupName="ComposeBg" Margin="0,0,0,4"
                                  IsChecked="{Binding BackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Image}" />
@@ -85,26 +64,8 @@
                     <RadioButton Content="Gradient" GroupName="ComposeBg" Margin="0,0,0,4"
                                  IsChecked="{Binding BackgroundMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Gradient}" />
                     <StackPanel Margin="16,0,0,8" Visibility="{Binding BackgroundMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Gradient}">
-                        <TextBlock Text="Top color" />
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <Rectangle Width="24" Height="24" Fill="{Binding GradientTopColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                            <Button x:Name="ChooseGradientTopColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseGradientTopColorButton_Click" />
-                            <Popup IsOpen="{Binding IsGradientTopColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseGradientTopColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                                <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                    <controls:SimpleColorPickerControl SelectedColor="{Binding GradientTopColor}" />
-                                </Border>
-                            </Popup>
-                        </StackPanel>
-                        <TextBlock Text="Bottom color" />
-                        <StackPanel Orientation="Horizontal">
-                            <Rectangle Width="24" Height="24" Fill="{Binding GradientBottomColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                            <Button x:Name="ChooseGradientBottomColorButton" Content="Choose..." Margin="8,0,0,0" Click="ChooseGradientBottomColorButton_Click" />
-                            <Popup IsOpen="{Binding IsGradientBottomColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseGradientBottomColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                                <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                    <controls:SimpleColorPickerControl SelectedColor="{Binding GradientBottomColor}" />
-                                </Border>
-                            </Popup>
-                        </StackPanel>
+                        <controls:ColorPickerField Header="Top color" SelectedColor="{Binding GradientTopColor}" />
+                        <controls:ColorPickerField Header="Bottom color" SelectedColor="{Binding GradientBottomColor}" />
                         <DockPanel Margin="0,6,0,0">
                             <TextBlock Text="Angle" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
                             <TextBlock Text="{Binding GradientAngle, StringFormat='{}{0:0}°'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
@@ -135,15 +96,7 @@
                             <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                         </DockPanel>
                         <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" TickFrequency="0.05" />
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <Rectangle Width="24" Height="24" Fill="{Binding ShadowColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                            <Button x:Name="ChooseShadowColorButton" Content="Shadow color..." Margin="8,0,0,0" Click="ChooseShadowColorButton_Click" />
-                            <Popup IsOpen="{Binding IsShadowColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseShadowColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                                <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                    <controls:SimpleColorPickerControl SelectedColor="{Binding ShadowColor}" />
-                                </Border>
-                            </Popup>
-                        </StackPanel>
+                        <controls:ColorPickerField Header="Shadow color" SelectedColor="{Binding ShadowColor}" Margin="0,8,0,0" />
                     </StackPanel>
 
                     <Separator Margin="0,12,0,12" />

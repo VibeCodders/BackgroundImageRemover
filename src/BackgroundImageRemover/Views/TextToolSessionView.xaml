@@ -23,20 +23,7 @@
     </UserControl.Resources>
 
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
-        <Border DockPanel.Dock="Top" Background="{DynamicResource Theme.BarBackground}" Padding="12,8" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="0,0,0,1">
-            <DockPanel>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
-                    <Border Background="#FFDB2777" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
-                        <TextBlock Text="✎ TEXT" Foreground="White" FontWeight="Bold" FontSize="11" />
-                    </Border>
-                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Theme.ForegroundBrush}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                    <Button Content="✕ Cancel (Esc)" Command="{Binding CancelCommand}" Padding="12,6" Margin="0,0,8,0" Background="{DynamicResource Theme.PanelBackground}" Foreground="{DynamicResource Theme.MutedForegroundBrush}" BorderBrush="{DynamicResource Theme.BorderBrush}" BorderThickness="1" Cursor="Hand" FontWeight="SemiBold" />
-                    <Button Content="✓ Apply (Enter)" Command="{Binding ApplyCommand}" Padding="16,6" Background="#FFDB2777" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
+        <controls:ToolSessionHeader Badge="✎ TEXT" Accent="#FFDB2777" />
 
         <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource Theme.BarBackground}" TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
             <StatusBarItem><TextBlock Text="{Binding StatusMessage}" /></StatusBarItem>
@@ -59,15 +46,7 @@
                     <TextBlock Text="Position" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <ComboBox ItemsSource="{Binding Source={StaticResource TextAnchorValues}}" SelectedItem="{Binding Anchor}" Margin="0,0,0,12" />
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Rectangle Width="24" Height="24" Fill="{Binding Color, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseColorButton" Content="Choose color..." Margin="8,0,0,0" Click="ChooseColorButton_Click" />
-                        <Popup IsOpen="{Binding IsColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding Color}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Color" SelectedColor="{Binding Color}" />
 
                     <DockPanel Margin="0,4,0,0">
                         <TextBlock Text="Opacity" FontWeight="SemiBold" DockPanel.Dock="Left" />
@@ -109,15 +88,7 @@
                         <TextBlock Text="{Binding OutlineThickness, StringFormat='{}{0}px'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="10" Value="{Binding OutlineThickness}" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,0,4" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Rectangle Width="24" Height="24" Fill="{Binding OutlineColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseOutlineColorButton" Content="Outline color..." Margin="8,0,0,0" Click="ChooseOutlineColorButton_Click" />
-                        <Popup IsOpen="{Binding IsOutlineColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseOutlineColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding OutlineColor}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Outline color" SelectedColor="{Binding OutlineColor}" />
 
                     <TextBlock Text="Shadow" FontWeight="SemiBold" Margin="0,4,0,4" />
                     <DockPanel>
@@ -135,27 +106,11 @@
                         <TextBlock Text="{Binding ShadowOpacity, StringFormat='{}{0:P0}'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />
                     </DockPanel>
                     <Slider Minimum="0" Maximum="1" Value="{Binding ShadowOpacity}" TickFrequency="0.05" Margin="0,0,0,8" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <Rectangle Width="24" Height="24" Fill="{Binding ShadowColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                        <Button x:Name="ChooseShadowColorButton" Content="Shadow color..." Margin="8,0,0,0" Click="ChooseShadowColorButton_Click" />
-                        <Popup IsOpen="{Binding IsShadowColorPickerOpen}" PlacementTarget="{Binding ElementName=ChooseShadowColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                            <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                <controls:SimpleColorPickerControl SelectedColor="{Binding ShadowColor}" />
-                            </Border>
-                        </Popup>
-                    </StackPanel>
+                    <controls:ColorPickerField Header="Shadow color" SelectedColor="{Binding ShadowColor}" />
 
                     <CheckBox Content="Background plate" IsChecked="{Binding BackgroundPlate}" FontWeight="SemiBold" Margin="0,0,0,8" />
                     <StackPanel Visibility="{Binding BackgroundPlate, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,12">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <Rectangle Width="24" Height="24" Fill="{Binding PlateColor, Converter={StaticResource ColorToBrushConverter}}" Stroke="Gray" />
-                            <Button x:Name="ChoosePlateColorButton" Content="Plate color..." Margin="8,0,0,0" Click="ChoosePlateColorButton_Click" />
-                            <Popup IsOpen="{Binding IsPlateColorPickerOpen}" PlacementTarget="{Binding ElementName=ChoosePlateColorButton}" StaysOpen="False" AllowsTransparency="True" Placement="Right">
-                                <Border Background="{DynamicResource Theme.PopupBackground}" BorderBrush="{DynamicResource Theme.PopupBorderBrush}" BorderThickness="1">
-                                    <controls:SimpleColorPickerControl SelectedColor="{Binding PlateColor}" />
-                                </Border>
-                            </Popup>
-                        </StackPanel>
+                        <controls:ColorPickerField Header="Plate color" SelectedColor="{Binding PlateColor}" />
                         <DockPanel>
                             <TextBlock Text="Opacity" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Left" />
                             <TextBlock Text="{Binding PlateOpacity, StringFormat='{}{0:P0}'}" FontSize="11" Foreground="{DynamicResource Theme.MutedForegroundBrush}" DockPanel.Dock="Right" />

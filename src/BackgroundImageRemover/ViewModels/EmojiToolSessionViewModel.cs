@@ -47,9 +47,6 @@ public partial class EmojiToolSessionViewModel : PreviewToolSessionViewModelBase
     [ObservableProperty]
     private int _margin = 20;
 
-    [ObservableProperty]
-    private bool _isColorPickerOpen;
-
     protected override string OperationName => "Emoji";
 
     protected override bool IsEffectActive => Opacity > 1e-4;

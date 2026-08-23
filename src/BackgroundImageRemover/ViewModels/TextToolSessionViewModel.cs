@@ -33,9 +33,6 @@ public partial class TextToolSessionViewModel : PreviewToolSessionViewModelBase
     private int _margin = 20;
 
     [ObservableProperty]
-    private bool _isColorPickerOpen;
-
-    [ObservableProperty]
     private double _rotation;
 
     [ObservableProperty]
@@ -79,15 +76,6 @@ public partial class TextToolSessionViewModel : PreviewToolSessionViewModelBase
 
     [ObservableProperty]
     private int _platePadding = 10;
-
-    [ObservableProperty]
-    private bool _isOutlineColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isPlateColorPickerOpen;
-
-    [ObservableProperty]
-    private bool _isShadowColorPickerOpen;
 
     protected override string OperationName => "Text";
 

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Helpers;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
@@ -35,21 +36,20 @@ public sealed class KMeansStrategy : StrategyBase
 
         ct.ThrowIfCancellationRequested();
 
-        var labelData = new int[total];
-        labels.GetArray(out labelData);
-
-        // Count how many pixels of each cluster sit on the image border.
+        // Count how many pixels of each cluster sit on the image border. The border is only
+        // O(rows + cols) pixels, so reading the labels Mat directly is cheap and avoids a
+        // full-image GetArray copy.
         var borderCount = new int[clusterCount];
         int totalBorder = 0;
         for (int x = 0; x < cols; x++)
         {
-            CountBorder(labelData, x, 0, cols, borderCount); ++totalBorder;
-            CountBorder(labelData, x, rows - 1, cols, borderCount); ++totalBorder;
+            CountBorder(labels, x, 0, borderCount); ++totalBorder;
+            CountBorder(labels, x, rows - 1, borderCount); ++totalBorder;
         }
         for (int y = 0; y < rows; y++)
         {
-            CountBorder(labelData, 0, y, cols, borderCount); ++totalBorder;
-            CountBorder(labelData, cols - 1, y, cols, borderCount); ++totalBorder;
+            CountBorder(labels, 0, y, borderCount); ++totalBorder;
+            CountBorder(labels, cols - 1, y, borderCount); ++totalBorder;
         }
 
         var isBackground = new bool[clusterCount];
@@ -58,20 +58,33 @@ public sealed class KMeansStrategy : StrategyBase
             isBackground[c] = borderCount[c] / (double)Math.Max(1, totalBorder) >= borderFraction;
         }
 
+        // Label→mask is a per-pixel map, so it is written straight into the native buffer in
+        // parallel — no GetArray/SetArray copies. Kmeans returns the labels as a flat N×1
+        // vector, so they are indexed linearly (image pixel i = y*cols + x). Identical math to
+        // the sequential version.
         var mask = new Mat(rows, cols, MatType.CV_8UC1);
-        var maskData = new byte[total];
-        for (int i = 0; i < total; i++)
+        unsafe
         {
-            maskData[i] = isBackground[labelData[i]] ? (byte)0 : (byte)255;
+            int* labelPtr = (int*)labels.DataPointer;
+            byte* maskPtr = (byte*)mask.DataPointer;
+            long maskStep = mask.Step();
+            Parallel.For(0, rows, y =>
+            {
+                byte* maskRow = maskPtr + y * maskStep;
+                int rowBase = y * cols;
+                for (int x = 0; x < cols; x++)
+                {
+                    maskRow[x] = isBackground[labelPtr[rowBase + x]] ? (byte)0 : (byte)255;
+                }
+            });
         }
-        mask.SetArray(maskData);
 
         return MaskHelpers.Feather(mask);
     }
 
-    private static void CountBorder(int[] labels, int x, int y, int cols, int[] borderCount)
+    private static void CountBorder(Mat labels, int x, int y, int[] borderCount)
     {
-        var label = labels[y * cols + x];
+        var label = labels.At<int>(y, x);
         if (label >= 0 && label < borderCount.Length)
         {
             borderCount[label]++;

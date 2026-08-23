@@ -198,30 +198,24 @@ public static class BackgroundCompositingService
         double rad = angleDeg * Math.PI / 180.0;
         double dx = Math.Cos(rad);
         double dy = Math.Sin(rad);
+        int w = size.Width;
+        int h = size.Height;
 
-        // Build the x/y ramps efficiently using row/column repetition instead of a
-        // pixel-per-pixel Set loop (O(width+height) instead of O(width*height)).
-        using var xRow = new Mat(1, size.Width, MatType.CV_32FC1);
-        var xSpan = xRow.AsSpan2D<float>();
-        for (int x = 0; x < size.Width; x++)
+        // Projection of each pixel onto the gradient axis, normalized by the corner range so
+        // the gradient always spans the full image. t is clamped to [0,1] and the two colors
+        // are interpolated per channel; single parallel pass over the native buffer instead of
+        // the previous ~13 intermediate Mats (ramps, projections, float color planes).
+        double min = double.MaxValue;
+        double max = double.MinValue;
+        foreach (double px in new[] { 0.0, w - 1.0 })
         {
-            xSpan[0, x] = x;
+            foreach (double py in new[] { 0.0, h - 1.0 })
+            {
+                double proj = px * dx + py * dy;
+                min = Math.Min(min, proj);
+                max = Math.Max(max, proj);
+            }
         }
-        using var xRamp = new Mat();
-        Cv2.Repeat(xRow, size.Height, 1, xRamp);
-
-        using var yCol = new Mat(size.Height, 1, MatType.CV_32FC1);
-        var ySpan = yCol.AsSpan2D<float>();
-        for (int y = 0; y < size.Height; y++)
-        {
-            ySpan[y, 0] = y;
-        }
-        using var yRamp = new Mat();
-        Cv2.Repeat(yCol, 1, size.Width, yRamp);
-
-        using var proj = new Mat();
-        Cv2.AddWeighted(xRamp, dx, yRamp, dy, 0, proj);
-        Cv2.MinMaxLoc(proj, out double min, out double max);
 
         var result = new Mat(size, MatType.CV_8UC3);
         if (max - min < 1e-9)
@@ -230,24 +224,25 @@ public static class BackgroundCompositingService
             return result;
         }
 
-        using var t = new Mat();
-        Cv2.Subtract(proj, Scalar.All(min), t);
-        Cv2.Divide(t, Scalar.All(max - min), t);
-        using var ones = new Mat(size, MatType.CV_32FC1, Scalar.All(1.0));
-        using var zeros = new Mat(size, MatType.CV_32FC1, Scalar.All(0.0));
-        Cv2.Min(t, ones, t);
-        Cv2.Max(t, zeros, t);
-
-        using var t3 = new Mat();
-        Cv2.CvtColor(t, t3, ColorConversionCodes.GRAY2BGR);
-        using var oneMinusT = new Mat();
-        using var ones3 = new Mat(size, MatType.CV_32FC3, Scalar.All(1.0));
-        Cv2.Subtract(ones3, t3, oneMinusT);
-
-        using var startF = new Mat(size, MatType.CV_32FC3, new Scalar(start.Item0 / 255.0, start.Item1 / 255.0, start.Item2 / 255.0));
-        using var endF = new Mat(size, MatType.CV_32FC3, new Scalar(end.Item0 / 255.0, end.Item1 / 255.0, end.Item2 / 255.0));
-        using var weighted = (startF.Mul(oneMinusT) + endF.Mul(t3)).ToMat();
-        weighted.ConvertTo(result, MatType.CV_8UC3, 255.0);
+        double invRange = 1.0 / (max - min);
+        unsafe
+        {
+            byte* dstPtr = (byte*)result.DataPointer;
+            long dstStep = result.Step();
+            Parallel.For(0, h, y =>
+            {
+                var row = new Span<Vec3b>((Vec3b*)(dstPtr + y * dstStep), w);
+                for (int x = 0; x < w; x++)
+                {
+                    float t = (float)Math.Clamp(((x * dx + y * dy) - min) * invRange, 0.0, 1.0);
+                    float invT = 1f - t;
+                    row[x] = new Vec3b(
+                        BlendByte(end.Item0, start.Item0, invT, t),
+                        BlendByte(end.Item1, start.Item1, invT, t),
+                        BlendByte(end.Item2, start.Item2, invT, t));
+                }
+            });
+        }
         return result;
     }
 

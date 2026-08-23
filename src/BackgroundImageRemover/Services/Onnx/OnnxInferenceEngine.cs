@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Threading.Tasks;
 using BackgroundImageRemover.Models;
 using BackgroundImageRemover.Services.Logging;
@@ -89,14 +90,8 @@ public sealed class OnnxInferenceEngine : IDisposable
         using var rgb = new Mat();
         Cv2.CvtColor(resized, rgb, ColorConversionCodes.BGR2RGB);
 
-        var input = new DenseTensor<float>(new[] { 1, 3, inputSize, inputSize });
-        // The tensor is contiguous [1,3,H,W]: fill its buffer directly (CHW layout), one
-        // channel plane at a time, instead of going through the 4-D indexer per pixel.
         // Precompute scale/offset per channel so each pixel is a multiply-add, not two
-        // divisions: (px / 255 - mean) / std == px * invScale - offset. Rows are independent,
-        // so the fill runs in parallel; the RGB Mat is read directly through its native buffer,
-        // avoiding the per-run GetArray copy.
-        var inputMem = input.Buffer;
+        // divisions: (px / 255 - mean) / std == px * invScale - offset.
         int plane = inputSize * inputSize;
         float[] scale = new float[3];
         float[] offset = new float[3];
@@ -105,69 +100,86 @@ public sealed class OnnxInferenceEngine : IDisposable
             scale[c] = 1f / (255f * definition.Std[c]);
             offset[c] = definition.Mean[c] / definition.Std[c];
         }
-        unsafe
-        {
-            byte* srcPtr = (byte*)rgb.DataPointer;
-            long srcStep = rgb.Step();
-            Parallel.For(0, inputSize, y =>
-            {
-                var row = new Span<Vec3b>((Vec3b*)(srcPtr + y * srcStep), inputSize);
-                var inputSpan = inputMem.Span;
-                int i = y * inputSize;
-                for (int x = 0; x < inputSize; x++)
-                {
-                    var px = row[x];
-                    inputSpan[i] = px.Item0 * scale[0] - offset[0];
-                    inputSpan[plane + i] = px.Item1 * scale[1] - offset[1];
-                    inputSpan[2 * plane + i] = px.Item2 * scale[2] - offset[2];
-                    i++;
-                }
-            });
-        }
 
-        var inputName = session.InputMetadata.Keys.First();
-        using var results = session.Run(new[] { NamedOnnxValue.CreateFromTensor(inputName, input) });
-        var output = results.First().AsTensor<float>();
-
-        // DenseTensor<float> exposes its backing buffer as a span: normalize and rescale over
-        // the flat data, using SIMD-accelerated min/max from SimdLinq for the range. The bytes
-        // are written straight into the mask Mat's buffer (no intermediate array), in parallel.
+        // The input tensor's backing buffer is rented from the shared pool (3*plane floats,
+        // ~3 MB at 1024²) and returned after the run, instead of allocating a fresh array per
+        // segmentation. Rows are independent, so the fill runs in parallel; the RGB Mat is
+        // read directly through its native buffer, avoiding a per-run GetArray copy.
+        int tensorLength = 3 * plane;
+        float[] rented = ArrayPool<float>.Shared.Rent(tensorLength);
         using var smallMask = new Mat(inputSize, inputSize, MatType.CV_8UC1);
-        if (output is DenseTensor<float> dense)
+        try
         {
-            var outputMem = dense.Buffer;
-            (float min, float max) = outputMem.Span.MinMax();
-            float range = Math.Max(1e-6f, max - min);
+            var input = new DenseTensor<float>(rented.AsMemory(0, tensorLength), new[] { 1, 3, inputSize, inputSize });
+            var inputMem = input.Buffer;
             unsafe
             {
-                byte* maskPtr = (byte*)smallMask.DataPointer;
-                long maskStep = smallMask.Step();
+                byte* srcPtr = (byte*)rgb.DataPointer;
+                long srcStep = rgb.Step();
                 Parallel.For(0, inputSize, y =>
                 {
-                    var maskRow = new Span<byte>((byte*)(maskPtr + y * maskStep), inputSize);
-                    var outputSpan = outputMem.Span;
+                    var row = new Span<Vec3b>((Vec3b*)(srcPtr + y * srcStep), inputSize);
+                    var inputSpan = inputMem.Span;
                     int i = y * inputSize;
                     for (int x = 0; x < inputSize; x++)
                     {
-                        float v = (outputSpan[i] - min) / range;
-                        maskRow[x] = (byte)Math.Clamp(v * 255f, 0f, 255f);
+                        var px = row[x];
+                        inputSpan[i] = px.Item0 * scale[0] - offset[0];
+                        inputSpan[plane + i] = px.Item1 * scale[1] - offset[1];
+                        inputSpan[2 * plane + i] = px.Item2 * scale[2] - offset[2];
                         i++;
                     }
                 });
             }
-        }
-        else
-        {
-            float[] fallback = output.ToArray();
-            (float min, float max) = fallback.MinMax();
-            float range = Math.Max(1e-6f, max - min);
-            var maskBytes = new byte[inputSize * inputSize];
-            for (int i = 0; i < maskBytes.Length; i++)
+
+            var inputName = session.InputMetadata.Keys.First();
+            using var results = session.Run(new[] { NamedOnnxValue.CreateFromTensor(inputName, input) });
+            var output = results.First().AsTensor<float>();
+
+            // DenseTensor<float> exposes its backing buffer as a span: normalize and rescale
+            // over the flat data, using SIMD-accelerated min/max from SimdLinq for the range.
+            // The bytes are written straight into the mask Mat's buffer (no intermediate array),
+            // in parallel.
+            if (output is DenseTensor<float> dense)
             {
-                float v = (fallback[i] - min) / range;
-                maskBytes[i] = (byte)Math.Clamp(v * 255f, 0f, 255f);
+                var outputMem = dense.Buffer;
+                (float min, float max) = outputMem.Span.MinMax();
+                float range = Math.Max(1e-6f, max - min);
+                unsafe
+                {
+                    byte* maskPtr = (byte*)smallMask.DataPointer;
+                    long maskStep = smallMask.Step();
+                    Parallel.For(0, inputSize, y =>
+                    {
+                        var maskRow = new Span<byte>((byte*)(maskPtr + y * maskStep), inputSize);
+                        var outputSpan = outputMem.Span;
+                        int i = y * inputSize;
+                        for (int x = 0; x < inputSize; x++)
+                        {
+                            float v = (outputSpan[i] - min) / range;
+                            maskRow[x] = (byte)Math.Clamp(v * 255f, 0f, 255f);
+                            i++;
+                        }
+                    });
+                }
             }
-            smallMask.SetArray(maskBytes);
+            else
+            {
+                float[] fallback = output.ToArray();
+                (float min, float max) = fallback.MinMax();
+                float range = Math.Max(1e-6f, max - min);
+                var maskBytes = new byte[inputSize * inputSize];
+                for (int i = 0; i < maskBytes.Length; i++)
+                {
+                    float v = (fallback[i] - min) / range;
+                    maskBytes[i] = (byte)Math.Clamp(v * 255f, 0f, 255f);
+                }
+                smallMask.SetArray(maskBytes);
+            }
+        }
+        finally
+        {
+            ArrayPool<float>.Shared.Return(rented);
         }
 
         var fullMask = new Mat();

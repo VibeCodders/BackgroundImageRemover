@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BackgroundImageRemover.Models;
 using OpenCvSharp;
 
@@ -52,12 +53,23 @@ public sealed class ChromaKeyStrategy : StrategyBase
 
     private static void CollectBand(Mat bgr, Rect band, List<Vec3b> into)
     {
-        // Clone to force a continuous buffer: a sub-Mat ROI is generally non-continuous
-        // (its row stride matches the parent, not the ROI width), which GetArray requires.
-        using var roi = new Mat(bgr, band);
-        using var contiguous = roi.Clone();
-        contiguous.GetArray(out Vec3b[] pixels);
-        into.AddRange(pixels);
+        // Read the band straight from the parent buffer: the row pointers honor the parent's
+        // stride, so no ROI clone + GetArray copy is needed.
+        int cols = band.Width;
+        int rows = band.Height;
+        unsafe
+        {
+            byte* basePtr = (byte*)bgr.DataPointer + (long)band.Y * bgr.Step() + (long)band.X * 3;
+            long step = bgr.Step();
+            for (int y = 0; y < rows; y++)
+            {
+                var row = new Span<Vec3b>((Vec3b*)(basePtr + y * step), cols);
+                for (int x = 0; x < cols; x++)
+                {
+                    into.Add(row[x]);
+                }
+            }
+        }
     }
 
     protected override Mat ComputeMask(Mat bgr, StrategyContext context, CancellationToken ct)
@@ -75,24 +87,36 @@ public sealed class ChromaKeyStrategy : StrategyBase
         Cv2.CvtColor(keyMat, keyLab, ColorConversionCodes.BGR2Lab);
         var keyLabColor = keyLab.At<Vec3b>(0, 0);
 
+        // Lab-distance per pixel is independent, so the mask is written straight into the
+        // native buffer in parallel — no GetArray/SetArray copies, and the sqrt math runs on
+        // all cores. Math is identical to the sequential version.
         var mask = new Mat(bgr.Size(), MatType.CV_8UC1);
-        lab.GetArray(out Vec3b[] labPixels);
-        var maskPixels = new byte[labPixels.Length];
-
-        for (int i = 0; i < labPixels.Length; i++)
+        int w = bgr.Width;
+        unsafe
         {
-            double dl = labPixels[i].Item0 - keyLabColor.Item0;
-            double da = labPixels[i].Item1 - keyLabColor.Item1;
-            double db = labPixels[i].Item2 - keyLabColor.Item2;
-            double distance = Math.Sqrt(dl * dl + da * da + db * db);
+            byte* labPtr = (byte*)lab.DataPointer;
+            byte* maskPtr = (byte*)mask.DataPointer;
+            long labStep = lab.Step();
+            long maskStep = mask.Step();
+            Parallel.For(0, bgr.Rows, y =>
+            {
+                var labRow = new Span<Vec3b>((Vec3b*)(labPtr + y * labStep), w);
+                var maskRow = new Span<byte>((byte*)(maskPtr + y * maskStep), w);
+                for (int x = 0; x < w; x++)
+                {
+                    var px = labRow[x];
+                    double dl = px.Item0 - keyLabColor.Item0;
+                    double da = px.Item1 - keyLabColor.Item1;
+                    double db = px.Item2 - keyLabColor.Item2;
+                    double distance = Math.Sqrt(dl * dl + da * da + db * db);
 
-            double t = (distance - cutoff) / FeatherBand;
-            t = Math.Clamp(t, 0.0, 1.0);
-            double smooth = t * t * (3 - 2 * t); // smoothstep
-            maskPixels[i] = (byte)(smooth * 255);
+                    double t = (distance - cutoff) / FeatherBand;
+                    t = Math.Clamp(t, 0.0, 1.0);
+                    double smooth = t * t * (3 - 2 * t); // smoothstep
+                    maskRow[x] = (byte)(smooth * 255);
+                }
+            });
         }
-
-        mask.SetArray(maskPixels);
         return mask;
     }
 }

@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Threading.Tasks;
 using BackgroundImageRemover.Services.Onnx;
 using BackgroundImageRemover.Services.Preview;
@@ -70,12 +71,7 @@ public sealed class SamInferenceEngine : IDisposable
             rgb.CopyTo(roi);
         }
 
-        var input = new DenseTensor<float>(new[] { 1, 3, EncoderInputSize, EncoderInputSize });
-        // Contiguous [1,3,H,W] tensor: fill the flat buffer directly (CHW layout).
         // Precompute scale/offset per channel: (px - mean) / std == px * scale - offset.
-        // Rows are independent, so the fill runs in parallel; the padded Mat is read directly
-        // through its native buffer, avoiding the per-run GetArray copy (1024x1024 = 1M pixels).
-        var inputMem = input.Buffer;
         int plane = EncoderInputSize * EncoderInputSize;
         float[] scale = new float[3];
         float[] offset = new float[3];
@@ -84,34 +80,51 @@ public sealed class SamInferenceEngine : IDisposable
             scale[c] = 1f / Std[c];
             offset[c] = Mean[c] / Std[c];
         }
-        unsafe
+
+        // The input tensor's backing buffer is rented from the shared pool (3*plane floats,
+        // ~12 MB at 1024²) and returned after the run, instead of allocating a fresh array per
+        // embedding computation. Rows are independent, so the fill runs in parallel; the
+        // padded Mat is read directly through its native buffer, avoiding a per-run GetArray
+        // copy (1024x1024 = 1M pixels).
+        int tensorLength = 3 * plane;
+        float[] rented = ArrayPool<float>.Shared.Rent(tensorLength);
+        try
         {
-            byte* srcPtr = (byte*)padded.DataPointer;
-            long srcStep = padded.Step();
-            Parallel.For(0, EncoderInputSize, y =>
+            var input = new DenseTensor<float>(rented.AsMemory(0, tensorLength), new[] { 1, 3, EncoderInputSize, EncoderInputSize });
+            var inputMem = input.Buffer;
+            unsafe
             {
-                var row = new Span<Vec3b>((Vec3b*)(srcPtr + y * srcStep), EncoderInputSize);
-                var inputSpan = inputMem.Span;
-                int i = y * EncoderInputSize;
-                for (int x = 0; x < EncoderInputSize; x++)
+                byte* srcPtr = (byte*)padded.DataPointer;
+                long srcStep = padded.Step();
+                Parallel.For(0, EncoderInputSize, y =>
                 {
-                    var px = row[x];
-                    inputSpan[i] = px.Item0 * scale[0] - offset[0];
-                    inputSpan[plane + i] = px.Item1 * scale[1] - offset[1];
-                    inputSpan[2 * plane + i] = px.Item2 * scale[2] - offset[2];
-                    i++;
-                }
-            });
+                    var row = new Span<Vec3b>((Vec3b*)(srcPtr + y * srcStep), EncoderInputSize);
+                    var inputSpan = inputMem.Span;
+                    int i = y * EncoderInputSize;
+                    for (int x = 0; x < EncoderInputSize; x++)
+                    {
+                        var px = row[x];
+                        inputSpan[i] = px.Item0 * scale[0] - offset[0];
+                        inputSpan[plane + i] = px.Item1 * scale[1] - offset[1];
+                        inputSpan[2 * plane + i] = px.Item2 * scale[2] - offset[2];
+                        i++;
+                    }
+                });
+            }
+
+            var inputName = _encoder.InputMetadata.Keys.First();
+            using var results = _encoder.Run(new[] { NamedOnnxValue.CreateFromTensor(inputName, input) });
+            var output = results.First().AsTensor<float>();
+
+            // Copy out of the OrtValue-backed tensor before `results` is disposed.
+            var embeddingData = new DenseTensor<float>(output.ToArray(), output.Dimensions.ToArray());
+
+            return new SamEmbedding { Data = embeddingData, SourceImageSize = bgr.Size() };
         }
-
-        var inputName = _encoder.InputMetadata.Keys.First();
-        using var results = _encoder.Run(new[] { NamedOnnxValue.CreateFromTensor(inputName, input) });
-        var output = results.First().AsTensor<float>();
-
-        // Copy out of the OrtValue-backed tensor before `results` is disposed.
-        var embeddingData = new DenseTensor<float>(output.ToArray(), output.Dimensions.ToArray());
-
-        return new SamEmbedding { Data = embeddingData, SourceImageSize = bgr.Size() };
+        finally
+        {
+            ArrayPool<float>.Shared.Return(rented);
+        }
     }
 
     /// <summary>Runs the decoder for one or more foreground points, returning a 0-255 mask sized to <paramref name="targetSize"/>.</summary>

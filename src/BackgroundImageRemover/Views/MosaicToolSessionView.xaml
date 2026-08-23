@@ -1,14 +1,15 @@
-<UserControl x:Class="BackgroundImageRemover.Views.MosaicToolSessionView"
+<views:BrushStrokeSessionViewBase x:Class="BackgroundImageRemover.Views.MosaicToolSessionView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:BackgroundImageRemover.Views"
              xmlns:controls="clr-namespace:BackgroundImageRemover.Views.Controls"
              xmlns:models="clr-namespace:BackgroundImageRemover.Models"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200">
-    <UserControl.Resources>
+    <views:BrushStrokeSessionViewBase.Resources>
         <ObjectDataProvider x:Key="MosaicModeValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
             <ObjectDataProvider.MethodParameters>
                 <x:Type TypeName="models:MosaicMode" />
@@ -20,7 +21,7 @@
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="{DynamicResource Theme.ForegroundBrush}" />
         </Style>
-    </UserControl.Resources>
+    </views:BrushStrokeSessionViewBase.Resources>
     <DockPanel TextElement.Foreground="{DynamicResource Theme.ForegroundBrush}">
         <controls:ToolSessionHeader Badge="▦ MOSAIC" Accent="#FFEA580C" />
 
@@ -83,9 +84,9 @@
                                                Mode="{Binding PreviewMode}"
                                                BrushRadius="{Binding BrushRadius}"
                                                RectSelected="MosaicPreview_RectSelected"
-                                               StrokeStart="MosaicPreview_StrokeStart"
-                                               StrokeMove="MosaicPreview_StrokeMove"
-                                               StrokeEnd="MosaicPreview_StrokeEnd" />
+                                               StrokeStart="OnStrokeStart"
+                                               StrokeMove="OnStrokeMove"
+                                               StrokeEnd="OnStrokeEnd" />
             </DockPanel>
             <DockPanel Grid.Column="1" Margin="8">
                 <TextBlock DockPanel.Dock="Top" Text="Result" FontWeight="Bold" Margin="0,0,0,4" />
@@ -98,4 +99,4 @@
         </controls:ToolSessionPanel.Preview>
     </controls:ToolSessionPanel>
 </DockPanel>
-</UserControl>
+</views:BrushStrokeSessionViewBase>

@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -15,11 +16,7 @@ public static class SketchService
         using var gray = new Mat();
         Cv2.CvtColor(bgr, gray, ColorConversionCodes.BGR2GRAY);
 
-        var k = Math.Max(1, blurRadius);
-        if (k % 2 == 0)
-        {
-            k++;
-        }
+        var k = EditingGuard.EnsureOdd(blurRadius);
 
         using var blurred = new Mat();
         Cv2.GaussianBlur(gray, blurred, new OpenCvSharp.Size(k, k), 0);

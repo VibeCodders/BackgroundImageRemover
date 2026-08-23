@@ -39,8 +39,7 @@ public static class BlurService
     public static Mat MotionBlur(Mat bgr, double length, double angleDeg)
     {
         length = Math.Max(1, length);
-        int ksize = (int)Math.Round(length);
-        if (ksize % 2 == 0) ksize++;
+        int ksize = EditingGuard.EnsureOdd((int)Math.Round(length));
 
         var kernel = new Mat(ksize, ksize, MatType.CV_32FC1, Scalar.All(0));
         double rad = angleDeg * Math.PI / 180.0;

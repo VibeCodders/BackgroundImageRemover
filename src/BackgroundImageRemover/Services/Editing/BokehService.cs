@@ -1,3 +1,4 @@
+using BackgroundImageRemover.Helpers;
 using OpenCvSharp;
 
 namespace BackgroundImageRemover.Services.Editing;
@@ -39,11 +40,7 @@ public static class BokehService
         Cv2.CvtColor(overlay, mask, ColorConversionCodes.BGR2GRAY);
         Cv2.Threshold(mask, mask, 1, 255, ThresholdTypes.Binary);
 
-        int blur = Math.Max(1, blurRadius);
-        if (blur % 2 == 0)
-        {
-            blur++;
-        }
+        int blur = EditingGuard.EnsureOdd(blurRadius);
         if (blurRadius > 0)
         {
             Cv2.GaussianBlur(overlay, overlay, new OpenCvSharp.Size(blur, blur), 0);

@@ -36,9 +36,7 @@ public static class MosaicService
     {
         return ImageProcessingUtility.ApplyToRegion(src, region, roi =>
         {
-            radius = Math.Max(1, radius);
-            int k = radius % 2 == 0 ? radius + 1 : radius;
-            Cv2.MedianBlur(roi, roi, k);
+            Cv2.MedianBlur(roi, roi, EditingGuard.EnsureOdd(radius));
         });
     }
 

@@ -48,13 +48,10 @@ public static class EditingGuard
         return strength > Epsilon;
     }
 
-    public static Mat CloneIfSignificant(double strength, Func<Mat> operation)
+    /// <summary>Returns the smallest odd integer &gt;= 1 that is &gt;= <paramref name="value"/> (kernel sizes must be odd).</summary>
+    public static int EnsureOdd(int value)
     {
-        if (strength <= Epsilon)
-        {
-            return operation();
-        }
-        return operation();
+        return Math.Max(1, value) | 1;
     }
 
     public static Mat ExpandCanvas(Mat img, int left, int top, int right, int bottom, Scalar fill)
@@ -105,15 +102,5 @@ public static class EditingGuard
         }
 
         return mat.Clone();
-    }
-
-    public static Mat ReturnIfInsignificant(Mat input, double strength)
-    {
-        if (!IsEffectSignificant(strength))
-        {
-            return input.Clone();
-        }
-
-        return input;
     }
 }
